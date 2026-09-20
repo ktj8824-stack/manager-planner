@@ -3,241 +3,416 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HQ 엔터프라이즈 최초 가입 | 마스터 스케줄러</title>
-  
+  <title>회사 최초 가입 | 마스터 관제 포털</title>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/variables.css?v=21">
-  <link rel="stylesheet" href="css/base.css?v=21">
-  
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      background: var(--bg-app);
-      color: var(--text-200);
+      font-family: 'Pretendard', -apple-system, sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      margin: 0;
-      font-family: 'Pretendard', sans-serif;
+      padding: 20px;
     }
-    
-    .admin-login-wrapper {
-      background: var(--bg-card);
-      border: 1px solid var(--border-default);
-      border-radius: 16px;
-      padding: 48px;
+
+    .card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 48px 40px 40px;
       width: 100%;
-      max-width: 500px;
-      box-shadow: var(--shadow-xl);
+      max-width: 460px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.10);
     }
 
-    .admin-login-logo {
-      text-align: center;
-      margin-bottom: 32px;
+    .logo-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-bottom: 28px;
     }
 
-    .admin-login-title {
+    .logo-img {
+      width: 72px;
+      height: 72px;
+      border-radius: 18px;
+      object-fit: cover;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    }
+
+    .logo-fallback {
+      width: 72px;
+      height: 72px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 24px;
-      font-weight: 800;
-      color: var(--text-100);
-      margin: 16px 0 8px 0;
+      font-weight: 900;
+      color: #e8e8e8;
+      letter-spacing: -2px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      font-family: 'Georgia', serif;
+    }
+
+    .title {
+      font-size: 24px;
+      font-weight: 900;
+      color: #0f172a;
       letter-spacing: -0.5px;
     }
 
-    .admin-login-subtitle {
-      font-size: 14px;
-      color: var(--text-400);
+    .subtitle {
+      font-size: 13px;
+      font-weight: 600;
+      color: #94a3b8;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    .badge-ceo {
+      display: inline-block;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+      margin-top: 10px;
     }
 
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     .form-label {
       display: block;
       font-size: 13px;
-      font-weight: 600;
-      color: var(--text-300);
+      font-weight: 700;
+      color: #374151;
       margin-bottom: 8px;
+    }
+
+    .form-label span {
+      color: #ef4444;
+      margin-left: 2px;
     }
 
     .form-input {
       width: 100%;
-      background: var(--bg-input);
-      border: 1px solid transparent;
-      color: var(--text-100);
+      background: #f1f5f9;
+      border: 2px solid transparent;
+      border-radius: 12px;
       padding: 14px 16px;
-      border-radius: 8px;
       font-size: 15px;
+      font-family: 'Pretendard', sans-serif;
+      color: #0f172a;
+      outline: none;
       transition: all 0.2s;
     }
 
     .form-input:focus {
-      outline: none;
-      background: var(--bg-input-focus);
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-dim);
+      background: #fff;
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 4px rgba(245,158,11,0.10);
+    }
+
+    .form-input::placeholder { color: #94a3b8; }
+
+    .form-hint {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .divider {
+      height: 1px;
+      background: #e2e8f0;
+      margin: 20px 0;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #64748b;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
     }
 
     .btn-submit {
       width: 100%;
-      background: var(--accent);
+      background: linear-gradient(135deg, #f59e0b, #d97706);
       color: #fff;
       font-size: 16px;
       font-weight: 800;
+      font-family: 'Pretendard', sans-serif;
       padding: 16px;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.2s;
       margin-top: 8px;
-      box-shadow: 0 4px 12px rgba(0,122,255,0.3);
+      letter-spacing: -0.3px;
+      box-shadow: 0 4px 14px rgba(245,158,11,0.35);
     }
 
-    .btn-submit:hover {
-      background: #005bb5;
-    }
+    .btn-submit:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(245,158,11,0.45); }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
     .error-msg {
       color: #ef4444;
       font-size: 13px;
       font-weight: 600;
       text-align: center;
-      margin-top: 16px;
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: #fef2f2;
+      border-radius: 8px;
+      border: 1px solid #fecaca;
       display: none;
     }
 
     .success-msg {
-      color: #10b981;
+      color: #059669;
       font-size: 13px;
       font-weight: 600;
       text-align: center;
-      margin-top: 16px;
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: #ecfdf5;
+      border-radius: 8px;
+      border: 1px solid #a7f3d0;
+      line-height: 1.6;
       display: none;
     }
 
-    .info-footer {
+    .footer-links {
       text-align: center;
-      margin-top: 32px;
-      font-size: 12px;
-      color: var(--text-500);
+      margin-top: 24px;
+      font-size: 13px;
+      color: #94a3b8;
     }
+
+    .footer-links a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+
+    .footer-links a:hover { text-decoration: underline; }
+
+    .info-box {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 12px;
+      color: #92400e;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .info-box strong { font-weight: 800; }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
-  <div class="admin-login-wrapper">
-    <div class="admin-login-logo">
-      <h1 class="admin-login-title">🏢 회사(엔터테인먼트) 가입</h1>
-      <p class="admin-login-subtitle">HQ ENTERPRISE SCHEDULER</p>
+  <div class="card">
+    <div class="logo-wrap">
+      <img src="img/logo.jpg" alt="Logo" class="logo-img"
+        onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';">
+      <div class="logo-fallback" id="logo-fallback" style="display:none;">MP</div>
+      <div class="title">회사 최초 가입</div>
+      <div class="subtitle">HQ ENTERPRISE SCHEDULER</div>
+      <div class="badge-ceo">👑 CEO / 본사 관리자 전용</div>
     </div>
 
-    <form id="admin-register-form">
+    <div class="info-box">
+      <strong>📌 가입 안내:</strong><br>
+      이 페이지는 <strong>엔터테인먼트 회사의 CEO 또는 본사 총괄 관리자</strong>만 가입할 수 있습니다.<br>
+      가입 후 마스터 관제 포털에서 소속 매니저 계정을 직접 생성·관리할 수 있습니다.
+    </div>
+
+    <form id="register-form">
+      <div class="section-title">👤 계정 정보</div>
+
       <div class="form-group">
-        <label class="form-label" for="reg-company">엔터테인먼트 회사명</label>
-        <input type="text" id="reg-company" class="form-input" placeholder="예: 스타 엔터테인먼트" required>
+        <label class="form-label" for="reg-name">이름 (실명)<span>*</span></label>
+        <input type="text" id="reg-name" class="form-input"
+          placeholder="홍길동" required autocomplete="name">
       </div>
+
       <div class="form-group">
-        <label class="form-label" for="reg-name">대표(CEO) 성함</label>
-        <input type="text" id="reg-name" class="form-input" placeholder="예: 홍길동" required>
+        <label class="form-label" for="reg-email">이메일 (로그인 ID)<span>*</span></label>
+        <input type="email" id="reg-email" class="form-input"
+          placeholder="ceo@star-ent.com" required autocomplete="email">
       </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="reg-pw">비밀번호<span>*</span></label>
+          <input type="password" id="reg-pw" class="form-input"
+            placeholder="8자 이상" required autocomplete="new-password" minlength="8">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reg-pw2">비밀번호 확인<span>*</span></label>
+          <input type="password" id="reg-pw2" class="form-input"
+            placeholder="재입력" required autocomplete="new-password">
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-title">🏢 회사 정보</div>
+
       <div class="form-group">
-        <label class="form-label" for="reg-email">CEO 이메일 (로그인 ID)</label>
-        <input type="email" id="reg-email" class="form-input" placeholder="예: ceo@star-ent.com" required autocomplete="email">
+        <label class="form-label" for="reg-company">회사명 (엔터테인먼트명)<span>*</span></label>
+        <input type="text" id="reg-company" class="form-input"
+          placeholder="STAR 엔터테인먼트" required>
       </div>
+
       <div class="form-group">
-        <label class="form-label" for="reg-pw">보안 비밀번호</label>
-        <input type="password" id="reg-pw" class="form-input" placeholder="••••••••" required autocomplete="new-password">
+        <label class="form-label" for="reg-phone">연락처</label>
+        <input type="tel" id="reg-phone" class="form-input"
+          placeholder="010-0000-0000" autocomplete="tel">
+        <div class="form-hint">매니저 배차 연락 및 계정 인증에 사용됩니다.</div>
       </div>
-      <button type="submit" class="btn-submit">회사 계정 생성하기</button>
-      <div id="reg-error" class="error-msg">가입 중 오류가 발생했습니다.</div>
-      <div id="reg-success" class="success-msg">가입이 완료되었습니다! 로그인 페이지로 이동합니다...</div>
+
+      <button type="submit" class="btn-submit" id="btn-register">
+        👑 CEO 계정 가입하기
+      </button>
+
+      <div id="reg-error" class="error-msg"></div>
+      <div id="reg-success" class="success-msg"></div>
     </form>
 
-    <div class="info-footer">
-      이미 계정이 있으신가요? <br>
-      <a href="admin-login.html" style="color:var(--text-400); text-decoration:underline; margin-top:4px; display:inline-block;">마스터 포털 로그인으로 돌아가기</a>
+    <div class="footer-links">
+      이미 계정이 있으신가요?
+      <a href="admin-login.html">로그인으로 이동</a>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./js/api.js?v=155"></script>
+  <script src="js/supabase-client.js"></script>
   <script>
-    document.getElementById('admin-register-form').addEventListener('submit', async function(e) {
+    if (window.SupabaseClient) {
+      SupabaseClient.init();
+    }
+
+    document.getElementById('register-form').addEventListener('submit', async function(e) {
       e.preventDefault();
-      const company = document.getElementById('reg-company').value.trim();
-      const name = document.getElementById('reg-name').value.trim();
-      const email = document.getElementById('reg-email').value.trim();
-      const pw = document.getElementById('reg-pw').value.trim();
-      const errEl = document.getElementById('reg-error');
-      const succEl = document.getElementById('reg-success');
-      
+
+      const name     = document.getElementById('reg-name').value.trim();
+      const email    = document.getElementById('reg-email').value.trim();
+      const pw       = document.getElementById('reg-pw').value;
+      const pw2      = document.getElementById('reg-pw2').value;
+      const company  = document.getElementById('reg-company').value.trim();
+      const phone    = document.getElementById('reg-phone').value.trim();
+
+      const errEl     = document.getElementById('reg-error');
+      const successEl = document.getElementById('reg-success');
+      const btnReg    = document.getElementById('btn-register');
+
       errEl.style.display = 'none';
-      succEl.style.display = 'none';
+      successEl.style.display = 'none';
+
+      // 유효성 검사
+      if (!name || !email || !pw || !company) {
+        errEl.textContent = '필수 항목(*)을 모두 입력해 주세요.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      if (pw !== pw2) {
+        errEl.textContent = '비밀번호가 일치하지 않습니다.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      if (pw.length < 8) {
+        errEl.textContent = '비밀번호는 8자 이상이어야 합니다.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      if (!window.SupabaseClient || !SupabaseClient.isConfigured) {
+        errEl.textContent = '⚠️ Supabase 연결이 필요합니다. 관리자에게 문의하세요.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      // 로딩
+      btnReg.disabled = true;
+      btnReg.innerHTML = '<span class="loading-spinner"></span>가입 처리 중...';
 
       try {
-        if (window.SupabaseClient && window.SupabaseClient.isConfigured) {
-          // 1. 회원가입 요청 (meta_data에 role, name 전달)
-          const { data, error } = await window.SupabaseClient.client.auth.signUp({
-            email: email,
-            password: pw,
-            options: {
-              data: {
-                name: name,
-                role: 'ceo', // 최초 가입자는 CEO
-                auth_provider: 'email',
-                company_name: company // 회사명 임시 저장
-              }
-            }
-          });
-          if (error) throw error;
-        } else {
-          // 로컬 환경(Supabase 미연결) 시 임시로 로컬스토리지에 가입정보 저장 (테스트용)
-          let users = [];
-          try {
-            users = JSON.parse(localStorage.getItem('mock_registered_users') || '[]');
-          } catch(e) {}
-          
-          if (users.find(u => u.email === email)) {
-            throw new Error("이미 가입된 이메일입니다.");
-          }
-          
-          users.push({
-            id: 'mgr_local_' + Date.now(),
-            email: email,
-            password: pw,
-            name: name,
-            role: 'ceo',
-            company_name: company,
-            badge: '👑 대표 (CEO)',
-            shortBadge: '👑 CEO',
-            color: '#f59e0b',
-            assignedArtists: []
-          });
-          localStorage.setItem('mock_registered_users', JSON.stringify(users));
-          
-          // 콘솔에 디버깅용으로 남김
-          console.warn("로컬 환경 모드: 계정이 브라우저에 임시 저장되었습니다.");
-        }
+        // CEO 역할로 가입
+        await SupabaseClient.signUp(email, pw, name, 'ceo', phone);
 
-        // 회원가입 성공 시 이전 데이터 초기화 (완전 새로운 화면)
-        const keysToClear = [
-          'HQ_ARTISTS_V5', 'HQ_MANAGERS_V5', 'HQ_VEHICLES_V5', 
-          'HQ_SCHEDULES_V5', 'HQ_NOTIFICATIONS_V2', 'HQ_SUBSCRIPTION_V5',
-          'bp_schedules_v2', 'bp_custom_schedules_v2', 'bp_event_overrides', 'bp_hidden_events',
-          'bp_assigned_artists', 'bp_manager_id', 'bp_user_name', 'bp_user_email'
-        ];
-        keysToClear.forEach(k => localStorage.removeItem(k));
-        
-        succEl.style.display = 'block';
+        // 회사명 로컬에 임시 저장
+        localStorage.setItem('reg_company_name', company);
+
+        successEl.innerHTML = `
+          ✅ <strong>${name}</strong> CEO 계정이 성공적으로 생성되었습니다!<br><br>
+          📧 <strong>${email}</strong>으로 인증 메일이 발송되었습니다.<br>
+          이메일을 확인하여 계정을 활성화한 후 로그인해 주세요.
+        `;
+        successEl.style.display = 'block';
+
+        btnReg.disabled = true;
+        btnReg.innerHTML = '가입 완료 ✓';
+        btnReg.style.background = '#059669';
+
+        // 3초 후 로그인 페이지로 이동
         setTimeout(() => {
           window.location.href = 'admin-login.html';
-        }, 1500);
+        }, 4000);
 
       } catch (err) {
-        console.error(err);
-        errEl.textContent = err.message || '가입 중 오류가 발생했습니다.';
+        console.error('가입 오류:', err);
+        let msg = '가입 처리 중 오류가 발생했습니다. 다시 시도해 주세요.';
+        if (err.message) {
+          if (err.message.includes('already registered') || err.message.includes('already been registered')) {
+            msg = '이미 등록된 이메일 주소입니다. 로그인 페이지로 이동해 주세요.';
+          } else if (err.message.includes('Password should be')) {
+            msg = '비밀번호는 6자 이상이어야 합니다.';
+          } else if (err.message.includes('valid email')) {
+            msg = '올바른 이메일 형식을 입력해 주세요.';
+          }
+        }
+        errEl.textContent = msg;
         errEl.style.display = 'block';
+        btnReg.disabled = false;
+        btnReg.innerHTML = '👑 CEO 계정 가입하기';
       }
     });
   </script>
