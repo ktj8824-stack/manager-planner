@@ -12,10 +12,14 @@ const SupabaseClient = {
   STORAGE_KEY_URL: 'BP_SUPABASE_URL',
   STORAGE_KEY_ANON_KEY: 'BP_SUPABASE_ANON_KEY',
 
+  // 기본 Supabase 연결 정보 (하드코딩)
+  DEFAULT_URL: 'https://gohxflsyhogyxantnlig.supabase.co',
+  DEFAULT_KEY: 'sb_publishable_4BiVB8PhD5kk1Dvtvf6Hkw_8YZL0Mwa',
+
   // 1. 초기화
   init() {
-    const url = localStorage.getItem(this.STORAGE_KEY_URL) || '';
-    const key = localStorage.getItem(this.STORAGE_KEY_ANON_KEY) || '';
+    const url = localStorage.getItem(this.STORAGE_KEY_URL) || this.DEFAULT_URL;
+    const key = localStorage.getItem(this.STORAGE_KEY_ANON_KEY) || this.DEFAULT_KEY;
 
     if (url && key && typeof supabase !== 'undefined') {
       try {
