@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,maximum-scale=1.0,user-scalable=no"/>
+  <meta name="description" content="매니저플래너 - 스마트한 연예인 스케줄 동선 관리"/>
+  <meta name="theme-color" content="#191919"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <meta name="apple-mobile-web-app-title" content="매니저플래너"/>
+  
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6195996093323539"
+     crossorigin="anonymous"></script>
+
+  <!-- OAuth SDKs -->
+  <script src="https://t1.kakaocdn.net/kakao_js_sdk/1.43.1/kakao.min.js" crossorigin="anonymous"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <link rel="icon" type="image/svg+xml" href="icon.svg"/>
+  <title>매니저플래너 | 스마트 연예인 스케줄 관리</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>"/>
+  <link rel="manifest" href="manifest.json"/>
+
+  <link rel="stylesheet" href="css/variables.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/variables.css?v=21">
+  <link rel="stylesheet" href="./css/base.css?v=21">
+  <link rel="stylesheet" href="./css/components.css?v=21">
+  <link rel="stylesheet" href="./css/calendar.css?v=21">
+  <link rel="stylesheet" href="./css/home.css?v=21">
+  <link rel="stylesheet" href="./css/timeline.css?v=21">
+  <link rel="stylesheet" href="./css/register.css?v=21">
+  <link rel="stylesheet" href="./css/login.css?v=21">
+  <link rel="stylesheet" href="./css/profile.css?v=21">
+  <link rel="stylesheet" href="css/upgrade.css?v=21"/>
+</head>
+<body>
+  <div id="app">
+    <!-- HQ 알림 토스트 컨테이너 -->
+    <div id="hq-toast-container" style="position:fixed; top:20px; left:50%; transform:translateX(-50%); width:90%; max-width:400px; z-index:99999; display:flex; flex-direction:column; gap:10px; pointer-events:none;"></div>
+
+    <div id="screen-login" class="screen"></div>
+    <div id="screen-onboarding" class="screen"></div>
+    <div id="screen-home" class="screen active"></div>
+    <div id="screen-register" class="screen"></div>
+    <div id="screen-timeline" class="screen"></div>
+    <div id="screen-profile" class="screen"></div>
+    <div id="screen-upgrade" class="screen"></div>
+  </div>
+
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./js/supabase-client.js?v=155"></script>
+  <script src="./js/admin-data.js?v=155"></script>
+  <script src="./js/data.js?v=155"></script>
+  <script src="./js/api.js?v=155"></script>
+  <script src="./js/utils.js?v=155"></script>
+  <script src="./js/home.js?v=155"></script>
+  <script src="./js/timeline.js?v=155"></script>
+  <script src="./js/register.js?v=155"></script>
+  <script src="./js/login.js?v=155"></script>
+  <script src="./js/onboarding.js?v=155"></script>
+  <script src="./js/profile.js?v=155"></script>
+  <script src="./js/upgrade.js?v=155"></script>
+  <script src="./js/app.js?v=155"></script>
+</body>
+</html>

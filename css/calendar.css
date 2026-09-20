@@ -1,0 +1,144 @@
+/* =========================================
+   BuddyPlanner v2 — 2-Column Home Styles
+   ========================================= */
+
+/* ── Split Layout (handled mainly inline, but adding helpers) ── */
+.split-view {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-app);
+}
+
+.split-left {
+  width: 360px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border-default);
+  overflow-y: auto;
+  background: #ffffff;
+}
+
+.split-right {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--bg-default);
+}
+
+/* ── Mini Calendar (Left) ── */
+.mini-cal-day {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+  color: var(--text-200);
+}
+.mini-cal-day:hover {
+  background: rgba(0,0,0,0.03);
+}
+.mini-cal-day.selected {
+  background: var(--text-100) !important;
+  color: #fff !important;
+}
+.mini-cal-day.today {
+  border: 1px solid var(--text-300);
+}
+
+/* ── Timeline (Right) ── */
+.timeline-grid {
+  position: relative;
+}
+
+.tl-row {
+  display: flex;
+  min-height: 80px;
+  border-top: 1px solid rgba(0,0,0,0.05);
+}
+.tl-row:last-child {
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.tl-time {
+  width: 60px;
+  flex-shrink: 0;
+  text-align: right;
+  padding-right: 16px;
+  padding-top: 12px;
+  font-size: 13px;
+  color: var(--text-400);
+  font-weight: 600;
+}
+
+.tl-content {
+  flex: 1;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tl-event {
+  background: var(--accent-dim);
+  border-left: 4px solid var(--accent);
+  padding: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.tl-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.tl-empty {
+  flex: 1;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-400);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px dashed transparent;
+  transition: all 0.2s;
+  min-height: 64px;
+}
+.tl-empty:hover {
+  border-color: var(--accent);
+  background: rgba(34,201,135,0.05); /* Accent color dim */
+}
+.tl-empty:hover .tl-empty-text {
+  opacity: 1 !important;
+  color: var(--accent);
+}
+
+.tl-abs-empty:hover {
+  background: rgba(34,201,135,0.05);
+}
+.tl-abs-event:hover {
+  transform: translateY(-1px);
+}
+.tl-abs-event.is-sched:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+}
+
+.route-timeline {
+  padding: 16px 8px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.route-node {
+  transition: opacity 0.2s;
+}
+.route-node:hover {
+  opacity: 0.8;
+}

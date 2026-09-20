@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HQ 엔터프라이즈 로그인 | 마스터 스케줄러</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css?v=21">
+  <link rel="stylesheet" href="css/base.css?v=21">
+  
+  <style>
+    body {
+      background: var(--bg-app);
+      color: var(--text-200);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      font-family: 'Pretendard', sans-serif;
+    }
+    
+    .admin-login-wrapper {
+      background: var(--bg-card);
+      border: 1px solid var(--border-default);
+      border-radius: 16px;
+      padding: 48px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: var(--shadow-xl);
+    }
+
+    .admin-login-logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .admin-login-logo svg {
+      width: 72px;
+      height: 72px;
+    }
+
+    .admin-login-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text-100);
+      margin: 16px 0 8px 0;
+      letter-spacing: -0.5px;
+    }
+
+    .admin-login-subtitle {
+      font-size: 14px;
+      color: var(--text-400);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-300);
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid transparent;
+      color: var(--text-100);
+      padding: 14px 16px;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      background: var(--bg-input-focus);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+      padding: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 8px;
+      box-shadow: 0 4px 12px rgba(0,122,255,0.3);
+    }
+
+    .btn-submit:hover {
+      background: #005bb5;
+    }
+
+    .error-msg {
+      color: #ef4444;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      margin-top: 16px;
+      display: none;
+    }
+
+    .info-footer {
+      text-align: center;
+      margin-top: 32px;
+      font-size: 12px;
+      color: var(--text-500);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="admin-login-wrapper">
+    <div class="admin-login-logo">
+      <img src="img/logo.jpg" alt="Logo" style="display:block; margin:0 auto 16px auto; width:80px; height:80px; border-radius:20px; box-shadow:0 8px 16px rgba(0,0,0,0.2);">
+      <h1 class="admin-login-title">마스터 관제 포털</h1>
+      <p class="admin-login-subtitle">HQ ENTERPRISE SCHEDULER</p>
+    </div>
+
+    <form id="admin-login-form">
+      <div class="form-group">
+        <label class="form-label" for="admin-email">사내 그룹웨어 이메일 (ID)</label>
+        <input type="email" id="admin-email" class="form-input" placeholder="이메일 입력" required autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="admin-pw">보안 비밀번호</label>
+        <input type="password" id="admin-pw" class="form-input" placeholder="비밀번호 입력" required autocomplete="current-password">
+      </div>
+      <style>
+        .custom-chk {
+          appearance: none; -webkit-appearance: none;
+          width: 18px; height: 18px;
+          border: 2px solid var(--border-default);
+          border-radius: 4px;
+          background-color: var(--bg-input);
+          cursor: pointer;
+          position: relative;
+          display: inline-block;
+          vertical-align: middle;
+        }
+        .custom-chk:checked {
+          background-color: var(--accent);
+          border-color: var(--accent);
+        }
+        .custom-chk:checked::after {
+          content: "";
+          position: absolute;
+          left: 5px; top: 1px;
+          width: 4px; height: 9px;
+          border: solid white;
+          border-width: 0 2px 2px 0;
+          transform: rotate(45deg);
+        }
+      </style>
+      <div class="form-group" style="display:flex; align-items:center; gap:8px; margin-bottom: 24px;">
+        <input type="checkbox" id="admin-save-id" class="custom-chk" />
+        <label for="admin-save-id" style="font-size:13px; color:var(--text-400); cursor:pointer;">아이디 저장</label>
+      </div>
+      <button type="submit" class="btn-submit">포털 접속 (Sign In)</button>
+      <div id="login-error" class="error-msg">이메일 또는 비밀번호가 일치하지 않습니다.</div>
+    </form>
+
+    <div class="info-footer">
+      엔터테인먼트 마스터 포털을 처음 사용하시나요? <br>
+      <a href="admin-register.html" style="color:var(--accent); text-decoration:underline; margin-top:4px; display:inline-block; font-weight:700;">회사(엔터테인먼트) 최초 가입하기</a>
+    </div>
+  </div>
+
+  <script src="./js/admin-data.js?v=155"></script>
+  <script>
+    document.getElementById('admin-login-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const email = document.getElementById('admin-email').value.trim();
+      const pw = document.getElementById('admin-pw').value.trim();
+      const isSaveId = document.getElementById('admin-save-id').checked;
+      const errEl = document.getElementById('login-error');
+      
+      errEl.style.display = 'none';
+
+      if (window.AuthPersona) {
+        const result = window.AuthPersona.login(email, pw);
+        if (result.success) {
+          // 권한 검증: 본사 관리자(ceo, hq_admin)인지 확인
+          if (result.user.role === 'ceo' || result.user.role === 'hq_admin') {
+            if (isSaveId) {
+              localStorage.setItem('admin_saved_email', email);
+              localStorage.setItem('admin_save_id', 'true');
+            } else {
+              localStorage.removeItem('admin_saved_email');
+              localStorage.removeItem('admin_save_id');
+            }
+            window.location.href = 'admin.html';
+          } else {
+            // 현장 매니저/스태프가 로그인한 경우 앱으로 쫓아냄
+            alert('권한 경고: 해당 계정은 본사 관제 포털에 접근할 수 없습니다. 현장 매니저용 모바일 앱으로 이동합니다.');
+            window.location.href = 'index.html';
+          }
+        } else {
+          errEl.textContent = result.message;
+          errEl.style.display = 'block';
+        }
+      } else {
+        errEl.textContent = '인증 시스템을 불러오지 못했습니다.';
+        errEl.style.display = 'block';
+      }
+    });
+
+    // 이미 본사 권한으로 로그인되어 있다면 즉시 admin.html로 통과
+    window.addEventListener('load', () => {
+      if (localStorage.getItem('bp_logged_in') === 'true') {
+        const role = localStorage.getItem('bp_user_role');
+        if (role === 'ceo' || role === 'hq_admin') {
+          window.location.href = 'admin.html';
+          return;
+        }
+      }
+      
+      // 아이디 저장 데이터 복원
+      if (localStorage.getItem('admin_save_id') === 'true') {
+        const savedEmail = localStorage.getItem('admin_saved_email');
+        if (savedEmail) document.getElementById('admin-email').value = savedEmail;
+        document.getElementById('admin-save-id').checked = true;
+      }
+    });
+  </script>
+</body>
+</html>

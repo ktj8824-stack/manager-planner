@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HQ 엔터테인먼트 마스터 스케줄러</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/calendar.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/timeline.css">
+</head>
+<body>
+  <div class="app-container">
+    <aside class="hq-sidebar">
+      <div class="brand-box">
+        <div class="brand-icon">✨</div>
+        <div class="brand-text">
+          <h1>STAR SCHEDULER</h1>
+          <span>ENTERPRISE MANAGEMENT</span>
+        </div>
+      </div>
+      <nav class="sidebar-section">
+        <div class="sidebar-title">전체 소속 아티스트</div>
+        <div id="artist-filter-list" class="artist-chip-list">
+           <!-- Filters rendered by JS -->
+        </div>
+      </nav>
+      <nav class="sidebar-section">
+        <div class="sidebar-title">담당 매니저 / 배차</div>
+        <div id="manager-status-list" class="artist-chip-list">
+           <!-- Rendered by JS -->
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <button id="btn-open-settings" class="btn-util">⚙️ 관리자 설정</button>
+      </div>
+    </aside>
+
+    <main class="hq-main">
+      <header class="main-header">
+        <div class="header-title-group">
+           <h2>아티스트 마스터 캘린더</h2>
+           <p>엔터테인먼트 통합 스케줄 관리</p>
+        </div>
+        <div class="header-actions">
+           <div class="user-profile">
+             <div class="user-avatar">👑</div>
+             <div class="user-name">홍길동 대표이사<br><small>(👑 CEO)</small></div>
+           </div>
+           <div class="subscription-badge">구독: Standard<br>(2/2명)</div>
+           <button id="btn-open-add-manager" class="btn-secondary" onclick="Admin.openManagerModal()">👥 매니저 관리</button>
+           <button id="btn-export-excel" class="btn-secondary">📊 내보내기</button>
+           <button id="btn-open-add-schedule" class="btn-primary">📅 신규 스케줄 등록</button>
+           <span id="calendar-title" style="display:none;"></span>
+           <button id="btn-open-add-artist" style="display:none;"></button>
+        </div>
+      </header>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-label">오늘 진행중인 일정</div>
+            <div class="stat-val" id="kpi-today-count">0건</div>
+          </div>
+          <div class="stat-icon-wrapper">📅</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-label">헤어/메이크업 경유 일정</div>
+            <div class="stat-val" id="kpi-shop-count">0건</div>
+          </div>
+          <div class="stat-icon-wrapper">💄</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-label">현재 가동중인 차량/팀</div>
+            <div class="stat-val" id="kpi-active-count">0대</div>
+          </div>
+          <div class="stat-icon-wrapper">🚗</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-label">등록된 아티스트</div>
+            <div class="stat-val" id="kpi-artist-count">0팀</div>
+          </div>
+          <div class="stat-icon-wrapper">🌟</div>
+        </div>
+      </div>
+
+      <div class="calendar-wrapper">
+        <div class="calendar-toolbar">
+           <div class="date-nav-group">
+              <div class="nav-btn-box">
+                <button id="btn-nav-prev" class="nav-arrow-btn">◀</button>
+                <button id="btn-nav-today" class="today-btn">오늘</button>
+                <button id="btn-nav-next" class="nav-arrow-btn">▶</button>
+              </div>
+              <h3 id="current-date-text">2026년 9월</h3>
+           </div>
+           <div class="view-tabs">
+              <button id="btn-view-month" class="view-tab-btn active" data-view="month">월간 캘린더</button>
+              <button id="btn-view-week" class="view-tab-btn" data-view="week">주간 시간표</button>
+              <button id="btn-view-day" class="view-tab-btn" data-view="gantt">당일 동선 간트차트</button>
+              <button id="btn-view-timeline" class="view-tab-btn" data-view="kanban">실시간 상황판</button>
+              <button id="btn-view-map" class="view-tab-btn" data-view="map">종합 관제 지도</button>
+              <button id="btn-view-kpi" class="view-tab-btn" data-view="analytics">전사 활동 분석</button>
+           </div>
+        </div>
+
+        <div id="schedule-viewport" class="view-container" style="flex: 1; overflow-y: auto;">
+           <!-- Calendar Grid -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Schedule Form Modal -->
+  <div id="modal-schedule-form" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="schedule-form-title">새 스케줄 등록</h3>
+        <button class="btn-close" data-close="modal-schedule-form">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-schedule">
+
+          <!-- Hidden fields required by admin.js to prevent crashes -->
+
+          <input type="checkbox" id="form-shop-needed" style="display:none;">
+          <div id="shop-fields" style="display:none;"></div>
+          <input type="hidden" id="form-shop-name">
+          <input type="number" id="form-shop-duration" style="display:none;" value="90">
+          <input type="hidden" id="form-shop-address">
+          <input type="hidden" id="form-departure-place">
+
+          <input type="hidden" id="form-date">
+          <input type="hidden" id="form-vehicle">
+          <input type="hidden" id="form-notes">
+          <input type="hidden" id="form-status">
+          <input type="checkbox" id="form-is-secret" style="display:none;">
+
+          <input type="hidden" id="form-sch-id">
+          <div class="form-group">
+            <label class="form-label">스케줄명 (행사/프로그램명)</label>
+            <input type="text" id="form-title" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">담당 아티스트</label>
+            <select id="form-artist" class="form-select" required></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">스케줄 분류</label>
+            <select id="form-category" class="form-select" required>
+              <option value="방송">방송</option>
+              <option value="행사">행사</option>
+              <option value="연습">연습</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">시작 일시</label>
+              <input type="datetime-local" id="form-start-time" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">종료 일시</label>
+              <input type="datetime-local" id="form-end-time" class="form-input" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">메인 행사장 / 촬영 위치</label>
+            <input type="text" id="form-location" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">담당 매니저 배정</label>
+            <select id="form-manager" class="form-select"></select>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" data-close="modal-schedule-form">취소</button>
+            <button type="submit" class="btn-primary">스케줄 저장</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Artist Management Modal -->
+  <div id="modal-artist-management" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🌟 아티스트 목록</h3>
+        <button class="btn-close" data-close="modal-artist-management">×</button>
+      </div>
+      <div class="modal-body">
+        <button id="btn-open-add-artist" class="btn-util" style="margin-bottom:15px; width:100%;">+ 신규 아티스트 등록</button>
+        <div id="artist-management-list" class="artist-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Artist Form Modal -->
+  <div id="modal-artist-form" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-artist-form-title">소속 아티스트 추가</h3>
+        <button class="btn-close" data-close="modal-artist-form">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-artist-add">
+          <input type="hidden" id="edit-artist-id">
+          <div class="form-group">
+            <label class="form-label">아티스트/그룹명</label>
+            <input type="text" id="new-artist-name" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">활동 유형</label>
+            <select id="new-artist-type" class="form-select">
+              <option value="그룹">그룹</option>
+              <option value="솔로">솔로</option>
+              <option value="배우">배우</option>
+              <option value="MC">MC</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">인원수</label>
+            <input type="number" id="new-artist-members" class="form-input" value="1" min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">대표 컬러</label>
+            <input type="color" id="new-artist-color" class="form-input" value="#ff3b30">
+          </div>
+          <div class="form-group">
+            <label class="form-label">프로필 사진 URL</label>
+            <input type="text" id="new-artist-image" class="form-input" placeholder="https://...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">케어 정보 (Rider Card)</label>
+            <textarea id="new-artist-care" class="form-input" rows="3" placeholder="예: 땅콩 알레르기 있음, 특정 브랜드 생수만 마심"></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" data-close="modal-artist-form">취소</button>
+            <button type="submit" class="btn-primary">아티스트 등록</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manager Management Modal -->
+    <div id="modal-manager-management" class="modal-overlay">
+      <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+          <h3 style="display: flex; align-items: center; gap: 8px;">👥 현장 매니저 계정 & 담당 아티스트 배정</h3>
+          <div id="mgr-modal-slot-badge" style="font-size:12px; background:var(--bg-card); color:var(--text-main); padding:4px 8px; border-radius:4px; margin-left:10px;">슬롯: -/-</div>
+          <button class="btn-close" data-close="modal-manager-management">×</button>
+        </div>
+        <div class="modal-body">
+          
+          <div style="background:var(--bg-card); border-radius:var(--radius-md); padding:15px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border-color);">
+            <div style="font-size:13px; color:var(--text-main);">💡 각 매니저에게 소속 아티스트를 배정하면, 매니저 로그인 시 배정된 아티스트 일정만 격리됩니다.</div>
+            <button class="btn-secondary" style="padding:6px 12px; font-size:12px; border-color:var(--primary-light);">💳 슬롯 추가</button>
+          </div>
+
+          <div id="manager-mgmt-list" style="display:flex; flex-direction:column; gap:10px; margin-bottom: 30px;">
+            <!-- Managers will be rendered here -->
+          </div>
+
+          <form id="form-create-manager" style="margin-top: 20px;">
+            <h4 style="margin-bottom: 15px; font-size: 15px; display:flex; align-items:center; gap:5px; font-weight: 600;">➕ 신규 매니저 계정 생성</h4>
+            <div id="mgr-form-slot-warning" style="display:none; color: #ef4444; font-size: 12px; margin-bottom: 10px;">더 이상 매니저를 생성할 수 없습니다.</div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+              <input type="text" id="new-mgr-name" placeholder="이름" required style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; background: var(--bg-body, #f8fafc); font-size: 14px; outline: none; box-sizing: border-box;">
+              
+              <div style="position: relative;">
+                <input type="text" id="new-mgr-email-id" placeholder="아이디" required autocomplete="off" style="width: 100%; padding: 12px 100px 12px 16px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; background: var(--bg-body, #f8fafc); font-size: 14px; outline: none; box-sizing: border-box;">
+                <span id="new-mgr-email-domain" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 14px;">@star-ent.com</span>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px;">
+              <input type="password" id="new-mgr-pw" placeholder="비밀번호" required autocomplete="new-password" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; background: var(--bg-body, #f8fafc); font-size: 14px; outline: none; box-sizing: border-box;">
+              
+              <input type="text" id="new-mgr-phone" placeholder="연락처" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; background: var(--bg-body, #f8fafc); font-size: 14px; outline: none; box-sizing: border-box;">
+            </div>
+            
+            <div style="display:flex; justify-content:flex-end;">
+              <button type="submit" id="btn-submit-mgr-create" style="padding: 10px 24px; font-size: 14px; font-weight: 500; border-radius: 20px; background: #6366f1; color: white; border: none; cursor: pointer;">매니저 계정 생성</button>
+            </div>
+          </form>
+
+        </div>
+        <div style="padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
+          <button type="button" class="btn-secondary" data-close="modal-manager-management" style="padding: 8px 24px;">닫기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Noti Form -->
+  <div id="modal-noti-form" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>전체 공지 / 알림 발송</h3>
+        <button class="btn-close" data-close="modal-noti-form">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+           <label class="form-label">수신자</label>
+           <select class="form-select"><option>전체 매니저</option></select>
+        </div>
+        <div class="form-group">
+           <label class="form-label">알림 메시지</label>
+           <textarea class="form-input" rows="4"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" data-close="modal-noti-form">취소</button>
+          <button type="button" id="btn-send-noti" class="btn-primary">발송하기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="modal-settings" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>관리자 환경 설정</h3>
+        <button class="btn-close" data-close="modal-settings">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Project URL (API URL)</label>
+          <input type="text" class="form-input" id="setting-supabase-url">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Anon / Public API Key</label>
+          <input type="text" class="form-input" id="setting-supabase-key">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" data-close="modal-settings">취소</button>
+          <button type="button" id="btn-save-settings" class="btn-primary">설정 저장</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/admin-data.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/timeline.js"></script>
+
+
+  <input type="text" id="form-departure-place">
+  <select id="form-status"></select>
+  <input type="checkbox" id="form-is-secret">
+  <input type="text" id="form-outfit">
+  <textarea id="form-notes"></textarea>
+</div>
+
+<div id="modal-schedule-detail" class="modal-overlay">
+  <div class="modal-content">
+    <div id="detail-body-content"></div>
+    <button id="btn-edit-schedule">Edit</button>
+    <button id="btn-delete-schedule">Delete</button>
+  </div>
+</div>
+
+
+
+<div id="hover-schedule-popover" style="display:none;"></div>
+<div id="kpi-hover-popover" style="display:none;"></div>
+<button id="btn-inner-add-artist" style="display:none;"></button>
+
+<div id="hq-role-switcher-badge" style="display:none;">
+  <span id="hq-role-badge-icon"></span>
+  <span id="hq-role-badge-text"></span>
+</div>
+<span id="hq-brand-title" style="display:none;"></span>
+<div id="modal-role-selector" style="display:none;"><div id="role-selector-list"></div></div>
+
+<form id="form-send-message" style="display:none;">
+  <select id="msg-target-manager"></select>
+  <input type="text" id="msg-title">
+  <textarea id="msg-content"></textarea>
+  <input type="checkbox" id="msg-is-urgent">
+</form>
+<div id="modal-send-message" style="display:none;"></div>
+
+<div style="display:none;">
+  <input id="care-allergies">
+  <input id="care-beverages">
+  <input id="care-vehicle">
+  <input id="care-emergency">
+  <input id="care-contacts">
+</div>
+
+
+
+<div id="modal-company-subscription" style="display:none;">
+  <span id="sub-badge-text"></span>
+  <div id="sub-company-name"></div>
+  <div id="sub-biz-info"></div>
+  <div id="sub-monthly-total"></div>
+  <div id="sub-slot-progress-text"></div>
+  <div id="sub-slot-progress-bar"></div>
+  <div id="sub-additional-slot-count"></div>
+  <div id="sub-calc-additional-fee"></div>
+  <div id="sub-calc-total-fee"></div>
+</div>
+
+<div id="modal-supabase-config" style="display:none;">
+  <input id="cfg-supabase-url">
+  <input id="cfg-supabase-key">
+  <div id="supabase-status-badge"></div>
+  <div id="supabase-status-dot"></div>
+  <div id="supabase-status-text"></div>
+</div>
+\n</body>
+</html>

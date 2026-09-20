@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>공진문 대표 표준 명함 디자인 (90mm x 50mm) | 매니저플래너</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Pretendard:wght@300;400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #0b0f17;
+      color: #f8fafc;
+      font-family: 'Pretendard', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .header-box {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .header-box h1 {
+      font-size: 24px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .header-box p {
+      font-size: 14px;
+      color: #94a3b8;
+    }
+
+    /* Cards Layout Container */
+    .cards-container {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    @media (min-width: 960px) {
+      .cards-container {
+        flex-direction: row;
+        gap: 36px;
+      }
+    }
+
+    .card-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .card-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #d4af37;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    /* ── 한국 표준 규격 90mm x 50mm (정확한 9:5 직사각형 비율) ── */
+    .business-card {
+      width: 450px;
+      height: 250px; /* 90mm : 50mm = 9 : 5 비율 */
+      border-radius: 14px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(145deg, #151a23, #0c1017);
+      border: 1.8px solid #caa85d;
+      box-shadow: 
+        0 20px 40px -10px rgba(0, 0, 0, 0.9),
+        0 0 18px rgba(202, 168, 93, 0.2),
+        inset 0 0 12px rgba(202, 168, 93, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .business-card:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 
+        0 30px 50px -12px rgba(0, 0, 0, 0.95),
+        0 0 25px rgba(202, 168, 93, 0.35),
+        inset 0 0 15px rgba(202, 168, 93, 0.2);
+    }
+
+    /* ── FRONT (앞면) 가로형 직사각형 디자인 ── */
+    .card-front {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 24px 30px;
+    }
+
+    .front-logo-circle {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      background-image: 
+        linear-gradient(#151a23, #151a23), 
+        linear-gradient(135deg, #6ee7b7, #3b82f6, #ec4899, #f59e0b);
+      background-origin: border-box;
+      background-clip: content-box, border-box;
+      box-shadow: 
+        0 0 18px rgba(59, 130, 246, 0.3),
+        0 0 25px rgba(236, 72, 153, 0.25),
+        inset 0 0 15px rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+
+    .front-logo-img {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .front-title {
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      background: linear-gradient(180deg, #fff4d1 0%, #caa85d 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 4px;
+      text-shadow: 0 2px 8px rgba(202, 168, 93, 0.25);
+    }
+
+    .front-subtitle {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 8px;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* ── BACK (뒷면) 가로형 직사각형 디자인 ── */
+    .card-back {
+      justify-content: space-between;
+      padding: 26px 30px;
+    }
+
+    .back-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .back-name-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .back-name {
+      font-size: 21px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .back-name span {
+      font-size: 12px;
+      font-weight: 500;
+      color: #94a3b8;
+      letter-spacing: 0.5px;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .back-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: #caa85d;
+      letter-spacing: 0.8px;
+      margin-top: 2px;
+    }
+
+    .back-logo-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1.5px solid #caa85d;
+      background: rgba(202, 168, 93, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 10px rgba(202, 168, 93, 0.2);
+    }
+
+    .back-logo-badge img {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      object-fit: cover;
+    }
+
+    .back-divider {
+      width: 100%;
+      height: 1px;
+      background: rgba(202, 168, 93, 0.2);
+      margin: 8px 0;
+    }
+
+    .back-contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 16px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: #d1d5db;
+      letter-spacing: 0.2px;
+    }
+
+    .back-contact-grid div {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .back-contact-grid .icon {
+      color: #caa85d;
+      font-size: 11px;
+    }
+
+    .back-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 8px;
+      color: #64748b;
+      font-family: 'Montserrat', sans-serif;
+      letter-spacing: 0.5px;
+      padding-top: 4px;
+    }
+
+    /* Print Controls */
+    .action-bar {
+      margin-top: 36px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-action {
+      background: linear-gradient(135deg, #caa85d, #9a7833);
+      color: #0b0f17;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: opacity 0.2s;
+      box-shadow: 0 4px 15px rgba(202, 168, 93, 0.4);
+    }
+
+    .btn-action:hover {
+      opacity: 0.9;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+        padding: 0;
+      }
+      .header-box, .action-bar, .card-label {
+        display: none !important;
+      }
+      .cards-container {
+        gap: 15mm;
+      }
+      .business-card {
+        width: 90mm !important;
+        height: 50mm !important;
+        box-shadow: none !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-box">
+    <h1>🎬 매니저플래너 공식 대표 명함 (표준 90mm × 50mm)</h1>
+    <p>국내 인쇄소 발주 표준 가로 직사각형 규격 디자인</p>
+  </div>
+
+  <div class="cards-container">
+    <!-- FRONT (앞면) -->
+    <div class="card-wrapper">
+      <div class="card-label">Front (앞면 - 90 × 50mm)</div>
+      <div class="business-card card-front">
+        <div class="front-logo-circle">
+          <img src="img/logo.jpg" alt="MP Logo" class="front-logo-img">
+        </div>
+        <div class="front-title">ManagerPlanner</div>
+        <div class="front-subtitle">ENTERPRISE ARTIST & ROAD MANAGEMENT</div>
+      </div>
+    </div>
+
+    <!-- BACK (뒷면) -->
+    <div class="card-wrapper">
+      <div class="card-label">Back (뒷면 - 90 × 50mm)</div>
+      <div class="business-card card-back">
+        <div class="back-header">
+          <div class="back-name-group">
+            <div class="back-name">
+              공 진 문 <span>(Jinmoon Kong)</span>
+            </div>
+            <div class="back-title">CEO / Founder</div>
+          </div>
+          <div class="back-logo-badge">
+            <img src="img/logo.jpg" alt="MP Logo">
+          </div>
+        </div>
+
+        <div class="back-divider"></div>
+
+        <div class="back-contact-grid">
+          <div><span class="icon">M.</span> 010-9002-9591</div>
+          <div><span class="icon">E.</span> ceo@managerplanner.com</div>
+          <div><span class="icon">W.</span> managerplanner.com</div>
+          <div><span class="icon">C.</span> Star Ent / ManagerPlanner</div>
+        </div>
+
+        <div class="back-footer">
+          <span>HIGH-PRECISION ROAD & VENUE INTELLIGENCE</span>
+          <span>SEOUL, KOREA</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="action-bar">
+    <button class="btn-action" onclick="window.print()">🖨️ 표준 규격 인쇄 / PDF 저장</button>
+  </div>
+
+</body>
+</html>
