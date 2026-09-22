@@ -1116,7 +1116,8 @@ document.addEventListener('DOMContentLoaded', () => {
   async function renderMonthView() {
     const year = state.currentDate.getFullYear();
     const month = state.currentDate.getMonth();
-    el.calendarTitle.textContent = `${year}년 ${month + 1}월`;
+    if (el.calendarTitle) el.calendarTitle.textContent = `${year}년 ${month + 1}월`;
+    if (el.currentDateText) el.currentDateText.textContent = `${year}년 ${month + 1}월`;
 
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
@@ -1130,24 +1131,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const artists = await window.hqStore.getArtists();
 
     let html = `
-      <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:8px; width:100%;">
-        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--accent-pink); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color);">일</div>
-        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color);">월</div>
-        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color);">화</div>
-        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color);">수</div>
-        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color);">목</div>
-        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color);">금</div>
-        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--accent-cyan); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color);">토</div>
+      <div style="display:grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap:8px; width:100%; box-sizing:border-box;">
+        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--accent-pink); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">일</div>
+        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">월</div>
+        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">화</div>
+        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">수</div>
+        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">목</div>
+        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">금</div>
+        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--accent-cyan); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">토</div>
     `;
 
-    // 이전 달 빈 칸 (고정 110px)
+    // 이전 달 빈 칸 (고정 110px, 균등 너비, 패딩 0 초기화)
     for (let i = 0; i < startDayOfWeek; i++) {
-      html += `<div class="cal-cell empty" style="background:transparent; border:1px dashed rgba(0,0,0,0.08); border-radius:8px; height:110px; min-height:110px; max-height:110px;"></div>`;
+      html += `<div class="cal-empty-slot" style="background:transparent; border:1px dashed rgba(0,0,0,0.08); border-radius:8px; height:110px; min-height:110px; max-height:110px; min-width:0; box-sizing:border-box; padding:0; margin:0;"></div>`;
     }
 
     const todayStr = fmtDate(new Date());
 
-    // 이번 달 날짜들 (고정 110px 및 심플 일정 제목 칩)
+    // 이번 달 날짜들 (고정 110px 및 심플 일정 제목 칩, min-width:0 균등 배분)
     for (let day = 1; day <= totalDays; day++) {
       const d = new Date(year, month, day);
       const dateStr = fmtDate(d);
@@ -1160,12 +1161,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       html += `
         <div class="cal-cell ${isToday ? 'today' : ''}" data-date="${dateStr}" 
-          style="background:var(--bg-card); border:${isToday ? '2px solid var(--primary)' : '1px solid var(--border-color)'}; border-radius:8px; height:110px; max-height:110px; min-height:110px; padding:8px 10px; display:flex; flex-direction:column; gap:4px; cursor:pointer; transition:all 0.2s; overflow:hidden; position:relative;" onmouseenter="this.style.background='var(--bg-card-hover)'" onmouseleave="this.style.background='var(--bg-card)'">
+          style="background:var(--bg-card); border:${isToday ? '2px solid var(--primary)' : '1px solid var(--border-color)'}; border-radius:8px; height:110px; max-height:110px; min-height:110px; min-width:0; box-sizing:border-box; padding:8px 10px; display:flex; flex-direction:column; gap:4px; cursor:pointer; transition:all 0.2s; overflow:hidden; position:relative;" onmouseenter="this.style.background='var(--bg-card-hover)'" onmouseleave="this.style.background='var(--bg-card)'">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
             <span style="font-size:14px; font-weight:800; color:${dayColor};">${day}</span>
             ${daySchedules.length > 0 ? `<span style="font-size:10px; background:rgba(79,70,229,0.1); color:#4f46e5; padding:1px 6px; border-radius:10px; font-weight:700;">${daySchedules.length}건</span>` : ''}
           </div>
-          <div class="cell-events" style="display:flex; flex-direction:column; gap:3px; overflow:hidden; flex:1;">
+          <div class="cell-events" style="display:flex; flex-direction:column; gap:3px; overflow:hidden; flex:1; min-width:0;">
       `;
 
       // 최대 2개만 깔끔한 제목 칩으로 노출
@@ -1175,7 +1176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const artColor = isSec ? '#9333ea' : (art ? art.color : '#4f46e5');
         const lockPrefix = isSec ? '🔒 ' : '';
         html += `
-          <div class="cal-event-pill" style="background:${artColor}; color:#fff; padding:0 8px; height:23px; line-height:23px; border-radius:5px; font-size:11px; font-weight:700; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.05); border-left:3px solid ${isSec ? '#f43f5e' : 'rgba(255,255,255,0.9)'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0;" data-sch-id="${sch.id}">
+          <div class="cal-event-pill" style="background:${artColor}; color:#fff; padding:0 8px; height:23px; line-height:23px; border-radius:5px; font-size:11px; font-weight:700; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.05); border-left:3px solid ${isSec ? '#f43f5e' : 'rgba(255,255,255,0.9)'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; min-width:0;" data-sch-id="${sch.id}">
             ${lockPrefix}${art?.emoji || '✨'} ${sch.title}
           </div>
         `;
@@ -1203,7 +1204,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const year = weekStart.getFullYear();
     const month = weekStart.getMonth() + 1;
-    el.calendarTitle.textContent = `${year}년 ${month}월 주간 타임테이블`;
+    if (el.calendarTitle) el.calendarTitle.textContent = `${year}년 ${month}월 주간 타임테이블`;
+    if (el.currentDateText) el.currentDateText.textContent = `${year}년 ${month}월`;
 
     let allSchedules = await window.hqStore.getSchedules();
     if (state.selectedArtistFilter !== 'ALL') {
@@ -1221,7 +1223,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
 
     let html = `
-      <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:12px; min-height:500px;">
+      <div style="display:grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap:12px; min-height:500px; width:100%; box-sizing:border-box;">
     `;
 
     weekDays.forEach((d, idx) => {
@@ -1230,7 +1232,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const daySchedules = allSchedules.filter(s => s.date === dateStr);
 
       html += `
-        <div style="background:var(--bg-card); border-radius:10px; padding:12px; border:${isToday ? '2px solid var(--primary)' : '1px solid var(--border-color)'}; display:flex; flex-direction:column; gap:10px;">
+        <div style="background:var(--bg-card); border-radius:10px; padding:12px; border:${isToday ? '2px solid var(--primary)' : '1px solid var(--border-color)'}; display:flex; flex-direction:column; gap:10px; min-width:0; box-sizing:border-box;">
           <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:8px;">
             <span style="font-weight:700; color:${idx === 0 ? '#ef4444' : idx === 6 ? '#3b82f6' : '#0f172a'};">${dayNames[idx]}요일 (${d.getDate()}일)</span>
             <span style="font-size:12px; color:#64748b;">${daySchedules.length}건</span>
@@ -1249,10 +1251,10 @@ document.addEventListener('DOMContentLoaded', () => {
           const art = artists.find(a => a.id === sch.artistId);
           const artColor = art ? art.color : '#4f46e5';
           html += `
-            <div class="cal-event-pill" style="--art-color: ${artColor}; padding:8px; border-radius:6px; cursor:pointer;" data-sch-id="${sch.id}">
+            <div class="cal-event-pill" style="--art-color: ${artColor}; padding:8px; border-radius:6px; cursor:pointer; min-width:0; overflow:hidden;" data-sch-id="${sch.id}">
               <div style="font-weight:600; font-size:12px; color:#ffffff;">${sch.startTime} ~ ${sch.endTime}</div>
-              <div style="font-size:13px; font-weight:700; color:#ffffff; margin:2px 0;">${displayTitle}</div>
-              <div style="font-size:11px; color:rgba(255,255,255,0.8);">👤 ${sch.artistName || '아티스트'} | 🚗 ${sch.managerName || '매니저'}</div>
+              <div style="font-size:13px; font-weight:700; color:#ffffff; margin:2px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${displayTitle}</div>
+              <div style="font-size:11px; color:rgba(255,255,255,0.8); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">👤 ${sch.artistName || '아티스트'} | 🚗 ${sch.managerName || '매니저'}</div>
             </div>
           `;
         });
@@ -1271,7 +1273,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── 3. 아티스트별 간트/타임라인 뷰 (Gantt View) ──
   async function renderGanttView() {
     const todayStr = fmtDate(state.currentDate);
-    el.calendarTitle.textContent = `${todayStr} 아티스트별 타임라인 (Gantt)`;
+    if (el.calendarTitle) el.calendarTitle.textContent = `${todayStr} 아티스트별 타임라인 (Gantt)`;
+    if (el.currentDateText) {
+      const y = state.currentDate.getFullYear();
+      const m = state.currentDate.getMonth() + 1;
+      const d = state.currentDate.getDate();
+      el.currentDateText.textContent = `${y}년 ${m}월 ${d}일`;
+    }
 
     const artists = await window.hqStore.getArtists();
     const schedules = await window.hqStore.getSchedules({ date: todayStr });
@@ -1326,7 +1334,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── 4. 실시간 관제 칸반 보드 뷰 (Kanban View) ──
   async function renderKanbanView() {
     const todayStr = fmtDate(state.currentDate);
-    el.calendarTitle.textContent = `${todayStr} 실시간 상황판 (Kanban Control)`;
+    if (el.calendarTitle) el.calendarTitle.textContent = `${todayStr} 실시간 상황판 (Kanban Control)`;
+    if (el.currentDateText) {
+      const y = state.currentDate.getFullYear();
+      const m = state.currentDate.getMonth() + 1;
+      const d = state.currentDate.getDate();
+      el.currentDateText.textContent = `${y}년 ${m}월 ${d}일`;
+    }
 
     let schedules = await window.hqStore.getSchedules({ date: todayStr });
     if (state.selectedArtistFilter !== 'ALL') {
@@ -1441,7 +1455,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── 5. 종합 관제 지도 뷰 (Map View) ──
   async function renderMapView() {
     const todayStr = fmtDate(state.currentDate);
-    el.calendarTitle.textContent = `${todayStr} 종합 관제 지도 (Control Map)`;
+    if (el.calendarTitle) el.calendarTitle.textContent = `${todayStr} 종합 관제 지도 (Control Map)`;
+    if (el.currentDateText) {
+      const y = state.currentDate.getFullYear();
+      const m = state.currentDate.getMonth() + 1;
+      const d = state.currentDate.getDate();
+      el.currentDateText.textContent = `${y}년 ${m}월 ${d}일`;
+    }
 
     let schedules = await window.hqStore.getSchedules({ date: todayStr });
     if (state.selectedArtistFilter !== 'ALL') {
@@ -1556,7 +1576,8 @@ document.addEventListener('DOMContentLoaded', () => {
   async function renderAnalyticsView() {
     const year = state.currentDate.getFullYear();
     const month = state.currentDate.getMonth() + 1;
-    el.calendarTitle.textContent = `${year}년 ${month}월 전사 활동 분석 리포트`;
+    if (el.calendarTitle) el.calendarTitle.textContent = `${year}년 ${month}월 전사 활동 분석 리포트`;
+    if (el.currentDateText) el.currentDateText.textContent = `${year}년 ${month}월`;
 
     const allSchedules = await window.hqStore.getSchedules();
     const artists = await window.hqStore.getArtists();
@@ -2000,7 +2021,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     el.scheduleViewport.addEventListener('mouseover', (e) => {
       const cell = e.target.closest('.cal-cell');
-      if (!cell || !cell.dataset.date || cell.classList.contains('empty')) {
+      if (!cell || !cell.dataset.date || cell.classList.contains('cal-empty-slot')) {
         scheduleHide(200);
         return;
       }
@@ -2110,7 +2131,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       const cell = e.target.closest('.cal-cell');
-      if (cell && cell.dataset.date && !cell.classList.contains('empty')) {
+      if (cell && cell.dataset.date && !cell.classList.contains('cal-empty-slot')) {
         openScheduleFormModal(cell.dataset.date);
       }
     });
