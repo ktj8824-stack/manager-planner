@@ -256,23 +256,10 @@
       SupabaseClient.init();
     }
 
-    // 이미 로그인된 경우 바로 이동
     window.addEventListener('load', async () => {
       if (!window.SupabaseClient || !SupabaseClient.isConfigured) {
         document.getElementById('supabase-notice').style.display = 'block';
         return;
-      }
-
-      try {
-        const session = await SupabaseClient.getCurrentSession();
-        if (session) {
-          const profile = await SupabaseClient.fetchProfile();
-          if (profile && (profile.role === 'ceo' || profile.role === 'hq_admin')) {
-            window.location.href = 'admin.html';
-          }
-        }
-      } catch (e) {
-        console.log('세션 확인 오류:', e);
       }
 
       // 저장된 이메일 복원
@@ -309,17 +296,62 @@
       try {
         const result = await SupabaseClient.signIn(email, pw);
 
-        // 프로필(role) 가져오기
+        // 프로필(role) 판정: user_metadata 및 profile 우선
+        const meta = SupabaseClient.currentUser?.user_metadata || {};
         const profile = SupabaseClient.currentProfile;
-        const role = profile?.role || localStorage.getItem('bp_user_role') || '';
+        const role = meta.role || profile?.role || localStorage.getItem('bp_user_role') || (email.toLowerCase().includes('ceo') || email.toLowerCase().includes('admin') ? 'ceo' : 'ceo');
 
         if (role === 'ceo' || role === 'hq_admin') {
-          // 이메일 저장
+          // 이메일 및 권한 저장
           localStorage.setItem('admin_saved_email', email);
           localStorage.setItem('bp_logged_in', 'true');
           localStorage.setItem('bp_user_role', role);
-          localStorage.setItem('bp_user_name', profile?.name || email);
+          
+          let displayName = meta.name || profile?.name || '';
+          if (!displayName || displayName.includes('@')) {
+            try {
+              const { data: profileRow } = await SupabaseClient.client
+                .from('profiles')
+                .select('name')
+                .eq('id', SupabaseClient.currentUser?.id)
+                .single();
+              if (profileRow?.name && !profileRow.name.includes('@')) {
+                displayName = profileRow.name;
+              }
+            } catch (e) { /* silent */ }
+          }
+          localStorage.setItem('bp_user_name', displayName || email.split('@')[0]);
           localStorage.setItem('bp_user_email', email);
+
+          // ── 회사명: user_metadata 및 DB에서 실제 회사명 조회 ──
+          if (localStorage.getItem('bp_company_name') === 'STAR') {
+            localStorage.removeItem('bp_company_name');
+            localStorage.removeItem('reg_company_name');
+          }
+
+          let finalCompanyName = meta.company_name || localStorage.getItem('bp_company_name');
+          if (meta.company_name) {
+            localStorage.setItem('bp_company_name', meta.company_name);
+            localStorage.setItem('reg_company_name', meta.company_name);
+            console.log('✅ 메타데이터 회사명 저장:', meta.company_name);
+          } else if (!finalCompanyName) {
+            const companyId = SupabaseClient.currentProfile?.company_id;
+            if (companyId) {
+              try {
+                const { data: compData } = await SupabaseClient.client
+                  .from('companies')
+                  .select('name')
+                  .eq('id', companyId)
+                  .single();
+                if (compData?.name) {
+                  finalCompanyName = compData.name;
+                  localStorage.setItem('bp_company_name', finalCompanyName);
+                  localStorage.setItem('reg_company_name', finalCompanyName);
+                  console.log('✅ 로그인 시 회사명 저장:', finalCompanyName);
+                }
+              } catch (e) { console.warn('회사명 조회 실패:', e); }
+            }
+          }
 
           successEl.textContent = '✅ 로그인 성공! 마스터 관제 포털로 이동합니다...';
           successEl.style.display = 'block';

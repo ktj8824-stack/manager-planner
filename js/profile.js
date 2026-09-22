@@ -290,24 +290,32 @@ const Profile = {
     });
   },
 
-  logout() {
+  async logout() {
     if (confirm('정말 로그아웃 하시겠습니까?')) {
       const provider = localStorage.getItem('bp_provider');
       
       if (window.SupabaseClient) {
-        window.SupabaseClient.signOut();
+        try {
+          await window.SupabaseClient.signOut();
+        } catch (e) {
+          console.warn('Supabase signOut error:', e);
+        }
       }
 
       // 카카오 로그아웃 처리
       if (provider === 'kakao' && typeof Kakao !== 'undefined' && Kakao.Auth) {
-        Kakao.Auth.logout(() => {
-          console.log('카카오 세션 만료');
-        });
+        try {
+          Kakao.Auth.logout(() => {
+            console.log('카카오 세션 만료');
+          });
+        } catch (e) {}
       }
       
       // 구글 로그아웃 처리
-      if (provider === 'google' && typeof google !== 'undefined') {
-        google.accounts.id.disableAutoSelect();
+      if (provider === 'google' && typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+        try {
+          google.accounts.id.disableAutoSelect();
+        } catch (e) {}
       }
 
       localStorage.removeItem('bp_logged_in');
@@ -317,6 +325,9 @@ const Profile = {
       localStorage.removeItem('bp_user_name');
       localStorage.removeItem('bp_user_email');
       localStorage.removeItem('bp_user_role');
+      localStorage.removeItem('bp_company_name');
+      localStorage.removeItem('bp_manager_filter');
+      localStorage.removeItem('bp_onboarded');
       
       U.toast('로그아웃 되었습니다.');
       App.navigate('login');

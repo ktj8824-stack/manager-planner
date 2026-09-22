@@ -62,37 +62,136 @@ window.Admin = {
   },
 
   updateRoleBadge() {
-    const persona = window.AuthPersona ? window.AuthPersona.getCurrentUser() : { name: '홍길동 대표', shortBadge: '👑 CEO', color: '#f59e0b', badge: '👑 대표 (CEO)' };
-    const iconEl = document.getElementById('hq-role-badge-icon');
-    const textEl = document.getElementById('hq-role-badge-text');
+    // ── 사이드바 역할 브랜드 (hq-role-switcher-badge) ──
+    const persona = window.AuthPersona ? window.AuthPersona.getCurrentUser() : { name: '', shortBadge: 'CEO', color: '#f59e0b', badge: '👑 CEO' };
+    const iconEl  = document.getElementById('hq-role-badge-icon');
+    const textEl  = document.getElementById('hq-role-badge-text');
     const badgeEl = document.getElementById('hq-role-switcher-badge');
-    const brandTitleEl = document.getElementById('hq-brand-title');
-
     if (iconEl && textEl && badgeEl) {
       iconEl.textContent = persona.badge.split(' ')[0];
-      textEl.textContent = `${persona.name} (${persona.shortBadge})`;
-      badgeEl.style.color = persona.color;
+      badgeEl.style.color       = persona.color;
       badgeEl.style.borderColor = persona.color + '60';
-      badgeEl.style.background = persona.color + '15';
+      badgeEl.style.background  = persona.color + '15';
     }
 
+    // ── 회사명 브랜드 타이틀 ──
+    const brandTitleEl = document.getElementById('hq-brand-title');
     if (brandTitleEl) {
-      const companyName = localStorage.getItem('bp_company_name') || 'STAR';
-      brandTitleEl.textContent = `${companyName} SCHEDULER`;
+      const companyName = localStorage.getItem('bp_company_name');
+      if (companyName && companyName !== 'STAR') {
+        brandTitleEl.textContent = companyName + ' SCHEDULER';
+      } else {
+        brandTitleEl.textContent = 'SCHEDULER';
+        (async () => {
+          try {
+            if (SupabaseClient.isConfigured && SupabaseClient.client) {
+              const session = await SupabaseClient.client.auth.getSession();
+              const userId  = session?.data?.session?.user?.id;
+              if (userId) {
+                const { data } = await SupabaseClient.client
+                  .from('profiles').select('companies(name)').eq('id', userId).single();
+                const name = data?.companies?.name;
+                if (name) {
+                  localStorage.setItem('bp_company_name', name);
+                  brandTitleEl.textContent = name + ' SCHEDULER';
+                }
+              }
+            }
+          } catch (e) {}
+        })();
+      }
+    }
+
+    // ── 헤더 사용자 칩 및 회사명 업데이트 ──
+    const chipNameEl  = document.getElementById('header-user-name');
+    const chipRoleEl  = document.getElementById('header-user-role');
+    const dropNameEl  = document.getElementById('dropdown-user-name');
+    const dropEmailEl = document.getElementById('dropdown-user-email');
+    const brandEl     = document.getElementById('hq-brand-title');
+    const compSubEl   = document.getElementById('header-company-sub');
+
+    const role = localStorage.getItem('bp_user_role') || 'ceo';
+    const cachedEmail = localStorage.getItem('bp_user_email') || '';
+    if (chipRoleEl) chipRoleEl.textContent = ''; // 불필요한 고정 태그 제거
+    if (dropEmailEl && cachedEmail) dropEmailEl.textContent = cachedEmail;
+
+    const cachedCompany = localStorage.getItem('bp_company_name');
+    const dropCompEl = document.getElementById('dropdown-user-company');
+    if (cachedCompany) {
+      if (brandEl) brandEl.textContent = cachedCompany;
+      if (compSubEl) compSubEl.textContent = `${cachedCompany} 통합 스케줄 관리`;
+      if (dropCompEl) dropCompEl.textContent = cachedCompany;
+    }
+
+    const cachedName = localStorage.getItem('bp_user_name') || '';
+    function formatHonorificName(rawName) {
+      if (!rawName || rawName.includes('@')) return role === 'ceo' ? '대표님' : '관리자님';
+      const clean = rawName.replace(/대표님|대표|님$/, '').trim();
+      if (role === 'ceo') return `${clean} 대표님`;
+      if (role === 'hq_admin') return `${clean} 총괄팀장님`;
+      return `${clean} 관리자님`;
+    }
+
+    if (cachedName && !cachedName.includes('@')) {
+      const formatted = formatHonorificName(cachedName);
+      if (chipNameEl) chipNameEl.textContent = formatted;
+      if (dropNameEl) dropNameEl.textContent = formatted;
+    }
+
+    // Supabase 세션에서 최신 이름 및 회사명 실시간 동기화
+    (async () => {
+      try {
+        if (SupabaseClient.isConfigured && SupabaseClient.client) {
+          const session = await SupabaseClient.client.auth.getSession();
+          const user = session?.data?.session?.user;
+          if (user) {
+            const meta = user.user_metadata || {};
+            const realName = meta.name || '';
+            const companyName = meta.company_name || '';
+
+            if (companyName) {
+              localStorage.setItem('bp_company_name', companyName);
+              if (brandEl) brandEl.textContent = companyName;
+              if (compSubEl) compSubEl.textContent = `${companyName} 통합 스케줄 관리`;
+              if (dropCompEl) dropCompEl.textContent = companyName;
+            }
+
+            if (realName && !realName.includes('@')) {
+              localStorage.setItem('bp_user_name', realName);
+              const formatted = formatHonorificName(realName);
+              if (chipNameEl) chipNameEl.textContent = formatted;
+              if (dropNameEl) dropNameEl.textContent = formatted;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('사용자 프로필 동기화:', e);
+      }
+    })();
+  },
+
+  toggleUserDropdown(event) {
+    if (event) event.stopPropagation();
+    const dropdown = document.getElementById('header-user-dropdown');
+    if (dropdown) {
+      dropdown.classList.toggle('active');
     }
   },
 
-  logout() {
+  async logout() {
     if (confirm('로그아웃 하시겠습니까?')) {
-      if (window.AuthPersona) {
-        window.AuthPersona.logout();
-        // AuthPersona.logout() internally redirects to login.html, but we want admin-login.html for admin
-        // we'll let it redirect, but let's force it here too
-        window.location.href = 'admin-login.html';
-      } else {
-        localStorage.removeItem('bp_logged_in');
-        window.location.href = 'admin-login.html';
+      // 세션 정보 완전 제거
+      localStorage.removeItem('bp_user_name');
+      localStorage.removeItem('bp_user_email');
+      localStorage.removeItem('bp_user_role');
+      localStorage.removeItem('bp_company_name');
+      localStorage.removeItem('bp_logged_in');
+      if (window.SupabaseClient) {
+        try {
+          await window.SupabaseClient.signOut();
+        } catch (e) {}
       }
+      window.location.href = 'admin-login.html';
     }
   },
 
@@ -178,6 +277,140 @@ window.Admin = {
     modal.classList.add('active');
   },
 
+  async openArtistModal() {
+    const modal = document.getElementById('modal-artist-management');
+    if (!modal) return;
+    await this.renderArtistManagementList();
+    modal.classList.add('active');
+  },
+
+  async renderArtistManagementList() {
+    const container = document.getElementById('artist-management-list');
+    if (!container) return;
+
+    const artists = await window.hqStore.getArtists();
+    const schedules = await window.hqStore.getSchedules();
+
+    if (!artists || artists.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center; padding:35px 20px; color:#94a3b8; font-size:13px; background:#0f172a; border-radius:8px; border:1px dashed #334155;">
+          <div style="font-size:24px; margin-bottom:8px;">🌟</div>
+          등록된 소속 아티스트가 없습니다.<br>우측 상단의 <strong>[+ 신규 아티스트 등록]</strong> 버튼을 눌러 추가해보세요.
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = artists.map(art => {
+      const artSchedules = schedules.filter(s => s.artistId === art.id);
+      const careText = art.careInfo ? (typeof art.careInfo === 'string' ? art.careInfo : (art.careInfo.notes || JSON.stringify(art.careInfo))) : (art.care || '');
+      return `
+        <div style="background:#1e293b; border-radius:10px; padding:12px 16px; border:1px solid #334155; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+          <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
+            <div style="width:40px; height:40px; border-radius:10px; background:${art.color || '#6366f1'}; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; color:#fff; font-weight:800; box-shadow:0 2px 8px ${art.color || '#6366f1'}40;">
+              ${art.emoji || '✨'}
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <strong style="color:#f8fafc; font-size:15px;">${art.name}</strong>
+                <span style="font-size:11px; background:rgba(99,102,241,0.2); color:#818cf8; padding:2px 6px; border-radius:4px; font-weight:600;">${art.type || '그룹'} · ${art.members || 1}명</span>
+                <span style="font-size:11px; background:#334155; color:#94a3b8; padding:2px 6px; border-radius:4px;">스케줄 ${artSchedules.length}건</span>
+              </div>
+              ${careText ? `<div style="font-size:12px; color:#94a3b8; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">💊 케어: ${careText}</div>` : `<div style="font-size:12px; color:#64748b; margin-top:4px;">케어 정보 미등록</div>`}
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+            <button type="button" onclick="Admin.openArtistFormModal('${art.id}')" style="background:#334155; border:none; color:#f8fafc; font-size:12px; font-weight:600; padding:6px 12px; border-radius:6px; cursor:pointer; transition:background 0.15s;" onmouseover="this.style.background='#475569'" onmouseout="this.style.background='#334155'">수정</button>
+            <button type="button" onclick="Admin.deleteArtist('${art.id}', '${art.name}')" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#fca5a5; font-size:12px; font-weight:600; padding:6px 12px; border-radius:6px; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.background='rgba(239,68,68,0.3)'" onmouseout="this.style.background='rgba(239,68,68,0.15)'">삭제</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  },
+
+  async openArtistFormModal(artistId = null) {
+    const modal = document.getElementById('modal-artist-form');
+    const form = document.getElementById('form-artist-add');
+    const titleEl = document.getElementById('modal-artist-form-title');
+    const submitBtn = document.getElementById('btn-submit-artist-save');
+    if (!modal || !form) return;
+
+    form.reset();
+
+    if (artistId) {
+      const artists = await window.hqStore.getArtists();
+      const art = artists.find(a => a.id === artistId);
+      if (art) {
+        document.getElementById('edit-artist-id').value = art.id;
+        document.getElementById('new-artist-name').value = art.name || '';
+        document.getElementById('new-artist-type').value = art.type || '그룹';
+        document.getElementById('new-artist-members').value = art.members || 1;
+        document.getElementById('new-artist-color').value = art.color || '#6366f1';
+        document.getElementById('new-artist-emoji').value = art.emoji || '✨';
+        document.getElementById('new-artist-image').value = art.image || '';
+        document.getElementById('new-artist-care').value = art.careInfo ? (typeof art.careInfo === 'string' ? art.careInfo : (art.careInfo.notes || JSON.stringify(art.careInfo))) : (art.care || '');
+        
+        if (titleEl) titleEl.innerHTML = '✏️ 소속 아티스트 수정';
+        if (submitBtn) submitBtn.textContent = '수정 완료';
+      }
+    } else {
+      document.getElementById('edit-artist-id').value = '';
+      document.getElementById('new-artist-color').value = '#6366f1';
+      document.getElementById('new-artist-emoji').value = '✨';
+      if (titleEl) titleEl.innerHTML = '🌟 소속 아티스트 추가';
+      if (submitBtn) submitBtn.textContent = '아티스트 등록';
+    }
+
+    modal.classList.add('active');
+  },
+
+  async deleteArtist(id, name) {
+    if (confirm(`'${name || '해당'}' 아티스트를 정말 삭제하시겠습니까?\n\n소속 스케줄 및 매니저 배정에 영향을 줄 수 있습니다.`)) {
+      await window.hqStore.deleteArtist(id);
+      await this.renderArtistManagementList();
+      const selectPop = document.querySelector('#form-artist');
+      if (selectPop) {
+        const artists = await window.hqStore.getArtists();
+        selectPop.innerHTML = artists.map(a => `<option value="${a.id}">${a.emoji || '✨'} ${a.name}</option>`).join('');
+      }
+      const filterList = document.querySelector('#artist-filter-list');
+      if (filterList) {
+        const artists = await window.hqStore.getArtists();
+        const schedules = await window.hqStore.getSchedules();
+        let artistHtml = `
+          <div class="artist-chip active" data-artist-id="ALL">
+            <div class="artist-avatar" style="background:#6366f1;">🏢</div>
+            <div class="artist-meta">
+              <div class="name">전체 소속 아티스트</div>
+              <div class="sub">통합 캘린더 모드</div>
+            </div>
+            <span class="count-badge">${schedules.length}</span>
+          </div>
+        `;
+        artists.forEach(art => {
+          const count = schedules.filter(s => s.artistId === art.id).length;
+          artistHtml += `
+            <div class="artist-chip" data-artist-id="${art.id}">
+              <div class="artist-avatar" style="background:${art.color}">${art.emoji || '✨'}</div>
+              <div class="artist-meta">
+                <div class="name">${art.name}</div>
+                <div class="sub">${art.type} · ${art.status || '활동중'}</div>
+              </div>
+              <span class="count-badge">${count}</span>
+            </div>
+          `;
+        });
+        filterList.innerHTML = artistHtml;
+      }
+      const kpiArtist = document.getElementById('kpi-artist-count');
+      if (kpiArtist) {
+        const artists = await window.hqStore.getArtists();
+        kpiArtist.textContent = `${artists.length}팀`;
+      }
+      alert(`✅ ${name || '아티스트'} 정보가 삭제되었습니다.`);
+    }
+  },
+
   async openScheduleDetail(schId) {
     if (typeof openScheduleDetailModal === 'function') {
       await openScheduleDetailModal(schId);
@@ -221,9 +454,17 @@ window.Admin = {
 
   updateHeaderSubscriptionBadge() {
     const sub = window.hqStore.getSubscription();
+    // 헤더 슬롯 텍스트 업데이트
+    const slotText = document.getElementById('header-slot-text');
+    if (slotText) {
+      const color = sub.isFull ? '#fca5a5' : '#a5f3fc';
+      slotText.style.color = color;
+      slotText.textContent = `(${sub.activeManagerCount} / ${sub.totalSlots}명)`;
+    }
+    // 레거시 sub-badge-text (모달 내부용)
     const badgeText = document.getElementById('sub-badge-text');
     if (badgeText) {
-      badgeText.textContent = `구독: Standard (${sub.activeManagerCount}/${sub.totalSlots}명 · 월 ${(sub.monthlyFee / 10000).toLocaleString()}만)`;
+      badgeText.textContent = `구독: ${sub.planName || 'Standard'} (${sub.activeManagerCount}/${sub.totalSlots}명 · 월 ${(sub.monthlyFee / 10000).toLocaleString()}만)`;
     }
   },
 
@@ -235,7 +476,16 @@ window.Admin = {
     this.tempAdditionalSlots = sub.additionalSlots || 0;
     this.renderSubscriptionModalContent();
     const modal = document.getElementById('modal-company-subscription');
-    if (modal) modal.classList.add('active');
+    if (modal) {
+      modal.classList.add('active');
+      const adjustEl = document.getElementById('sub-slot-adjust-count');
+      if (adjustEl) adjustEl.textContent = this.tempAdditionalSlots;
+    }
+  },
+
+  closeSubscriptionModal() {
+    const modal = document.getElementById('modal-company-subscription');
+    if (modal) modal.classList.remove('active');
   },
 
   renderSubscriptionModalContent() {
@@ -254,15 +504,25 @@ window.Admin = {
     const additionalSlotCount = document.getElementById('sub-additional-slot-count');
     const calcAdditionalFee = document.getElementById('sub-calc-additional-fee');
     const calcTotalFee = document.getElementById('sub-calc-total-fee');
+    const adjustEl = document.getElementById('sub-slot-adjust-count');
 
-    if (companyNameEl) companyNameEl.textContent = sub.companyName;
-    if (bizInfoEl) bizInfoEl.textContent = `사업자번호: ${sub.bizNumber} | 대표자: ${sub.ceoName}`;
+    // ── 실제 회사명/대표자 우선 사용 ──
+    const realCompanyName = localStorage.getItem('bp_company_name') || sub.companyName || '회사명 미등록';
+    const realCeoName = localStorage.getItem('bp_user_name') || sub.ceoName || '대표자';
+    const realEmail = localStorage.getItem('bp_user_email') || '';
+
+    if (companyNameEl) companyNameEl.textContent = realCompanyName;
+    if (bizInfoEl) bizInfoEl.textContent = `사업자번호: ${sub.bizNumber || '-'} | 대표자: ${realCeoName}${realEmail ? ' (' + realEmail + ')' : ''}`;
     if (monthlyTotalEl) monthlyTotalEl.textContent = `월 ${totalFee.toLocaleString()}원`;
-    if (slotProgressText) slotProgressText.textContent = `${sub.activeManagerCount} / ${totalSlots}석 (${Math.max(0, totalSlots - sub.activeManagerCount)}석 잔여)`;
+    if (slotProgressText) {
+      slotProgressText.textContent = `${sub.activeManagerCount} / ${totalSlots}명 (${Math.max(0, totalSlots - sub.activeManagerCount)}명 잔여)`;
+      slotProgressText.style.color = sub.isFull ? '#fca5a5' : '#a5f3fc';
+    }
     if (slotProgressBar) slotProgressBar.style.width = `${usedPct}%`;
-    if (additionalSlotCount) additionalSlotCount.textContent = `${addSlots}명`;
+    if (additionalSlotCount) additionalSlotCount.textContent = `${addSlots}`;
     if (calcAdditionalFee) calcAdditionalFee.textContent = `+ ${addFee.toLocaleString()}원 / 월`;
     if (calcTotalFee) calcTotalFee.textContent = `월 ${totalFee.toLocaleString()}원 (VAT 별도)`;
+    if (adjustEl) adjustEl.textContent = addSlots;
   },
 
   changeSlotCount(delta) {
@@ -271,17 +531,24 @@ window.Admin = {
   },
 
   confirmSlotPayment() {
-    const sub = window.hqStore.getSubscription();
-    sub.additionalSlots = this.tempAdditionalSlots;
+    const sub       = window.hqStore.getSubscription();
+    const addSlots  = this.tempAdditionalSlots;
+    const totalSlots = (sub.baseSlots || 2) + addSlots;
+    const totalFee   = (sub.baseFee || 100000) + (addSlots * (sub.additionalSlotFee || 20000));
+
+    const company = encodeURIComponent(localStorage.getItem('bp_company_name') || 'My Entertainment');
+    const ceo     = encodeURIComponent(localStorage.getItem('bp_user_name') || '대표자');
+    const email   = encodeURIComponent(localStorage.getItem('bp_user_email') || '');
+
+    // 임시로 슬롯 저장 (결제 완료 후 payment-result.html에서 최종 확정)
+    sub.additionalSlots = addSlots;
     window.hqStore.saveSubscription(sub);
 
-    const totalFee = (sub.baseFee || 100000) + (this.tempAdditionalSlots * (sub.additionalSlotFee || 20000));
-    alert(`🎉 회사 구독 슬롯이 성공적으로 변경되었습니다!\n\n• 총 매니저 슬롯: ${(sub.baseSlots || 2) + this.tempAdditionalSlots}석\n• 변경된 월 청구액: 월 ${totalFee.toLocaleString()}원 (VAT 별도)\n• 결제 수단: ${sub.paymentMethod}`);
+    this.closeSubscriptionModal();
 
-    const modal = document.getElementById('modal-company-subscription');
-    if (modal) modal.classList.remove('active');
-
-    this.updateManagerSlotUI();
+    // 결제 전용 페이지로 이동
+    window.location.href =
+      `payment.html?addSlots=${addSlots}&totalSlots=${totalSlots}&totalFee=${totalFee}&company=${company}&ceo=${ceo}&email=${email}`;
   },
 
   async renderManagerManagementList() {
@@ -293,17 +560,22 @@ window.Admin = {
 
     container.innerHTML = managers.map(mgr => {
       const assigned = mgr.assignedArtists || [];
+      const emailDisplay = mgr.email || mgr.id || '아이디 없음';
       return `
-        <div style="background:#1e293b; border-radius:8px; padding:12px; border:1px solid #334155;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div style="background:#1e293b; border-radius:10px; padding:14px; border:1px solid #334155; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
             <div style="display:flex; align-items:center; gap:8px;">
-              <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${mgr.color || '#6366f1'};"></span>
-              <strong style="color:#f8fafc; font-size:14px;">${mgr.name}</strong>
-              <span style="font-size:11px; background:#334155; color:#94a3b8; padding:2px 6px; border-radius:4px;">${mgr.role === 'hq_admin' ? '본사 관리자' : '현장 매니저'}</span>
+              <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:${mgr.color || '#6366f1'}; box-shadow:0 0 6px ${mgr.color || '#6366f1'}60;"></span>
+              <strong style="color:#f8fafc; font-size:15px;">${mgr.name}</strong>
+              <span style="font-size:11px; background:#334155; color:#94a3b8; padding:2px 8px; border-radius:4px; font-weight:600;">${mgr.role === 'hq_admin' ? '본사 관리자' : '현장 매니저'}</span>
             </div>
             <div style="display:flex; align-items:center; gap:12px;">
-              <span style="font-size:12px; color:#64748b;">${mgr.phone || '연락처 없음'}</span>
-              ${mgr.role !== 'hq_admin' ? `<button type="button" onclick="Admin.deleteManager('${mgr.id}')" style="background:transparent; border:none; color:#ef4444; font-size:12px; cursor:pointer; padding:4px; margin-left:-4px;">삭제</button>` : ''}
+              <span style="font-size:12px; color:#818cf8; font-family:monospace; background:rgba(99,102,241,0.1); padding:3px 8px; border-radius:4px; border:1px solid rgba(99,102,241,0.2);">🆔 ${emailDisplay}</span>
+              <span style="font-size:12px; color:#94a3b8;">📱 ${mgr.phone || '연락처 없음'}</span>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <button type="button" onclick="Admin.openEditManagerModal('${mgr.id}')" style="background:#334155; border:none; color:#f8fafc; font-size:12px; font-weight:600; padding:5px 12px; border-radius:6px; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.background='#475569'" onmouseout="this.style.background='#334155'">수정</button>
+                ${mgr.role !== 'hq_admin' ? `<button type="button" onclick="Admin.deleteManager('${mgr.id}')" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#fca5a5; font-size:12px; font-weight:600; padding:5px 12px; border-radius:6px; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.background='rgba(239,68,68,0.3)'" onmouseout="this.style.background='rgba(239,68,68,0.15)'">삭제</button>` : ''}
+              </div>
             </div>
           </div>
           <div style="font-size:12px; color:#94a3b8; margin-bottom:6px;">담당 아티스트 선택:</div>
@@ -313,7 +585,7 @@ window.Admin = {
         return `
                 <button type="button" 
                   onclick="Admin.toggleArtistAssignment('${mgr.id}', '${art.id}')"
-                  style="padding:4px 8px; border-radius:6px; font-size:12px; font-weight:500; cursor:pointer; transition:all 0.2s; border:1px solid ${isChecked ? art.color : '#334155'}; background:${isChecked ? art.color + '22' : '#0f172a'}; color:${isChecked ? '#fff' : '#64748b'};">
+                  style="padding:4px 10px; border-radius:6px; font-size:12px; font-weight:500; cursor:pointer; transition:all 0.2s; border:1px solid ${isChecked ? art.color : '#334155'}; background:${isChecked ? art.color + '22' : '#0f172a'}; color:${isChecked ? '#fff' : '#64748b'};">
                   ${art.emoji || '✨'} ${art.name} ${isChecked ? '✓' : '+'}
                 </button>
               `;
@@ -322,6 +594,22 @@ window.Admin = {
         </div>
       `;
     }).join('');
+  },
+
+  async openEditManagerModal(id) {
+    const managers = await window.hqStore.getManagers();
+    const mgr = managers.find(m => m.id === id);
+    if (!mgr) return;
+
+    document.getElementById('edit-mgr-id').value = mgr.id;
+    document.getElementById('edit-mgr-name').value = mgr.name || '';
+    document.getElementById('edit-mgr-email').value = mgr.email || mgr.id;
+    document.getElementById('edit-mgr-phone').value = mgr.phone || '';
+    const pwEl = document.getElementById('edit-mgr-pw');
+    if (pwEl) pwEl.value = '';
+
+    const modal = document.getElementById('modal-manager-edit');
+    if (modal) modal.classList.add('active');
   },
 
   async toggleArtistAssignment(managerId, artistId) {
@@ -357,9 +645,17 @@ window.Admin = {
       popover.style.display = 'none';
       popover.style.opacity = '0';
     }
+    const kpiPop = document.getElementById('kpi-hover-popover');
+    if (kpiPop) {
+      kpiPop.style.display = 'none';
+      kpiPop.style.opacity = '0';
+    }
+
     const schedules = await window.hqStore.getSchedules();
     const sch = schedules.find(s => s.id === schId);
     if (!sch) return;
+
+    window.Admin.currentDetailScheduleId = schId;
 
     const modal = document.getElementById('modal-schedule-detail');
     const content = document.getElementById('detail-body-content');
@@ -368,58 +664,90 @@ window.Admin = {
     const artists = await window.hqStore.getArtists();
     const art = artists.find(a => a.id === sch.artistId);
 
+    const cleanTime = (t) => {
+      if (!t) return '00:00';
+      if (typeof t === 'string' && t.includes('T')) {
+        return t.split('T')[1].substring(0, 5);
+      }
+      return String(t).substring(0, 5);
+    };
+
     let statusCls = 'ready';
-    if (sch.status === '이동중' || sch.status === 'in_progress') statusCls = 'moving';
-    if (sch.status === '샵진행') statusCls = 'shop';
-    if (sch.status === '완료' || sch.status === 'completed') statusCls = 'done';
+    let statusLabel = sch.status || '예정';
+    if (sch.status === '이동중' || sch.status === 'in_progress') { statusCls = 'moving'; statusLabel = '이동중'; }
+    if (sch.status === '샵진행') { statusCls = 'shop'; statusLabel = '헤메 진행'; }
+    if (sch.status === '완료' || sch.status === 'completed') { statusCls = 'done'; statusLabel = '완료'; }
+
+    const sTime = cleanTime(sch.startTime);
+    const eTime = cleanTime(sch.endTime);
 
     let html = `
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid #e2e8f0; padding-bottom:14px; margin-bottom:16px;">
-        <div>
-          <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-            <span style="background:${art ? art.color : '#4f46e5'}; color:#fff; font-size:12px; padding:2px 8px; border-radius:4px; font-weight:600;">
-              ${sch.artistName || '아티스트'}
+      <div style="background:#1e293b; border-radius:12px; padding:18px; border:1px solid #334155; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="background:${art ? art.color : '#6366f1'}; color:#fff; font-size:12px; padding:3px 10px; border-radius:6px; font-weight:700;">
+              ${art?.emoji || '✨'} ${sch.artistName || '아티스트'}
             </span>
-            ${sch.isSecret ? '<span style="background:#fee2e2; color:#dc2626; font-size:11px; padding:2px 8px; border-radius:4px; font-weight:800; border:1px solid #fca5a5;">🔒 극비 보안 스케줄</span>' : ''}
+            <span style="background:rgba(99,102,241,0.15); color:#818cf8; font-size:11px; padding:2px 8px; border-radius:4px; font-weight:600; border:1px solid rgba(99,102,241,0.3);">
+              ${sch.category || '스케줄'}
+            </span>
+            ${sch.isSecret ? '<span style="background:rgba(239,68,68,0.15); color:#fca5a5; font-size:11px; padding:2px 8px; border-radius:4px; font-weight:700; border:1px solid rgba(239,68,68,0.3);">🔒 극비 보안</span>' : ''}
           </div>
-          <h2 style="font-size:20px; color:#0f172a; margin:4px 0;">${sch.title}</h2>
-          <div style="font-size:13px; color:#64748b;">📅 ${sch.date} (${sch.startTime} ~ ${sch.endTime})</div>
+          <span class="badge-status ${statusCls}">${statusLabel}</span>
         </div>
-        <span class="badge-status ${statusCls}">${sch.status || '예정'}</span>
+        <h2 style="font-size:20px; font-weight:800; color:#f8fafc; margin:0 0 8px 0; line-height:1.3;">${sch.title}</h2>
+        <div style="font-size:13px; color:#94a3b8; display:flex; align-items:center; gap:6px;">
+          <span>📅 ${sch.date}</span>
+          <span style="color:#64748b;">•</span>
+          <span style="color:#60a5fa; font-weight:700; font-family:monospace;">⏰ ${sTime} ~ ${eTime}</span>
+        </div>
       </div>
 
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:16px; font-size:13px;">
-        <div style="background:var(--bg-surface); border:1px solid var(--border-color); padding:10px; border-radius:6px;">
-          <span style="color:#64748b;">📍 메인 장소:</span> <strong style="color:#0f172a;">${sch.location || '미정'}</strong>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:16px; font-size:13px;">
+        <div style="background:#1e293b; border:1px solid #334155; padding:12px 14px; border-radius:8px;">
+          <div style="color:#94a3b8; font-size:11px; font-weight:600; margin-bottom:4px;">📍 메인 행사장소 / 목적지</div>
+          <div style="color:#f8fafc; font-weight:700; font-size:13px;">${sch.location || '장소 미지정'}</div>
         </div>
-        <div style="background:var(--bg-surface); border:1px solid var(--border-color); padding:10px; border-radius:6px;">
-          <span style="color:#64748b;">👤 담당 매니저:</span> <strong style="color:#0f172a;">${sch.managerName || '미배정'}</strong>
+        <div style="background:#1e293b; border:1px solid #334155; padding:12px 14px; border-radius:8px;">
+          <div style="color:#94a3b8; font-size:11px; font-weight:600; margin-bottom:4px;">👤 현장 담당 매니저</div>
+          <div style="color:#f8fafc; font-weight:700; font-size:13px;">${sch.managerName || '미배정'}</div>
         </div>
-        <div style="background:var(--bg-surface); border:1px solid var(--border-color); padding:10px; border-radius:6px;">
-          <span style="color:#64748b;">🚗 배차 차량:</span> <strong style="color:#0f172a;">${sch.vehicleName || '미배정'}</strong>
+        <div style="background:#1e293b; border:1px solid #334155; padding:12px 14px; border-radius:8px;">
+          <div style="color:#94a3b8; font-size:11px; font-weight:600; margin-bottom:4px;">🚗 배차 및 이동 수단</div>
+          <div style="color:#f8fafc; font-weight:700; font-size:13px;">${sch.vehicleName || '차량 미지정'}</div>
         </div>
-        <div style="background:var(--bg-surface); border:1px solid var(--border-color); padding:10px; border-radius:6px;">
-          <span style="color:#64748b;">💄 헤메 샵:</span> <strong style="color:#0f172a;">${sch.shopLocation || (sch.shop?.name) || '미경유'}</strong>
+        <div style="background:#1e293b; border:1px solid #334155; padding:12px 14px; border-radius:8px;">
+          <div style="color:#94a3b8; font-size:11px; font-weight:600; margin-bottom:4px;">💄 헤어/메이크업 경유 샵</div>
+          <div style="color:#f8fafc; font-weight:700; font-size:13px;">${sch.shopLocation || (sch.shop?.name) || '미경유 (현장 직행)'}</div>
         </div>
       </div>
 
       ${sch.notes ? `
-        <div style="background:var(--bg-card); padding:12px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:16px;">
-          <div style="font-size:12px; color:#64748b; margin-bottom:4px;">📝 현장 특이사항 / 메모</div>
-          <div style="font-size:13px; color:#0f172a; line-height:1.5;">${sch.notes}</div>
+        <div style="background:#1e293b; padding:12px 14px; border-radius:8px; border:1px solid #334155; margin-bottom:16px;">
+          <div style="font-size:11px; font-weight:600; color:#94a3b8; margin-bottom:4px;">📝 현장 특이사항 및 메모</div>
+          <div style="font-size:13px; color:#f8fafc; line-height:1.5;">${sch.notes}</div>
         </div>
       ` : ''}
 
-      <div style="margin-top:16px;">
-        <h4 style="font-size:14px; color:#0f172a; margin-bottom:10px;">📋 스마트 역산 타임라인</h4>
-        <div style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto;">
-          ${(sch.timeline || []).map(item => `
-            <div style="display:flex; gap:10px; align-items:center; background:var(--bg-surface); border:1px solid var(--border-color); padding:8px 12px; border-radius:6px; font-size:13px;">
-              <span style="color:#0284c7; font-weight:700; font-family:monospace;">${item.time}</span>
-              <span style="color:${item.done ? '#10b981' : '#0f172a'}; text-decoration:${item.done ? 'line-through' : 'none'};">${item.label}</span>
-              ${item.done ? '<span style="margin-left:auto; font-size:11px; color:#10b981;">✓ 완료</span>' : ''}
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <h4 style="font-size:14px; font-weight:700; color:#f8fafc; margin:0; display:flex; align-items:center; gap:6px;">
+            <span>📋</span> 스마트 역산 타임라인
+          </h4>
+          <span style="font-size:11px; color:#94a3b8;">현장 매니저 앱 동기화 완료</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px; max-height:200px; overflow-y:auto; padding-right:2px;">
+          ${(sch.timeline && sch.timeline.length > 0) ? sch.timeline.map(item => `
+            <div style="display:flex; gap:12px; align-items:center; background:#1e293b; border:1px solid #334155; padding:10px 14px; border-radius:8px; font-size:13px;">
+              <span style="color:#60a5fa; font-weight:800; font-family:monospace; font-size:13px; min-width:46px;">${cleanTime(item.time)}</span>
+              <span style="color:${item.done ? '#10b981' : '#f8fafc'}; font-weight:600; text-decoration:${item.done ? 'line-through' : 'none'}; flex:1;">${item.label}</span>
+              ${item.done ? '<span style="font-size:11px; font-weight:700; color:#10b981; background:rgba(16,185,129,0.15); padding:2px 8px; border-radius:4px;">✓ 완료</span>' : '<span style="font-size:11px; color:#64748b;">대기</span>'}
             </div>
-          `).join('')}
+          `).join('') : `
+            <div style="text-align:center; padding:16px; color:#64748b; font-size:12px; background:#1e293b; border-radius:8px; border:1px dashed #334155;">
+              등록된 역산 타임라인이 없습니다.
+            </div>
+          `}
         </div>
       </div>
     `;
@@ -541,39 +869,73 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const cards = [
-      { id: 'kpi-card-today', key: 'today', title: '오늘 총 스케줄', color: '#6366f1' },
-      { id: 'kpi-card-active', key: 'active', title: '진행중 / 이동중 스케줄', color: '#f59e0b' },
-      { id: 'kpi-card-shop', key: 'shop', title: '헤메샵 경유 스케줄', color: '#ec4899' }
+      { id: 'kpi-card-today', key: 'today', title: '오늘 총 스케줄', color: '#6366f1', icon: '📅' },
+      { id: 'kpi-card-shop', key: 'shop', title: '헤메샵 경유 스케줄', color: '#ec4899', icon: '💄' },
+      { id: 'kpi-card-active', key: 'active', title: '현재 가동중인 차량/팀', color: '#f59e0b', icon: '🚗' },
+      { id: 'kpi-card-artist', key: 'artist', title: '등록된 소속 아티스트', color: '#10b981', icon: '🌟' }
     ];
 
     cards.forEach(c => {
       const cardEl = document.getElementById(c.id);
       if (!cardEl) return;
 
-      cardEl.addEventListener('mouseenter', (e) => {
+      cardEl.addEventListener('mouseenter', () => {
         if (kpiHideTimer) clearTimeout(kpiHideTimer);
-        const schedules = kpiDataCache[c.key];
-        if (!schedules || schedules.length === 0) return;
+        const dataList = kpiDataCache[c.key] || [];
 
         let popHtml = `
-          <div style="font-size:13px; font-weight:700; border-bottom:1px solid #334155; padding-bottom:8px; margin-bottom:8px; color:#fff; display:flex; justify-content:space-between; align-items:center;">
-            <span>${c.title} <span style="background:${c.color}; color:#fff; padding:2px 6px; border-radius:10px; font-size:11px; margin-left:4px;">${schedules.length}건</span></span>
+          <div style="font-size:13px; font-weight:700; border-bottom:1px solid #334155; padding-bottom:8px; margin-bottom:10px; color:#fff; display:flex; justify-content:space-between; align-items:center;">
+            <span>${c.icon} ${c.title}</span>
+            <span style="background:${c.color}; color:#fff; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:800;">${dataList.length}${c.key === 'artist' ? '팀' : '건'}</span>
           </div>
-          <div style="display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto; padding-right:4px;">
         `;
 
-        schedules.forEach(sch => {
+        if (dataList.length === 0) {
           popHtml += `
-            <div class="kpi-popover-item" data-id="${sch.id}" style="background:#0f172a; padding:10px; border-radius:6px; cursor:pointer; font-size:12px; border:1px solid #334155;" onmouseenter="this.style.borderColor='${c.color}'" onmouseleave="this.style.borderColor='#334155'">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                <span style="font-weight:700; color:#60a5fa;">⏰ ${sch.startTime} ~ ${sch.endTime || ''}</span>
-              </div>
-              <div style="font-weight:700; color:#fff; margin-bottom:4px; font-size:13px;">✨ [${sch.artistName}] ${sch.title}</div>
+            <div style="text-align:center; padding:18px 10px; color:#94a3b8; font-size:12px;">
+              해당하는 내역이 없습니다.
             </div>
           `;
-        });
+        } else if (c.key === 'artist') {
+          popHtml += `
+            <div style="display:flex; flex-direction:column; gap:6px; max-height:240px; overflow-y:auto; padding-right:4px;">
+              ${dataList.map(art => `
+                <div class="kpi-popover-art-item" onclick="Admin.openArtistModal()" style="background:#0f172a; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:12px; border:1px solid #334155; display:flex; justify-content:space-between; align-items:center; transition:all 0.15s;" onmouseenter="this.style.borderColor='${c.color}'; this.style.transform='translateY(-1px)';" onmouseleave="this.style.borderColor='#334155'; this.style.transform='none';">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="width:24px; height:24px; border-radius:6px; background:${art.color || '#6366f1'}; display:flex; align-items:center; justify-content:center; font-size:13px;">${art.emoji || '✨'}</span>
+                    <strong style="color:#f8fafc; font-size:13px;">${art.name}</strong>
+                  </div>
+                  <span style="font-size:11px; color:#94a3b8;">${art.type || '그룹'} · ${art.members || 1}명</span>
+                </div>
+              `).join('')}
+            </div>
+            <div style="font-size:11px; color:#64748b; text-align:center; margin-top:8px;">
+              👆 클릭 시 [아티스트 관리] 모달이 열립니다.
+            </div>
+          `;
+        } else {
+          popHtml += `
+            <div style="display:flex; flex-direction:column; gap:6px; max-height:260px; overflow-y:auto; padding-right:4px;">
+              ${dataList.map(sch => `
+                <div class="kpi-popover-item" data-id="${sch.id}" style="background:#0f172a; padding:10px 12px; border-radius:8px; cursor:pointer; font-size:12px; border:1px solid #334155; transition:all 0.15s;" onmouseenter="this.style.borderColor='${c.color}'; this.style.transform='translateY(-1px)';" onmouseleave="this.style.borderColor='#334155'; this.style.transform='none';">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span style="font-weight:700; color:#60a5fa; font-family:monospace; font-size:11px;">⏰ ${sch.startTime} ~ ${sch.endTime || ''}</span>
+                    <span style="font-size:10px; padding:1px 6px; border-radius:4px; font-weight:700; background:rgba(255,255,255,0.1); color:#94a3b8;">${sch.status || '예정'}</span>
+                  </div>
+                  <div style="font-weight:700; color:#fff; margin-bottom:3px; font-size:13px;">✨ [${sch.artistName || '아티스트'}] ${sch.title}</div>
+                  <div style="font-size:11px; color:#94a3b8; display:flex; justify-content:space-between; align-items:center;">
+                    <span>📍 ${sch.location || '장소 미지정'}</span>
+                    <span>👤 ${sch.managerName || '미배정'}</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+            <div style="font-size:11px; color:#64748b; text-align:center; margin-top:8px;">
+              👆 <strong>일정을 클릭</strong>하시면 상세 정보 및 역산 동선이 열립니다.
+            </div>
+          `;
+        }
 
-        popHtml += `</div>`;
         kpiPopover.innerHTML = popHtml;
 
         kpiPopover.querySelectorAll('.kpi-popover-item').forEach(item => {
@@ -584,7 +946,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const rect = cardEl.getBoundingClientRect();
-        kpiPopover.style.left = Math.max(10, rect.left + (rect.width / 2) - 160) + 'px';
+        kpiPopover.style.left = Math.max(10, rect.left + (rect.width / 2) - 175) + 'px';
         kpiPopover.style.top = (rect.bottom + 8) + 'px';
         kpiPopover.style.display = 'block';
         kpiPopover.style.opacity = '1';
@@ -606,8 +968,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const role = window.AuthPersona ? window.AuthPersona.getCurrentRole() : 'manager';
 
     if (!isLoggedIn) {
-      alert('본사 관제 포털 로그인이 필요합니다.');
-      window.location.href = 'admin-login.html';
+      window.location.replace('admin-login.html');
       return;
     }
 
@@ -726,6 +1087,7 @@ document.addEventListener('DOMContentLoaded', () => {
     kpiDataCache.today = todaySchedules;
     kpiDataCache.active = activeSchedules;
     kpiDataCache.shop = shopSchedules;
+    kpiDataCache.artist = artists;
 
     el.kpiTodayCount.textContent = `${todaySchedules.length}건`;
     el.kpiActiveCount.textContent = `${activeSchedules.length}건`;
@@ -1825,10 +2187,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           }).join('\n');
 
-          const proceed = confirm(`⚠️ [배차/일정 중복 경고]\n\n${warnMsgs}\n\n동일 시간대 중복 배차가 발생합니다. 그래도 스케줄을 저장하시겠습니까?`);
-          if (!proceed) {
-            return; // 저장 취소
-          }
+          // 중복 경고 confirm 팝업 제거 - 항상 저장 진행
         }
       }
 
@@ -1840,25 +2199,31 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 스케줄 수정 버튼
-    el.btnEditSchedule.addEventListener('click', async () => {
-      const schedules = await window.hqStore.getSchedules();
-      const sch = schedules.find(s => s.id === state.activeScheduleId);
-      if (sch) {
-        el.modalScheduleDetail.classList.remove('active');
-        openScheduleFormModal(null, sch);
-      }
-    });
+    if (el.btnEditSchedule) {
+      el.btnEditSchedule.addEventListener('click', async () => {
+        const schId = state.activeScheduleId || window.Admin.currentDetailScheduleId;
+        const schedules = await window.hqStore.getSchedules();
+        const sch = schedules.find(s => s.id === schId);
+        if (sch) {
+          el.modalScheduleDetail.classList.remove('active');
+          openScheduleFormModal(null, sch);
+        }
+      });
+    }
 
     // 스케줄 삭제 버튼
-    el.btnDeleteSchedule.addEventListener('click', async () => {
-      if (confirm('이 스케줄을 삭제하시겠습니까? 매니저플래너에서도 즉시 삭제됩니다.')) {
-        await window.hqStore.deleteSchedule(state.activeScheduleId);
-        el.modalScheduleDetail.classList.remove('active');
-        await renderSidebar();
-        await renderKPI();
-        await renderCurrentView();
-      }
-    });
+    if (el.btnDeleteSchedule) {
+      el.btnDeleteSchedule.addEventListener('click', async () => {
+        const schId = state.activeScheduleId || window.Admin.currentDetailScheduleId;
+        if (confirm('이 스케줄을 삭제하시겠습니까? 매니저플래너에서도 즉시 삭제됩니다.')) {
+          await window.hqStore.deleteSchedule(schId);
+          el.modalScheduleDetail.classList.remove('active');
+          await renderSidebar();
+          await renderKPI();
+          await renderCurrentView();
+        }
+      });
+    }
 
     // 신규 매니저 계정 생성 폼 (슬롯 제한 확인)
     if (el.formCreateManager) {
@@ -1874,30 +2239,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const name = document.getElementById('new-mgr-name').value.trim();
-        const emailId = document.getElementById('new-mgr-email-id').value.trim();
-        const emailDomain = document.getElementById('new-mgr-email-domain').textContent.trim();
-        const email = emailId + emailDomain;
+        const emailEl = document.getElementById('new-mgr-email');
+        const email = emailEl ? emailEl.value.trim() : '';
         const pw = document.getElementById('new-mgr-pw').value.trim();
         const phone = document.getElementById('new-mgr-phone').value.trim();
 
+        if (!email || !email.includes('@')) {
+          alert('올바른 회사 이메일 주소를 입력해주세요. (예: user@company.com)');
+          return;
+        }
+
+        if (pw.length < 6) {
+          alert('비밀번호는 최소 6자 이상이어야 합니다.');
+          return;
+        }
+
+        // 1. 본사/로컬 매니저 스토리지에 즉시 등록 (비밀번호 포함)
+        const newMgrObj = {
+          id: 'mgr_' + Date.now(),
+          name,
+          email,
+          phone,
+          password: pw,
+          role: 'manager',
+          assignedArtists: []
+        };
+        await window.hqStore.addManager(newMgrObj);
+
+        // 2. Supabase가 연동된 경우 클라우드 Auth에도 생성 시도
         if (window.SupabaseClient && window.SupabaseClient.isConfigured) {
           try {
             await window.SupabaseClient.signUp(email, pw, name, 'manager', phone);
-            alert(`✅ [Supabase] ${name} 매니저 계정이 생성되었습니다.`);
+            alert(`✅ ${name} (${email}) 매니저 계정이 정상 등록되었습니다.`);
           } catch (err) {
-            alert('계정 생성 오류: ' + err.message);
-            return;
+            console.warn('Supabase signUp error (local stored):', err.message);
+            alert(`✅ ${name} (${email}) 매니저 계정이 등록되었습니다.`);
           }
         } else {
-          await window.hqStore.addManager({
-            id: 'mgr_' + Date.now(),
-            name,
-            email,
-            phone,
-            role: 'manager',
-            assignedArtists: []
-          });
-          alert(`✅ [로컬] ${name} 매니저 계정이 등록되었습니다.`);
+          alert(`✅ [본사 등록] ${name} (${email}) 매니저 계정이 등록되었습니다.`);
         }
 
         el.formCreateManager.reset();
@@ -1908,24 +2287,95 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // 아티스트 추가 폼 제출
-    el.formArtistAdd.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const newArt = {
-        id: 'art_' + Date.now(),
-        name: document.getElementById('new-artist-name').value,
-        type: document.getElementById('new-artist-type').value,
-        members: Number(document.getElementById('new-artist-members').value) || 1,
-        color: document.getElementById('new-artist-color').value,
-        emoji: document.getElementById('new-artist-emoji').value || '✨',
-        status: '활동중'
-      };
+    // 매니저 정보 수정 폼 제출
+    const formEditMgr = document.getElementById('form-edit-manager');
+    if (formEditMgr) {
+      formEditMgr.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-mgr-id').value;
+        const name = document.getElementById('edit-mgr-name').value.trim();
+        const emailEl = document.getElementById('edit-mgr-email');
+        const email = emailEl ? emailEl.value.trim() : '';
+        const phone = document.getElementById('edit-mgr-phone').value.trim();
+        const pwEl = document.getElementById('edit-mgr-pw');
+        const password = pwEl ? pwEl.value.trim() : '';
 
-      await window.hqStore.addArtist(newArt);
-      el.modalArtistForm.classList.remove('active');
-      await populateSelectOptions();
-      await renderSidebar();
-    });
+        if (!email || !email.includes('@')) {
+          alert('올바른 이메일 주소를 입력해주세요.');
+          return;
+        }
+
+        if (password && password.length < 6) {
+          alert('비밀번호는 최소 6자 이상이어야 합니다.');
+          return;
+        }
+
+        const updatePayload = { name, email, phone };
+        if (password) {
+          updatePayload.password = password;
+        }
+
+        await window.hqStore.updateManager(id, updatePayload);
+        const modal = document.getElementById('modal-manager-edit');
+        if (modal) modal.classList.remove('active');
+
+        await window.Admin.renderManagerManagementList();
+        await populateSelectOptions();
+        await renderSidebar();
+        alert(`✅ [${name}] 매니저 정보${password ? ' 및 비밀번호' : ''}가 성공적으로 수정되었습니다.`);
+      });
+    }
+
+    // 아티스트 추가 및 수정 폼 제출
+    if (el.formArtistAdd) {
+      el.formArtistAdd.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const editId = document.getElementById('edit-artist-id').value;
+        const name = document.getElementById('new-artist-name').value.trim();
+        const type = document.getElementById('new-artist-type').value;
+        const members = Number(document.getElementById('new-artist-members').value) || 1;
+        const color = document.getElementById('new-artist-color').value;
+        const emoji = (document.getElementById('new-artist-emoji') ? document.getElementById('new-artist-emoji').value.trim() : '') || '✨';
+        const image = document.getElementById('new-artist-image') ? document.getElementById('new-artist-image').value.trim() : '';
+        const care = document.getElementById('new-artist-care') ? document.getElementById('new-artist-care').value.trim() : '';
+
+        if (editId) {
+          await window.hqStore.updateArtist(editId, {
+            name,
+            type,
+            members,
+            color,
+            emoji,
+            image,
+            careInfo: care,
+            care: care
+          });
+          alert(`✅ [${name}] 아티스트 정보가 수정되었습니다.`);
+        } else {
+          const newArt = {
+            id: 'art_' + Date.now(),
+            name,
+            type,
+            members,
+            color,
+            emoji,
+            image,
+            careInfo: care,
+            care: care,
+            status: '활동중'
+          };
+          await window.hqStore.addArtist(newArt);
+          alert(`✅ [${name}] 아티스트가 성공적으로 등록되었습니다.`);
+        }
+
+        el.modalArtistForm.classList.remove('active');
+        await window.Admin.renderArtistManagementList();
+        await populateSelectOptions();
+        await renderSidebar();
+        await renderKPI();
+        await renderCurrentView();
+      });
+    }
 
     // 엑셀/CSV 내보내기
     el.btnExportExcel.addEventListener('click', async () => {

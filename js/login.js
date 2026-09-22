@@ -10,17 +10,6 @@ const Login = {
   async init() {
     this.render();
     this.initOAuth();
-    if (window.SupabaseClient) {
-      const session = await window.SupabaseClient.getCurrentSession();
-      if (session && session.user) {
-        this.finishLogin('supabase', {
-          id: session.user.id,
-          name: session.profile?.name || session.user.email,
-          email: session.user.email,
-          role: session.profile?.role || 'manager'
-        });
-      }
-    }
   },
 
   render() {
@@ -143,25 +132,27 @@ const Login = {
     const pw = document.getElementById('login-pw').value.trim();
 
     // 1. Supabase가 연결되어 있으면 우선 클라우드 인증 시도
+    let supabaseSuccess = false;
     if (window.SupabaseClient && window.SupabaseClient.isConfigured) {
       try {
         const res = await window.SupabaseClient.signIn(email, pw);
-        if (res.error) throw res.error;
-        const profile = res.user.profile || {};
-        this.finishLogin('supabase', {
-          id: res.user.id,
-          name: profile.name || email,
-          email: email,
-          role: profile.role || 'manager'
-        });
-        return;
-      } catch (e) {
-        alert('Supabase 로그인 실패: ' + e.message);
-        return;
+        if (!res.error && res.user) {
+          supabaseSuccess = true;
+          const profile = res.user.profile || {};
+          this.finishLogin('supabase', {
+            id: res.user.id,
+            name: profile.name || email,
+            email: email,
+            role: profile.role || 'manager'
+          });
+          return;
+        }
+      } catch (err) {
+        console.warn('Supabase 인증 실패, 로컬/본사 매니저 계정 검증으로 전환합니다:', err.message);
       }
     }
 
-    // 2. 로컬 모드 (AuthPersona 활용한 하드코딩 검증)
+    // 2. 로컬 모드 및 본사 등록 매니저 계정 검증 (AuthPersona)
     if (window.AuthPersona) {
       const result = window.AuthPersona.login(email, pw);
       if (result.success) {
@@ -179,7 +170,7 @@ const Login = {
         
         App.navigate('home');
       } else {
-        alert(result.message);
+        alert(result.message || '이메일 또는 비밀번호가 일치하지 않습니다.');
       }
     } else {
       alert('인증 시스템이 초기화되지 않았습니다.');

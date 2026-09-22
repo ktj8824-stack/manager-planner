@@ -14,7 +14,8 @@ const SupabaseClient = {
 
   // 기본 Supabase 연결 정보 (하드코딩)
   DEFAULT_URL: 'https://gohxflsyhogyxantnlig.supabase.co',
-  DEFAULT_KEY: 'sb_publishable_4BiVB8PhD5kk1Dvtvf6Hkw_8YZL0Mwa',
+  DEFAULT_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvaHhmbHN5aG9neXhhbnRubGlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4ODY5NDUsImV4cCI6MjEwNTQ2Mjk0NX0.imGAcwKc26zLXnXeYqNuqWmomMEyL2xz0wI5MpsK0a0',
+  DEFAULT_SERVICE_ROLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvaHhmbHN5aG9neXhhbnRubGlnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4OTg4Njk0NSwiZXhwIjoyMTA1NDYyOTQ1fQ.gjLLRgLW8XFBbLV781hxJguPJKbc6PHAS5ZHOPgywFE',
 
   // 1. 초기화
   init() {
@@ -34,6 +35,14 @@ const SupabaseClient = {
       console.log('ℹ️ Supabase 키가 설정되지 않아 로컬/데모 모드로 동작합니다.');
       this.isConfigured = false;
     }
+  },
+
+  getAdminClient() {
+    const url = localStorage.getItem(this.STORAGE_KEY_URL) || this.DEFAULT_URL;
+    if (url && typeof supabase !== 'undefined') {
+      return supabase.createClient(url, this.DEFAULT_SERVICE_ROLE_KEY);
+    }
+    return null;
   },
 
   // 설정 저장 및 재초기화
@@ -64,23 +73,100 @@ const SupabaseClient = {
 
   // ── 2. 인증 (Authentication) ──
 
-  async signUp(email, password, name, role = 'manager', phone = '') {
-    if (!this.isConfigured) throw new Error('Supabase 설정이 필요합니다.');
+  async adminCreateUser(email, password, name, role = 'manager', phone = '') {
+    const admin = this.getAdminClient();
+    if (!admin) throw new Error('Supabase Admin Client를 초기화할 수 없습니다.');
 
-    const { data, error } = await this.client.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name,
-          role,
-          phone
-        }
+    const cleanEmail = email.trim();
+    const cleanPw = password.trim();
+
+    const { data, error } = await admin.auth.admin.createUser({
+      email: cleanEmail,
+      password: cleanPw,
+      email_confirm: true,
+      user_metadata: {
+        name,
+        role,
+        phone
       }
     });
 
-    if (error) throw error;
+    if (error) {
+      if (error.message && (error.message.includes('already exists') || error.message.includes('already registered'))) {
+        const { data: userList } = await admin.auth.admin.listUsers();
+        const existing = (userList?.users || []).find(u => u.email?.toLowerCase() === cleanEmail.toLowerCase());
+        if (existing) {
+          await admin.auth.admin.updateUserById(existing.id, {
+            password: cleanPw,
+            email_confirm: true,
+            user_metadata: { name, role, phone }
+          });
+          await admin.from('profiles').upsert({
+            id: existing.id,
+            email: cleanEmail,
+            name,
+            role,
+            phone
+          });
+          return { user: existing };
+        }
+      }
+      throw error;
+    }
+
+    if (data && data.user) {
+      try {
+        await admin.from('profiles').upsert({
+          id: data.user.id,
+          email: cleanEmail,
+          name,
+          role,
+          phone
+        });
+      } catch (e) {
+        console.warn('profiles upsert warning:', e);
+      }
+    }
+
     return data;
+  },
+
+  async adminUpdateUser(id, data = {}) {
+    const admin = this.getAdminClient();
+    if (!admin) return false;
+    try {
+      const updatePayload = {};
+      if (data.password) {
+        updatePayload.password = data.password.trim();
+        updatePayload.email_confirm = true;
+      }
+      if (data.name || data.phone || data.role) {
+        updatePayload.user_metadata = {
+          ...(data.name ? { name: data.name } : {}),
+          ...(data.phone ? { phone: data.phone } : {}),
+          ...(data.role ? { role: data.role } : {})
+        };
+      }
+      if (Object.keys(updatePayload).length > 0) {
+        await admin.auth.admin.updateUserById(id, updatePayload);
+      }
+      const profilePayload = {};
+      if (data.name) profilePayload.name = data.name;
+      if (data.email) profilePayload.email = data.email;
+      if (data.phone) profilePayload.phone = data.phone;
+      if (data.role) profilePayload.role = data.role;
+      if (Object.keys(profilePayload).length > 0) {
+        await admin.from('profiles').update(profilePayload).eq('id', id);
+      }
+      return true;
+    } catch (e) {
+      console.warn('adminUpdateUser error:', e);
+      return false;
+    }
+  },
+
+  async signUp(email, password, name, role = 'manager', phone = '') {
+    return this.adminCreateUser(email, password, name, role, phone);
   },
 
   async signIn(email, password) {
@@ -123,23 +209,45 @@ const SupabaseClient = {
 
   async fetchProfile() {
     if (!this.isConfigured || !this.currentUser) return null;
+    const meta = this.currentUser.user_metadata || {};
     try {
       const { data, error } = await this.client
         .from('profiles')
-        .select('*')
+        .select('*, companies(name)')
         .eq('id', this.currentUser.id)
         .single();
 
       if (!error && data) {
-        this.currentProfile = data;
-        localStorage.setItem('bp_user_role', data.role || 'manager');
-        localStorage.setItem('bp_user_name', data.name || this.currentUser.email);
-        return data;
+        this.currentProfile = { ...meta, ...data };
+      } else {
+        this.currentProfile = {
+          id: this.currentUser.id,
+          name: meta.name || this.currentUser.email.split('@')[0],
+          role: meta.role || (this.currentUser.email.includes('ceo') ? 'ceo' : 'manager'),
+          company_name: meta.company_name || 'KJM-엔터테인먼트',
+          phone: meta.phone || ''
+        };
       }
     } catch (e) {
-      console.warn('프로필 로드 실패:', e);
+      this.currentProfile = {
+        id: this.currentUser.id,
+        name: meta.name || this.currentUser.email.split('@')[0],
+        role: meta.role || (this.currentUser.email.includes('ceo') ? 'ceo' : 'manager'),
+        company_name: meta.company_name || 'KJM-엔터테인먼트',
+        phone: meta.phone || ''
+      };
     }
-    return null;
+
+    if (this.currentProfile) {
+      localStorage.setItem('bp_user_role', this.currentProfile.role || 'ceo');
+      localStorage.setItem('bp_user_name', this.currentProfile.name || this.currentUser.email);
+      const companyName = this.currentProfile.companies?.name || this.currentProfile.company_name;
+      if (companyName) {
+        localStorage.setItem('bp_company_name', companyName);
+        localStorage.setItem('reg_company_name', companyName);
+      }
+    }
+    return this.currentProfile;
   },
 
   // ── 3. 소속 아티스트 API ──
@@ -193,6 +301,46 @@ const SupabaseClient = {
 
     if (error) throw error;
     return data;
+  },
+
+  async updateArtist(id, artist) {
+    if (!this.isConfigured) {
+      const list = JSON.parse(localStorage.getItem('HQ_ARTISTS_V1') || '[]');
+      const idx = list.findIndex(a => a.id === id);
+      if (idx !== -1) {
+        list[idx] = { ...list[idx], ...artist };
+        localStorage.setItem('HQ_ARTISTS_V1', JSON.stringify(list));
+        return list[idx];
+      }
+      return null;
+    }
+
+    const { data, error } = await this.client
+      .from('artists')
+      .update(artist)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async deleteArtist(id) {
+    if (!this.isConfigured) {
+      let list = JSON.parse(localStorage.getItem('HQ_ARTISTS_V1') || '[]');
+      list = list.filter(a => a.id !== id);
+      localStorage.setItem('HQ_ARTISTS_V1', JSON.stringify(list));
+      return true;
+    }
+
+    const { error } = await this.client
+      .from('artists')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    return true;
   },
 
   // ── 4. 매니저 목록 및 배정 API ──

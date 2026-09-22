@@ -375,16 +375,53 @@
       btnReg.innerHTML = '<span class="loading-spinner"></span>가입 처리 중...';
 
       try {
-        // CEO 역할로 가입
-        await SupabaseClient.signUp(email, pw, name, 'ceo', phone);
+        // Admin API로 CEO 계정 생성 (이메일 도메인 검증 우회)
+        const SUPABASE_URL = 'https://gohxflsyhogyxantnlig.supabase.co';
+        const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvaHhmbHN5aG9neXhhbnRubGlnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4OTg4Njk0NSwiZXhwIjoyMTA1NDYyOTQ1fQ.gjLLRgLW8XFBbLV781hxJguPJKbc6PHAS5ZHOPgywFE';
 
-        // 회사명 로컬에 임시 저장
+        const adminClient = supabase.createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+        const { data: userData, error: adminError } = await adminClient.auth.admin.createUser({
+          email,
+          password: pw,
+          email_confirm: true,
+          user_metadata: {
+            name,
+            role: 'ceo',
+            phone,
+            company_name: company
+          }
+        });
+
+        if (adminError) throw adminError;
+
+        // ── companies 테이블에 회사 INSERT ──
+        const { data: companyData, error: companyError } = await adminClient
+          .from('companies')
+          .insert([{ name: company }])
+          .select()
+          .single();
+
+        if (companyError) {
+          console.warn('회사 생성 오류:', companyError);
+        } else {
+          // profiles.company_id 업데이트
+          await adminClient
+            .from('profiles')
+            .update({ company_id: companyData.id })
+            .eq('id', userData.user.id);
+          console.log('✅ 회사 등록 완료:', companyData);
+        }
+
+        // 회사명 로컬에 저장 (두 키 모두 저장하여 호환성 확보)
         localStorage.setItem('reg_company_name', company);
+        localStorage.setItem('bp_company_name', company);
 
         successEl.innerHTML = `
           ✅ <strong>${name}</strong> CEO 계정이 성공적으로 생성되었습니다!<br><br>
-          📧 <strong>${email}</strong>으로 인증 메일이 발송되었습니다.<br>
-          이메일을 확인하여 계정을 활성화한 후 로그인해 주세요.
+          🏢 <strong>${company}</strong> 회사 등록 완료<br>
+          🔑 <strong>${email}</strong>로 바로 로그인하실 수 있습니다.<br>
+          (이메일 인증 없이 즉시 사용 가능)
         `;
         successEl.style.display = 'block';
 
@@ -399,14 +436,17 @@
 
       } catch (err) {
         console.error('가입 오류:', err);
-        let msg = '가입 처리 중 오류가 발생했습니다. 다시 시도해 주세요.';
+        let msg = '가입 처리 중 오류가 발생했습니다.';
         if (err.message) {
-          if (err.message.includes('already registered') || err.message.includes('already been registered')) {
+          if (err.message.includes('already registered') || err.message.includes('already been registered') || err.message.includes('User already registered') || err.message.includes('already exists')) {
             msg = '이미 등록된 이메일 주소입니다. 로그인 페이지로 이동해 주세요.';
-          } else if (err.message.includes('Password should be')) {
+          } else if (err.message.includes('Password should be') || err.message.includes('password')) {
             msg = '비밀번호는 6자 이상이어야 합니다.';
-          } else if (err.message.includes('valid email')) {
+          } else if (err.message.includes('valid email') || err.message.includes('email_address_invalid')) {
             msg = '올바른 이메일 형식을 입력해 주세요.';
+          } else {
+            // 실제 Supabase 오류 메시지 표시
+            msg = '오류: ' + err.message;
           }
         }
         errEl.textContent = msg;

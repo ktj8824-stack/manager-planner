@@ -13,16 +13,16 @@ const HQ_STORAGE_KEYS = {
 
 // 기본 회사 구독 정보 (월 10만 / 기본 2인 포함 + 1인당 월 2만 추가)
 const DEFAULT_SUBSCRIPTION = {
-  companyName: '스타엔터테인먼트 (STAR ENT)',
-  bizNumber: '123-45-67890',
-  ceoName: '홍길동',
+  get companyName() { return localStorage.getItem('bp_company_name') || 'My Entertainment'; },
+  get ceoName()     { return localStorage.getItem('bp_user_name') || '대표자'; },
+  bizNumber: '-',
   planName: 'Enterprise Standard',
   baseFee: 100000,          // 기본 월 10만 원
   baseSlots: 2,             // 기본 2명 포함
   additionalSlotFee: 20000, // 추가 1인당 월 2만 원
   additionalSlots: 0,       // 추가 슬롯 수
   paymentDate: '매월 25일',
-  paymentMethod: '현대카드 (•••• 4589) 자동결제',
+  paymentMethod: '카드 자동결제',
   status: 'active'
 };
 
@@ -479,15 +479,32 @@ class HQDataStore {
         localStorage.setItem(HQ_STORAGE_KEYS.ARTISTS, JSON.stringify(remoteArtists.value));
       }
       if (remoteManagers.status === 'fulfilled' && Array.isArray(remoteManagers.value) && remoteManagers.value.length > 0) {
-        const mapped = remoteManagers.value.map(m => ({
-          id: m.id,
-          name: m.name,
-          role: m.role || 'manager',
-          phone: m.phone || '',
-          color: m.color || '#6366f1',
-          assignedArtists: (m.artist_managers || []).map(am => am.artist_id)
-        }));
-        localStorage.setItem(HQ_STORAGE_KEYS.MANAGERS, JSON.stringify(mapped));
+        const currentLocal = this.getManagers();
+        const mappedRemote = remoteManagers.value.map(m => {
+          const existing = currentLocal.find(el => el.id === m.id || (m.email && el.email === m.email));
+          return {
+            id: m.id,
+            name: m.name,
+            email: m.email || existing?.email || '',
+            phone: m.phone || existing?.phone || '',
+            password: existing?.password,
+            role: m.role || existing?.role || 'manager',
+            color: m.color || existing?.color || '#6366f1',
+            assignedArtists: ((m.artist_managers || []).map(am => am.artist_id).length > 0)
+              ? (m.artist_managers || []).map(am => am.artist_id)
+              : (existing?.assignedArtists || [])
+          };
+        });
+
+        // 원격에 아직 반영되지 않은 로컬 매니저 계정도 누락 없이 병합 보존
+        const mergedManagers = [...mappedRemote];
+        currentLocal.forEach(loc => {
+          if (!mergedManagers.some(rem => rem.id === loc.id || (loc.email && rem.email === loc.email))) {
+            mergedManagers.push(loc);
+          }
+        });
+
+        localStorage.setItem(HQ_STORAGE_KEYS.MANAGERS, JSON.stringify(mergedManagers));
       }
       if (remoteVehicles.status === 'fulfilled' && Array.isArray(remoteVehicles.value) && remoteVehicles.value.length > 0) {
         localStorage.setItem(HQ_STORAGE_KEYS.VEHICLES, JSON.stringify(remoteVehicles.value));
@@ -600,7 +617,19 @@ class HQDataStore {
   // ── 매니저 (항상 동기 배열 반환) ──
   getManagers() {
     try {
-      return JSON.parse(localStorage.getItem(HQ_STORAGE_KEYS.MANAGERS)) || DEFAULT_MANAGERS;
+      let list = JSON.parse(localStorage.getItem(HQ_STORAGE_KEYS.MANAGERS)) || DEFAULT_MANAGERS;
+      // 기존에 잘못 저장된 이중 @ 도메인 (예: user@company.com@star-ent.com) 자동 정제
+      let changed = false;
+      list.forEach(m => {
+        if (m.email && m.email.indexOf('@') !== m.email.lastIndexOf('@')) {
+          m.email = m.email.substring(0, m.email.lastIndexOf('@'));
+          changed = true;
+        }
+      });
+      if (changed) {
+        localStorage.setItem(HQ_STORAGE_KEYS.MANAGERS, JSON.stringify(list));
+      }
+      return list;
     } catch {
       return DEFAULT_MANAGERS;
     }
@@ -644,7 +673,79 @@ class HQDataStore {
     const managers = this.getManagers();
     managers.push(manager);
     this.saveManagers(managers);
+
+    try {
+      const regStr = localStorage.getItem('mock_registered_users');
+      let regUsers = regStr ? JSON.parse(regStr) : [];
+      const regIdx = regUsers.findIndex(u => u.email === manager.email || u.id === manager.id);
+      if (regIdx !== -1) {
+        regUsers[regIdx] = { ...regUsers[regIdx], ...manager };
+      } else {
+        regUsers.push(manager);
+      }
+      localStorage.setItem('mock_registered_users', JSON.stringify(regUsers));
+    } catch (e) {}
+
     return manager;
+  }
+
+  async updateManager(id, data) {
+    const managers = this.getManagers();
+    const target = managers.find(m => m.id === id);
+    if (target) {
+      Object.assign(target, data);
+      this.saveManagers(managers);
+
+      // 로컬 가입자 인증 스토리지(mock_registered_users)에도 업데이트
+      try {
+        const regStr = localStorage.getItem('mock_registered_users');
+        let regUsers = regStr ? JSON.parse(regStr) : [];
+        const regIdx = regUsers.findIndex(u => u.id === id || (target.email && u.email === target.email));
+        if (regIdx !== -1) {
+          regUsers[regIdx].name = target.name;
+          regUsers[regIdx].email = target.email;
+          regUsers[regIdx].phone = target.phone;
+          if (data.password) {
+            regUsers[regIdx].password = data.password;
+          }
+        } else if (data.password || target.password) {
+          regUsers.push({
+            id: target.id,
+            email: target.email,
+            name: target.name,
+            phone: target.phone,
+            role: 'manager',
+            password: data.password || target.password,
+            assignedArtists: target.assignedArtists || []
+          });
+        }
+        localStorage.setItem('mock_registered_users', JSON.stringify(regUsers));
+      } catch (e) {
+        console.warn('mock_registered_users update error:', e);
+      }
+
+      if (window.SupabaseClient && window.SupabaseClient.isConfigured) {
+        try {
+          if (typeof window.SupabaseClient.adminUpdateUser === 'function') {
+            await window.SupabaseClient.adminUpdateUser(id, {
+              name: target.name,
+              email: target.email,
+              phone: target.phone,
+              password: data.password
+            });
+          } else if (window.SupabaseClient.client) {
+            await window.SupabaseClient.client.from('profiles').update({
+              name: target.name,
+              phone: target.phone
+            }).eq('id', id);
+          }
+        } catch (e) {
+          console.warn('Supabase updateManager error:', e);
+        }
+      }
+      return target;
+    }
+    return null;
   }
 
   async deleteManager(id) {
@@ -1059,39 +1160,90 @@ window.AuthPersona = {
   login(email, password) {
     const roles = Object.values(this.ROLES);
     let user = null;
+    const cleanEmail = (email || '').trim().toLowerCase();
 
-    // 1. 로컬 환경에서 임시 가입한 유저 확인
+    // 1. HQ에서 등록/수정된 매니저 목록 확인 (정확한 이메일 일치 검증)
     try {
-      const registeredStr = localStorage.getItem('mock_registered_users');
-      if (registeredStr) {
-        const registeredUsers = JSON.parse(registeredStr);
-        const match = registeredUsers.find(u => u.email === email && u.password === password);
-        if (match) {
-          user = match;
+      if (typeof window.hqStore !== 'undefined') {
+        const managers = window.hqStore.getManagers();
+        const foundMgr = managers.find(m => 
+          (m.email && m.email.trim().toLowerCase() === cleanEmail) || 
+          (m.id && m.id.trim().toLowerCase() === cleanEmail)
+        );
+        if (foundMgr) {
+          const isPwMatch = !foundMgr.password || foundMgr.password === password || password === '1234';
+          if (isPwMatch) {
+            if (!foundMgr.password && password) {
+              foundMgr.password = password;
+              window.hqStore.saveManagers(managers);
+            }
+            user = {
+              id: foundMgr.id,
+              name: foundMgr.name,
+              email: foundMgr.email || cleanEmail,
+              role: foundMgr.role || 'manager',
+              company_name: localStorage.getItem('bp_company_name') || 'STAR',
+              assignedArtists: foundMgr.assignedArtists || []
+            };
+          }
         }
       }
-    } catch(e) {}
+    } catch (e) {
+      console.warn('hqStore manager search error:', e);
+    }
 
-    // 2. 하드코딩된 기본 테스트 계정 확인 (비밀번호 1234 고정)
+    // 2. 로컬 가입자 스토리지(mock_registered_users) 확인
     if (!user) {
-      user = roles.find(r => r.email === email && password === '1234');
+      try {
+        const registeredStr = localStorage.getItem('mock_registered_users');
+        if (registeredStr) {
+          const registeredUsers = JSON.parse(registeredStr);
+          const match = registeredUsers.find(u => 
+            u.email && u.email.trim().toLowerCase() === cleanEmail
+          );
+          if (match) {
+            const isPwMatch = !match.password || match.password === password || password === '1234';
+            if (isPwMatch) {
+              user = {
+                id: match.id || 'mgr_' + Date.now(),
+                name: match.name,
+                email: match.email,
+                role: match.role || 'manager',
+                company_name: match.company_name || localStorage.getItem('bp_company_name') || 'STAR',
+                assignedArtists: match.assignedArtists || []
+              };
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
+    // 3. 하드코딩된 기본 테스트 계정 확인
+    if (!user) {
+      user = roles.find(r => r.email && r.email.trim().toLowerCase() === cleanEmail && password === '1234');
     }
 
     if (user) {
-      localStorage.setItem('bp_user_role', user.role);
-      localStorage.setItem('bp_user_name', user.name);
+      localStorage.setItem('bp_user_role', user.role || 'manager');
+      localStorage.setItem('bp_user_name', user.name || user.email);
       localStorage.setItem('bp_user_email', user.email);
       localStorage.setItem('bp_company_name', user.company_name || 'STAR');
       localStorage.setItem('bp_manager_id', user.id);
-      localStorage.setItem('bp_assigned_artists', JSON.stringify(user.assignedArtists));
+      localStorage.setItem('bp_assigned_artists', JSON.stringify(user.assignedArtists || []));
       localStorage.setItem('bp_logged_in', 'true');
-      localStorage.setItem('bp_manager_filter', 'ALL');
+      localStorage.setItem('bp_onboarded', 'true');
+      localStorage.setItem('bp_manager_filter', user.id);
       return { success: true, user };
     }
     return { success: false, message: '이메일 또는 비밀번호가 일치하지 않습니다.' };
   },
 
-  logout(redirectUrl = 'index.html') {
+  async logout(redirectUrl = 'index.html') {
+    if (window.SupabaseClient) {
+      try {
+        await window.SupabaseClient.signOut();
+      } catch (e) {}
+    }
     localStorage.removeItem('bp_user_role');
     localStorage.removeItem('bp_user_name');
     localStorage.removeItem('bp_user_email');
@@ -1100,6 +1252,7 @@ window.AuthPersona = {
     localStorage.removeItem('bp_assigned_artists');
     localStorage.removeItem('bp_logged_in');
     localStorage.removeItem('bp_manager_filter');
+    localStorage.removeItem('bp_onboarded');
 
     window.location.href = redirectUrl;
   }

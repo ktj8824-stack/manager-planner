@@ -761,13 +761,30 @@ const Home = {
     }
   },
 
-  logout() {
+  async logout() {
     if (confirm('로그아웃 하시겠습니까?')) {
+      if (window.SupabaseClient) {
+        try {
+          await window.SupabaseClient.signOut();
+        } catch (e) {}
+      }
       if (window.AuthPersona) {
-        window.AuthPersona.logout();
+        await window.AuthPersona.logout('index.html');
       } else {
+        localStorage.removeItem('bp_user_role');
+        localStorage.removeItem('bp_user_name');
+        localStorage.removeItem('bp_user_email');
+        localStorage.removeItem('bp_company_name');
+        localStorage.removeItem('bp_manager_id');
+        localStorage.removeItem('bp_assigned_artists');
         localStorage.removeItem('bp_logged_in');
-        window.location.href = 'index.html#login';
+        localStorage.removeItem('bp_manager_filter');
+        localStorage.removeItem('bp_onboarded');
+        if (typeof App !== 'undefined' && App.navigate) {
+          App.navigate('login');
+        } else {
+          window.location.href = 'index.html';
+        }
       }
     }
   },

@@ -1,0 +1,232 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>구독 결제 | HQ 엔터테인먼트 스케줄러</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Pretendard', -apple-system, sans-serif;
+      background: #0f172a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      color: #f8fafc;
+    }
+    body::before {
+      content: '';
+      position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(ellipse at 20% 20%, rgba(99,102,241,0.15) 0%, transparent 50%),
+                  radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.10) 0%, transparent 50%);
+      pointer-events: none; z-index: 0;
+    }
+    .page-wrap { position: relative; z-index: 1; width: 100%; max-width: 520px; }
+    .pay-header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+    .pay-back-btn {
+      width: 36px; height: 36px; border-radius: 10px; border: 1px solid #334155;
+      background: rgba(255,255,255,0.05); color: #94a3b8; font-size: 18px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .pay-back-btn:hover { background: rgba(255,255,255,0.10); color: #f8fafc; }
+    .pay-header-title { font-size: 20px; font-weight: 800; color: #f8fafc; }
+    .pay-header-sub { font-size: 13px; color: #94a3b8; margin-top: 2px; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 20px; margin-bottom: 14px; }
+    .card-title { font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+    .order-company { font-size: 18px; font-weight: 800; color: #f8fafc; margin-bottom: 4px; }
+    .order-plan {
+      display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 16px;
+    }
+    .order-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0; border-bottom: 1px solid #334155; font-size: 13px; color: #94a3b8;
+    }
+    .order-row:last-child { border-bottom: none; }
+    .order-row span:last-child { color: #e2e8f0; font-weight: 600; }
+    .order-total { display: flex; justify-content: space-between; align-items: center; padding: 14px 0 0; margin-top: 4px; }
+    .order-total-label { font-size: 15px; font-weight: 700; color: #f8fafc; }
+    .order-total-amount { font-size: 22px; font-weight: 900; color: #a5f3fc; }
+    .order-vat { font-size: 11px; color: #64748b; text-align: right; margin-top: 2px; }
+    .method-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .method-btn {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 8px; padding: 16px 12px; border-radius: 12px; border: 2px solid #334155;
+      background: #0f172a; cursor: pointer; transition: all 0.2s; color: #cbd5e1;
+      font-size: 13px; font-weight: 600; font-family: 'Pretendard', sans-serif;
+    }
+    .method-btn:hover { border-color: #6366f1; background: rgba(99,102,241,0.08); color: #f8fafc; }
+    .method-btn.selected { border-color: #6366f1; background: rgba(99,102,241,0.15); color: #a5b4fc; }
+    .method-icon { font-size: 24px; line-height: 1; }
+    .billing-row { display: flex; flex-direction: column; gap: 12px; }
+    .billing-label { font-size: 12px; color: #64748b; margin-bottom: 5px; font-weight: 600; }
+    .billing-input {
+      width: 100%; background: #0f172a; border: 1.5px solid #334155; border-radius: 10px;
+      padding: 12px 14px; font-size: 14px; font-family: 'Pretendard', sans-serif;
+      color: #f8fafc; outline: none; transition: border-color 0.2s;
+    }
+    .billing-input:focus { border-color: #6366f1; }
+    .billing-input::placeholder { color: #475569; }
+    .pay-btn {
+      width: 100%; padding: 18px; border-radius: 14px; border: none;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff;
+      font-size: 16px; font-weight: 800; font-family: 'Pretendard', sans-serif;
+      cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 20px rgba(99,102,241,0.35);
+      margin-top: 6px; letter-spacing: -0.3px;
+    }
+    .pay-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.45); }
+    .pay-btn:active { transform: translateY(0); }
+    .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .pay-notice { text-align: center; font-size: 12px; color: #475569; margin-top: 12px; line-height: 1.6; }
+    .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 8px; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .security-badges { display: flex; justify-content: center; gap: 16px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e293b; }
+    .sec-badge { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #475569; }
+    .sec-badge span { font-size: 14px; }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+  <div class="pay-header">
+    <button class="pay-back-btn" onclick="history.back()">&#8592;</button>
+    <div>
+      <div class="pay-header-title">&#128179; 구독 결제</div>
+      <div class="pay-header-sub">Enterprise Standard 플랜</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">&#128203; 주문 요약</div>
+    <div class="order-company" id="pay-company-name">—</div>
+    <div class="order-plan">Enterprise Standard</div>
+    <div class="order-row"><span>기본 요금 (2인 포함)</span><span>100,000원</span></div>
+    <div class="order-row">
+      <span>추가 슬롯 (<span id="pay-add-slots">0</span>명 × 20,000원)</span>
+      <span id="pay-add-fee">+0원 / 월</span>
+    </div>
+    <div class="order-row"><span>매니저 슬롯 합계</span><span id="pay-total-slots">2명</span></div>
+    <div class="order-total">
+      <span class="order-total-label">월 청구 합계</span>
+      <span class="order-total-amount" id="pay-total-amount">100,000원</span>
+    </div>
+    <div class="order-vat" id="pay-vat-text">월 100,000원 (VAT 별도)</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">&#128179; 결제 수단</div>
+    <div class="method-grid">
+      <button class="method-btn selected" data-method="CARD" onclick="selectMethod(this,'CARD')">
+        <div class="method-icon">&#128179;</div><div>신용/체크카드</div>
+      </button>
+      <button class="method-btn" data-method="KAKAO_PAY" onclick="selectMethod(this,'KAKAO_PAY')">
+        <div class="method-icon">&#128155;</div><div>카카오페이</div>
+      </button>
+      <button class="method-btn" data-method="NAVER_PAY" onclick="selectMethod(this,'NAVER_PAY')">
+        <div class="method-icon">&#128154;</div><div>네이버페이</div>
+      </button>
+      <button class="method-btn" data-method="TRANSFER" onclick="selectMethod(this,'TRANSFER')">
+        <div class="method-icon">&#127974;</div><div>계좌이체</div>
+      </button>
+      <button class="method-btn" data-method="VIRTUAL_ACCOUNT" onclick="selectMethod(this,'VIRTUAL_ACCOUNT')">
+        <div class="method-icon">&#128196;</div><div>무통장입금</div>
+      </button>
+      <button class="method-btn" data-method="TOSSPAY" onclick="selectMethod(this,'TOSSPAY')">
+        <div class="method-icon">&#128309;</div><div>토스페이</div>
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">&#128100; 구매자 정보</div>
+    <div class="billing-row">
+      <div><div class="billing-label">대표자 이름</div><input type="text" class="billing-input" id="buyer-name" placeholder="홍길동"></div>
+      <div><div class="billing-label">이메일 (영수증 발송)</div><input type="email" class="billing-input" id="buyer-email" placeholder="ceo@company.com"></div>
+      <div><div class="billing-label">연락처</div><input type="tel" class="billing-input" id="buyer-phone" placeholder="010-0000-0000"></div>
+    </div>
+  </div>
+
+  <button class="pay-btn" id="btn-pay" onclick="startPayment()">
+    &#128179; <span id="pay-btn-text">월 100,000원 결제하기</span>
+  </button>
+  <p class="pay-notice">결제는 <strong style="color:#818cf8;">토스페이먼츠</strong>를 통해 안전하게 처리됩니다.<br>정기 구독은 매월 같은 날 자동 결제되며, 언제든지 취소할 수 있습니다.</p>
+  <div class="security-badges">
+    <div class="sec-badge"><span>&#128274;</span> SSL 보안결제</div>
+    <div class="sec-badge"><span>&#128737;&#65039;</span> PCI DSS 인증</div>
+    <div class="sec-badge"><span>&#9989;</span> 토스페이먼츠</div>
+  </div>
+</div>
+
+<script src="https://js.tosspayments.com/v1/payment"></script>
+<script>
+  const params      = new URLSearchParams(location.search);
+  const addSlots    = parseInt(params.get('addSlots') || '0');
+  const totalSlots  = parseInt(params.get('totalSlots') || '2');
+  const totalFee    = parseInt(params.get('totalFee') || '100000');
+  const addFee      = addSlots * 20000;
+  const companyName = decodeURIComponent(params.get('company') || localStorage.getItem('bp_company_name') || 'My Entertainment');
+  const ceoName     = decodeURIComponent(params.get('ceo') || localStorage.getItem('bp_user_name') || '대표자');
+  const ceoEmail    = decodeURIComponent(params.get('email') || localStorage.getItem('bp_user_email') || '');
+
+  document.getElementById('pay-company-name').textContent = companyName;
+  document.getElementById('pay-add-slots').textContent    = addSlots;
+  document.getElementById('pay-add-fee').textContent      = '+' + addFee.toLocaleString() + '원 / 월';
+  document.getElementById('pay-total-slots').textContent  = totalSlots + '명';
+  document.getElementById('pay-total-amount').textContent = totalFee.toLocaleString() + '원';
+  document.getElementById('pay-vat-text').textContent     = '월 ' + totalFee.toLocaleString() + '원 (VAT 별도)';
+  document.getElementById('pay-btn-text').textContent     = '월 ' + totalFee.toLocaleString() + '원 결제하기';
+  document.getElementById('buyer-name').value   = ceoName;
+  document.getElementById('buyer-email').value  = ceoEmail;
+  document.getElementById('buyer-phone').value  = localStorage.getItem('bp_user_phone') || '';
+
+  let selectedMethod = 'CARD';
+  function selectMethod(el, method) {
+    document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedMethod = method;
+  }
+
+  // 테스트 클라이언트 키 (실 서비스 시 토스 대시보드 발급 키로 교체)
+  const TOSS_CLIENT_KEY = 'test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq';
+
+  async function startPayment() {
+    const name  = document.getElementById('buyer-name').value.trim();
+    const email = document.getElementById('buyer-email').value.trim();
+    const phone = document.getElementById('buyer-phone').value.trim();
+    if (!name || !email) { alert('구매자 이름과 이메일을 입력해 주세요.'); return; }
+
+    const btn = document.getElementById('btn-pay');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>결제창 여는 중...';
+
+    const orderId   = 'HQ-SUB-' + Date.now();
+    const orderName = companyName + ' Enterprise Standard (' + totalSlots + '명)';
+    const base      = location.href.replace('payment.html', 'payment-result.html');
+    const successUrl = base + '?status=success&orderId=' + orderId + '&addSlots=' + addSlots + '&totalSlots=' + totalSlots + '&totalFee=' + totalFee;
+    const failUrl    = base + '?status=fail';
+
+    try {
+      const tossPayments = TossPayments(TOSS_CLIENT_KEY);
+      await tossPayments.requestPayment(selectedMethod, {
+        amount: totalFee, orderId, orderName,
+        customerName: name, customerEmail: email,
+        customerMobilePhone: phone.replace(/-/g, '') || undefined,
+        successUrl, failUrl,
+      });
+    } catch (err) {
+      console.error('결제 오류:', err);
+      if (err.code !== 'USER_CANCEL') alert('결제 오류: ' + err.message);
+      btn.disabled = false;
+      btn.innerHTML = '&#128179; <span id="pay-btn-text">월 ' + totalFee.toLocaleString() + '원 결제하기</span>';
+    }
+  }
+</script>
+</body>
+</html>

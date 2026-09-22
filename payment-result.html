@@ -1,0 +1,177 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>결제 결과 | HQ 엔터테인먼트 스케줄러</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Pretendard', -apple-system, sans-serif;
+      background: #0f172a; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px 16px; color: #f8fafc;
+    }
+    body::before {
+      content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(ellipse at 20% 20%, rgba(99,102,241,0.15) 0%, transparent 50%),
+                  radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.10) 0%, transparent 50%);
+      pointer-events: none; z-index: 0;
+    }
+    .wrap {
+      position: relative; z-index: 1;
+      background: #1e293b; border: 1px solid #334155; border-radius: 24px;
+      padding: 48px 40px; max-width: 420px; width: 100%; text-align: center;
+    }
+    .icon { font-size: 64px; margin-bottom: 20px; animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
+    @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .result-title { font-size: 24px; font-weight: 900; margin-bottom: 8px; }
+    .result-sub { font-size: 14px; color: #94a3b8; margin-bottom: 28px; line-height: 1.6; }
+    .info-box { background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: left; }
+    .info-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid #1e293b; }
+    .info-row:last-child { border-bottom: none; }
+    .info-row span:first-child { color: #64748b; }
+    .info-row span:last-child { color: #e2e8f0; font-weight: 600; }
+    .btn-primary {
+      display: block; width: 100%; padding: 16px; border-radius: 12px; border: none;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff;
+      font-size: 15px; font-weight: 700; font-family: 'Pretendard', sans-serif;
+      cursor: pointer; text-decoration: none; margin-bottom: 10px;
+      transition: all 0.2s; box-shadow: 0 4px 16px rgba(99,102,241,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); }
+    .btn-secondary {
+      display: block; width: 100%; padding: 14px; border-radius: 12px;
+      border: 1px solid #334155; background: transparent; color: #94a3b8;
+      font-size: 14px; font-weight: 600; font-family: 'Pretendard', sans-serif;
+      cursor: pointer; text-decoration: none; transition: all 0.2s;
+    }
+    .btn-secondary:hover { border-color: #6366f1; color: #f8fafc; }
+    .confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+  </style>
+</head>
+<body>
+<canvas class="confetti" id="confetti-canvas"></canvas>
+<div class="wrap" id="result-wrap">
+  <div class="icon" id="result-icon">⏳</div>
+  <div class="result-title" id="result-title">처리 중...</div>
+  <div class="result-sub" id="result-sub">결제 결과를 확인하고 있습니다.</div>
+  <div class="info-box" id="info-box" style="display:none;">
+    <div class="info-row"><span>주문번호</span><span id="r-order-id">—</span></div>
+    <div class="info-row"><span>결제 금액</span><span id="r-amount">—</span></div>
+    <div class="info-row"><span>매니저 슬롯</span><span id="r-slots">—</span></div>
+    <div class="info-row"><span>결제 일시</span><span id="r-date">—</span></div>
+  </div>
+  <button class="btn-primary" id="btn-main" onclick="goToAdmin()">&#127968; 관제 포털로 이동</button>
+  <button class="btn-secondary" id="btn-retry" onclick="goToPayment()" style="display:none;">&#8617; 다시 결제하기</button>
+</div>
+
+<script>
+  const params     = new URLSearchParams(location.search);
+  const status     = params.get('status');
+  const orderId    = params.get('orderId') || '';
+  const addSlots   = parseInt(params.get('addSlots') || '0');
+  const totalSlots = parseInt(params.get('totalSlots') || '2');
+  const totalFee   = parseInt(params.get('totalFee') || '100000');
+
+  const iconEl    = document.getElementById('result-icon');
+  const titleEl   = document.getElementById('result-title');
+  const subEl     = document.getElementById('result-sub');
+  const infoBox   = document.getElementById('info-box');
+  const btnRetry  = document.getElementById('btn-retry');
+  const btnMain   = document.getElementById('btn-main');
+
+  if (status === 'success') {
+    iconEl.textContent  = '🎉';
+    titleEl.textContent = '결제 완료!';
+    titleEl.style.color = '#a5f3fc';
+    subEl.innerHTML     = '구독이 성공적으로 활성화되었습니다.<br>이제 매니저 계정을 추가할 수 있습니다.';
+    infoBox.style.display = 'block';
+
+    const now = new Date();
+    document.getElementById('r-order-id').textContent  = orderId || '—';
+    document.getElementById('r-amount').textContent    = totalFee.toLocaleString() + '원 / 월';
+    document.getElementById('r-slots').textContent     = totalSlots + '명 (추가 ' + addSlots + '명)';
+    document.getElementById('r-date').textContent      = now.toLocaleString('ko-KR');
+
+    // 구독 정보 localStorage 업데이트
+    const HQ_SUBSCRIPTION_KEY = 'HQ_SUBSCRIPTION_V5';
+    try {
+      const sub = JSON.parse(localStorage.getItem(HQ_SUBSCRIPTION_KEY) || '{}');
+      sub.additionalSlots = addSlots;
+      sub.status = 'active';
+      sub.lastPaidAt = now.toISOString();
+      sub.lastOrderId = orderId;
+      localStorage.setItem(HQ_SUBSCRIPTION_KEY, JSON.stringify(sub));
+    } catch(e) {}
+
+    // 컨페티 효과
+    launchConfetti();
+
+    // 3초 후 자동 이동
+    let count = 3;
+    const timer = setInterval(() => {
+      count--;
+      btnMain.textContent = '관제 포털로 이동 (' + count + '초)';
+      if (count <= 0) { clearInterval(timer); goToAdmin(); }
+    }, 1000);
+
+  } else {
+    iconEl.textContent  = '❌';
+    titleEl.textContent = '결제 실패';
+    titleEl.style.color = '#fca5a5';
+    subEl.textContent   = params.get('message') || '결제가 취소되었거나 오류가 발생했습니다. 다시 시도해 주세요.';
+    btnRetry.style.display = 'block';
+    btnMain.textContent = '관제 포털로 돌아가기';
+  }
+
+  function goToAdmin() {
+    window.location.href = 'admin.html';
+  }
+
+  function goToPayment() {
+    history.back();
+  }
+
+  // ── 컨페티 ──
+  function launchConfetti() {
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx    = canvas.getContext('2d');
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const pieces = Array.from({ length: 120 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * -canvas.height,
+      w: Math.random() * 10 + 5,
+      h: Math.random() * 6 + 3,
+      color: ['#6366f1','#8b5cf6','#a5f3fc','#f59e0b','#10b981','#ec4899'][Math.floor(Math.random()*6)],
+      speed: Math.random() * 3 + 1,
+      angle: Math.random() * 360,
+      spin:  Math.random() * 4 - 2,
+      drift: Math.random() * 2 - 1,
+    }));
+
+    let frame = 0;
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pieces.forEach(p => {
+        ctx.save();
+        ctx.translate(p.x + p.w/2, p.y + p.h/2);
+        ctx.rotate(p.angle * Math.PI / 180);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, 1 - frame / 180);
+        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+        ctx.restore();
+        p.y += p.speed; p.x += p.drift; p.angle += p.spin;
+      });
+      frame++;
+      if (frame < 200) requestAnimationFrame(draw);
+      else ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    draw();
+  }
+</script>
+</body>
+</html>
