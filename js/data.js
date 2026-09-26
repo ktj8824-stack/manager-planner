@@ -399,11 +399,11 @@ const State = {
             let gapText = gapHours > 0 ? `${gapHours}시간` : '';
             if (gapRemainMins > 0) gapText += ` ${gapRemainMins}분`;
 
-            let gapLabel = `⏳ 다음 일정까지 ${gapText} 대기/휴식`;
+            let gapLabel = `[대기/휴식] 다음 일정까지 ${gapText} 휴식`;
             if (gapMins >= 120) {
-              gapLabel = `🍱 식사 및 이동 여유시간 (${gapText})`;
+              gapLabel = `[식사/정비] 식사 및 이동 여유시간 (${gapText})`;
             } else if (gapMins >= 60) {
-              gapLabel = `🚗 이동 및 대기 (${gapText})`;
+              gapLabel = `[대기/이동] 이동 및 대기 (${gapText})`;
             }
 
             events.push({
@@ -412,10 +412,10 @@ const State = {
               isHQ: true,
               isAuto: true,
               type: 'travel',
+              stepCategory: 'rest',
               title: gapLabel,
               time: previousEndTimeStr,
               durMin: gapMins,
-              icon: gapMins >= 120 ? '🍱' : (gapMins >= 60 ? '🚗' : '⏳'),
               desc: '개인 정비 및 식사 가능',
               done: true, // Auto complete or read-only
               moving: false,

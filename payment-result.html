@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -96,7 +96,7 @@
     document.getElementById('r-date').textContent      = now.toLocaleString('ko-KR');
 
     // 구독 정보 localStorage 업데이트
-    const HQ_SUBSCRIPTION_KEY = 'HQ_SUBSCRIPTION_V5';
+    const HQ_SUBSCRIPTION_KEY = 'HQ_SUBSCRIPTION_V6';
     try {
       const sub = JSON.parse(localStorage.getItem(HQ_SUBSCRIPTION_KEY) || '{}');
       sub.additionalSlots = addSlots;

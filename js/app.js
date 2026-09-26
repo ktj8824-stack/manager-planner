@@ -19,10 +19,18 @@ const App = {
       if (e.data && e.data.type === 'NEW_HQ_MESSAGE') {
         const noti = e.data.payload;
         this.showHqToast(noti);
-      } else if (e.data && (e.data.type === 'SCHEDULES_SAVED' || e.data.type === 'SCHEDULE_UPDATE')) {
+      } else if (e.data && (e.data.type === 'SCHEDULES_SAVED' || e.data.type === 'SCHEDULE_UPDATE' || e.data.type === 'SCHEDULE_DELETE' || e.data.type === 'MANAGER_ASSIGNED' || e.data.type === 'ARTISTS_SAVED')) {
         this.refreshActiveScreens();
       }
     };
+
+    // 로컬 창 및 탭 간 커스텀 이벤트/스토리지 이벤트 즉시 수신
+    window.addEventListener('hq-store-change', () => this.refreshActiveScreens());
+    window.addEventListener('storage', (e) => {
+      if (!e.key || e.key.startsWith('HQ_') || e.key.startsWith('bp_')) {
+        this.refreshActiveScreens();
+      }
+    });
 
     // 2. Supabase Cloud Realtime 구독 (기기 간 실시간 동기화)
     this.initRealtimeSync();
@@ -78,10 +86,13 @@ const App = {
   },
 
   refreshActiveScreens() {
-    if (State.screen === 'home' && typeof Home !== 'undefined' && Home.renderRightTimeline) {
-      Home.renderRightTimeline();
-      Home.renderCalendar();
-    } else if (State.screen === 'timeline' && typeof Timeline !== 'undefined' && Timeline.render) {
+    if (typeof State !== 'undefined' && State.loadSchedules) {
+      State.loadSchedules();
+    }
+    if (State.screen === 'home' && typeof Home !== 'undefined') {
+      if (typeof Home.updateLeftCal === 'function') Home.updateLeftCal();
+      if (typeof Home.updateRightTimeline === 'function') Home.updateRightTimeline();
+    } else if (State.screen === 'timeline' && typeof Timeline !== 'undefined' && typeof Timeline.render === 'function') {
       Timeline.render();
     }
   },

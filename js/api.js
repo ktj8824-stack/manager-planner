@@ -8,17 +8,14 @@ const KakaoAPI = {
   REST_API_KEY: '0584e867024205fde01e6e0bee9f05f4',
 
   /**
-   * 카카오 로컬 API 장소 검색 (키워드)
-   * API 키가 없으면 기본 주요 거점(COURSES/VENUES)에서 검색합니다.
+   * 카카오 로컬 API 장소/주소 검색 (키워드 및 도로명/지번)
    */
   async searchPlace(keyword) {
     if (!keyword || keyword.trim() === '') return [];
 
-    // Fallback: API 키가 없거나 실패 시 기본 거점 데이터(Mock) 반환
     const fallbackList = (typeof COURSES !== 'undefined') ? COURSES : [];
 
     if (!this.REST_API_KEY) {
-      console.log('API 키가 없어 기본 데이터에서 검색합니다:', keyword);
       return fallbackList.filter(c => U.matchCho(c.name, keyword) || U.matchCho(c.region, keyword)).map(c => ({
         id: c.id,
         place_name: c.name,
@@ -29,38 +26,88 @@ const KakaoAPI = {
     }
 
     try {
-      let searchQuery = keyword.trim();
+      const searchQuery = keyword.trim();
+      // 1. 키워드 검색
       const searchUrl = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(searchQuery)}`;
-
       const response = await fetch(searchUrl, {
         method: 'GET',
+        headers: { 'Authorization': `KakaoAK ${this.REST_API_KEY}` }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.documents && data.documents.length > 0) {
+          return data.documents;
+        }
+      }
+
+      // 2. 키워드 결과가 없을 경우 주소 검색 API 시도
+      const addrUrl = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(searchQuery)}`;
+      const addrRes = await fetch(addrUrl, {
+        method: 'GET',
+        headers: { 'Authorization': `KakaoAK ${this.REST_API_KEY}` }
+      });
+
+      if (addrRes.ok) {
+        const addrData = await addrRes.json();
+        if (addrData.documents && addrData.documents.length > 0) {
+          return addrData.documents.map(d => ({
+            id: d.address_name,
+            place_name: d.address_name,
+            address_name: d.road_address?.address_name || d.address?.address_name || d.address_name,
+            x: d.x,
+            y: d.y
+          }));
+        }
+      }
+
+      return [];
+    } catch (error) {
+      console.warn('카카오 장소/주소 검색 오류:', error);
+      return [];
+    }
+  },
+
+  /**
+   * 🚗 카카오모빌리티 실시간 자동차 길찾기 API (실시간 교통 정체 100% 반영)
+   * @param {number|string} startX 출발지 경도 (lng)
+   * @param {number|string} startY 출발지 위도 (lat)
+   * @param {number|string} endX 목적지 경도 (lng)
+   * @param {number|string} endY 목적지 위도 (lat)
+   * @returns {Promise<number|null>} 실시간 소요 시간 (분)
+   */
+  async getRouteTime(startX, startY, endX, endY) {
+    if (!startX || !startY || !endX || !endY || !this.REST_API_KEY) return null;
+
+    try {
+      const url = `https://apis-navi.kakaomobility.com/v1/directions?origin=${startX},${startY}&destination=${endX},${endY}&priority=RECOMMEND&car_type=1`;
+      const response = await fetch(url, {
+        method: 'GET',
         headers: {
-          'Authorization': `KakaoAK ${this.REST_API_KEY}`
+          'Authorization': `KakaoAK ${this.REST_API_KEY}`,
+          'Content-Type': 'application/json'
         }
       });
 
       if (!response.ok) {
-        console.warn(`카카오 API 요청 실패 [${response.status}], 기본 데이터 검색으로 전환합니다.`);
-        return fallbackList.filter(c => U.matchCho(c.name, keyword) || U.matchCho(c.region, keyword)).map(c => ({
-          id: c.id,
-          place_name: c.name,
-          address_name: c.addr || c.region,
-          x: c.lng,
-          y: c.lat
-        }));
+        console.warn(`카카오모빌리티 길찾기 요청 실패 [${response.status}]`);
+        return null;
       }
 
       const data = await response.json();
-      return data.documents || [];
+      if (data && data.routes && data.routes.length > 0) {
+        const route = data.routes[0];
+        if (route.result_code === 0 && route.summary && route.summary.duration !== undefined) {
+          const durationSec = route.summary.duration; // 초 단위
+          const durationMin = Math.ceil(durationSec / 60); // 분 단위 올림
+          console.log(`⚡ [KakaoMobility] 실시간 자동차 소요시간: ${durationMin}분 (${(route.summary.distance/1000).toFixed(1)}km, 실시간 정체 반영)`);
+          return durationMin;
+        }
+      }
+      return null;
     } catch (error) {
-      console.error('카카오 장소 검색 오류:', error);
-      return fallbackList.filter(c => U.matchCho(c.name, keyword) || U.matchCho(c.region, keyword)).map(c => ({
-        id: c.id,
-        place_name: c.name,
-        address_name: c.addr || c.region,
-        x: c.lng,
-        y: c.lat
-      }));
+      console.warn('카카오모빌리티 길찾기 통신 오류:', error);
+      return null;
     }
   }
 };

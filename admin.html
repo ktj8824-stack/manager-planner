@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HQ 엔터테인먼트 마스터 스케줄러</title>
-  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css">
@@ -13,82 +15,227 @@
   <link rel="stylesheet" href="css/timeline.css">
   <style>
     /* ── 사용자 드롭다운 (헤더 화이트 테마 & 호버 인터랙션) ── */
-    .user-dropdown-wrap { position: relative; display: inline-block; padding-bottom: 6px; margin-bottom: -6px; }
+    .user-dropdown-wrap {
+      position: relative;
+      display: inline-block;
+      padding-bottom: 6px;
+      margin-bottom: -6px;
+    }
+
     .user-chip {
-      display: flex; align-items: center; gap: 8px;
-      padding: 7px 14px; border-radius: 10px;
-      border: 1px solid #e2e8f0; background: #ffffff;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      cursor: pointer; transition: all 0.2s; white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
       font-family: 'Pretendard', sans-serif;
     }
-    .user-chip:hover, .user-dropdown-wrap:hover .user-chip { 
-      background: #f8fafc; 
-      border-color: #6366f1; 
+
+    .user-chip:hover,
+    .user-dropdown-wrap:hover .user-chip {
+      background: #f8fafc;
+      border-color: #6366f1;
       box-shadow: 0 4px 12px rgba(99, 102, 241, 0.12);
     }
-    .user-chip-name { font-size: 13px; font-weight: 700; color: #0f172a; }
-    .user-chip-role { font-size: 11px; color: #6366f1; font-weight: 600; }
-    .user-chip-arrow { font-size: 10px; color: #64748b; transition: transform 0.2s; }
-    .user-dropdown-wrap:hover .user-chip-arrow, .user-dropdown-wrap.open .user-chip-arrow { transform: rotate(180deg); }
-    
-    .user-dropdown-menu {
-      position: absolute; top: calc(100% + 4px); right: 0;
-      background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px;
-      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04); min-width: 240px;
-      padding: 8px; z-index: 9999;
-      opacity: 0; transform: translateY(-6px) scale(0.98);
-      pointer-events: none; transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
-    }
-    .user-dropdown-wrap:hover .user-dropdown-menu, .user-dropdown-wrap.open .user-dropdown-menu {
-      opacity: 1; transform: translateY(0) scale(1); pointer-events: auto;
-    }
-    .dropdown-item {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 9px 12px; border-radius: 8px; cursor: pointer;
-      font-size: 13px; font-weight: 600; color: #334155;
-      transition: background 0.15s; border: none; background: none;
-      width: 100%; font-family: 'Pretendard', sans-serif; text-align: left; box-sizing: border-box;
-    }
-    .dropdown-item:hover { background: #f1f5f9; color: #0f172a; }
-    .dropdown-item.danger { color: #ef4444; }
-    .dropdown-item.danger:hover { background: #fef2f2; color: #dc2626; }
-    .dropdown-divider { height: 1px; background: #f1f5f9; margin: 6px 0; }
-    .dropdown-user-info { padding: 8px 10px 10px; border-bottom: 1px solid #f1f5f9; margin-bottom: 6px; }
-    .dropdown-user-info .d-name { font-size: 14px; font-weight: 800; color: #0f172a; }
-    .dropdown-user-info .d-company { font-size: 11px; color: #6366f1; font-weight: 700; margin-bottom: 2px; }
-    .dropdown-user-info .d-email { font-size: 11px; color: #64748b; margin-top: 2px; }
-    
-    .dropdown-sub-card {
-      background: #f8fafc; border: 1px solid #e2e8f0;
-      border-radius: 10px; padding: 10px 12px; margin: 4px 0;
-      cursor: pointer; transition: all 0.15s;
-    }
-    .dropdown-sub-card:hover { background: #f1f5f9; border-color: #cbd5e1; }
-    .dropdown-sub-card .sub-title { font-size: 12px; font-weight: 700; color: #4338ca; display: flex; justify-content: space-between; align-items: center; }
-    .dropdown-sub-card .sub-slots { font-size: 11px; color: #64748b; margin-top: 3px; font-weight: 500; }
 
-    /* ── 호버 팝오버 레이어 스타일 ── */
-    #kpi-hover-popover, #hover-schedule-popover {
+    .user-chip-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .user-chip-role {
+      font-size: 11px;
+      color: #6366f1;
+      font-weight: 600;
+    }
+
+    .user-chip-arrow {
+      font-size: 10px;
+      color: #64748b;
+      transition: transform 0.2s;
+    }
+
+    .user-dropdown-wrap:hover .user-chip-arrow,
+    .user-dropdown-wrap.open .user-chip-arrow {
+      transform: rotate(180deg);
+    }
+
+    .user-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+      min-width: 240px;
+      padding: 8px;
+      z-index: 9999;
+      opacity: 0;
+      transform: translateY(-6px) scale(0.98);
+      pointer-events: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .user-dropdown-wrap:hover .user-dropdown-menu,
+    .user-dropdown-wrap.open .user-dropdown-menu {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      transition: background 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      font-family: 'Pretendard', sans-serif;
+      text-align: left;
+      box-sizing: border-box;
+    }
+
+    .dropdown-item:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .dropdown-item.danger {
+      color: #ef4444;
+    }
+
+    .dropdown-item.danger:hover {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: #f1f5f9;
+      margin: 6px 0;
+    }
+
+    .dropdown-user-info {
+      padding: 8px 10px 10px;
+      border-bottom: 1px solid #f1f5f9;
+      margin-bottom: 6px;
+    }
+
+    .dropdown-user-info .d-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .dropdown-user-info .d-company {
+      font-size: 11px;
+      color: #6366f1;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .dropdown-user-info .d-email {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    .dropdown-sub-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin: 4px 0;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .dropdown-sub-card:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    .dropdown-sub-card .sub-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #4338ca;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dropdown-sub-card .sub-slots {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 3px;
+      font-weight: 500;
+    }
+
+    /* ── 호버 팝오버 레이어 스타일 (라이트 모드) ── */
+    #kpi-hover-popover,
+    #hover-schedule-popover {
       position: fixed;
       z-index: 99999;
-      background: rgba(15, 23, 42, 0.96);
-      backdrop-filter: blur(16px);
-      border: 1px solid #334155;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
       border-radius: 12px;
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
       padding: 14px;
-      color: #f8fafc;
+      color: #0f172a;
       pointer-events: auto;
       transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-      width: 350px;
+      width: 380px;
       max-width: calc(100vw - 40px);
+      word-break: keep-all;
     }
+
+    /* ── 공통 모달 헤더 닫기 버튼 스타일 ── */
+    .modal-header .btn-secondary[data-close],
+    .modal-header button[onclick*="close"],
+    .modal-header button[onclick*="Close"] {
+      padding: 7px 16px !important;
+      font-size: 13.5px !important;
+      font-weight: 800 !important;
+      border-radius: 8px !important;
+      background: #ffffff !important;
+      border: 1px solid #cbd5e1 !important;
+      color: #334155 !important;
+      cursor: pointer !important;
+      transition: all 0.15s !important;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    .modal-header .btn-secondary[data-close]:hover,
+    .modal-header button[onclick*="close"]:hover,
+    .modal-header button[onclick*="Close"]:hover {
+      background: #f1f5f9 !important;
+      color: #0f172a !important;
+      border-color: #94a3b8 !important;
+    }
+
     .stat-card {
       cursor: pointer;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
     }
+
     .stat-card:hover {
       transform: translateY(-3px);
       box-shadow: 0 10px 24px rgba(99, 102, 241, 0.15);
@@ -96,11 +243,14 @@
     }
   </style>
 </head>
+
 <body>
   <div class="app-container">
     <aside class="hq-sidebar">
       <div class="brand-box">
-        <div class="brand-icon">✨</div>
+        <div class="brand-icon" style="display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, #6366f1, #8b5cf6); border-radius:10px; width:34px; height:34px; color:#fff;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+        </div>
         <div class="brand-text">
           <h1 id="hq-brand-title">SCHEDULER</h1>
           <span>ENTERPRISE MANAGEMENT</span>
@@ -109,63 +259,81 @@
       <nav class="sidebar-section">
         <div class="sidebar-title" style="display:flex; justify-content:space-between; align-items:center;">
           <span>전체 소속 아티스트</span>
-          <button type="button" onclick="Admin.openArtistModal()" style="background:transparent; border:1px solid #334155; color:#818cf8; font-size:11px; cursor:pointer; font-weight:700; padding:2px 8px; border-radius:4px; transition:all 0.15s;" onmouseover="this.style.background='#334155'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='#818cf8';">+ 관리</button>
+          <button type="button" onclick="Admin.openArtistModal()"
+            style="background:transparent; border:1px solid #334155; color:#818cf8; font-size:11px; cursor:pointer; font-weight:700; padding:2px 8px; border-radius:4px; transition:all 0.15s;"
+            onmouseover="this.style.background='#334155'; this.style.color='#fff';"
+            onmouseout="this.style.background='transparent'; this.style.color='#818cf8';">+ 관리</button>
         </div>
         <div id="artist-filter-list" class="artist-chip-list">
-           <!-- Filters rendered by JS -->
-        </div>
-      </nav>
-      <nav class="sidebar-section">
-        <div class="sidebar-title">담당 매니저 / 배차</div>
-        <div id="manager-status-list" class="artist-chip-list">
-           <!-- Rendered by JS -->
+          <!-- Filters rendered by JS -->
         </div>
       </nav>
       <div class="sidebar-footer">
-        <button id="btn-open-settings" class="btn-util">⚙️ 관리자 설정</button>
+        <button id="btn-open-settings" class="btn-util" onclick="Admin.openAdminSettingsModal()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          관리자 설정
+        </button>
       </div>
     </aside>
 
     <main class="hq-main">
       <header class="main-header">
         <div class="header-title-group">
-           <h2>아티스트 마스터 캘린더</h2>
-           <p id="header-company-sub">엔터테인먼트 통합 스케줄 관리</p>
+          <h2>아티스트 마스터 캘린더</h2>
+          <p id="header-company-sub">엔터테인먼트 통합 스케줄 관리</p>
         </div>
         <div class="header-actions">
-           <div class="user-dropdown-wrap" id="user-dropdown-wrap">
-             <div class="user-chip">
-               <span style="font-size:14px;">👑</span>
-               <span class="user-chip-name" id="header-user-name">대표님</span>
-               <span class="user-chip-role" id="header-user-role" style="display:none;"></span>
-               <span class="user-chip-arrow">▼</span>
-             </div>
-             <div class="user-dropdown-menu" id="user-dropdown-menu">
-               <div class="dropdown-user-info">
-                 <div class="d-company" id="dropdown-user-company">소속사 정보</div>
-                 <div class="d-name" id="dropdown-user-name">대표님</div>
-                 <div class="d-email" id="dropdown-user-email">ceo@company.com</div>
-               </div>
-               
-               <div class="dropdown-sub-card" onclick="Admin.openSubscriptionModal()" title="구독 플랜 및 매니저 슬롯 관리">
-                 <div class="sub-title">
-                   <span>💳 구독: Standard</span>
-                   <span style="font-size:11px; color:#818cf8; font-weight:700;">관리 &gt;</span>
-                 </div>
-                 <div class="sub-slots" id="header-slot-text">매니저 슬롯: - / -명</div>
-               </div>
+          <div class="user-dropdown-wrap" id="user-dropdown-wrap">
+            <div class="user-chip">
+              <span style="display:inline-flex; align-items:center; color:#f59e0b;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
+              </span>
+              <span class="user-chip-name" id="header-user-name">대표님</span>
+              <span class="user-chip-role" id="header-user-role" style="display:none;"></span>
+              <span class="user-chip-arrow">▼</span>
+            </div>
+            <div class="user-dropdown-menu" id="user-dropdown-menu">
+              <div class="dropdown-user-info">
+                <div class="d-company" id="dropdown-user-company">소속사 정보</div>
+                <div class="d-name" id="dropdown-user-name">대표님</div>
+                <div class="d-email" id="dropdown-user-email">ceo@company.com</div>
+              </div>
 
-               <div class="dropdown-divider"></div>
-               <button type="button" class="dropdown-item danger" onclick="Admin.logout()">
-                 <span>🚪 로그아웃</span>
-               </button>
-             </div>
-           </div>
-           <button id="btn-open-add-artist" class="btn-secondary" onclick="Admin.openArtistModal()">🌟 아티스트 관리</button>
-           <button id="btn-open-add-manager" class="btn-secondary" onclick="Admin.openManagerModal()">👥 매니저 관리</button>
-           <button id="btn-export-excel" class="btn-secondary">📊 내보내기</button>
-           <button id="btn-open-add-schedule" class="btn-primary">📅 신규 스케줄 등록</button>
-           <span id="calendar-title" style="display:none;"></span>
+              <div class="dropdown-sub-card" onclick="Admin.openSubscriptionModal()" title="구독 플랜 및 매니저 슬롯 관리">
+                <div class="sub-title">
+                  <span>💳 구독: Standard</span>
+                  <span style="font-size:11px; color:#818cf8; font-weight:700;">관리 &gt;</span>
+                </div>
+                <div class="sub-slots" id="header-slot-text">매니저 슬롯: - / -명</div>
+              </div>
+
+              <div class="dropdown-divider"></div>
+              <button type="button" class="dropdown-item danger" onclick="Admin.logout()">
+                <span>🚪 로그아웃</span>
+              </button>
+            </div>
+          </div>
+          <button id="btn-open-add-artist" class="btn-secondary" onclick="Admin.openArtistModal()" style="display:inline-flex; align-items:center; gap:6px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            아티스트 관리
+          </button>
+          <button id="btn-open-add-manager" class="btn-secondary" onclick="Admin.openManagerModal()" style="display:inline-flex; align-items:center; gap:6px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6d28d9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            매니저 관리
+          </button>
+          <button id="btn-open-add-vehicle" class="btn-secondary" onclick="Admin.openVehicleModal()" style="display:inline-flex; align-items:center; gap:6px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 7.5 C8.2 4.5 15.8 4.5 16.5 7.5 L17.5 10.8 C19.5 10.5 20.5 11.2 20.5 12.2 C20.5 13.2 19.5 13.8 18 13.8 V18 C18 18.8 17.5 19.5 16.5 19.5 H15.2 C14.5 19.5 14.2 19 14.2 18.2 V16.2 H9.8 V18.2 C9.8 19 9.5 19.5 8.8 19.5 H7.5 C6.5 19.5 6 18.8 6 18 V13.8 C4.5 13.8 3.5 13.2 3.5 12.2 C3.5 11.2 4.5 10.5 6.5 10.8 Z"/><path d="M6.2 11.8 C9 12.6 15 12.6 17.8 11.8"/><path d="M7.2 14.2 C8.6 13.8 9.8 14.3 9.8 15.4 C9.8 16.5 8.5 16.8 7.2 16.2 C6.8 15.6 6.8 14.8 7.2 14.2 Z"/><path d="M16.8 14.2 C15.4 13.8 14.2 14.3 14.2 15.4 C14.2 16.5 15.5 16.8 16.8 16.2 C17.2 15.6 17.2 14.8 16.8 14.2 Z"/></svg>
+            차량 관리
+          </button>
+          <button id="btn-export-excel" class="btn-secondary" style="display:inline-flex; align-items:center; gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+            내보내기
+          </button>
+          <button id="btn-open-add-schedule" class="btn-primary" style="display:inline-flex; align-items:center; gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><line x1="12" y1="13" x2="12" y2="17"></line><line x1="10" y1="15" x2="14" y2="15"></line></svg>
+            신규 스케줄 등록
+          </button>
+          <span id="calendar-title" style="display:none;"></span>
         </div>
       </header>
 
@@ -175,53 +343,81 @@
             <div class="stat-label">오늘 진행중인 일정</div>
             <div class="stat-val" id="kpi-today-count">0건</div>
           </div>
-          <div class="stat-icon-wrapper">📅</div>
+          <div class="stat-icon-wrapper" style="background:#eff6ff; color:#2563eb; width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; border:1px solid #dbeafe;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
         </div>
         <div class="stat-card" id="kpi-card-shop" title="마우스를 올리면 헤메샵 경유 일정 목록을 확인합니다">
           <div class="stat-info">
             <div class="stat-label">헤어/메이크업 경유 일정</div>
             <div class="stat-val" id="kpi-shop-count">0건</div>
           </div>
-          <div class="stat-icon-wrapper">💄</div>
+          <div class="stat-icon-wrapper" style="background:#fff1f2; color:#be185d; width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; border:1px solid #ffe4e6;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#be185d" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 2.5 L6.8 4.8 L9 5.5 L6.8 6.2 L6 8.5 L5.2 6.2 L3 5.5 L5.2 4.8 Z" fill="#be185d" stroke="none"/>
+              <path d="M18.5 15.5 L19.1 17 L20.5 17.5 L19.1 18 L18.5 19.5 L17.9 18 L16.5 17.5 L17.9 17 Z" fill="#be185d" stroke="none"/>
+              <path d="m11.5 12.5-6 6a1.77 1.77 0 1 0 2.5 2.5l6-6"/>
+              <path d="m9.5 10.5 4 4"/>
+              <path d="M13.5 10.5c-.8-3.2 1-6 4.5-6s4.5 2 4 5.5c-.6 3.2-3.5 4.5-5.5 3.5"/>
+              <path d="M16 7.5c-.2 1.2-.6 2-1.2 2.5"/>
+            </svg>
+          </div>
         </div>
         <div class="stat-card" id="kpi-card-active" title="마우스를 올리면 현재 가동중인 차량/팀 일정을 확인합니다">
           <div class="stat-info">
             <div class="stat-label">현재 가동중인 차량/팀</div>
             <div class="stat-val" id="kpi-active-count">0대</div>
           </div>
-          <div class="stat-icon-wrapper">🚗</div>
+          <div class="stat-icon-wrapper" style="background:#ecfeff; color:#0891b2; width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; border:1px solid #cffafe;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7.5 7.5 C8.2 4.5 15.8 4.5 16.5 7.5 L17.5 10.8 C19.5 10.5 20.5 11.2 20.5 12.2 C20.5 13.2 19.5 13.8 18 13.8 V18 C18 18.8 17.5 19.5 16.5 19.5 H15.2 C14.5 19.5 14.2 19 14.2 18.2 V16.2 H9.8 V18.2 C9.8 19 9.5 19.5 8.8 19.5 H7.5 C6.5 19.5 6 18.8 6 18 V13.8 C4.5 13.8 3.5 13.2 3.5 12.2 C3.5 11.2 4.5 10.5 6.5 10.8 Z"/>
+              <path d="M6.2 11.8 C9 12.6 15 12.6 17.8 11.8"/>
+              <path d="M7.2 14.2 C8.6 13.8 9.8 14.3 9.8 15.4 C9.8 16.5 8.5 16.8 7.2 16.2 C6.8 15.6 6.8 14.8 7.2 14.2 Z"/>
+              <path d="M16.8 14.2 C15.4 13.8 14.2 14.3 14.2 15.4 C14.2 16.5 15.5 16.8 16.8 16.2 C17.2 15.6 17.2 14.8 16.8 14.2 Z"/>
+            </svg>
+          </div>
         </div>
-        <div class="stat-card" id="kpi-card-artist" title="마우스를 올리면 등록된 소속 아티스트 명단을 확인합니다" onclick="Admin.openArtistModal()">
+        <div class="stat-card" id="kpi-card-artist" title="마우스를 올리면 등록된 소속 아티스트 명단을 확인합니다"
+          onclick="Admin.openArtistModal()">
           <div class="stat-info">
             <div class="stat-label">등록된 아티스트</div>
             <div class="stat-val" id="kpi-artist-count">0팀</div>
           </div>
-          <div class="stat-icon-wrapper">🌟</div>
+          <div class="stat-icon-wrapper" style="background:#f5f3ff; color:#7c3aed; width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; border:1px solid #ede9fe;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+          </div>
         </div>
       </div>
 
       <div class="calendar-wrapper">
         <div class="calendar-toolbar">
-           <div class="date-nav-group">
-              <div class="nav-btn-box">
-                <button id="btn-nav-prev" class="nav-arrow-btn">◀</button>
-                <button id="btn-nav-today" class="today-btn">오늘</button>
-                <button id="btn-nav-next" class="nav-arrow-btn">▶</button>
-              </div>
-              <h3 id="current-date-text">2026년 9월</h3>
-           </div>
-           <div class="view-tabs">
-              <button id="btn-view-month" class="view-tab-btn active" data-view="month">월간 캘린더</button>
-              <button id="btn-view-week" class="view-tab-btn" data-view="week">주간 시간표</button>
-              <button id="btn-view-day" class="view-tab-btn" data-view="gantt">당일 동선 간트차트</button>
-              <button id="btn-view-timeline" class="view-tab-btn" data-view="kanban">실시간 상황판</button>
-              <button id="btn-view-map" class="view-tab-btn" data-view="map">종합 관제 지도</button>
-              <button id="btn-view-kpi" class="view-tab-btn" data-view="analytics">전사 활동 분석</button>
-           </div>
+          <div class="date-nav-group">
+            <div class="nav-btn-box">
+              <button id="btn-nav-prev" class="nav-arrow-btn">◀</button>
+              <button id="btn-nav-today" class="today-btn">오늘</button>
+              <button id="btn-nav-next" class="nav-arrow-btn">▶</button>
+            </div>
+            <h3 id="current-date-text">2026년 9월</h3>
+          </div>
+          <div class="view-tabs">
+            <button id="btn-view-month" class="view-tab-btn active" data-view="month">월간 캘린더</button>
+            <button id="btn-view-week" class="view-tab-btn" data-view="week">주간 시간표</button>
+            <button id="btn-view-day" class="view-tab-btn" data-view="gantt">당일 동선 간트차트</button>
+            <button id="btn-view-timeline" class="view-tab-btn" data-view="kanban">실시간 상황판</button>
+            <button id="btn-view-map" class="view-tab-btn" data-view="map">종합 관제 지도</button>
+            <button id="btn-view-kpi" class="view-tab-btn" data-view="analytics">전사 활동 분석</button>
+          </div>
         </div>
 
         <div id="schedule-viewport" class="view-container" style="flex: 1; overflow-y: auto;">
-           <!-- Calendar Grid -->
+          <!-- Calendar Grid -->
         </div>
       </div>
     </main>
@@ -229,92 +425,433 @@
 
   <!-- Schedule Form Modal -->
   <div id="modal-schedule-form" class="modal-overlay">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="schedule-form-title">새 스케줄 등록</h3>
-        <button class="btn-close" data-close="modal-schedule-form">×</button>
+    <div class="modal-content"
+      style="max-width: 600px; width: 92%; max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="modal-header"
+        style="flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;">
+        <h3 id="schedule-form-title"
+          style="display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 700; margin: 0;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="13" x2="12" y2="17"/><line x1="10" y1="15" x2="14" y2="15"/></svg>
+          신규 스케줄 등록
+        </h3>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button type="button" class="btn-secondary" onclick="Admin.openPlaceModal()"
+            style="padding: 5px 12px; font-size: 12px; font-weight: 700; color: #6366f1; border-color: #c7d2fe; background: #eef2ff; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.15s;"
+            onmouseover="this.style.background='#6366f1'; this.style.color='#fff';"
+            onmouseout="this.style.background='#eef2ff'; this.style.color='#6366f1';">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            샵 / 숙소 관리
+          </button>
+          <button type="button" class="btn-secondary" data-close="modal-schedule-form"
+            style="padding: 7px 16px; font-size: 13.5px; font-weight: 800; cursor: pointer; border-radius: 8px; background: #ffffff; border: 1px solid #cbd5e1; color: #475569; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
+            onmouseover="this.style.background='#f1f5f9'; this.style.color='#0f172a';"
+            onmouseout="this.style.background='#ffffff'; this.style.color='#475569';">
+            닫기
+          </button>
+        </div>
       </div>
-      <div class="modal-body">
-        <form id="form-schedule">
-
-          <!-- Hidden fields required by admin.js to prevent crashes -->
-
-          <input type="checkbox" id="form-shop-needed" style="display:none;">
-          <div id="shop-fields" style="display:none;"></div>
-          <input type="hidden" id="form-shop-name">
-          <input type="number" id="form-shop-duration" style="display:none;" value="90">
-          <input type="hidden" id="form-shop-address">
-          <input type="hidden" id="form-departure-place">
-
-          <input type="hidden" id="form-date">
-          <input type="hidden" id="form-vehicle">
-          <input type="hidden" id="form-notes">
-          <input type="hidden" id="form-status">
-          <input type="checkbox" id="form-is-secret" style="display:none;">
-
+      <div class="modal-body" style="overflow-y: auto; padding-right: 6px; flex: 1;">
+        <form id="form-schedule" style="display: flex; flex-direction: column; gap: 16px;">
           <input type="hidden" id="form-sch-id">
-          <div class="form-group">
-            <label class="form-label">스케줄명 (행사/프로그램명)</label>
-            <input type="text" id="form-title" class="form-input" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">담당 아티스트</label>
-            <select id="form-artist" class="form-select" required></select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">스케줄 분류</label>
-            <select id="form-category" class="form-select" required>
-              <option value="방송">방송</option>
-              <option value="행사">행사</option>
-              <option value="연습">연습</option>
-              <option value="기타">기타</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">시작 일시</label>
-              <input type="datetime-local" id="form-start-time" class="form-input" required>
+
+          <!-- 1. 기본 필수 정보 -->
+          <div
+            style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px;">
+            <div
+              style="font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              기본 스케줄 정보
             </div>
-            <div class="form-group">
-              <label class="form-label">종료 일시</label>
-              <input type="datetime-local" id="form-end-time" class="form-input" required>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label">스케줄명 (행사 / 방송 / 일정명) <span style="color:#ef4444;">*</span></label>
+              <input type="text" id="form-title" class="form-input" required placeholder="예: 뮤직뱅크 사전녹화, 브랜드 팝업 행사">
+            </div>
+
+            <div class="form-row"
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+              <div class="form-group">
+                <label class="form-label">담당 아티스트 <span style="color:#ef4444;">*</span></label>
+                <select id="form-artist" class="form-select" required></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">스케줄 분류 <span style="color:#ef4444;">*</span></label>
+                <select id="form-category" class="form-select" required>
+                  <option value="music_show">음악방송 / 생방송</option>
+                  <option value="broadcast">예능 / 라디오 / 인터뷰</option>
+                  <option value="shooting">화보 / 촬영 / 광고</option>
+                  <option value="event">행사 / 콘서트 / 페스티벌</option>
+                  <option value="fansign">팬미팅 / 팬사인회</option>
+                  <option value="recording">녹음 / 안무레슨 / 연습</option>
+                  <option value="overseas">해외 투어 / 출국</option>
+                  <option value="meeting">미팅 / 기획회의 / 기타</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 그룹 참여 멤버 선택 (완전체 / 개별 멤버) -->
+            <div id="form-member-select-group" style="display:none; margin-bottom: 12px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:10px 12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <label class="form-label" style="margin:0; font-size:12px; font-weight:700; color:#0f172a;">참여 멤버 선택</label>
+                <span style="font-size:11px; color:#64748b;">개인/유닛 스케줄 시 해당 멤버를 선택하세요</span>
+              </div>
+              <div id="form-member-chips" style="display:flex; gap:6px; flex-wrap:wrap;">
+                <!-- Dynamically populated member chips -->
+              </div>
+              <input type="hidden" id="form-selected-members" value="ALL">
+            </div>
+
+            <div class="form-row" style="display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 10px; margin-bottom: 12px; position: relative;">
+              <!-- 1. 스케줄 일자 -->
+              <div class="form-group">
+                <label class="form-label">스케줄 일자 <span style="color:#ef4444;">*</span></label>
+                <input type="date" id="form-date" class="form-input" required style="font-weight: 700; height: 38px;">
+              </div>
+
+              <!-- 2. 시작 시간 -->
+              <div class="form-group">
+                <label class="form-label">시작 시간 <span style="color:#ef4444;">*</span></label>
+                <div class="roller-time-trigger" id="trigger-start-time" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; height: 38px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 700; color: #0f172a; font-size: 13px; transition: border-color 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                  <span id="display-start-time">오전 10:00</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <input type="hidden" id="form-start-time" value="10:00">
+              </div>
+
+              <!-- 3. 종료 시간 -->
+              <div class="form-group">
+                <label class="form-label">종료 시간 <span style="color:#ef4444;">*</span></label>
+                <div class="roller-time-trigger" id="trigger-end-time" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; height: 38px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 700; color: #0f172a; font-size: 13px; transition: border-color 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                  <span id="display-end-time">오후 06:00</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <input type="hidden" id="form-end-time" value="18:00">
+              </div>
+
+              <!-- 휠 스크롤 시간 롤러 피커 팝오버 -->
+              <div id="wheel-picker-popover" style="display: none; position: absolute; top: calc(100% + 4px); z-index: 2100; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.18); width: 230px; padding: 12px; user-select: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f1f5f9;">
+                  <span id="wheel-picker-title" style="font-size: 12px; font-weight: 800; color: #6366f1;">시작 시간 선택</span>
+                  <button type="button" id="btn-close-wheel-picker" style="border: none; background: transparent; font-size: 14px; color: #94a3b8; cursor: pointer; font-weight: bold;">✕</button>
+                </div>
+
+                <div class="roller-container" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; position: relative; height: 160px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden;">
+                  <!-- 중앙 선택 하이라이트 바 -->
+                  <div style="position: absolute; top: 64px; left: 0; right: 0; height: 32px; background: rgba(99,102,241,0.1); border-top: 1.5px solid #6366f1; border-bottom: 1.5px solid #6366f1; pointer-events: none; z-index: 1;"></div>
+
+                  <!-- 1. 오전/오후 롤러 -->
+                  <div class="wheel-col" id="wheel-col-ampm" style="height: 160px; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; z-index: 2; padding: 64px 0;"></div>
+                  <!-- 2. 시 롤러 -->
+                  <div class="wheel-col" id="wheel-col-hour" style="height: 160px; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; z-index: 2; padding: 64px 0;"></div>
+                  <!-- 3. 분 롤러 -->
+                  <div class="wheel-col" id="wheel-col-min" style="height: 160px; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; z-index: 2; padding: 64px 0;"></div>
+                </div>
+
+                <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 11px; color: #64748b;">위아래 롤러 스크롤</span>
+                  <button type="button" id="btn-apply-wheel-picker" style="padding: 5px 14px; font-size: 12px; font-weight: 700; background: #6366f1; color: #ffffff; border: none; border-radius: 6px; cursor: pointer;">확인</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+              <div class="form-group" style="position: relative;">
+                <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+                  <span>메인 행사장 / 촬영 위치 <span style="color:#ef4444;">*</span></span>
+                  <span style="font-size: 11px; color: #2563eb; font-weight: 600;">※ 카카오·티맵 검색 지원</span>
+                </label>
+                <div style="display: flex; gap: 8px;">
+                  <input type="text" id="form-location" class="form-input" placeholder="예: 상암 SBS 프리즘타워, KBS 신관 공개홀, 잠실 실내체육관" autocomplete="off" style="flex: 1;" required>
+                  <button type="button" id="btn-search-location" class="btn-secondary" style="padding: 0 14px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); cursor: pointer;" title="카카오/티맵 위치 및 도로명 주소 검색">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    위치 검색
+                  </button>
+                </div>
+                <div id="location-search-results" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; max-height: 220px; overflow-y: auto; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.12); padding: 4px;"></div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">소요 시간(분)</label>
+                <input type="number" id="form-event-duration" class="form-input" min="10" step="10" placeholder="분 단위">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <label class="form-label" style="display: flex; justify-content: space-between;">
+                <span>행사장 상세 도로명 주소 (네비게이션 연동)</span>
+                <span style="font-size: 11px; color: #64748b; font-weight: 500;">검색 시 자동 입력 또는 직접 입력</span>
+              </label>
+              <input type="text" id="form-location-address" class="form-input" placeholder="예: 서울 마포구 상암산로 82 (도로명 주소)">
+              <input type="hidden" id="form-location-lat">
+              <input type="hidden" id="form-location-lng">
             </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">메인 행사장 / 촬영 위치</label>
-            <input type="text" id="form-location" class="form-input">
+
+          <!-- 2. 헤어/메이크업(샵) 정보 -->
+          <div
+            style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <div
+                style="font-size: 13px; font-weight: 700; color: #ec4899; display: flex; align-items: center; gap: 6px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg>
+                헤어 / 메이크업(샵) 경유
+              </div>
+              <label
+                style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; cursor: pointer; background: var(--bg-hover, #f8fafc); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-color, #e2e8f0); user-select: none;">
+                <input type="checkbox" id="form-shop-needed" style="cursor: pointer; width: 15px; height: 15px; accent-color: #ec4899;">
+                <span style="color: #0f172a;">샵 경유</span>
+              </label>
+            </div>
+
+            <div id="shop-fields"
+              style="display: none; flex-direction: column; gap: 10px; padding-top: 8px; border-top: 1px dashed var(--border-color);">
+              <div class="form-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+                <div class="form-group" style="position: relative;">
+                  <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>샵 이름 (선택 또는 직접 입력)</span>
+                    <span style="font-size: 11px; color: #ec4899; font-weight: 600;">※ 카카오·티맵 검색 지원</span>
+                  </label>
+                  <div style="display: flex; gap: 8px;">
+                    <input type="text" id="form-shop-name" class="form-input"
+                      placeholder="예: 순수 청담본점, 빗앤붓, 제니하우스" autocomplete="off" style="flex: 1;">
+                    <button type="button" id="btn-search-shop" class="btn-secondary" style="padding: 0 12px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; background: #fdf2f8; color: #db2777; border: 1px solid #fbcfe8; border-radius: var(--radius-sm); cursor: pointer;" title="카카오/티맵 샵 및 도로명 주소 검색">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                      샵 검색
+                    </button>
+                  </div>
+                  <div id="shop-search-results" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; max-height: 220px; overflow-y: auto; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.12); padding: 4px;"></div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">소요 시간(분)</label>
+                  <input type="number" id="form-shop-duration" class="form-input" value="90" min="10" step="10"
+                    placeholder="분 단위">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">샵 주소 / 상세 위치</label>
+                <input type="text" id="form-shop-address" class="form-input" placeholder="샵 선택 시 자동 입력 또는 직접 입력">
+              </div>
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">담당 매니저 배정</label>
-            <select id="form-manager" class="form-select"></select>
+
+          <!-- 3. 이동 및 매니저/차량 배차 -->
+          <div
+            style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px;">
+            <div
+              style="font-size: 13px; font-weight: 700; color: #06b6d4; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg>
+              이동 및 매니저 / 차량 배차
+            </div>
+
+            <div class="form-row"
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+              <div class="form-group">
+                <label class="form-label">담당 매니저 배정</label>
+                <select id="form-manager" class="form-select"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">이동 지원 차량(배차)</label>
+                <select id="form-vehicle" class="form-select"></select>
+              </div>
+            </div>
+
+            <div class="form-group" style="position: relative;">
+              <label class="form-label" style="display: flex; justify-content: space-between;">
+                <span>출발 장소 / 픽업 장소 (숙소/거점)</span>
+                <span style="font-size: 11px; color: var(--primary); font-weight: 600;">※ 클릭 시 등록된 숙소/거점 목록 노출</span>
+              </label>
+              <input type="text" id="form-departure-place" class="form-input"
+                placeholder="예: 한남 숙소, 청담 사옥 지하주차장, 직접 입력" autocomplete="off">
+              <div id="departure-search-results" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; max-height: 220px; overflow-y: auto; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.12); padding: 4px;"></div>
+            </div>
+            <div class="form-group" style="margin-top: 10px;">
+              <label class="form-label">출발지 상세 주소 (도로명/지번)</label>
+              <input type="text" id="form-departure-address" class="form-input"
+                placeholder="숙소 선택 시 자동 입력 또는 실제 도로명 주소 직접 입력">
+            </div>
           </div>
-          <div class="form-actions">
+
+          <!-- 4. 의상 / 준비물 / 메모 & 현장 연락처 -->
+          <div
+            style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px;">
+            <div
+              style="font-size: 13px; font-weight: 700; color: #10b981; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>
+              의상 컨셉 / 준비물 & 현장 담당자
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label">의상 컨셉 / 착장 안내</label>
+              <input type="text" id="form-outfit" class="form-input" placeholder="예: 무대의상 A세트, 캐주얼 수트, 개인 사복">
+            </div>
+
+            <div class="form-row"
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+              <div class="form-group">
+                <label class="form-label">현장 담당자 / PD</label>
+                <input type="text" id="form-contact-name" class="form-input" placeholder="예: 김진우 PD / 박실장">
+              </div>
+              <div class="form-group">
+                <label class="form-label">현장 비상 연락처</label>
+                <input type="text" id="form-contact-phone" class="form-input" placeholder="010-0000-0000">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">준비물 / 매니저 전달 메모</label>
+              <textarea id="form-notes" class="form-input" rows="3"
+                placeholder="지참 소품, 인이어 번호, 대기실 식음료 주의사항 등 특이사항"></textarea>
+            </div>
+          </div>
+
+          <!-- 5. 보안 및 진행 상태 -->
+          <div
+            style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label class="form-label" style="margin: 0;">진행 상태</label>
+              <select id="form-status" class="form-select" style="width: auto; min-width: 100px;">
+                <option value="확정">확정</option>
+                <option value="가예정">가예정</option>
+                <option value="완료">완료</option>
+                <option value="취소">취소</option>
+              </select>
+            </div>
+
+            <label
+              style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #f43f5e; cursor: pointer;">
+              <input type="checkbox" id="form-is-secret" style="cursor: pointer;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              대외비 (비공개 일정)
+            </label>
+          </div>
+
+          <!-- 하단 버튼 -->
+          <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
             <button type="button" class="btn-secondary" data-close="modal-schedule-form">취소</button>
-            <button type="submit" class="btn-primary">스케줄 저장</button>
+            <button type="submit" class="btn-primary" style="padding: 10px 24px; font-size: 14px; font-weight: 700;">스케줄 저장</button>
           </div>
         </form>
       </div>
     </div>
   </div>
 
+  <!-- Place & Shop / Dorm Management Modal -->
+  <div id="modal-place-management" class="modal-overlay">
+    <div class="modal-content"
+      style="max-width: 760px; width: 92%; max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="modal-header"
+        style="flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 700; margin: 0;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          전담 샵 / 아티스트 숙소 / 사옥 관리
+        </h3>
+        <button type="button" class="btn-secondary" data-close="modal-place-management"
+          style="padding: 7px 16px; font-size: 13.5px; font-weight: 800; cursor: pointer; border-radius: 8px; background: #ffffff; border: 1px solid #cbd5e1; color: #475569; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
+          onmouseover="this.style.background='#f1f5f9'; this.style.color='#0f172a';"
+          onmouseout="this.style.background='#ffffff'; this.style.color='#475569';">
+          닫기
+        </button>
+      </div>
+      <div class="modal-body" style="overflow-y: auto; padding-right: 6px; flex: 1;">
+
+        <!-- 신규 거점 등록 폼 -->
+        <div
+          style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;">
+          <h4 id="place-form-title"
+            style="font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            신규 거점 (샵 / 숙소 / 사옥) 등록
+          </h4>
+          <form id="form-add-place" onsubmit="Admin.handleSavePlace(event)"
+            style="display: flex; flex-direction: column; gap: 10px;">
+            <input type="hidden" id="edit-place-id" value="">
+            <div style="display: grid; grid-template-columns: 140px 1fr 1fr; gap: 10px;">
+              <div>
+                <label class="form-label">분류</label>
+                <select id="new-place-type" class="form-select" required>
+                  <option value="shop">헤메샵</option>
+                  <option value="dorm">아티스트 숙소</option>
+                  <option value="office">사옥 / 연습실</option>
+                  <option value="etc">기타 거점</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">거점 / 샵 이름 <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="new-place-name" class="form-input" required placeholder="예: 순수 청담본점, 루나스 숙소">
+              </div>
+              <div>
+                <label class="form-label">연락처 / 비고</label>
+                <input type="text" id="new-place-contact" class="form-input" placeholder="예: 02-515-0000, 3층">
+              </div>
+            </div>
+            <div>
+              <label class="form-label">상세 주소 <span style="color:#ef4444;">*</span></label>
+              <div style="display: flex; gap: 8px; width: 100%; align-items: stretch;">
+                <input type="text" id="new-place-address" class="form-input" required placeholder="예: 서울 강남구 도산대로67길 14"
+                  style="flex: 1; min-width: 0; width: 100%; height: 38px; box-sizing: border-box;">
+                <button type="button" id="btn-cancel-edit-place" class="btn-secondary" onclick="Admin.cancelEditPlace()"
+                  style="display: none; flex-shrink: 0; width: auto; height: 38px; padding: 0 16px; white-space: nowrap; font-weight: 600;">취소</button>
+                <button type="submit" id="btn-submit-place" class="btn-primary"
+                  style="flex-shrink: 0; width: auto; min-width: 90px; height: 38px; padding: 0 20px; white-space: nowrap; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">등록하기</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- 탭 및 거점 목록 -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="display: flex; gap: 6px;" id="place-filter-tabs">
+              <button type="button" class="btn-secondary active" onclick="Admin.filterPlaces('ALL', this)"
+                style="padding: 5px 12px; font-size: 12px; font-weight: 700;">전체 보기</button>
+              <button type="button" class="btn-secondary" onclick="Admin.filterPlaces('shop', this)"
+                style="padding: 5px 12px; font-size: 12px;">샵</button>
+              <button type="button" class="btn-secondary" onclick="Admin.filterPlaces('dorm', this)"
+                style="padding: 5px 12px; font-size: 12px;">숙소</button>
+              <button type="button" class="btn-secondary" onclick="Admin.filterPlaces('office', this)"
+                style="padding: 5px 12px; font-size: 12px;">사옥/연습실</button>
+            </div>
+            <span id="place-total-count" style="font-size: 12px; color: var(--text-dim);">총 0개 등록됨</span>
+          </div>
+
+          <div id="place-management-list"
+            style="display: flex; flex-direction: column; gap: 8px; max-height: 360px; overflow-y: auto;">
+            <!-- Rendered dynamically by Admin.renderPlaceList() -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <!-- Artist Management Modal -->
   <div id="modal-artist-management" class="modal-overlay">
-    <div class="modal-content" style="max-width: 700px;">
-      <div class="modal-header">
-        <h3 style="display:flex; align-items:center; gap:8px;">🌟 소속 아티스트 관리</h3>
-        <button class="btn-close" data-close="modal-artist-management">×</button>
+    <div class="modal-content" style="max-width: 720px; width: 92%;">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="display:flex; align-items:center; gap:8px; margin:0; font-size:16px; font-weight:800; color:#0f172a;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          소속 아티스트 관리
+        </h3>
+        <button type="button" class="btn-secondary" data-close="modal-artist-management"
+          style="padding: 7px 16px; font-size: 13.5px; font-weight: 800; cursor: pointer; border-radius: 8px; background: #ffffff; border: 1px solid #cbd5e1; color: #475569; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
+          onmouseover="this.style.background='#f1f5f9'; this.style.color='#0f172a';"
+          onmouseout="this.style.background='#ffffff'; this.style.color='#475569';">
+          닫기
+        </button>
       </div>
-      <div class="modal-body">
-        <div style="background:var(--bg-card); border-radius:var(--radius-md); padding:15px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border-color);">
-          <div>
-            <div style="font-weight:700; color:var(--text-main); font-size:14px;">소속 아티스트 및 그룹 목록</div>
-            <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">등록된 아티스트의 스케줄, 담당 매니저 배정 및 케어(라이더) 카드를 관리합니다.</div>
+      <div class="modal-body" style="padding: 18px;">
+        <div
+          style="background:#ffffff; border-radius:12px; padding:14px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; border:1px solid #cbd5e1; gap:16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+          <div style="flex:1; min-width:0;">
+            <div style="font-weight:700; color:#0f172a; font-size:13.5px;">소속 아티스트 및 그룹 목록</div>
+            <div style="font-size:11.5px; color:#64748b; margin-top:2px;">등록된 아티스트의 스케줄, 담당 매니저 배정 및 케어(라이더) 카드를 관리합니다.</div>
           </div>
-          <button type="button" class="btn-primary" onclick="Admin.openArtistFormModal()" style="padding:8px 16px; font-size:13px; font-weight:700; display:flex; align-items:center; gap:6px;">
+          <button type="button" class="btn-primary" onclick="Admin.openArtistFormModal()"
+            style="padding:8px 16px; font-size:12.5px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; gap:6px; flex-shrink:0; width:auto; white-space:nowrap; border-radius:8px;">
             <span>+</span> 신규 아티스트 등록
           </button>
         </div>
-        <div id="artist-management-list" class="artist-list" style="display:flex; flex-direction:column; gap:10px; max-height:480px; overflow-y:auto; padding-right:4px;">
+        <div id="artist-management-list" class="artist-list"
+          style="display:flex; flex-direction:column; gap:10px; max-height:480px; overflow-y:auto; padding-right:4px;">
           <!-- Rendered by Admin.renderArtistManagementList() -->
         </div>
       </div>
@@ -323,60 +860,143 @@
 
   <!-- Artist Form Modal -->
   <div id="modal-artist-form" class="modal-overlay">
-    <div class="modal-content" style="max-width: 540px;">
-      <div class="modal-header">
-        <h3 id="modal-artist-form-title" style="display:flex; align-items:center; gap:8px;">🌟 소속 아티스트 추가</h3>
-        <button class="btn-close" data-close="modal-artist-form">×</button>
+    <div class="modal-content" style="max-width: 540px; width: 92%;">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 id="modal-artist-form-title" style="display:flex; align-items:center; gap:8px; margin:0; font-size:16px; font-weight:800; color:#0f172a;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          소속 아티스트 추가
+        </h3>
+        <button type="button" class="btn-secondary" data-close="modal-artist-form"
+          style="padding: 7px 16px; font-size: 13.5px; font-weight: 800; cursor: pointer; border-radius: 8px; background: #ffffff; border: 1px solid #cbd5e1; color: #475569; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
+          onmouseover="this.style.background='#f1f5f9'; this.style.color='#0f172a';"
+          onmouseout="this.style.background='#ffffff'; this.style.color='#475569';">
+          닫기
+        </button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" style="padding: 18px;">
         <form id="form-artist-add">
           <input type="hidden" id="edit-artist-id">
-          
-          <div class="form-group">
-            <label class="form-label">아티스트 / 그룹명 <span style="color:#ef4444;">*</span></label>
-            <input type="text" id="new-artist-name" class="form-input" placeholder="예: 루나스 (LUNAS), 에이펙스 등" required>
+
+          <!-- 1. 기본 아티스트 정보 섹션 카드 -->
+          <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+            <div style="font-size: 13.5px; font-weight: 800; color: #6366f1; display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              기본 아티스트 정보
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label">아티스트 / 그룹명 <span style="color:#ef4444;">*</span></label>
+              <input type="text" id="new-artist-name" class="form-input" placeholder="예: 루나스 (LUNAS), 에이펙스 등" required>
+            </div>
+
+            <div class="form-row" style="display:grid; grid-template-columns: 1.2fr 0.9fr 1.1fr; gap:10px; margin-bottom: 14px;">
+              <div class="form-group">
+                <label class="form-label">활동 유형 <span style="color:#ef4444;">*</span></label>
+                <select id="new-artist-type" class="form-select" onchange="Admin.onArtistTypeChange(this.value)">
+                  <option value="아이돌/걸그룹">아이돌 / 걸그룹</option>
+                  <option value="보이그룹">보이그룹</option>
+                  <option value="솔로가수">솔로가수 / 보컬</option>
+                  <option value="배우">배우 (Actor)</option>
+                  <option value="MC/방송인">MC / 방송인</option>
+                  <option value="밴드/기타">밴드 / 기타</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">멤버 인원수</label>
+                <input type="number" id="new-artist-members" class="form-input" value="1" min="1">
+              </div>
+              <div class="form-group">
+                <label class="form-label">활동 상태 <span style="color:#ef4444;">*</span></label>
+                <select id="new-artist-status" class="form-select">
+                  <option value="활동중">활동중</option>
+                  <option value="컴백준비">컴백준비</option>
+                  <option value="휴식기">휴식기 / 공백기</option>
+                  <option value="군복무">군복무 / 군백기</option>
+                  <option value="활동종료">활동종료</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 소속 멤버 명단 (그룹일 때 활용) -->
+            <div id="artist-member-list-group" style="margin-bottom: 14px;">
+              <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>소속 멤버 명단</span>
+                <span style="font-size:11px; color:#64748b;">쉼표(,)로 구분하여 입력</span>
+              </label>
+              <input type="text" id="new-artist-member-list" class="form-input" placeholder="예: 지수, 민아, 수연, 유진" oninput="Admin.onMemberListInput(this.value)">
+              <div style="font-size:11px; color:#64748b; margin-top:4px;">
+                💡 멤버명을 입력해두면 스케줄 등록 시 <strong>'완전체'</strong> 또는 <strong>'개별 멤버 스케줄'</strong>을 지정할 수 있습니다.
+              </div>
+            </div>
+
+            <!-- 대표 컬러 히든 필드 & 대표 아이콘 선택기 -->
+            <input type="hidden" id="new-artist-color" value="#ec4899">
+            <input type="hidden" id="new-artist-icon" value="star">
+            <input type="hidden" id="new-artist-emoji" value="STAR">
+
+            <div style="margin-bottom: 14px;">
+              <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>대표 아이콘 (유형별 심볼)</span>
+                <span style="font-size:11px; color:#64748b;">원하는 아이콘을 클릭하여 선택</span>
+              </label>
+              <div id="artist-icon-picker" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; background:#f8fafc; padding:10px; border-radius:10px; border:1px solid #cbd5e1;">
+                <div class="artist-icon-opt active" data-icon="star" onclick="Admin.selectArtistIcon('star')" style="padding:8px 6px; border-radius:8px; border:1.5px solid #ec4899; background:#ffffff; color:#ec4899; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:11px; font-weight:700; transition:all 0.15s ease;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <span>별/걸그룹</span>
+                </div>
+                <div class="artist-icon-opt" data-icon="zap" onclick="Admin.selectArtistIcon('zap')" style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#64748b; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:11px; font-weight:700; transition:all 0.15s ease;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span>번개/보이</span>
+                </div>
+                <div class="artist-icon-opt" data-icon="mic" onclick="Admin.selectArtistIcon('mic')" style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#64748b; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:11px; font-weight:700; transition:all 0.15s ease;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                  <span>마이크/솔로</span>
+                </div>
+                <div class="artist-icon-opt" data-icon="film" onclick="Admin.selectArtistIcon('film')" style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#64748b; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:11px; font-weight:700; transition:all 0.15s ease;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m4 4 3 4"/><path d="m11 4 3 4"/><path d="m18 4 3 4"/><line x1="2" y1="8" x2="22" y2="8"/></svg>
+                  <span>슬레이트/배우</span>
+                </div>
+                <div class="artist-icon-opt" data-icon="crown" onclick="Admin.selectArtistIcon('crown')" style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#64748b; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:11px; font-weight:700; transition:all 0.15s ease;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
+                  <span>왕관/MC</span>
+                </div>
+                <div class="artist-icon-opt" data-icon="music" onclick="Admin.selectArtistIcon('music')" style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#64748b; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:11px; font-weight:700; transition:all 0.15s ease;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                  <span>음표/밴드</span>
+                </div>
+                <div class="artist-icon-opt" data-icon="heart" onclick="Admin.selectArtistIcon('heart')" style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#64748b; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:11px; font-weight:700; transition:all 0.15s ease;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                  <span>하트</span>
+                </div>
+                <div class="artist-icon-opt" data-icon="sparkle" onclick="Admin.selectArtistIcon('sparkle')" style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#64748b; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:11px; font-weight:700; transition:all 0.15s ease;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                  <span>스파클</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-            <div class="form-group">
-              <label class="form-label">활동 유형</label>
-              <select id="new-artist-type" class="form-select">
-                <option value="그룹">그룹 (Group)</option>
-                <option value="솔로">솔로 (Solo)</option>
-                <option value="배우">배우 (Actor)</option>
-                <option value="MC">MC / 방송인</option>
-              </select>
+          <!-- 2. 케어 & 라이더 카드 섹션 카드 -->
+          <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+            <div style="font-size: 13.5px; font-weight: 800; color: #ec4899; display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+              아티스트 케어 & 라이더 카드 (Rider Card)
             </div>
             <div class="form-group">
-              <label class="form-label">멤버 인원수</label>
-              <input type="number" id="new-artist-members" class="form-input" value="1" min="1">
+              <label class="form-label" style="display:flex; justify-content:space-between;">
+                <span>특이사항 및 케어 가이드</span>
+                <span style="font-size:11px; color:#64748b; font-weight:500;">식습관, 알레르기, 대기실 요청사항</span>
+              </label>
+              <textarea id="new-artist-care" class="form-input" rows="3"
+                placeholder="예: 견과류 알레르기 있음, 특정 브랜드 생수 상온 유지, 대기실 가습기 필수 등"></textarea>
             </div>
           </div>
 
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-            <div class="form-group">
-              <label class="form-label">대표 컬러</label>
-              <input type="color" id="new-artist-color" class="form-input" value="#6366f1" style="height:42px; padding:2px 6px; cursor:pointer;">
-            </div>
-            <div class="form-group">
-              <label class="form-label">이모지 / 심볼</label>
-              <input type="text" id="new-artist-emoji" class="form-input" value="✨" placeholder="예: ✨, 🎤, 🌟, 🎸">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">프로필 이미지 URL (선택)</label>
-            <input type="text" id="new-artist-image" class="form-input" placeholder="https://...">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">아티스트 케어 & 라이더 카드 (Rider Card)</label>
-            <textarea id="new-artist-care" class="form-input" rows="3" placeholder="예: 견과류 알레르기 있음, 특정 브랜드 생수 상온 유지, 대기실 가습기 필수 등"></textarea>
-          </div>
-
-          <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-            <button type="button" class="btn-secondary" data-close="modal-artist-form">취소</button>
-            <button type="submit" class="btn-primary" id="btn-submit-artist-save">아티스트 등록</button>
+          <div class="form-actions" style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px; border-top:1px solid #cbd5e1; padding-top:14px;">
+            <button type="button" class="btn-secondary" data-close="modal-artist-form"
+              style="padding:8px 16px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#475569; font-size:12px; font-weight:700; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">취소</button>
+            <button type="submit" class="btn-primary" id="btn-submit-artist-save"
+              style="padding:8px 16px; border-radius:8px; border:none; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:12px; font-weight:800; cursor:pointer;">아티스트 저장</button>
           </div>
         </form>
       </div>
@@ -384,105 +1004,309 @@
   </div>
 
   <!-- Manager Management Modal -->
-    <div id="modal-manager-management" class="modal-overlay">
-      <div class="modal-content" style="max-width: 700px;">
-        <div class="modal-header">
-          <h3 style="display: flex; align-items: center; gap: 8px;">👥 현장 매니저 계정 & 담당 아티스트 배정</h3>
-          <div id="mgr-modal-slot-badge" style="font-size:12px; background:var(--bg-card); color:var(--text-main); padding:4px 8px; border-radius:4px; margin-left:10px;">슬롯: -/-</div>
-          <button class="btn-close" data-close="modal-manager-management">×</button>
+  <div id="modal-manager-management" class="modal-overlay">
+    <div class="modal-content" style="max-width: 720px; width: 92%;">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <h3 style="display: flex; align-items: center; gap: 8px; margin:0; font-size:16px; font-weight:800; color:#0f172a;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            현장 매니저 계정 & 담당 아티스트 배정
+          </h3>
+          <div id="mgr-modal-slot-badge"
+            style="font-size:11.5px; font-weight:700; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; padding:2px 8px; border-radius:6px; margin-left:6px;">
+            슬롯: -/-</div>
         </div>
-        <div class="modal-body">
-          
-          <div style="background:var(--bg-card); border-radius:var(--radius-md); padding:15px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border-color);">
-            <div style="font-size:13px; color:var(--text-main);">💡 각 매니저에게 소속 아티스트를 배정하면, 매니저 로그인 시 배정된 아티스트 일정만 격리됩니다.</div>
-            <button class="btn-secondary" style="padding:6px 12px; font-size:12px; border-color:var(--primary-light);">💳 슬롯 추가</button>
+        <button type="button" class="btn-secondary" data-close="modal-manager-management"
+          style="padding: 7px 16px; font-size: 13.5px; font-weight: 800; cursor: pointer; border-radius: 8px; background: #ffffff; border: 1px solid #cbd5e1; color: #475569; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
+          onmouseover="this.style.background='#f1f5f9'; this.style.color='#0f172a';"
+          onmouseout="this.style.background='#ffffff'; this.style.color='#475569';">
+          닫기
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 18px;">
+
+        <div
+          style="background:#ffffff; border-radius:12px; padding:14px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; border:1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+          <div style="font-size:12px; color:#475569; display:flex; align-items:center; gap:6px; font-weight:500;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            각 매니저에게 소속 아티스트를 배정하면, 매니저 로그인 시 배정된 아티스트 일정만 격리됩니다.
+          </div>
+          <button class="btn-secondary" onclick="Admin.openSubscriptionModal()" style="padding:6px 12px; font-size:12px; font-weight:700; border:1px solid #cbd5e1; background:#ffffff; color:#0f172a; border-radius:8px; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+            슬롯 추가
+          </button>
+        </div>
+
+        <div id="manager-mgmt-list" style="display:flex; flex-direction:column; gap:10px; margin-bottom: 20px;">
+          <!-- Managers will be rendered here -->
+        </div>
+
+        <form id="form-create-manager" style="background:#ffffff; border:1px solid #cbd5e1; border-radius:12px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+          <div style="font-size: 13.5px; font-weight: 800; color: #6366f1; display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            신규 매니저 계정 생성
+          </div>
+          <div id="mgr-form-slot-warning" style="display:none; color: #ef4444; font-size: 12px; margin-bottom: 10px; font-weight:600;">더 이상 매니저를 생성할 수 없습니다. (슬롯 초과)</div>
+
+          <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+            <div class="form-group">
+              <label class="form-label">매니저 이름 <span style="color:#ef4444;">*</span></label>
+              <input type="text" id="new-mgr-name" class="form-input" placeholder="예: 김정민" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">아이디 (회사 이메일) <span style="color:#ef4444;">*</span></label>
+              <input type="email" id="new-mgr-email" class="form-input" placeholder="예: kjm@company.com" required autocomplete="off">
+            </div>
           </div>
 
-          <div id="manager-mgmt-list" style="display:flex; flex-direction:column; gap:10px; margin-bottom: 30px;">
-            <!-- Managers will be rendered here -->
+          <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+            <div class="form-group">
+              <label class="form-label">비밀번호 (6자 이상) <span style="color:#ef4444;">*</span></label>
+              <input type="password" id="new-mgr-pw" class="form-input" placeholder="비밀번호 설정" required autocomplete="new-password">
+            </div>
+            <div class="form-group">
+              <label class="form-label">연락처</label>
+              <input type="text" id="new-mgr-phone" class="form-input" placeholder="예: 010-1234-5678">
+            </div>
           </div>
 
-          <form id="form-create-manager" style="margin-top: 20px;">
-            <h4 style="margin-bottom: 15px; font-size: 15px; display:flex; align-items:center; gap:5px; font-weight: 600;">➕ 신규 매니저 계정 생성</h4>
-            <div id="mgr-form-slot-warning" style="display:none; color: #ef4444; font-size: 12px; margin-bottom: 10px;">더 이상 매니저를 생성할 수 없습니다.</div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-              <input type="text" id="new-mgr-name" placeholder="매니저 이름 (예: 김정민)" required style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; background: var(--bg-body, #f8fafc); font-size: 14px; outline: none; box-sizing: border-box;">
-              
-              <input type="email" id="new-mgr-email" placeholder="회사 이메일 (예: kjm@kjm-ent.com)" required autocomplete="off" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; background: var(--bg-body, #f8fafc); font-size: 14px; outline: none; box-sizing: border-box;">
-            </div>
+          <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+            <button type="submit" id="btn-submit-mgr-create"
+              style="padding: 8px 18px; font-size: 12.5px; font-weight: 800; border-radius: 8px; background: linear-gradient(135deg,#6366f1,#8b5cf6); color: white; border: none; cursor: pointer;">
+              매니저 계정 생성
+            </button>
+          </div>
+        </form>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px;">
-              <input type="password" id="new-mgr-pw" placeholder="비밀번호 (6자 이상)" required autocomplete="new-password" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; background: var(--bg-body, #f8fafc); font-size: 14px; outline: none; box-sizing: border-box;">
-              
-              <input type="text" id="new-mgr-phone" placeholder="연락처 (예: 010-1234-5678)" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; background: var(--bg-body, #f8fafc); font-size: 14px; outline: none; box-sizing: border-box;">
-            </div>
-            
-            <div style="display:flex; justify-content:flex-end;">
-              <button type="submit" id="btn-submit-mgr-create" style="padding: 10px 24px; font-size: 14px; font-weight: 500; border-radius: 20px; background: #6366f1; color: white; border: none; cursor: pointer;">매니저 계정 생성</button>
-            </div>
-          </form>
-
-        </div>
-        <div style="padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
-          <button type="button" class="btn-secondary" data-close="modal-manager-management" style="padding: 8px 24px;">닫기</button>
-        </div>
       </div>
     </div>
+  </div>
 
-    <!-- Manager Edit Modal -->
-    <div id="modal-manager-edit" class="modal-overlay">
-      <div class="modal-content" style="max-width: 500px; width: 90%;">
-        <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
-          <h3 style="margin:0; font-size:16px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:8px;">
-            <span>✏️</span> 매니저 정보 수정
-          </h3>
-          <button class="btn-close" data-close="modal-manager-edit">×</button>
-        </div>
-        <div class="modal-body" style="padding-top:16px;">
-          <form id="form-edit-manager">
-            <input type="hidden" id="edit-mgr-id">
-            <div class="form-group" style="margin-bottom:14px;">
+  <!-- Manager Edit Modal -->
+  <div id="modal-manager-edit" class="modal-overlay">
+    <div class="modal-content" style="max-width: 500px; width: 92%;">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h3
+          style="margin:0; font-size:16px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          매니저 정보 수정
+        </h3>
+        <button type="button" class="btn-secondary" data-close="modal-manager-edit"
+          style="padding: 7px 16px; font-size: 13.5px; font-weight: 800; cursor: pointer; border-radius: 8px; background: #ffffff; border: 1px solid #cbd5e1; color: #475569; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
+          onmouseover="this.style.background='#f1f5f9'; this.style.color='#0f172a';"
+          onmouseout="this.style.background='#ffffff'; this.style.color='#475569';">
+          닫기
+        </button>
+      </div>
+      <div class="modal-body" style="padding:18px;">
+        <form id="form-edit-manager">
+          <input type="hidden" id="edit-mgr-id">
+          
+          <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:12px; padding:16px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+            <div style="font-size: 13.5px; font-weight: 800; color: #6366f1; display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              매니저 계정 정보
+            </div>
+            
+            <div class="form-group" style="margin-bottom:12px;">
               <label class="form-label">매니저 이름 <span style="color:#ef4444;">*</span></label>
               <input type="text" id="edit-mgr-name" class="form-input" required placeholder="이름을 입력하세요">
             </div>
-            <div class="form-group" style="margin-bottom:14px;">
+            <div class="form-group" style="margin-bottom:12px;">
               <label class="form-label">아이디 (회사 이메일) <span style="color:#ef4444;">*</span></label>
-              <input type="email" id="edit-mgr-email" class="form-input" required placeholder="회사 이메일 (예: kjm@kjm-ent.com)">
+              <input type="email" id="edit-mgr-email" class="form-input" required
+                placeholder="회사 이메일 (예: kjm@kjm-ent.com)">
             </div>
-            <div class="form-group" style="margin-bottom:14px;">
+            <div class="form-group" style="margin-bottom:12px;">
               <label class="form-label">연락처 (휴대폰 번호)</label>
               <input type="text" id="edit-mgr-phone" class="form-input" placeholder="010-0000-0000">
             </div>
-            <div class="form-group" style="margin-bottom:14px;">
-              <label class="form-label">새 비밀번호 (선택)</label>
-              <input type="password" id="edit-mgr-pw" class="form-input" placeholder="변경 시에만 6자 이상 입력" autocomplete="new-password">
-              <div style="font-size:11px; color:#64748b; margin-top:4px;">※ 미입력 시 기존 비밀번호가 그대로 유지됩니다.</div>
+            <div class="form-group">
+              <label class="form-label" style="display:flex; justify-content:space-between;">
+                <span>새 비밀번호</span>
+                <span style="font-size:11px; color:#64748b; font-weight:500;">변경 시에만 6자 이상 입력</span>
+              </label>
+              <input type="password" id="edit-mgr-pw" class="form-input" placeholder="미입력 시 기존 비밀번호 유지"
+                autocomplete="new-password">
             </div>
-            <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px; border-top:1px solid #334155; padding-top:16px;">
-              <button type="button" class="btn-secondary" data-close="modal-manager-edit">취소</button>
-              <button type="submit" class="btn-primary">수정 완료</button>
-            </div>
-          </form>
+          </div>
+
+          <div class="form-actions"
+            style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px; border-top:1px solid #cbd5e1; padding-top:14px;">
+            <button type="button" class="btn-secondary" data-close="modal-manager-edit"
+              style="padding:8px 16px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#475569; font-size:12px; font-weight:700; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">취소</button>
+            <button type="submit" class="btn-primary"
+              style="padding:8px 16px; border-radius:8px; border:none; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:12px; font-weight:800; cursor:pointer;">수정 완료</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vehicle Management Modal -->
+  <div id="modal-vehicle-management" class="modal-overlay">
+    <div class="modal-content" style="max-width: 740px; width: 92%;">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="display:flex; align-items:center; gap:8px; margin:0; font-size:16px; font-weight:800; color:#0f172a;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 7.5 C8.2 4.5 15.8 4.5 16.5 7.5 L17.5 10.8 C19.5 10.5 20.5 11.2 20.5 12.2 C20.5 13.2 19.5 13.8 18 13.8 V18 C18 18.8 17.5 19.5 16.5 19.5 H15.2 C14.5 19.5 14.2 19 14.2 18.2 V16.2 H9.8 V18.2 C9.8 19 9.5 19.5 8.8 19.5 H7.5 C6.5 19.5 6 18.8 6 18 V13.8 C4.5 13.8 3.5 13.2 3.5 12.2 C3.5 11.2 4.5 10.5 6.5 10.8 Z"/><path d="M6.2 11.8 C9 12.6 15 12.6 17.8 11.8"/><path d="M7.2 14.2 C8.6 13.8 9.8 14.3 9.8 15.4 C9.8 16.5 8.5 16.8 7.2 16.2 C6.8 15.6 6.8 14.8 7.2 14.2 Z"/><path d="M16.8 14.2 C15.4 13.8 14.2 14.3 14.2 15.4 C14.2 16.5 15.5 16.8 16.8 16.2 C17.2 15.6 17.2 14.8 16.8 14.2 Z"/></svg>
+          소속 지원 차량 및 배차 관리
+        </h3>
+        <button type="button" class="btn-secondary" data-close="modal-vehicle-management"
+          style="padding: 7px 16px; font-size: 13.5px; font-weight: 800; cursor: pointer; border-radius: 8px; background: #ffffff; border: 1px solid #cbd5e1; color: #475569; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
+          onmouseover="this.style.background='#f1f5f9'; this.style.color='#0f172a';"
+          onmouseout="this.style.background='#ffffff'; this.style.color='#475569';">
+          닫기
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 18px;">
+        <div
+          style="background:#ffffff; border-radius:12px; padding:14px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; border:1px solid #cbd5e1; gap:16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+          <div style="flex:1; min-width:0;">
+            <div style="font-weight:700; color:#0f172a; font-size:13.5px;">소속 의전 및 이동 지원 차량 목록</div>
+            <div style="font-size:11.5px; color:#64748b; margin-top:2px;">스케줄 이동에 투입되는 차량, 정원 및 배차 상태를 실시간으로 관리합니다.</div>
+          </div>
+          <button type="button" class="btn-primary" onclick="Admin.openVehicleFormModal()"
+            style="padding:8px 16px; font-size:12.5px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; gap:6px; flex-shrink:0; width:auto; white-space:nowrap; border-radius:8px;">
+            <span>+</span> 신규 차량 등록
+          </button>
+        </div>
+        <div id="vehicle-management-list"
+          style="display:flex; flex-direction:column; gap:10px; max-height:480px; overflow-y:auto; padding-right:4px;">
+          <!-- Rendered by Admin.renderVehicleManagementList() -->
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Noti Form -->
+  <!-- Vehicle Form Modal (Add / Edit) -->
+  <div id="modal-vehicle-form" class="modal-overlay">
+    <div class="modal-content" style="max-width: 540px; width: 92%;">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 id="modal-vehicle-form-title" style="display:flex; align-items:center; gap:8px; margin:0; font-size:16px; font-weight:800; color:#0f172a;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 7.5 C8.2 4.5 15.8 4.5 16.5 7.5 L17.5 10.8 C19.5 10.5 20.5 11.2 20.5 12.2 C20.5 13.2 19.5 13.8 18 13.8 V18 C18 18.8 17.5 19.5 16.5 19.5 H15.2 C14.5 19.5 14.2 19 14.2 18.2 V16.2 H9.8 V18.2 C9.8 19 9.5 19.5 8.8 19.5 H7.5 C6.5 19.5 6 18.8 6 18 V13.8 C4.5 13.8 3.5 13.2 3.5 12.2 C3.5 11.2 4.5 10.5 6.5 10.8 Z"/><path d="M6.2 11.8 C9 12.6 15 12.6 17.8 11.8"/><path d="M7.2 14.2 C8.6 13.8 9.8 14.3 9.8 15.4 C9.8 16.5 8.5 16.8 7.2 16.2 C6.8 15.6 6.8 14.8 7.2 14.2 Z"/><path d="M16.8 14.2 C15.4 13.8 14.2 14.3 14.2 15.4 C14.2 16.5 15.5 16.8 16.8 16.2 C17.2 15.6 17.2 14.8 16.8 14.2 Z"/></svg>
+          지원 차량 등록
+        </h3>
+        <button type="button" class="btn-secondary" data-close="modal-vehicle-form"
+          style="padding: 7px 16px; font-size: 13.5px; font-weight: 800; cursor: pointer; border-radius: 8px; background: #ffffff; border: 1px solid #cbd5e1; color: #475569; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
+          onmouseover="this.style.background='#f1f5f9'; this.style.color='#0f172a';"
+          onmouseout="this.style.background='#ffffff'; this.style.color='#475569';">
+          닫기
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 18px;">
+        <form id="form-vehicle-add">
+          <input type="hidden" id="edit-vehicle-id">
+
+          <!-- 1. 지원 차량 기본 정보 섹션 카드 -->
+          <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+            <div style="font-size: 13.5px; font-weight: 800; color: #2563eb; display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2"><path d="M7.5 7.5 C8.2 4.5 15.8 4.5 16.5 7.5 L17.5 10.8 C19.5 10.5 20.5 11.2 20.5 12.2 C20.5 13.2 19.5 13.8 18 13.8 V18 C18 18.8 17.5 19.5 16.5 19.5 H15.2 C14.5 19.5 14.2 19 14.2 18.2 V16.2 H9.8 V18.2 C9.8 19 9.5 19.5 8.8 19.5 H7.5 C6.5 19.5 6 18.8 6 18 V13.8 C4.5 13.8 3.5 13.2 3.5 12.2 C3.5 11.2 4.5 10.5 6.5 10.8 Z"/></svg>
+              지원 차량 기본 정보
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label">차량 명칭 (호차 / 별칭) <span style="color:#ef4444;">*</span></label>
+              <input type="text" id="new-vehicle-name" class="form-input" placeholder="예: 카니발 하이리무진 1호차, 스타리아 2호차" required>
+            </div>
+
+            <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+              <div class="form-group">
+                <label class="form-label">차량 번호 <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="new-vehicle-number" class="form-input" placeholder="예: 12가 3456" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">차종 / 유형</label>
+                <select id="new-vehicle-type" class="form-select">
+                  <option value="밴/리무진">밴 / 하이리무진</option>
+                  <option value="밴">일반 밴 / 승합차</option>
+                  <option value="세단">세단 (VIP 의전용)</option>
+                  <option value="SUV">대형 SUV</option>
+                  <option value="버스/승합">대형 버스 (투어용)</option>
+                  <option value="기타">기타 지원 차량</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. 탑승 정원 및 지원 상태 섹션 카드 -->
+          <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+            <div style="font-size: 13.5px; font-weight: 800; color: #6366f1; display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+              탑승 정원 및 지원 상태
+            </div>
+
+            <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom: 12px;">
+              <div class="form-group">
+                <label class="form-label">탑승 정원 (인원)</label>
+                <input type="number" id="new-vehicle-seats" class="form-input" value="7" min="1" max="50">
+              </div>
+              <div class="form-group">
+                <label class="form-label">운행 상태</label>
+                <select id="new-vehicle-status" class="form-select">
+                  <option value="운행가능">운행 가능 (배차가능)</option>
+                  <option value="운행중">운행 중</option>
+                  <option value="정비중">점검 / 정비중</option>
+                  <option value="예약대기">예약 대기</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom: 12px;">
+              <div class="form-group">
+                <label class="form-label">기본 전담 아티스트</label>
+                <select id="new-vehicle-artist" class="form-select">
+                  <option value="">공용 / 미지정</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">기본 전담 운전자/매니저</label>
+                <input type="text" id="new-vehicle-driver" class="form-input" placeholder="예: 공진문 매니저">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="display:flex; justify-content:space-between;">
+                <span>차량 특이사항 / 비치 물품 메모</span>
+                <span style="font-size:11px; color:#64748b; font-weight:500;">옵션 장비, 편의 용품</span>
+              </label>
+              <textarea id="new-vehicle-notes" class="form-input" rows="3"
+                placeholder="예: 암막 커튼 완비, 트렁크 옷걸이 랙 장착, VIP 핀조명 세팅, 하이패스 단말기 장착 등"></textarea>
+            </div>
+          </div>
+
+          <div class="form-actions" style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px; border-top:1px solid #cbd5e1; padding-top:14px;">
+            <button type="button" class="btn-secondary" data-close="modal-vehicle-form"
+              style="padding:8px 16px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#475569; font-size:12px; font-weight:700; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">취소</button>
+            <button type="submit" class="btn-primary" id="btn-submit-vehicle-save"
+              style="padding:8px 16px; border-radius:8px; border:none; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:12px; font-weight:800; cursor:pointer;">차량 저장</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Noti Form -->
   <div id="modal-noti-form" class="modal-overlay">
     <div class="modal-content">
-      <div class="modal-header">
-        <h3>전체 공지 / 알림 발송</h3>
-        <button class="btn-close" data-close="modal-noti-form">×</button>
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0;">전체 공지 / 알림 발송</h3>
+        <button type="button" class="btn-secondary" data-close="modal-noti-form"
+          style="padding: 7px 16px; font-size: 13.5px; font-weight: 800; cursor: pointer; border-radius: 8px; background: #ffffff; border: 1px solid #cbd5e1; color: #475569; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
+          onmouseover="this.style.background='#f1f5f9'; this.style.color='#0f172a';"
+          onmouseout="this.style.background='#ffffff'; this.style.color='#475569';">
+          닫기
+        </button>
       </div>
       <div class="modal-body">
         <div class="form-group">
-           <label class="form-label">수신자</label>
-           <select class="form-select"><option>전체 매니저</option></select>
+          <label class="form-label">수신자</label>
+          <select class="form-select">
+            <option>전체 매니저</option>
+          </select>
         </div>
         <div class="form-group">
-           <label class="form-label">알림 메시지</label>
-           <textarea class="form-input" rows="4"></textarea>
+          <label class="form-label">알림 메시지</label>
+          <textarea class="form-input" rows="4"></textarea>
         </div>
         <div class="form-actions">
           <button type="button" class="btn-secondary" data-close="modal-noti-form">취소</button>
@@ -495,9 +1319,14 @@
   <!-- Settings Modal -->
   <div id="modal-settings" class="modal-overlay">
     <div class="modal-content">
-      <div class="modal-header">
-        <h3>관리자 환경 설정</h3>
-        <button class="btn-close" data-close="modal-settings">×</button>
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0;">관리자 환경 설정</h3>
+        <button type="button" class="btn-secondary" data-close="modal-settings"
+          style="padding: 7px 16px; font-size: 13.5px; font-weight: 800; cursor: pointer; border-radius: 8px; background: #ffffff; border: 1px solid #cbd5e1; color: #475569; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
+          onmouseover="this.style.background='#f1f5f9'; this.style.color='#0f172a';"
+          onmouseout="this.style.background='#ffffff'; this.style.color='#475569';">
+          닫기
+        </button>
       </div>
       <div class="modal-body">
         <div class="form-group">
@@ -517,214 +1346,327 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/api.js"></script>
   <script src="js/admin-data.js"></script>
   <script src="js/admin.js"></script>
   <script src="js/timeline.js"></script>
 
 
-  <input type="text" id="form-departure-place">
-  <select id="form-status"></select>
-  <input type="checkbox" id="form-is-secret">
-  <input type="text" id="form-outfit">
-  <textarea id="form-notes"></textarea>
-</div>
 
-<div id="modal-schedule-detail" class="modal-overlay">
-  <div class="modal-content" style="max-width: 620px; width: 92%;">
-    <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
-      <h3 style="margin:0; font-size:16px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:8px;">
-        <span>📋</span> 스케줄 상세 정보
-      </h3>
-      <button class="btn-close" data-close="modal-schedule-detail">×</button>
-    </div>
-    <div class="modal-body" style="padding-top:16px;">
-      <div id="detail-body-content"></div>
-      <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px; border-top:1px solid #334155; padding-top:16px;">
-        <button id="btn-delete-schedule" class="btn-secondary" style="color:#f87171; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.08);">🗑️ 스케줄 삭제</button>
-        <button id="btn-edit-schedule" class="btn-primary">✏️ 스케줄 수정</button>
+
+  <!-- Schedule Detail Modal -->
+  <div id="modal-schedule-detail" class="modal-overlay">
+    <div class="modal-content" style="max-width: 640px; width: 92%;">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0; font-size:16px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          스케줄 상세 정보
+        </h3>
+        <button type="button" class="btn-secondary" data-close="modal-schedule-detail"
+          style="padding: 7px 16px; font-size: 13.5px; font-weight: 800; cursor: pointer; border-radius: 8px; background: #ffffff; border: 1px solid #cbd5e1; color: #475569; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
+          onmouseover="this.style.background='#f1f5f9'; this.style.color='#0f172a';"
+          onmouseout="this.style.background='#ffffff'; this.style.color='#475569';">
+          닫기
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 18px;">
+        <div id="detail-body-content"></div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-top:1px solid #cbd5e1;">
+        <button type="button" id="btn-delete-schedule"
+          style="padding:8px 16px; border-radius:8px; border:1px solid #fca5a5; background:#fee2e2; color:#dc2626; font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s;"
+          onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'">
+          스케줄 삭제
+        </button>
+        <div style="display:flex; gap:8px;">
+          <button type="button" id="btn-edit-schedule" class="btn-primary"
+            style="padding:8px 16px; border-radius:8px; border:none; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:12px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(99,102,241,0.3);">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            스케줄 수정
+          </button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-
-
-<div id="hover-schedule-popover" style="display:none;"></div>
-<div id="kpi-hover-popover" style="display:none;"></div>
-<button id="btn-inner-add-artist" style="display:none;"></button>
-
-<div id="hq-role-switcher-badge" style="display:none;">
-  <span id="hq-role-badge-icon"></span>
-  <span id="hq-role-badge-text"></span>
-</div>
-<span id="hq-brand-title" style="display:none;"></span>
-<div id="modal-role-selector" style="display:none;"><div id="role-selector-list"></div></div>
-
-<form id="form-send-message" style="display:none;">
-  <select id="msg-target-manager"></select>
-  <input type="text" id="msg-title">
-  <textarea id="msg-content"></textarea>
-  <input type="checkbox" id="msg-is-urgent">
-</form>
-<div id="modal-send-message" style="display:none;"></div>
-
-<div style="display:none;">
-  <input id="care-allergies">
-  <input id="care-beverages">
-  <input id="care-vehicle">
-  <input id="care-emergency">
-  <input id="care-contacts">
-</div>
-
-
-
-<div id="modal-company-subscription" class="modal-overlay">
-  <div class="modal-content" style="max-width:480px; width:100%;">
-    <div class="modal-header">
-      <h3 style="margin:0; font-size:16px; font-weight:700; color:#f8fafc;">💳 회사 구독 관리</h3>
-      <button onclick="Admin.closeSubscriptionModal()" style="background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer; padding:4px 8px; line-height:1;">✕</button>
-    </div>
-    <div class="modal-body" style="padding:20px;">
-
-      <!-- 회사 정보 -->
-      <div style="background:#0f172a; border:1px solid #334155; border-radius:12px; padding:16px; margin-bottom:16px;">
-        <div id="sub-company-name" style="font-size:16px; font-weight:800; color:#f8fafc; margin-bottom:4px;">—</div>
-        <div id="sub-biz-info" style="font-size:12px; color:#94a3b8;"></div>
-        <div style="margin-top:10px; display:flex; align-items:center; gap:8px;">
-          <span style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px;">Enterprise Standard</span>
-          <span id="sub-badge-text" style="font-size:11px; color:#94a3b8;"></span>
-        </div>
+  <!-- Company Subscription Modal -->
+  <div id="modal-company-subscription" class="modal-overlay">
+    <div class="modal-content" style="max-width:480px; width:100%;">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0; font-size:15px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+          회사 구독 관리
+        </h3>
+        <button type="button" onclick="Admin.closeSubscriptionModal()"
+          style="padding: 7px 16px; font-size: 13.5px; font-weight: 800; cursor: pointer; border-radius: 8px; background: #ffffff; border: 1px solid #cbd5e1; color: #475569; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
+          onmouseover="this.style.background='#f1f5f9'; this.style.color='#0f172a';"
+          onmouseout="this.style.background='#ffffff'; this.style.color='#475569';">
+          닫기
+        </button>
       </div>
+      <div class="modal-body" style="padding:18px;">
 
-      <!-- 슬롯 현황 -->
-      <div style="background:#1e293b; border-radius:10px; padding:14px; margin-bottom:14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <span style="font-size:13px; font-weight:600; color:#cbd5e1;">👥 매니저 슬롯 현황</span>
-          <span id="sub-slot-progress-text" style="font-size:13px; font-weight:700; color:#a5f3fc;">— / —명</span>
+        <!-- 회사 정보 -->
+        <div style="background:#e2e8f0; border:1px solid #cbd5e1; border-radius:10px; padding:14px; margin-bottom:12px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
+          <div id="sub-company-name" style="font-size:15px; font-weight:800; color:#0f172a; margin-bottom:3px;">—</div>
+          <div id="sub-biz-info" style="font-size:11.5px; color:#475569; font-weight:500;"></div>
+          <div style="margin-top:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px;">Enterprise Standard</span>
+            <span id="sub-badge-text" style="font-size:11px; color:#475569; font-weight:600;"></span>
+          </div>
         </div>
-        <div style="background:#0f172a; border-radius:6px; height:8px; overflow:hidden;">
-          <div id="sub-slot-progress-bar" style="height:100%; background:linear-gradient(90deg,#6366f1,#8b5cf6); border-radius:6px; transition:width 0.4s; width:0%;"></div>
+
+        <!-- 슬롯 현황 -->
+        <div style="background:#e2e8f0; border:1px solid #cbd5e1; border-radius:10px; padding:12px 14px; margin-bottom:12px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-size:12px; font-weight:700; color:#0f172a; display:flex; align-items:center; gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              매니저 슬롯 현황
+            </span>
+            <span id="sub-slot-progress-text" style="font-size:12px; font-weight:800; color:#2563eb;">— / —명</span>
+          </div>
+          <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; height:8px; overflow:hidden;">
+            <div id="sub-slot-progress-bar"
+              style="height:100%; background:linear-gradient(90deg,#6366f1,#8b5cf6); border-radius:6px; transition:width 0.4s; width:0%;">
+            </div>
+          </div>
         </div>
+
+        <!-- 월 요금 -->
+        <div style="background:#e2e8f0; border:1px solid #cbd5e1; border-radius:10px; padding:12px 14px; margin-bottom:12px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:12px; color:#475569; font-weight:600;">기본 요금 (2인 포함)</span>
+            <span style="font-size:12px; color:#0f172a; font-weight:700;">100,000원</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+            <span style="font-size:12px; color:#475569; font-weight:600;">추가 슬롯 (<span id="sub-additional-slot-count">0</span>명 × 20,000원)</span>
+            <span id="sub-calc-additional-fee" style="font-size:12px; color:#0f172a; font-weight:700;">+0원 / 월</span>
+          </div>
+          <div
+            style="border-top:1px solid #cbd5e1; margin-top:8px; padding-top:8px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:12px; font-weight:800; color:#0f172a;">월 청구 합계</span>
+            <span id="sub-monthly-total" style="font-size:15px; font-weight:800; color:#2563eb;">—</span>
+          </div>
+          <div id="sub-calc-total-fee" style="text-align:right; font-size:11px; color:#64748b; margin-top:2px;"></div>
+        </div>
+
+        <!-- 추가 슬롯 조절 -->
+        <div style="background:#e2e8f0; border:1px solid #cbd5e1; border-radius:10px; padding:12px 14px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
+          <div style="font-size:12px; font-weight:700; color:#0f172a; margin-bottom:8px;">슬롯 추가 / 제거</div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <button onclick="Admin.changeSlotCount(-1)"
+              style="width:34px; height:34px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#0f172a; font-size:16px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 2px rgba(0,0,0,0.03);" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">−</button>
+            <span style="font-size:13px; color:#0f172a; font-weight:700; flex:1; text-align:center;">추가 슬롯: <strong
+                id="sub-slot-adjust-count" style="color:#2563eb;">0</strong>명</span>
+            <button onclick="Admin.changeSlotCount(1)"
+              style="width:34px; height:34px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#0f172a; font-size:16px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 2px rgba(0,0,0,0.03);" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">+</button>
+          </div>
+        </div>
+
       </div>
-
-      <!-- 월 요금 -->
-      <div style="background:#1e293b; border-radius:10px; padding:14px; margin-bottom:14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:13px; color:#94a3b8;">기본 요금 (2인 포함)</span>
-          <span style="font-size:13px; color:#e2e8f0;">100,000원</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-          <span style="font-size:13px; color:#94a3b8;">추가 슬롯 (<span id="sub-additional-slot-count">0</span>명 × 20,000원)</span>
-          <span id="sub-calc-additional-fee" style="font-size:13px; color:#e2e8f0;">+0원 / 월</span>
-        </div>
-        <div style="border-top:1px solid #334155; margin-top:10px; padding-top:10px; display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:14px; font-weight:700; color:#f8fafc;">월 청구 합계</span>
-          <span id="sub-monthly-total" style="font-size:16px; font-weight:800; color:#a5f3fc;">—</span>
-        </div>
-        <div id="sub-calc-total-fee" style="text-align:right; font-size:11px; color:#64748b; margin-top:2px;"></div>
+      <div class="modal-footer"
+        style="display:flex; gap:8px; justify-content:flex-end; padding:14px 20px; border-top:1px solid #cbd5e1;">
+        <button onclick="Admin.closeSubscriptionModal()"
+          style="padding:8px 16px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#475569; font-size:12px; font-weight:700; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">취소</button>
+        <button onclick="Admin.confirmSlotPayment()"
+          style="padding:8px 16px; border-radius:8px; border:none; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:12px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(99,102,241,0.3);">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+          슬롯 변경 확정
+        </button>
       </div>
-
-      <!-- 추가 슬롯 조절 -->
-      <div style="background:#1e293b; border-radius:10px; padding:14px;">
-        <div style="font-size:12px; font-weight:700; color:#94a3b8; margin-bottom:10px; letter-spacing:0.5px;">슬롯 추가/제거</div>
-        <div style="display:flex; align-items:center; gap:12px;">
-          <button onclick="Admin.changeSlotCount(-1)"
-            style="width:36px; height:36px; border-radius:8px; border:1px solid #475569; background:#0f172a; color:#e2e8f0; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center;">−</button>
-          <span style="font-size:14px; color:#e2e8f0; flex:1; text-align:center;">추가 슬롯: <strong id="sub-slot-adjust-count" style="color:#a5f3fc;">0</strong>명</span>
-          <button onclick="Admin.changeSlotCount(1)"
-            style="width:36px; height:36px; border-radius:8px; border:1px solid #475569; background:#0f172a; color:#e2e8f0; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center;">+</button>
-        </div>
-      </div>
-
-    </div>
-    <div class="modal-footer" style="display:flex; gap:8px; justify-content:flex-end; padding:16px 20px; border-top:1px solid #1e293b;">
-      <button onclick="Admin.closeSubscriptionModal()"
-        style="padding:10px 18px; border-radius:8px; border:1px solid #475569; background:transparent; color:#94a3b8; font-size:13px; cursor:pointer;">취소</button>
-      <button onclick="Admin.confirmSlotPayment()"
-        style="padding:10px 18px; border-radius:8px; border:none; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:13px; font-weight:700; cursor:pointer;">💳 슬롯 변경 확정</button>
     </div>
   </div>
-</div>
 
-<div id="modal-supabase-config" style="display:none;">
-  <input id="cfg-supabase-url">
-  <input id="cfg-supabase-key">
-  <div id="supabase-status-badge"></div>
-  <div id="supabase-status-dot"></div>
-  <div id="supabase-status-text"></div>
-</div>
+  <!-- ==========================================
+       Modal: 관리자 종합 설정 (Admin Settings)
+       ========================================== -->
+  <div id="modal-admin-settings" class="modal-backdrop">
+    <div class="modal-card" style="max-width:560px; max-height:88vh; background:#ffffff; border:1px solid #cbd5e1; border-radius:14px; box-shadow:0 20px 40px rgba(0,0,0,0.18); display:flex; flex-direction:column; overflow:hidden;">
+      <div class="modal-header" style="background:#ffffff; border-bottom:1px solid #cbd5e1; padding:18px 22px; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg, #6366f1, #8b5cf6); color:#fff; display:flex; align-items:center; justify-content:center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          </div>
+          <div>
+            <div style="font-size:16px; font-weight:800; color:#0f172a;">엔터프라이즈 관리자 종합 설정</div>
+            <div style="font-size:12px; color:#64748b; font-weight:500;">소속사 프로필, 클라우드 연동, 기본 버퍼 및 데이터 백업 관리</div>
+          </div>
+        </div>
+        <button onclick="Admin.closeAdminSettingsModal()" style="background:transparent; border:none; color:#94a3b8; font-size:24px; cursor:pointer; line-height:1; padding:4px;" onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'">&times;</button>
+      </div>
 
-<script>
-// ── 회사명 + 대표 이름 즉시 로드 ──
-(async function loadProfileInfo() {
-  if (localStorage.getItem('bp_company_name') === 'STAR') {
-    localStorage.removeItem('bp_company_name');
-    localStorage.removeItem('reg_company_name');
-  }
+      <div class="modal-body" style="background:#f8fafc; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:16px;">
+        
+        <!-- 1. 소속사 & 관리자 정보 -->
+        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+          <div style="font-size:13.5px; font-weight:800; color:#0f172a; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+            <span style="color:#6366f1;">🏢</span> 소속사 및 관리자 프로필
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div>
+              <label style="font-size:11.5px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">소속사 / 엔터테인먼트명</label>
+              <input type="text" id="setting-company-name" placeholder="소속사명 입력" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid #cbd5e1; font-size:12.5px; font-weight:600; color:#0f172a; background:#f8fafc;">
+            </div>
+            <div>
+              <label style="font-size:11.5px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">관리자 / 대표자명</label>
+              <input type="text" id="setting-ceo-name" placeholder="대표자명 입력" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid #cbd5e1; font-size:12.5px; font-weight:600; color:#0f172a; background:#f8fafc;">
+            </div>
+          </div>
+        </div>
 
-  const brandEl = document.getElementById('hq-brand-title');
-  const compSubEl = document.getElementById('header-company-sub');
-  const headerNameEl = document.getElementById('header-user-name');
-  const dropNameEl = document.getElementById('dropdown-user-name');
+        <!-- 2. 클라우드 DB 연동 (Supabase) -->
+        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div style="font-size:13.5px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:6px;">
+              <span style="color:#10b981;">☁️</span> Supabase 클라우드 DB 연동
+            </div>
+            <span id="setting-supabase-badge" style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px; background:#dcfce7; color:#15803d; border:1px solid #bbf7d0;">연결 상태 확인됨</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div>
+              <label style="font-size:11.5px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">Supabase Project URL</label>
+              <input type="text" id="cfg-supabase-url" placeholder="https://xxxx.supabase.co" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid #cbd5e1; font-size:12px; font-family:monospace; color:#0f172a; background:#f8fafc;">
+            </div>
+            <div>
+              <label style="font-size:11.5px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">Supabase Anon API Key</label>
+              <input type="password" id="cfg-supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid #cbd5e1; font-size:12px; font-family:monospace; color:#0f172a; background:#f8fafc;">
+            </div>
+          </div>
+        </div>
 
-  const role = localStorage.getItem('bp_user_role') || 'ceo';
+        <!-- 3. 스케줄 역산 동선 버퍼 기본값 -->
+        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+          <div style="font-size:13.5px; font-weight:800; color:#0f172a; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+            <span style="color:#f59e0b;">⏱️</span> 스케줄 역산 동선 기본값
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+            <div>
+              <label style="font-size:11px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">헤어/메이크업 (분)</label>
+              <input type="number" id="setting-buffer-shop" value="120" min="0" max="300" step="10" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:12px; font-weight:700; color:#0f172a; background:#f8fafc; text-align:center;">
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">이동 여유 버퍼 (분)</label>
+              <input type="number" id="setting-buffer-travel" value="30" min="0" max="120" step="5" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:12px; font-weight:700; color:#0f172a; background:#f8fafc; text-align:center;">
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">현장 사전대기 (분)</label>
+              <input type="number" id="setting-buffer-wait" value="10" min="0" max="60" step="5" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:12px; font-weight:700; color:#0f172a; background:#f8fafc; text-align:center;">
+            </div>
+          </div>
+        </div>
 
-  function formatHonorific(rawName) {
-    if (!rawName || rawName.includes('@')) return role === 'ceo' ? '대표님' : '관리자님';
-    const clean = rawName.replace(/대표님|대표|님$/, '').trim();
-    if (role === 'ceo') return `${clean} 대표님`;
-    if (role === 'hq_admin') return `${clean} 총괄팀장님`;
-    return `${clean} 관리자님`;
-  }
+        <!-- 4. 데이터 백업 & 복원 -->
+        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+          <div style="font-size:13.5px; font-weight:800; color:#0f172a; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+            <span style="color:#3b82f6;">💾</span> 데이터 백업 및 복원 (JSON)
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button type="button" onclick="Admin.exportAllDataBackup()" style="flex:1; padding:9px 12px; border-radius:6px; border:1px solid #cbd5e1; background:#f8fafc; color:#334155; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f8fafc'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              전체 데이터 백업 다운로드
+            </button>
+            <label style="flex:1; padding:9px 12px; border-radius:6px; border:1px solid #cbd5e1; background:#f8fafc; color:#334155; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; margin:0;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f8fafc'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              백업 파일 복원
+              <input type="file" id="input-restore-backup" accept=".json" style="display:none;" onchange="Admin.importAllDataBackup(event)">
+            </label>
+          </div>
+        </div>
 
-  // 1. localStorage 캐시 우선 적용
-  const cachedCompany = localStorage.getItem('bp_company_name');
-  if (cachedCompany) {
-    if (brandEl) brandEl.textContent = cachedCompany;
-    if (compSubEl) compSubEl.textContent = `${cachedCompany} 통합 스케줄 관리`;
-  }
+      </div>
 
-  const cachedName = localStorage.getItem('bp_user_name');
-  if (cachedName && !cachedName.includes('@')) {
-    const formatted = formatHonorific(cachedName);
-    if (headerNameEl) headerNameEl.textContent = formatted;
-    if (dropNameEl) dropNameEl.textContent = formatted;
-  }
+      <div class="modal-footer" style="display:flex; gap:8px; justify-content:flex-end; padding:14px 22px; border-top:1px solid #cbd5e1; background:#ffffff;">
+        <button onclick="Admin.closeAdminSettingsModal()" style="padding:8px 16px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#475569; font-size:12.5px; font-weight:700; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">닫기</button>
+        <button onclick="Admin.saveAdminSettings()" style="padding:8px 18px; border-radius:8px; border:none; background:linear-gradient(135deg, #6366f1, #8b5cf6); color:#fff; font-size:12.5px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(99,102,241,0.3);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          설정 저장 및 적용
+        </button>
+      </div>
+    </div>
+  </div>
 
-  // 2. Supabase 세션 메타데이터 & 프로필 연동
-  try {
-    if (typeof supabase === 'undefined') return;
-    const SUPABASE_URL = 'https://gohxflsyhogyxantnlig.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvaHhmbHN5aG9neXhhbnRubGlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4ODY5NDUsImV4cCI6MjEwNTQ2Mjk0NX0.imGAcwKc26zLXnXeYqNuqWmomMEyL2xz0wI5MpsK0a0';
-    const _client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  <!-- KPI & Schedule Hover Popovers -->
+  <div id="kpi-hover-popover" style="display:none;"></div>
+  <div id="hover-schedule-popover" style="display:none;"></div>
 
-    const { data: sessionData } = await _client.auth.getSession();
-    const user = sessionData?.session?.user;
-    if (!user) return;
+  <div id="modal-supabase-config" style="display:none;">
+    <div id="supabase-status-badge"></div>
+    <div id="supabase-status-dot"></div>
+    <div id="supabase-status-text"></div>
+  </div>
 
-    const meta = user.user_metadata || {};
+  <script>
+    // ── 회사명 + 대표 이름 즉시 로드 ──
+    (async function loadProfileInfo() {
+      if (localStorage.getItem('bp_company_name') === 'STAR') {
+        localStorage.removeItem('bp_company_name');
+        localStorage.removeItem('reg_company_name');
+      }
 
-    // 회사명 업데이트
-    const finalComp = meta.company_name || cachedCompany;
-    if (finalComp) {
-      localStorage.setItem('bp_company_name', finalComp);
-      localStorage.setItem('reg_company_name', finalComp);
-      if (brandEl) brandEl.textContent = finalComp;
-      if (compSubEl) compSubEl.textContent = `${finalComp} 통합 스케줄 관리`;
-    }
+      const brandEl = document.getElementById('hq-brand-title');
+      const compSubEl = document.getElementById('header-company-sub');
+      const headerNameEl = document.getElementById('header-user-name');
+      const dropNameEl = document.getElementById('dropdown-user-name');
 
-    // 대표자 이름 업데이트
-    const realName = meta.name || cachedName;
-    if (realName && !realName.includes('@')) {
-      localStorage.setItem('bp_user_name', realName);
-      const formatted = formatHonorific(realName);
-      if (headerNameEl) headerNameEl.textContent = formatted;
-      if (dropNameEl) dropNameEl.textContent = formatted;
-    }
-  } catch (e) {
-    console.warn('프로필 정보 로드 실패:', e);
-  }
-})();
-</script>
+      const role = localStorage.getItem('bp_user_role') || 'ceo';
+
+      function formatHonorific(rawName) {
+        if (!rawName || rawName.includes('@')) return role === 'ceo' ? '대표님' : '관리자님';
+        const clean = rawName.replace(/대표님|대표|님$/, '').trim();
+        if (role === 'ceo') return `${clean} 대표님`;
+        if (role === 'hq_admin') return `${clean} 총괄팀장님`;
+        return `${clean} 관리자님`;
+      }
+
+      // 1. localStorage 캐시 우선 적용
+      const cachedCompany = localStorage.getItem('bp_company_name');
+      if (cachedCompany) {
+        if (brandEl) brandEl.textContent = cachedCompany;
+        if (compSubEl) compSubEl.textContent = `${cachedCompany} 통합 스케줄 관리`;
+      }
+
+      const cachedName = localStorage.getItem('bp_user_name');
+      if (cachedName && !cachedName.includes('@')) {
+        const formatted = formatHonorific(cachedName);
+        if (headerNameEl) headerNameEl.textContent = formatted;
+        if (dropNameEl) dropNameEl.textContent = formatted;
+      }
+
+      // 2. Supabase 세션 메타데이터 & 프로필 연동
+      try {
+        if (typeof supabase === 'undefined') return;
+        const SUPABASE_URL = 'https://gohxflsyhogyxantnlig.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvaHhmbHN5aG9neXhhbnRubGlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4ODY5NDUsImV4cCI6MjEwNTQ2Mjk0NX0.imGAcwKc26zLXnXeYqNuqWmomMEyL2xz0wI5MpsK0a0';
+        const _client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const { data: sessionData } = await _client.auth.getSession();
+        const user = sessionData?.session?.user;
+        if (!user) return;
+
+        const meta = user.user_metadata || {};
+
+        // 회사명 업데이트
+        const finalComp = meta.company_name || cachedCompany;
+        if (finalComp) {
+          localStorage.setItem('bp_company_name', finalComp);
+          localStorage.setItem('reg_company_name', finalComp);
+          if (brandEl) brandEl.textContent = finalComp;
+          if (compSubEl) compSubEl.textContent = `${finalComp} 통합 스케줄 관리`;
+        }
+
+        // 대표자 이름 업데이트
+        const realName = meta.name || cachedName;
+        if (realName && !realName.includes('@')) {
+          localStorage.setItem('bp_user_name', realName);
+          const formatted = formatHonorific(realName);
+          if (headerNameEl) headerNameEl.textContent = formatted;
+          if (dropNameEl) dropNameEl.textContent = formatted;
+        }
+      } catch (e) {
+        console.warn('프로필 정보 로드 실패:', e);
+      }
+    })();
+  </script>
 </body>
+
 </html>
