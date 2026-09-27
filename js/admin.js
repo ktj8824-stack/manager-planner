@@ -177,6 +177,29 @@ window.Admin = {
     });
   },
 
+  updateHeaderUserInfo() {
+    const comp = localStorage.getItem('bp_company_name') || localStorage.getItem('reg_company_name') || 'STAR';
+    const ceo = localStorage.getItem('bp_user_name') || '관리자';
+
+    const brandEl = document.getElementById('hq-brand-title');
+    if (brandEl) brandEl.textContent = comp.toUpperCase();
+
+    const compSubEl = document.getElementById('header-company-sub');
+    if (compSubEl) compSubEl.textContent = `${comp} 통합 스케줄 관리`;
+
+    const dropComp = document.getElementById('dropdown-user-company');
+    if (dropComp) dropComp.textContent = comp;
+
+    const headerNameEl = document.getElementById('header-user-name');
+    if (headerNameEl) headerNameEl.textContent = `${ceo} 대표님`;
+
+    const dropNameEl = document.getElementById('dropdown-user-name');
+    if (dropNameEl) dropNameEl.textContent = `${ceo} 대표님`;
+
+    this.checkSystemAdminAccess();
+  },
+
+  // ── ⚙️ 상단 환경 설정 (소속사/대표자 프로필 및 스케줄 역산 버퍼) ──
   openAdminSettingsModal() {
     const modal = document.getElementById('modal-admin-settings');
     if (!modal) return;
@@ -189,16 +212,9 @@ window.Admin = {
     if (compInput) compInput.value = compName;
     if (ceoInput) ceoInput.value = ceoName;
 
-    // 2. Supabase 설정 로드
-    const cfg = window.SupabaseClient ? window.SupabaseClient.getConfig() : { url: '', anonKey: '' };
-    const urlInput = document.getElementById('cfg-supabase-url');
-    const keyInput = document.getElementById('cfg-supabase-key');
-    if (urlInput) urlInput.value = cfg.url || 'https://gohxflsyhogyxantnlig.supabase.co';
-    if (keyInput) keyInput.value = cfg.anonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvaHhmbHN5aG9neXhhbnRubGlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4ODY5NDUsImV4cCI6MjEwNTQ2Mjk0NX0.imGAcwKc26zLXnXeYqNuqWmomMEyL2xz0wI5MpsK0a0';
-
-    // 3. 버퍼 기본값 로드
+    // 2. 버퍼 기본값 로드
     const shopBuf = localStorage.getItem('bp_buffer_shop') || '120';
-    const travelBuf = localStorage.getItem('bp_buffer_travel') || '30';
+    const travelBuf = localStorage.getItem('bp_buffer_travel') || '10';
     const waitBuf = localStorage.getItem('bp_buffer_wait') || '10';
     const shopInput = document.getElementById('setting-buffer-shop');
     const travelInput = document.getElementById('setting-buffer-travel');
@@ -215,11 +231,9 @@ window.Admin = {
     if (modal) modal.classList.remove('active');
   },
 
-  saveAdminSettings() {
+  async saveAdminSettings() {
     const compInput = document.getElementById('setting-company-name');
     const ceoInput = document.getElementById('setting-ceo-name');
-    const urlInput = document.getElementById('cfg-supabase-url');
-    const keyInput = document.getElementById('cfg-supabase-key');
     const shopInput = document.getElementById('setting-buffer-shop');
     const travelInput = document.getElementById('setting-buffer-travel');
     const waitInput = document.getElementById('setting-buffer-wait');
@@ -228,26 +242,106 @@ window.Admin = {
       const comp = compInput.value.trim();
       localStorage.setItem('bp_company_name', comp);
       localStorage.setItem('reg_company_name', comp);
-      const brandEl = document.getElementById('hq-brand-title');
-      if (brandEl) brandEl.textContent = comp;
-      const compSubEl = document.getElementById('header-company-sub');
-      if (compSubEl) compSubEl.textContent = `${comp} 통합 스케줄 관리`;
-      const dropComp = document.getElementById('dropdown-user-company');
-      if (dropComp) dropComp.textContent = comp;
     }
 
     if (ceoInput && ceoInput.value.trim()) {
       const ceo = ceoInput.value.trim();
       localStorage.setItem('bp_user_name', ceo);
-      const headerNameEl = document.getElementById('header-user-name');
-      if (headerNameEl) headerNameEl.textContent = `${ceo} 대표님`;
-      const dropNameEl = document.getElementById('dropdown-user-name');
-      if (dropNameEl) dropNameEl.textContent = `${ceo} 대표님`;
     }
 
-    if (shopInput) localStorage.setItem('bp_buffer_shop', shopInput.value);
-    if (travelInput) localStorage.setItem('bp_buffer_travel', travelInput.value);
-    if (waitInput) localStorage.setItem('bp_buffer_wait', waitInput.value);
+    this.updateHeaderUserInfo();
+
+    const shopVal = shopInput ? shopInput.value : '120';
+    const travelVal = travelInput ? travelInput.value : '10';
+    const waitVal = waitInput ? waitInput.value : '10';
+
+    localStorage.setItem('bp_buffer_shop', shopVal);
+    localStorage.setItem('bp_buffer_travel', travelVal);
+    localStorage.setItem('bp_buffer_wait', waitVal);
+
+    // 저장된 버퍼값으로 기존 스케줄들의 역산 타임라인 일괄 재계산
+    if (window.hqStore && window.hqStore.getSchedules) {
+      const schedules = window.hqStore.getSchedules();
+      let updated = false;
+      for (const sch of schedules) {
+        if (sch.shop && sch.shop.needed) {
+          sch.shop.durationMin = Number(shopVal) || 90;
+        }
+        if (window.hqStore.generateSmartTimelineAsync) {
+          sch.timeline = await window.hqStore.generateSmartTimelineAsync(sch);
+        } else if (window.hqStore.generateAutoTimeline) {
+          sch.timeline = window.hqStore.generateAutoTimeline(sch);
+        }
+        updated = true;
+      }
+      if (updated) {
+        window.hqStore.saveSchedules(schedules);
+      }
+    }
+
+    alert('✅ 환경 설정이 성공적으로 저장 및 적용되었습니다!');
+    this.closeAdminSettingsModal();
+    window.location.reload();
+  },
+
+  // ── 🔒 시스템 관리자 권한 체크 (ceo@jm-ent.com 전용 계정만 노출 및 접근 허용) ──
+  checkSystemAdminAccess() {
+    const MASTER_ADMIN_EMAIL = 'ceo@jm-ent.com';
+    const email = (localStorage.getItem('bp_user_email') || (window.SupabaseClient?.currentUser?.email) || '').trim().toLowerCase();
+    
+    // 오직 지정된 대표님 이메일(ceo@jm-ent.com)만 시스템 관리자 권한 허용
+    const isMasterAdmin = (email === MASTER_ADMIN_EMAIL.toLowerCase());
+    
+    const btn = document.getElementById('btn-open-settings');
+    if (btn) {
+      btn.style.display = isMasterAdmin ? 'flex' : 'none';
+    }
+    return isMasterAdmin;
+  },
+
+  // ── 🔧 사이드바 시스템 관리자 설정 (Supabase 클라우드 연동 및 백업/복원) ──
+  openSystemSettingsModal() {
+    if (!this.checkSystemAdminAccess()) {
+      alert('🔒 시스템 관리자(대표자) 권한이 있는 계정만 접근할 수 있습니다.');
+      return;
+    }
+
+    const modal = document.getElementById('modal-system-settings');
+    if (!modal) return;
+
+    // Supabase 설정 로드 및 뱃지 상태 업데이트
+    const cfg = window.SupabaseClient ? window.SupabaseClient.getConfig() : { url: '', anonKey: '' };
+    const urlInput = document.getElementById('sys-supabase-url');
+    const keyInput = document.getElementById('sys-supabase-key');
+    if (urlInput) urlInput.value = cfg.url || 'https://gohxflsyhogyxantnlig.supabase.co';
+    if (keyInput) keyInput.value = cfg.anonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvaHhmbHN5aG9neXhhbnRubGlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4ODY5NDUsImV4cCI6MjEwNTQ2Mjk0NX0.imGAcwKc26zLXnXeYqNuqWmomMEyL2xz0wI5MpsK0a0';
+
+    const badge = document.getElementById('system-supabase-badge');
+    if (badge) {
+      if (window.SupabaseClient && window.SupabaseClient.client) {
+        badge.textContent = '클라우드 DB 연동됨';
+        badge.style.background = '#dcfce7';
+        badge.style.color = '#15803d';
+        badge.style.borderColor = '#bbf7d0';
+      } else {
+        badge.textContent = '로컬 스토리지 모드';
+        badge.style.background = '#f1f5f9';
+        badge.style.color = '#64748b';
+        badge.style.borderColor = '#cbd5e1';
+      }
+    }
+
+    modal.classList.add('active');
+  },
+
+  closeSystemSettingsModal() {
+    const modal = document.getElementById('modal-system-settings');
+    if (modal) modal.classList.remove('active');
+  },
+
+  saveSystemSettings() {
+    const urlInput = document.getElementById('sys-supabase-url');
+    const keyInput = document.getElementById('sys-supabase-key');
 
     if (urlInput && keyInput && urlInput.value.trim() && keyInput.value.trim()) {
       if (window.SupabaseClient && typeof window.SupabaseClient.setConfig === 'function') {
@@ -255,8 +349,8 @@ window.Admin = {
       }
     }
 
-    alert('✅ 관리자 설정이 성공적으로 저장 및 적용되었습니다!');
-    this.closeAdminSettingsModal();
+    alert('✅ 클라우드 데이터베이스 설정이 성공적으로 저장되었습니다!');
+    this.closeSystemSettingsModal();
   },
 
   async exportAllDataBackup() {
@@ -652,12 +746,12 @@ window.Admin = {
     const brandEl     = document.getElementById('hq-brand-title');
     const compSubEl   = document.getElementById('header-company-sub');
 
-    const role = localStorage.getItem('bp_user_role') || 'ceo';
-    const cachedEmail = localStorage.getItem('bp_user_email') || '';
+    const role = localStorage.getItem('admin_bp_user_role') || localStorage.getItem('bp_user_role') || 'ceo';
+    const cachedEmail = localStorage.getItem('admin_bp_user_email') || localStorage.getItem('bp_user_email') || '';
     if (chipRoleEl) chipRoleEl.textContent = ''; // 불필요한 고정 태그 제거
     if (dropEmailEl && cachedEmail) dropEmailEl.textContent = cachedEmail;
 
-    const cachedCompany = localStorage.getItem('bp_company_name');
+    const cachedCompany = localStorage.getItem('admin_bp_company_name') || localStorage.getItem('bp_company_name');
     const dropCompEl = document.getElementById('dropdown-user-company');
     if (cachedCompany) {
       if (brandEl) brandEl.textContent = cachedCompany;
@@ -665,7 +759,7 @@ window.Admin = {
       if (dropCompEl) dropCompEl.textContent = cachedCompany;
     }
 
-    const cachedName = localStorage.getItem('bp_user_name') || '';
+    const cachedName = localStorage.getItem('admin_bp_user_name') || localStorage.getItem('bp_user_name') || '';
     function formatHonorificName(rawName) {
       if (!rawName || rawName.includes('@')) return role === 'ceo' ? '대표님' : '관리자님';
       const clean = rawName.replace(/대표님|대표|님$/, '').trim();
@@ -692,14 +786,14 @@ window.Admin = {
             const companyName = meta.company_name || '';
 
             if (companyName) {
-              localStorage.setItem('bp_company_name', companyName);
+              localStorage.setItem('admin_bp_company_name', companyName);
               if (brandEl) brandEl.textContent = companyName;
               if (compSubEl) compSubEl.textContent = `${companyName} 통합 스케줄 관리`;
               if (dropCompEl) dropCompEl.textContent = companyName;
             }
 
             if (realName && !realName.includes('@')) {
-              localStorage.setItem('bp_user_name', realName);
+              localStorage.setItem('admin_bp_user_name', realName);
               const formatted = formatHonorificName(realName);
               if (chipNameEl) chipNameEl.textContent = formatted;
               if (dropNameEl) dropNameEl.textContent = formatted;
@@ -709,7 +803,10 @@ window.Admin = {
       } catch (e) {
         console.warn('사용자 프로필 동기화:', e);
       }
+      Admin.checkSystemAdminAccess();
     })();
+
+    this.checkSystemAdminAccess();
   },
 
   toggleUserDropdown(event) {
@@ -722,12 +819,13 @@ window.Admin = {
 
   async logout() {
     if (confirm('로그아웃 하시겠습니까?')) {
-      // 세션 정보 완전 제거
-      localStorage.removeItem('bp_user_name');
-      localStorage.removeItem('bp_user_email');
-      localStorage.removeItem('bp_user_role');
-      localStorage.removeItem('bp_company_name');
-      localStorage.removeItem('bp_logged_in');
+      // 관리자 세션 정보 완전 제거 (매니저 앱 세션은 보존)
+      localStorage.removeItem('admin_bp_user_name');
+      localStorage.removeItem('admin_bp_user_email');
+      localStorage.removeItem('admin_bp_user_role');
+      localStorage.removeItem('admin_bp_company_name');
+      localStorage.removeItem('admin_bp_logged_in');
+      localStorage.removeItem('admin_bp_onboarded');
       if (window.SupabaseClient) {
         try {
           await window.SupabaseClient.signOut();
@@ -1431,7 +1529,6 @@ document.addEventListener('DOMContentLoaded', () => {
     btnOpenAddSchedule: document.getElementById('btn-open-add-schedule'),
     btnOpenAddArtist: document.getElementById('btn-open-add-artist'),
     btnOpenAddManager: document.getElementById('btn-open-add-manager'),
-    btnExportExcel: document.getElementById('btn-export-excel'),
 
     // Modals
     modalScheduleForm: document.getElementById('modal-schedule-form'),
@@ -1616,9 +1713,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Init ──
   async function init() {
-    // 🛡️ Auth & Role Guard
-    const isLoggedIn = localStorage.getItem('bp_logged_in') === 'true';
-    const role = window.AuthPersona ? window.AuthPersona.getCurrentRole() : 'manager';
+    // 🛡️ Auth & Role Guard (관리자 전용 세션 우선 검증)
+    const isLoggedIn = localStorage.getItem('admin_bp_logged_in') === 'true' || localStorage.getItem('bp_logged_in') === 'true';
+    const role = localStorage.getItem('admin_bp_user_role') || (window.AuthPersona ? window.AuthPersona.getCurrentRole() : 'manager');
 
     if (!isLoggedIn) {
       window.location.replace('admin-login.html');
@@ -1770,14 +1867,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const artists = await window.hqStore.getArtists();
 
     let html = `
+      <!-- 요일 헤더 (컴팩트 슬림 바) -->
+      <div style="display:grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap:8px; width:100%; box-sizing:border-box; margin-bottom:8px;">
+        <div style="text-align:center; padding:6px 0; font-size:12.5px; font-weight:800; color:#ef4444; background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">일</div>
+        <div style="text-align:center; padding:6px 0; font-size:12.5px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">월</div>
+        <div style="text-align:center; padding:6px 0; font-size:12.5px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">화</div>
+        <div style="text-align:center; padding:6px 0; font-size:12.5px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">수</div>
+        <div style="text-align:center; padding:6px 0; font-size:12.5px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">목</div>
+        <div style="text-align:center; padding:6px 0; font-size:12.5px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">금</div>
+        <div style="text-align:center; padding:6px 0; font-size:12.5px; font-weight:800; color:#3b82f6; background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">토</div>
+      </div>
+      <!-- 월간 날짜 그리드 -->
       <div style="display:grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-auto-rows: minmax(110px, auto); gap:8px; width:100%; box-sizing:border-box;">
-        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--accent-pink); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">일</div>
-        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">월</div>
-        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">화</div>
-        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">수</div>
-        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">목</div>
-        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">금</div>
-        <div style="text-align:center; padding:10px 0; font-size:13px; font-weight:700; color:var(--accent-cyan); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">토</div>
     `;
 
     // 이전 달 빈 칸 (기본 min-height 110px, 그리드 행 높이에 자동 동기화)
@@ -1838,14 +1939,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── 2. 주간 타임테이블 뷰 (Week View) ──
   async function renderWeekView() {
-    const curr = new Date(state.currentDate);
-    const first = curr.getDate() - curr.getDay(); // Sunday
-    const weekStart = new Date(curr.setDate(first));
+    const baseDate = new Date(state.currentDate);
+    const dayOfWeek = baseDate.getDay(); // 0(일) ~ 6(토)
+    const weekStart = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate() - dayOfWeek);
 
-    const year = weekStart.getFullYear();
-    const month = weekStart.getMonth() + 1;
-    if (el.calendarTitle) el.calendarTitle.textContent = `${year}년 ${month}월 주간 타임테이블`;
-    if (el.currentDateText) el.currentDateText.textContent = `${year}년 ${month}월`;
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+
+    const startY = weekStart.getFullYear();
+    const startM = weekStart.getMonth() + 1;
+    const startD = weekStart.getDate();
+
+    const endY = weekEnd.getFullYear();
+    const endM = weekEnd.getMonth() + 1;
+    const endD = weekEnd.getDate();
+
+    let titleText = '';
+    if (startY === endY && startM === endM) {
+      titleText = `${startY}년 ${startM}월 (${startD}일 ~ ${endD}일)`;
+    } else if (startY === endY) {
+      titleText = `${startY}년 ${startM}월 ${startD}일 ~ ${endM}월 ${endD}일`;
+    } else {
+      titleText = `${startY}년 ${startM}월 ${startD}일 ~ ${endY}년 ${endM}월 ${endD}일`;
+    }
+
+    if (el.calendarTitle) el.calendarTitle.textContent = `${titleText} 주간 시간표`;
+    if (el.currentDateText) el.currentDateText.textContent = titleText;
 
     let allSchedules = await window.hqStore.getSchedules();
     if (state.selectedArtistFilter !== 'ALL') {
@@ -1855,8 +1974,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const weekDays = [];
     for (let i = 0; i < 7; i++) {
-      const d = new Date(weekStart);
-      d.setDate(d.getDate() + i);
+      const d = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i);
       weekDays.push(d);
     }
 
@@ -1870,12 +1988,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const dateStr = fmtDate(d);
       const isToday = dateStr === fmtDate(new Date());
       const daySchedules = allSchedules.filter(s => s.date === dateStr);
+      const monthNum = d.getMonth() + 1;
+      const dayNum = d.getDate();
 
       html += `
-        <div style="background:var(--bg-card); border-radius:10px; padding:12px; border:${isToday ? '2px solid var(--primary)' : '1px solid var(--border-color)'}; display:flex; flex-direction:column; gap:10px; min-width:0; box-sizing:border-box;">
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:8px;">
-            <span style="font-weight:700; color:${idx === 0 ? '#ef4444' : idx === 6 ? '#3b82f6' : '#0f172a'};">${dayNames[idx]}요일 (${d.getDate()}일)</span>
-            <span style="font-size:12px; color:#64748b;">${daySchedules.length}건</span>
+        <div class="cal-cell week-day-card" data-date="${dateStr}" style="background:var(--bg-card); border-radius:10px; padding:12px; border:${isToday ? '2px solid var(--primary)' : '1px solid var(--border-color)'}; display:flex; flex-direction:column; gap:10px; min-width:0; box-sizing:border-box; transition:border-color 0.15s ease;">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:8px; pointer-events:none;">
+            <span style="font-weight:700; color:${idx === 0 ? '#ef4444' : idx === 6 ? '#3b82f6' : '#0f172a'};">${dayNames[idx]}요일 (${monthNum}/${dayNum})</span>
+            <span style="font-size:12px; color:#64748b; font-weight:600;">${daySchedules.length}건</span>
           </div>
           <div style="display:flex; flex-direction:column; gap:8px; overflow-y:auto;">
       `;
@@ -3076,7 +3196,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (el.formShopNeeded) el.formShopNeeded.checked = false;
       if (el.shopFields) el.shopFields.style.display = 'none';
-      if (el.formShopDuration) el.formShopDuration.value = 90;
+      if (el.formShopDuration) el.formShopDuration.value = Number(localStorage.getItem('bp_buffer_shop') || 120);
       
       if (el.formLocationAddress) el.formLocationAddress.value = '';
       if (el.formLocationLat) el.formLocationLat.value = '';
@@ -3111,34 +3231,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (formSendMsg) {
       formSendMsg.addEventListener('submit', (e) => {
         e.preventDefault();
-        const targetId = document.getElementById('msg-target-manager').value;
+        const targetId   = document.getElementById('msg-target-manager').value;
         const targetName = document.getElementById('msg-target-manager').options[document.getElementById('msg-target-manager').selectedIndex].text;
-        const content = document.getElementById('msg-content').value;
-        const isUrgent = document.getElementById('msg-is-urgent').checked;
+        const title      = (document.getElementById('msg-title')?.value || '').trim();
+        const content    = document.getElementById('msg-content').value.trim();
+        const isUrgent   = document.getElementById('msg-is-urgent').checked;
 
-        const notiData = {
-          id: 'noti_' + Date.now(),
-          targetId: targetId,
-          content: content,
-          isUrgent: isUrgent,
-          createdAt: new Date().toISOString()
-        };
-
-        // LocalStorage 저장
-        const hqNotiKey = 'HQ_NOTIFICATIONS_V2';
-        let notis = JSON.parse(localStorage.getItem(hqNotiKey) || '[]');
-        notis.push(notiData);
-        localStorage.setItem(hqNotiKey, JSON.stringify(notis));
-
-        // 브로드캐스트 전송
-        if (window.hqStore && window.hqStore.broadcast) {
-          window.hqStore.broadcast.postMessage({
-            type: 'NEW_HQ_MESSAGE',
-            payload: notiData
-          });
+        if (!content) {
+          alert('공지 내용을 입력해 주세요.');
+          return;
         }
 
-        alert(`[${targetName}]에게 메시지를 발송했습니다.`);
+        // AdminData.addBroadcast()로 localStorage 저장 + BroadcastChannel 전송
+        if (window.hqStore && typeof window.hqStore.addBroadcast === 'function') {
+          window.hqStore.addBroadcast({ title, content, isUrgent, targetId });
+        } else {
+          // fallback: 직접 저장
+          const notiData = {
+            id: 'noti_' + Date.now(),
+            title: title || (isUrgent ? '🚨 긴급 공지' : '📢 본사 공지'),
+            content, isUrgent, targetId,
+            createdAt: new Date().toISOString()
+          };
+          const key = 'HQ_NOTIFICATIONS_V2';
+          let notis = JSON.parse(localStorage.getItem(key) || '[]');
+          notis.push(notiData);
+          localStorage.setItem(key, JSON.stringify(notis));
+          if (window.hqStore?.broadcast) {
+            window.hqStore.broadcast.postMessage({ type: 'NEW_HQ_MESSAGE', payload: notiData });
+          }
+        }
+
+        alert(`✅ [${targetName}]에게 ${isUrgent ? '긴급 공지' : '공지'}가 발송되었습니다.`);
         Admin.closeSendMsgModal();
       });
     }
@@ -3266,7 +3390,7 @@ document.addEventListener('DOMContentLoaded', () => {
               총 ${daySchedules.length}건
             </span>
           </div>
-          <div style="display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto; padding-right:4px;">
+          <div style="display:flex; flex-direction:column; gap:8px; max-height:min(380px, calc(100vh - 160px)); overflow-y:auto; padding-right:4px;">
         `;
 
         daySchedules.forEach(sch => {
@@ -3318,29 +3442,35 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         popover.innerHTML = popHtml;
+        popover.style.display = 'block';
+        popover.style.visibility = 'hidden';
 
-        // 🌟 날짜 셀 기준으로 팝오버 위치를 완벽하게 고정 (마우스 따라 도망가지 않음!)
+        // 🌟 날짜 셀 기준으로 팝오버 위치를 완벽하게 고정 및 뷰포트 벗어남 방지
         const rect = cell.getBoundingClientRect();
-        const popW = 340;
-        const popH = 260;
+        const popW = popover.offsetWidth || 380;
+        const popH = popover.offsetHeight || 300;
 
         let left = rect.right + 10;
         let top = rect.top;
 
         // 화면 우측으로 넘치면 셀의 왼쪽에 배치
-        if (left + popW > window.innerWidth - 10) {
+        if (left + popW > window.innerWidth - 12) {
           left = rect.left - popW - 10;
         }
-        // 화면 아래로 넘치면 위로 당김
-        if (top + popH > window.innerHeight - 10) {
-          top = window.innerHeight - popH - 20;
-        }
-        if (top < 10) top = 10;
         if (left < 10) left = 10;
+        if (left + popW > window.innerWidth - 10) {
+          left = Math.max(10, window.innerWidth - popW - 10);
+        }
+
+        // 화면 아래로 넘치면 화면 하단에 맞춰 위로 당김
+        if (top + popH > window.innerHeight - 16) {
+          top = window.innerHeight - popH - 16;
+        }
+        if (top < 16) top = 16;
 
         popover.style.left = `${left}px`;
         popover.style.top = `${top}px`;
-        popover.style.display = 'block';
+        popover.style.visibility = 'visible';
         popover.style.opacity = '1';
       }
     });
@@ -3597,6 +3727,7 @@ document.addEventListener('DOMContentLoaded', () => {
           overlay.classList.remove('active');
           if (overlay.id === 'modal-company-subscription') Admin.closeSubscriptionModal();
           if (overlay.id === 'modal-admin-settings') Admin.closeAdminSettingsModal();
+          if (overlay.id === 'modal-system-settings') Admin.closeSystemSettingsModal();
         }
       });
     });
@@ -3608,6 +3739,7 @@ document.addEventListener('DOMContentLoaded', () => {
           m.classList.remove('active');
           if (m.id === 'modal-company-subscription') Admin.closeSubscriptionModal();
           if (m.id === 'modal-admin-settings') Admin.closeAdminSettingsModal();
+          if (m.id === 'modal-system-settings') Admin.closeSystemSettingsModal();
         });
       }
     });
@@ -4052,23 +4184,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     }
-
-    // 엑셀/CSV 내보내기
-    el.btnExportExcel.addEventListener('click', async () => {
-      const schedules = await window.hqStore.getSchedules();
-      let csv = '\uFEFF날짜,스케줄명,아티스트,분류,시간,담당매니저,배차,장소,상태\n';
-      schedules.forEach(s => {
-        csv += `"${s.date}","${s.title}","${s.artistName}","${s.category}","${s.startTime}~${s.endTime}","${s.managerName}","${s.vehicleName || ''}","${s.location}","${s.status}"\n`;
-      });
-
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `HQ_아티스트_스케줄_${fmtDate(new Date())}.csv`;
-      link.click();
-    });
   }
 
   // Run
+  Admin.updateHeaderUserInfo();
   init();
 });

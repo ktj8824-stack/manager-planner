@@ -138,12 +138,13 @@ const Login = {
         const res = await window.SupabaseClient.signIn(email, pw);
         if (!res.error && res.user) {
           supabaseSuccess = true;
-          const profile = res.user.profile || {};
+          // res.profile = fetchProfile() 결과, res.user.user_metadata = Supabase auth 메타
+          const profile = res.profile || res.user.user_metadata || {};
           this.finishLogin('supabase', {
             id: res.user.id,
-            name: profile.name || email,
+            name: profile.name || res.user.user_metadata?.name || email,
             email: email,
-            role: profile.role || 'manager'
+            role: profile.role || res.user.user_metadata?.role || 'manager'
           });
           return;
         }
@@ -170,7 +171,17 @@ const Login = {
         
         App.navigate('home');
       } else {
-        alert(result.message || '이메일 또는 비밀번호가 일치하지 않습니다.');
+        // 미등록 매니저 계정인 경우 신규 매니저로 즉시 시작 안내
+        if (confirm(`'${email}' 계정이 본사 매니저 풀에 아직 등록되지 않았습니다.\n\n이 계정으로 매니저 플래너를 바로 시작하시겠습니까?`)) {
+          this.finishLogin('local', {
+            id: 'mgr_' + Date.now().toString(36),
+            name: email.split('@')[0] + ' 매니저',
+            email: email,
+            role: 'manager'
+          });
+        } else {
+          alert(result.message || '이메일 또는 비밀번호를 다시 확인해주세요.');
+        }
       }
     } else {
       alert('인증 시스템이 초기화되지 않았습니다.');
@@ -245,8 +256,17 @@ const Login = {
 
     // 매니저에 배정된 아티스트 목록 조회 및 세팅
     const managers = (typeof window.hqStore !== 'undefined') ? window.hqStore.getManagers() : [];
-    const foundMgr = managers.find(m => m.id === mgrId || m.email === user.email);
-    const assigned = foundMgr?.assignedArtists || (mgrId === 'mgr_2' ? ['art_1'] : mgrId === 'mgr_3' ? ['art_2'] : mgrId === 'mgr_4' ? ['art_3'] : ['art_1']);
+    const foundMgr = managers.find(m => m.id === mgrId || (m.email && m.email.toLowerCase() === (user.email || '').toLowerCase()));
+    
+    let assigned = [];
+    if (foundMgr && Array.isArray(foundMgr.assignedArtists) && foundMgr.assignedArtists.length > 0) {
+      assigned = foundMgr.assignedArtists;
+    } else {
+      // 본사 아티스트 목록에서 기본 배정 또는 전체 조회 가능하도록 세팅
+      const allArtists = (typeof window.hqStore !== 'undefined') ? window.hqStore.getArtists() : [];
+      assigned = allArtists.map(a => a.id);
+    }
+    
     localStorage.setItem('bp_assigned_artists', JSON.stringify(assigned));
 
     if (typeof State !== 'undefined') {

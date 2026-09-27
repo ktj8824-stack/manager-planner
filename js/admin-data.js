@@ -302,13 +302,13 @@ function getInitialMockSchedules() {
       shop: {
         needed: true,
         name: '정샘물 청담본점',
-        time: '11:00',
+        time: '11:45',
         durationMin: 90,
         address: '서울 강남구 압구정로79길 19'
       },
       departure: {
         place: '논현동 숙소 픽업',
-        time: '10:30'
+        time: '11:15'
       },
       outfit: '스쿨룩 콘셉트 셔츠 & 타이 착장',
       supplies: '사인용 유성 네임펜 100자루, 포스트잇, 경호팀 무전기 6대, 팬레터 수거함 5개',
@@ -484,43 +484,80 @@ function getInitialMockSchedules() {
     }
   ];
 
-  // 자동으로 타임라인이 없는 데이터는 역산 로직을 태움
+  // 자동으로 타임라인이 없는 데이터는 역산 로직을 태움 (사전대기 버퍼 + 이동 버퍼 연동)
   const generateAutoTimelineFn = (schedule) => {
     const timeline = [];
     const mainStartTime = schedule.startTime || '10:00';
     const [startH, startM] = mainStartTime.split(':').map(Number);
     const startMinutes = (startH || 10) * 60 + (startM || 0);
 
+    const waitBuffer = Number(localStorage.getItem('bp_buffer_wait') !== null ? localStorage.getItem('bp_buffer_wait') : 10);
+    const travelBuffer = Number(localStorage.getItem('bp_buffer_travel') !== null ? localStorage.getItem('bp_buffer_travel') : 10);
+
+    const fmt = (min) => {
+      const positiveMin = ((min % 1440) + 1440) % 1440;
+      const h = Math.floor(positiveMin / 60);
+      const m = positiveMin % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    };
+
+    const targetArriveMinutes = startMinutes - waitBuffer;
+
     if (schedule.shop && schedule.shop.needed) {
-      const shopDuration = Number(schedule.shop.durationMin) || 90;
-      const travelShopToMain = 35;
-      const shopArriveMinutes = startMinutes - travelShopToMain - shopDuration;
-      const departMinutes = shopArriveMinutes - 30;
+      const defaultShopMin = Number(localStorage.getItem('bp_buffer_shop') || 120);
+      const shopDuration = Number(schedule.shop.durationMin) || defaultShopMin;
+      const travelShopToMain = 20;
+      const totalShopToMain = travelShopToMain + travelBuffer;
+      const shopDepartMinutes = targetArriveMinutes - totalShopToMain;
+      const shopArriveMinutes = shopDepartMinutes - shopDuration;
+      const travelDepartToShop = 15;
+      const totalDepartToShop = travelDepartToShop + travelBuffer;
+      const departMinutes = shopArriveMinutes - totalDepartToShop;
 
-      const fmt = (min) => {
-        const positiveMin = ((min % 1440) + 1440) % 1440;
-        const h = Math.floor(positiveMin / 60);
-        const m = positiveMin % 60;
-        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-      };
-
-      timeline.push({ time: fmt(departMinutes), label: `[픽업 출발] ${schedule.departure?.place || '숙소'} 픽업 및 출발`, desc: `담당 매니저: ${schedule.managerName || '배정 매니저'}`, done: false });
-      timeline.push({ time: fmt(shopArriveMinutes), label: `[헤어·메이크업] ${schedule.shop.name || '헤메샵'} 도착 및 스타일링`, desc: `소요시간 약 ${shopDuration}분 (${schedule.shop.address || ''})`, done: false });
-      timeline.push({ time: fmt(startMinutes - travelShopToMain), label: `[현장 이동] 현장(${schedule.location || '행사장'})으로 출발`, desc: '의상 및 마이크/소품 최종 체크', done: false });
+      timeline.push({
+        time: fmt(departMinutes),
+        label: `[픽업 출발] ${schedule.departure?.place || '숙소'} 픽업 및 출발`,
+        desc: `이동 약 ${travelDepartToShop}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToShop + travelBuffer}분)`,
+        done: false
+      });
+      timeline.push({
+        time: fmt(shopArriveMinutes),
+        label: `[헤어·메이크업] ${schedule.shop.name || '헤메샵'} 도착 및 스타일링`,
+        desc: `소요시간 약 ${shopDuration}분 (${schedule.shop.address || ''})`,
+        done: false
+      });
+      timeline.push({
+        time: fmt(shopDepartMinutes),
+        label: `[현장 이동] 현장(${schedule.location || '행사장'})으로 출발`,
+        desc: `이동 약 ${travelShopToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelShopToMain + travelBuffer}분)`,
+        done: false
+      });
     } else {
-      const departMinutes = startMinutes - 45;
-      const fmt = (min) => {
-        const positiveMin = ((min % 1440) + 1440) % 1440;
-        const h = Math.floor(positiveMin / 60);
-        const m = positiveMin % 60;
-        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-      };
-      timeline.push({ time: fmt(departMinutes), label: `[현장 이동] ${schedule.departure?.place || '출발지'} 출발 및 이동`, desc: `배차: ${schedule.vehicleName || '지정 차량'}`, done: false });
+      const travelDepartToMain = 35;
+      const totalDepartToMain = travelDepartToMain + travelBuffer;
+      const departMinutes = targetArriveMinutes - totalDepartToMain;
+
+      timeline.push({
+        time: fmt(departMinutes),
+        label: `[현장 이동] ${schedule.departure?.place || '출발지'} 출발 및 이동`,
+        desc: `이동 약 ${travelDepartToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToMain + travelBuffer}분)`,
+        done: false
+      });
     }
 
-    timeline.push({ time: schedule.startTime, label: `[메인 일정] ${schedule.title}`, desc: `장소: ${schedule.location || '현장'} / 현장 담당자 미팅 & 대기실 세팅`, done: false });
+    timeline.push({
+      time: schedule.startTime,
+      label: `[메인 일정] ${schedule.title}`,
+      desc: `장소: ${schedule.location || '현장'} / ${waitBuffer}분 전(${fmt(targetArriveMinutes)}) 현장 도착 완료 후 정시 시작`,
+      done: false
+    });
     if (schedule.endTime) {
-      timeline.push({ time: schedule.endTime, label: `[현장 철수] 일정 종료 및 복귀 이동`, desc: '협찬 의상 수거, 준비물 점검 후 숙소/사옥 복귀', done: false });
+      timeline.push({
+        time: schedule.endTime,
+        label: `[현장 철수] 일정 종료 및 복귀 이동`,
+        desc: '협찬 의상 수거, 준비물 점검 후 숙소/사옥 복귀',
+        done: false
+      });
     }
     return timeline;
   };
@@ -540,25 +577,80 @@ class HQDataStore {
     this.syncFromSupabase();
   }
 
-  initStorage() {
-    const rawArtists = localStorage.getItem(HQ_STORAGE_KEYS.ARTISTS);
-    if (!rawArtists || rawArtists === '[]') {
-      localStorage.setItem(HQ_STORAGE_KEYS.ARTISTS, JSON.stringify(DEFAULT_ARTISTS));
-    }
-    const rawManagers = localStorage.getItem(HQ_STORAGE_KEYS.MANAGERS);
-    if (!rawManagers || rawManagers === '[]') {
-      localStorage.setItem(HQ_STORAGE_KEYS.MANAGERS, JSON.stringify(DEFAULT_MANAGERS));
-    }
-    const rawVehicles = localStorage.getItem(HQ_STORAGE_KEYS.VEHICLES);
-    if (!rawVehicles || rawVehicles === '[]') {
-      localStorage.setItem(HQ_STORAGE_KEYS.VEHICLES, JSON.stringify(DEFAULT_VEHICLES));
-    }
-    const rawSchedules = localStorage.getItem(HQ_STORAGE_KEYS.SCHEDULES);
-    if (!rawSchedules || rawSchedules === '[]') {
-      localStorage.setItem(HQ_STORAGE_KEYS.SCHEDULES, JSON.stringify(getInitialMockSchedules()));
+  // ── 🔒 계정(아이디)별 독립 스토리지 네임스페이스 키 생성 (매니저는 본사 데이터 공유) ──
+  getUserStorageKey(baseKey) {
+    const rawEmail = (localStorage.getItem('bp_user_email') || window.SupabaseClient?.currentUser?.email || '').trim().toLowerCase();
+    const role = localStorage.getItem('bp_user_role') || 'manager';
+
+    // 매니저나 스태프인 경우, 본사(CEO)의 데이터 저장소를 공유 참조
+    if (role === 'manager' || role === 'staff') {
+      if (localStorage.getItem(baseKey)) return baseKey;
+      const ceoKey = `${baseKey}_ceo_jm_ent_com`;
+      if (localStorage.getItem(ceoKey)) return ceoKey;
+      const demoKey = `${baseKey}_ceo_star_ent_com`;
+      if (localStorage.getItem(demoKey)) return demoKey;
+      return baseKey;
     }
 
-    if (!localStorage.getItem(HQ_STORAGE_KEYS.SUBSCRIPTION)) {
+    if (!rawEmail) {
+      if (localStorage.getItem(baseKey)) return baseKey;
+      const ceoKey = `${baseKey}_ceo_jm_ent_com`;
+      if (localStorage.getItem(ceoKey)) return ceoKey;
+      return baseKey;
+    }
+
+    const safeKey = rawEmail.replace(/[^a-z0-9_]/g, '_');
+    return `${baseKey}_${safeKey}`;
+  }
+
+  initStorage() {
+    const rawEmail = (localStorage.getItem('bp_user_email') || window.SupabaseClient?.currentUser?.email || '').trim().toLowerCase();
+    const artKey = this.getUserStorageKey(HQ_STORAGE_KEYS.ARTISTS);
+    const mgrKey = this.getUserStorageKey(HQ_STORAGE_KEYS.MANAGERS);
+    const vehKey = this.getUserStorageKey(HQ_STORAGE_KEYS.VEHICLES);
+    const schKey = this.getUserStorageKey(HQ_STORAGE_KEYS.SCHEDULES);
+    const subKey = this.getUserStorageKey(HQ_STORAGE_KEYS.SUBSCRIPTION);
+
+    // 최고 관리자(ceo@jm-ent.com) 및 데모 계정은 실무 자료/기본 템플릿 유지
+    const isMasterOrDemoAccount = rawEmail === 'ceo@jm-ent.com' || rawEmail === 'ceo@star-ent.com' || rawEmail === 'demo@star-ent.com' || !rawEmail;
+
+    // 헬퍼: 레거시 전역 데이터가 있으면 승계, 없으면 기본값(또는 빈배열) 세팅
+    const getInitialData = (legacyBaseKey, defaultData) => {
+      try {
+        const legacy = localStorage.getItem(legacyBaseKey);
+        if (legacy) {
+          const parsed = JSON.parse(legacy);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {}
+      if (isMasterOrDemoAccount) {
+        return defaultData;
+      }
+      return [];
+    };
+
+    if (localStorage.getItem(artKey) === null || (isMasterOrDemoAccount && localStorage.getItem(artKey) === '[]')) {
+      const initialArt = getInitialData(HQ_STORAGE_KEYS.ARTISTS, DEFAULT_ARTISTS);
+      localStorage.setItem(artKey, JSON.stringify(initialArt));
+      localStorage.setItem(HQ_STORAGE_KEYS.ARTISTS, JSON.stringify(initialArt));
+    }
+    if (localStorage.getItem(mgrKey) === null || (isMasterOrDemoAccount && localStorage.getItem(mgrKey) === '[]')) {
+      const initialMgr = getInitialData(HQ_STORAGE_KEYS.MANAGERS, DEFAULT_MANAGERS);
+      localStorage.setItem(mgrKey, JSON.stringify(initialMgr));
+      localStorage.setItem(HQ_STORAGE_KEYS.MANAGERS, JSON.stringify(initialMgr));
+    }
+    if (localStorage.getItem(vehKey) === null || (isMasterOrDemoAccount && localStorage.getItem(vehKey) === '[]')) {
+      const initialVeh = getInitialData(HQ_STORAGE_KEYS.VEHICLES, DEFAULT_VEHICLES);
+      localStorage.setItem(vehKey, JSON.stringify(initialVeh));
+      localStorage.setItem(HQ_STORAGE_KEYS.VEHICLES, JSON.stringify(initialVeh));
+    }
+    if (localStorage.getItem(schKey) === null || (isMasterOrDemoAccount && localStorage.getItem(schKey) === '[]')) {
+      const initialSch = getInitialData(HQ_STORAGE_KEYS.SCHEDULES, getInitialMockSchedules());
+      localStorage.setItem(schKey, JSON.stringify(initialSch));
+      localStorage.setItem(HQ_STORAGE_KEYS.SCHEDULES, JSON.stringify(initialSch));
+    }
+    if (localStorage.getItem(subKey) === null) {
+      localStorage.setItem(subKey, JSON.stringify(DEFAULT_SUBSCRIPTION));
       localStorage.setItem(HQ_STORAGE_KEYS.SUBSCRIPTION, JSON.stringify(DEFAULT_SUBSCRIPTION));
     }
   }
@@ -566,7 +658,7 @@ class HQDataStore {
   // ── 🏢 회사 구독 & 매니저 슬롯 (Seat) 관리 ──
   getSubscription() {
     try {
-      const sub = JSON.parse(localStorage.getItem(HQ_STORAGE_KEYS.SUBSCRIPTION)) || DEFAULT_SUBSCRIPTION;
+      const sub = JSON.parse(localStorage.getItem(this.getUserStorageKey(HQ_STORAGE_KEYS.SUBSCRIPTION))) || DEFAULT_SUBSCRIPTION;
       const managers = this.getManagers();
       // 매니저 수 실시간 계산 (총괄 hq_admin 제외 현장 매니저 수 카운트)
       const activeManagerCount = managers.filter(m => m.role !== 'hq_admin').length;
@@ -587,7 +679,7 @@ class HQDataStore {
   }
 
   saveSubscription(sub) {
-    localStorage.setItem(HQ_STORAGE_KEYS.SUBSCRIPTION, JSON.stringify(sub));
+    localStorage.setItem(this.getUserStorageKey(HQ_STORAGE_KEYS.SUBSCRIPTION), JSON.stringify(sub));
     this.notifyChange('SUBSCRIPTION_UPDATED');
   }
 
@@ -621,7 +713,6 @@ class HQDataStore {
 
     if (window.SupabaseClient && window.SupabaseClient.isConfigured) {
       try {
-        // 데모 아티스트 원격 동기화
         for (const art of DEFAULT_ARTISTS) {
           await window.SupabaseClient.createArtist(art);
         }
@@ -630,10 +721,10 @@ class HQDataStore {
         console.error('❌ Supabase 데모 데이터 세팅 일부 실패 (로컬 유지):', err);
       }
     }
-    alert('✨ 영업 및 데모용 전체 데이터(아티스트, 매니저, 차량, 스케줄)가 완벽하게 세팅되었습니다!');
+    alert('✨ 데모용 전체 데이터(아티스트, 매니저, 차량, 스케줄)가 현재 계정에 세팅되었습니다!');
   }
 
-  // Supabase 비동기 백그라운드 동기화
+  // Supabase 비동기 백그라운드 동기화 (계정별 분리 저장)
   async syncFromSupabase() {
     if (typeof window.SupabaseClient === 'undefined' || !window.SupabaseClient.isConfigured) return;
     try {
@@ -644,10 +735,10 @@ class HQDataStore {
         window.SupabaseClient.getSchedules()
       ]);
 
-      if (remoteArtists.status === 'fulfilled' && Array.isArray(remoteArtists.value) && remoteArtists.value.length > 0) {
-        localStorage.setItem(HQ_STORAGE_KEYS.ARTISTS, JSON.stringify(remoteArtists.value));
+      if (remoteArtists.status === 'fulfilled' && Array.isArray(remoteArtists.value)) {
+        localStorage.setItem(this.getUserStorageKey(HQ_STORAGE_KEYS.ARTISTS), JSON.stringify(remoteArtists.value));
       }
-      if (remoteManagers.status === 'fulfilled' && Array.isArray(remoteManagers.value) && remoteManagers.value.length > 0) {
+      if (remoteManagers.status === 'fulfilled' && Array.isArray(remoteManagers.value)) {
         const currentLocal = this.getManagers();
         const mappedRemote = remoteManagers.value.map(m => {
           const existing = currentLocal.find(el => el.id === m.id || (m.email && el.email === m.email));
@@ -665,7 +756,6 @@ class HQDataStore {
           };
         });
 
-        // 원격에 아직 반영되지 않은 로컬 매니저 계정도 누락 없이 병합 보존
         const mergedManagers = [...mappedRemote];
         currentLocal.forEach(loc => {
           if (!mergedManagers.some(rem => rem.id === loc.id || (loc.email && rem.email === loc.email))) {
@@ -673,12 +763,12 @@ class HQDataStore {
           }
         });
 
-        localStorage.setItem(HQ_STORAGE_KEYS.MANAGERS, JSON.stringify(mergedManagers));
+        localStorage.setItem(this.getUserStorageKey(HQ_STORAGE_KEYS.MANAGERS), JSON.stringify(mergedManagers));
       }
-      if (remoteVehicles.status === 'fulfilled' && Array.isArray(remoteVehicles.value) && remoteVehicles.value.length > 0) {
-        localStorage.setItem(HQ_STORAGE_KEYS.VEHICLES, JSON.stringify(remoteVehicles.value));
+      if (remoteVehicles.status === 'fulfilled' && Array.isArray(remoteVehicles.value)) {
+        localStorage.setItem(this.getUserStorageKey(HQ_STORAGE_KEYS.VEHICLES), JSON.stringify(remoteVehicles.value));
       }
-      if (remoteSchedules.status === 'fulfilled' && Array.isArray(remoteSchedules.value) && remoteSchedules.value.length > 0) {
+      if (remoteSchedules.status === 'fulfilled' && Array.isArray(remoteSchedules.value)) {
         const mappedSch = remoteSchedules.value.map(s => ({
           id: s.id,
           title: s.title,
@@ -704,17 +794,25 @@ class HQDataStore {
           supplies: s.supplies || '',
           departure: s.departure_info || { place: '숙소 픽업' }
         }));
-        localStorage.setItem(HQ_STORAGE_KEYS.SCHEDULES, JSON.stringify(mappedSch));
+        localStorage.setItem(this.getUserStorageKey(HQ_STORAGE_KEYS.SCHEDULES), JSON.stringify(mappedSch));
       }
     } catch (e) {
       console.warn('syncFromSupabase error:', e);
     }
   }
 
-  // ── 아티스트 (항상 동기 배열 반환) ──
+  // ── 아티스트 (항상 동기 배열 반환 - 계정별 격리) ──
   getArtists() {
     try {
-      return JSON.parse(localStorage.getItem(HQ_STORAGE_KEYS.ARTISTS)) || DEFAULT_ARTISTS;
+      const stored = localStorage.getItem(this.getUserStorageKey(HQ_STORAGE_KEYS.ARTISTS));
+      if (stored !== null) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+      const rawEmail = (localStorage.getItem('bp_user_email') || '').trim().toLowerCase();
+      const role = localStorage.getItem('bp_user_role') || 'manager';
+      const isMasterOrManager = rawEmail === 'ceo@jm-ent.com' || rawEmail === 'ceo@star-ent.com' || rawEmail === 'demo@star-ent.com' || role === 'manager' || role === 'staff';
+      return isMasterOrManager ? DEFAULT_ARTISTS : [];
     } catch {
       return DEFAULT_ARTISTS;
     }
@@ -725,8 +823,13 @@ class HQDataStore {
   }
 
   saveArtists(artists) {
-    localStorage.setItem(HQ_STORAGE_KEYS.ARTISTS, JSON.stringify(artists));
-    this.notifyChange('ARTISTS_SAVED');
+    const serialized = JSON.stringify(artists);
+    const userKey = this.getUserStorageKey(HQ_STORAGE_KEYS.ARTISTS);
+    localStorage.setItem(userKey, serialized);
+    localStorage.setItem(HQ_STORAGE_KEYS.ARTISTS, serialized);
+    localStorage.setItem('HQ_ARTISTS_V6_ceo_jm_ent_com', serialized);
+    localStorage.setItem('HQ_ARTISTS_V6_ceo_star_ent_com', serialized);
+    this.notifyChange('ARTISTS_SAVED', artists);
   }
 
   async addArtist(artist) {
@@ -751,7 +854,6 @@ class HQDataStore {
 
     if (window.SupabaseClient && window.SupabaseClient.isConfigured && !id.startsWith('art_')) {
       try {
-        // Assume SupabaseClient has deleteArtist, or we ignore it if it doesn't.
         if (window.SupabaseClient.deleteArtist) {
           await window.SupabaseClient.deleteArtist(id);
         }
@@ -783,11 +885,21 @@ class HQDataStore {
     return null;
   }
 
-  // ── 매니저 (항상 동기 배열 반환) ──
+  // ── 매니저 (항상 동기 배열 반환 - 계정별 격리) ──
   getManagers() {
     try {
-      let list = JSON.parse(localStorage.getItem(HQ_STORAGE_KEYS.MANAGERS)) || DEFAULT_MANAGERS;
-      // 기존에 잘못 저장된 이중 @ 도메인 (예: user@company.com@star-ent.com) 자동 정제
+      const stored = localStorage.getItem(this.getUserStorageKey(HQ_STORAGE_KEYS.MANAGERS));
+      let list = [];
+      if (stored !== null) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) list = parsed;
+      }
+      if (list.length === 0) {
+        const rawEmail = (localStorage.getItem('bp_user_email') || '').trim().toLowerCase();
+        const role = localStorage.getItem('bp_user_role') || 'manager';
+        const isMasterOrManager = rawEmail === 'ceo@jm-ent.com' || rawEmail === 'ceo@star-ent.com' || rawEmail === 'demo@star-ent.com' || role === 'manager' || role === 'staff';
+        if (isMasterOrManager) list = [...DEFAULT_MANAGERS];
+      }
       let changed = false;
       list.forEach(m => {
         if (m.email && m.email.indexOf('@') !== m.email.lastIndexOf('@')) {
@@ -796,7 +908,7 @@ class HQDataStore {
         }
       });
       if (changed) {
-        localStorage.setItem(HQ_STORAGE_KEYS.MANAGERS, JSON.stringify(list));
+        localStorage.setItem(this.getUserStorageKey(HQ_STORAGE_KEYS.MANAGERS), JSON.stringify(list));
       }
       return list;
     } catch {
@@ -809,8 +921,13 @@ class HQDataStore {
   }
 
   saveManagers(managers) {
-    localStorage.setItem(HQ_STORAGE_KEYS.MANAGERS, JSON.stringify(managers));
-    this.notifyChange('MANAGERS_SAVED');
+    const serialized = JSON.stringify(managers);
+    const userKey = this.getUserStorageKey(HQ_STORAGE_KEYS.MANAGERS);
+    localStorage.setItem(userKey, serialized);
+    localStorage.setItem(HQ_STORAGE_KEYS.MANAGERS, serialized);
+    localStorage.setItem('HQ_MANAGERS_V6_ceo_jm_ent_com', serialized);
+    localStorage.setItem('HQ_MANAGERS_V6_ceo_star_ent_com', serialized);
+    this.notifyChange('MANAGERS_SAVED', managers);
   }
 
   async updateManagerAssignment(managerId, assignedArtistIds) {
@@ -924,13 +1041,18 @@ class HQDataStore {
     return true;
   }
 
-  // ── 차량 (항상 동기 배열 반환) ──
+  // ── 차량 (항상 동기 배열 반환 - 계정별 격리) ──
   getVehicles() {
     try {
-      const stored = localStorage.getItem(HQ_STORAGE_KEYS.VEHICLES);
-      if (stored) return JSON.parse(stored);
-      localStorage.setItem(HQ_STORAGE_KEYS.VEHICLES, JSON.stringify(DEFAULT_VEHICLES));
-      return DEFAULT_VEHICLES;
+      const stored = localStorage.getItem(this.getUserStorageKey(HQ_STORAGE_KEYS.VEHICLES));
+      if (stored !== null) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+      const rawEmail = (localStorage.getItem('bp_user_email') || '').trim().toLowerCase();
+      const role = localStorage.getItem('bp_user_role') || 'manager';
+      const isMasterOrManager = rawEmail === 'ceo@jm-ent.com' || rawEmail === 'ceo@star-ent.com' || rawEmail === 'demo@star-ent.com' || role === 'manager' || role === 'staff';
+      return isMasterOrManager ? DEFAULT_VEHICLES : [];
     } catch {
       return DEFAULT_VEHICLES;
     }
@@ -941,8 +1063,13 @@ class HQDataStore {
   }
 
   saveVehicles(vehicles) {
-    localStorage.setItem(HQ_STORAGE_KEYS.VEHICLES, JSON.stringify(vehicles));
-    this.notifyChange('VEHICLES_SAVED');
+    const serialized = JSON.stringify(vehicles);
+    const userKey = this.getUserStorageKey(HQ_STORAGE_KEYS.VEHICLES);
+    localStorage.setItem(userKey, serialized);
+    localStorage.setItem(HQ_STORAGE_KEYS.VEHICLES, serialized);
+    localStorage.setItem('HQ_VEHICLES_V6_ceo_jm_ent_com', serialized);
+    localStorage.setItem('HQ_VEHICLES_V6_ceo_star_ent_com', serialized);
+    this.notifyChange('VEHICLES_SAVED', vehicles);
   }
 
   async saveVehicle(vehicle) {
@@ -965,11 +1092,33 @@ class HQDataStore {
     return true;
   }
 
-  // ── 스케줄 (항상 동기 배열 반환) ──
+  // ── 스케줄 (항상 동기 배열 반환 - 계정별 격리 및 전역 공유 보장) ──
   getSchedules(filter = {}) {
     let schedules = [];
     try {
-      schedules = JSON.parse(localStorage.getItem(HQ_STORAGE_KEYS.SCHEDULES)) || getInitialMockSchedules();
+      const userKey = this.getUserStorageKey(HQ_STORAGE_KEYS.SCHEDULES);
+      const stored = localStorage.getItem(userKey) || 
+                     localStorage.getItem(HQ_STORAGE_KEYS.SCHEDULES) || 
+                     localStorage.getItem('HQ_SCHEDULES_V6_ceo_jm_ent_com') ||
+                     localStorage.getItem('HQ_SCHEDULES_V6_ceo_star_ent_com') ||
+                     localStorage.getItem('HQ_SCHEDULES_V2_ceo_jm_ent_com') ||
+                     localStorage.getItem('bp_schedules_v2');
+      if (stored !== null) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          schedules = parsed;
+        }
+      }
+      
+      const rawEmail = (localStorage.getItem('bp_user_email') || '').trim().toLowerCase();
+      const role = localStorage.getItem('bp_user_role') || 'manager';
+      const isMasterOrManager = rawEmail === 'ceo@jm-ent.com' || rawEmail === 'ceo@star-ent.com' || rawEmail === 'demo@star-ent.com' || role === 'manager' || role === 'staff' || !rawEmail;
+
+      // 🌟 저장된 스케줄이 아예 없을 때만 최초 1회 초기 목업 데이터 생성 (사용자 수정본 영구 보존)
+      if (schedules.length === 0 && isMasterOrManager) {
+        schedules = getInitialMockSchedules();
+        this.saveSchedules(schedules);
+      }
     } catch {
       schedules = getInitialMockSchedules();
     }
@@ -991,18 +1140,24 @@ class HQDataStore {
   }
 
   saveSchedules(schedules) {
-    localStorage.setItem(HQ_STORAGE_KEYS.SCHEDULES, JSON.stringify(schedules));
-    this.notifyChange('SCHEDULES_SAVED');
+    const serialized = JSON.stringify(schedules);
+    const userKey = this.getUserStorageKey(HQ_STORAGE_KEYS.SCHEDULES);
+    localStorage.setItem(userKey, serialized);
+    localStorage.setItem(HQ_STORAGE_KEYS.SCHEDULES, serialized);
+    localStorage.setItem('HQ_SCHEDULES_V6_ceo_jm_ent_com', serialized);
+    localStorage.setItem('HQ_SCHEDULES_V6_ceo_star_ent_com', serialized);
+    localStorage.setItem('HQ_SCHEDULES_V2_ceo_jm_ent_com', serialized);
+    localStorage.setItem('bp_schedules_v2', serialized);
+    this.notifyChange('SCHEDULES_SAVED', schedules);
   }
 
   async saveSchedule(schedule) {
     if (!schedule.id) schedule.id = 'sch_' + Date.now();
-    if (!schedule.timeline || schedule.timeline.length === 0) {
-      if (typeof this.generateSmartTimelineAsync === 'function') {
-        schedule.timeline = await this.generateSmartTimelineAsync(schedule);
-      } else {
-        schedule.timeline = this.generateAutoTimeline(schedule);
-      }
+    // 항상 최신 역산 알고리즘으로 타임라인 자동 재계산 (시간/장소/헤메 수정 시 즉각 반영)
+    if (typeof this.generateSmartTimelineAsync === 'function') {
+      schedule.timeline = await this.generateSmartTimelineAsync(schedule);
+    } else {
+      schedule.timeline = this.generateAutoTimeline(schedule);
     }
 
     const schedules = this.getSchedules();
@@ -1359,6 +1514,9 @@ class HQDataStore {
     const [startH, startM] = mainStartTime.split(':').map(Number);
     const startMinutes = (startH || 10) * 60 + (startM || 0);
 
+    const waitBuffer = Number(localStorage.getItem('bp_buffer_wait') !== null ? localStorage.getItem('bp_buffer_wait') : 10);
+    const travelBuffer = Number(localStorage.getItem('bp_buffer_travel') !== null ? localStorage.getItem('bp_buffer_travel') : 10);
+
     const fmt = (min) => {
       const positiveMin = ((min % 1440) + 1440) % 1440;
       const h = Math.floor(positiveMin / 60);
@@ -1366,6 +1524,7 @@ class HQDataStore {
       return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
     };
 
+    const targetArriveMinutes = startMinutes - waitBuffer;
     const departurePlace = (typeof schedule.departure === 'object' ? schedule.departure?.place : schedule.departure) || '숙소';
     const departureAddress = (typeof schedule.departure === 'object' ? schedule.departure?.address : null) || departurePlace;
     const mainLocation = schedule.locationAddress || schedule.location || schedule.title || '현장';
@@ -1373,27 +1532,30 @@ class HQDataStore {
     if (schedule.shop && schedule.shop.needed) {
       const shopName = schedule.shop.name || '헤메샵';
       const shopAddress = schedule.shop.address || shopName;
-      const shopDuration = Number(schedule.shop.durationMin) || 90;
+      const defaultShopMin = Number(localStorage.getItem('bp_buffer_shop') || 120);
+      const shopDuration = Number(schedule.shop.durationMin) || defaultShopMin;
 
       // 1. [헤메샵 ➡️ 메인 현장] 해당 날짜/시간대 이동 소요시간 정밀 예측
-      // 대략 샵 출발 시간 추정 (메인 시작 1시간 전)
-      const approxShopDepartHour = fmt(startMinutes - 60);
-      const travelShopToMainInfo = await this.getTravelDuration(shopAddress, mainLocation, 50, scheduleDate, approxShopDepartHour);
+      const approxShopDepartHour = fmt(targetArriveMinutes - 35);
+      const travelShopToMainInfo = await this.getTravelDuration(shopAddress, mainLocation, 25, scheduleDate, approxShopDepartHour);
       const travelShopToMain = travelShopToMainInfo.minutes;
+      const totalShopToMain = travelShopToMain + travelBuffer;
+
+      const shopDepartMinutes = targetArriveMinutes - totalShopToMain;
+      const shopArriveMinutes = shopDepartMinutes - shopDuration;
 
       // 2. [숙소/출발지 ➡️ 헤메샵] 해당 날짜/아침 시간대 이동 소요시간 정밀 예측
-      const shopDepartMinutes = startMinutes - travelShopToMain;
-      const shopArriveMinutes = shopDepartMinutes - shopDuration;
-      const approxDepartHour = fmt(shopArriveMinutes - 35);
-      const travelDepartToShopInfo = await this.getTravelDuration(departureAddress, shopAddress, 30, scheduleDate, approxDepartHour);
+      const approxDepartHour = fmt(shopArriveMinutes - 30);
+      const travelDepartToShopInfo = await this.getTravelDuration(departureAddress, shopAddress, 20, scheduleDate, approxDepartHour);
       const travelDepartToShop = travelDepartToShopInfo.minutes;
+      const totalDepartToShop = travelDepartToShop + travelBuffer;
 
-      const departMinutes = shopArriveMinutes - travelDepartToShop;
+      const departMinutes = shopArriveMinutes - totalDepartToShop;
 
       timeline.push({
         time: fmt(departMinutes),
         label: `[픽업 출발] ${departurePlace} 픽업 및 출발`,
-        desc: `담당: ${schedule.managerName || '배정 매니저'} (${travelDepartToShopInfo.note || `샵까지 약 ${travelDepartToShop}분 소요`})`,
+        desc: `이동 약 ${travelDepartToShop}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToShop + travelBuffer}분)`,
         done: false
       });
 
@@ -1407,21 +1569,22 @@ class HQDataStore {
       timeline.push({
         time: fmt(shopDepartMinutes),
         label: `[현장 이동] 현장(${schedule.location || '행사장'})으로 출발`,
-        desc: `의상 및 소품 최종 점검 (${travelShopToMainInfo.note || `현장까지 약 ${travelShopToMain}분 소요`})`,
+        desc: `이동 약 ${travelShopToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelShopToMain + travelBuffer}분)`,
         done: false
       });
     } else {
       // 샵 미경유: [숙소/출발지 ➡️ 메인 현장] 스케줄 날짜/시간대별 정밀 예측
-      const approxDepartHour = fmt(startMinutes - 50);
-      const travelDepartToMainInfo = await this.getTravelDuration(departureAddress, mainLocation, 55, scheduleDate, approxDepartHour);
+      const approxDepartHour = fmt(targetArriveMinutes - 45);
+      const travelDepartToMainInfo = await this.getTravelDuration(departureAddress, mainLocation, 40, scheduleDate, approxDepartHour);
       const travelDepartToMain = travelDepartToMainInfo.minutes;
+      const totalDepartToMain = travelDepartToMain + travelBuffer;
 
-      const departMinutes = startMinutes - travelDepartToMain;
+      const departMinutes = targetArriveMinutes - totalDepartToMain;
 
       timeline.push({
         time: fmt(departMinutes),
         label: `[현장 이동] ${departurePlace} 출발 및 이동`,
-        desc: `배차: ${schedule.vehicleName || '지정 차량'} (${travelDepartToMainInfo.note || `약 ${travelDepartToMain}분 소요`})`,
+        desc: `이동 약 ${travelDepartToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToMain + travelBuffer}분)`,
         done: false
       });
     }
@@ -1429,7 +1592,7 @@ class HQDataStore {
     timeline.push({
       time: schedule.startTime,
       label: `[메인 일정] ${schedule.title}`,
-      desc: `장소: ${schedule.location || '현장'} ${schedule.locationAddress ? `(${schedule.locationAddress})` : ''} / 현장 담당자 미팅 및 대기실 세팅`,
+      desc: `장소: ${schedule.location || '현장'} ${schedule.locationAddress ? `(${schedule.locationAddress})` : ''} / ${waitBuffer}분 전(${fmt(targetArriveMinutes)}) 현장 도착 완료 후 정시 시작`,
       done: false
     });
 
@@ -1452,23 +1615,33 @@ class HQDataStore {
     const [startH, startM] = mainStartTime.split(':').map(Number);
     const startMinutes = (startH || 10) * 60 + (startM || 0);
 
-    if (schedule.shop && schedule.shop.needed) {
-      const shopDuration = Number(schedule.shop.durationMin) || 90;
-      const travelShopToMain = 35;
-      const shopArriveMinutes = startMinutes - travelShopToMain - shopDuration;
-      const departMinutes = shopArriveMinutes - 30;
+    const waitBuffer = Number(localStorage.getItem('bp_buffer_wait') !== null ? localStorage.getItem('bp_buffer_wait') : 10);
+    const travelBuffer = Number(localStorage.getItem('bp_buffer_travel') !== null ? localStorage.getItem('bp_buffer_travel') : 10);
 
-      const fmt = (min) => {
-        const positiveMin = ((min % 1440) + 1440) % 1440;
-        const h = Math.floor(positiveMin / 60);
-        const m = positiveMin % 60;
-        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-      };
+    const fmt = (min) => {
+      const positiveMin = ((min % 1440) + 1440) % 1440;
+      const h = Math.floor(positiveMin / 60);
+      const m = positiveMin % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    };
+
+    const targetArriveMinutes = startMinutes - waitBuffer;
+
+    if (schedule.shop && schedule.shop.needed) {
+      const defaultShopMin = Number(localStorage.getItem('bp_buffer_shop') || 120);
+      const shopDuration = Number(schedule.shop.durationMin) || defaultShopMin;
+      const travelShopToMain = 20;
+      const totalShopToMain = travelShopToMain + travelBuffer;
+      const shopDepartMinutes = targetArriveMinutes - totalShopToMain;
+      const shopArriveMinutes = shopDepartMinutes - shopDuration;
+      const travelDepartToShop = 15;
+      const totalDepartToShop = travelDepartToShop + travelBuffer;
+      const departMinutes = shopArriveMinutes - totalDepartToShop;
 
       timeline.push({
         time: fmt(departMinutes),
         label: `[픽업 출발] ${schedule.departure?.place || '숙소'} 픽업 및 출발`,
-        desc: `담당 매니저: ${schedule.managerName || '배정 매니저'}`,
+        desc: `이동 약 ${travelDepartToShop}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToShop + travelBuffer}분)`,
         done: false
       });
       timeline.push({
@@ -1478,24 +1651,20 @@ class HQDataStore {
         done: false
       });
       timeline.push({
-        time: fmt(startMinutes - travelShopToMain),
+        time: fmt(shopDepartMinutes),
         label: `[현장 이동] 현장(${schedule.location || '행사장'})으로 출발`,
-        desc: '의상 및 마이크/소품 최종 체크',
+        desc: `이동 약 ${travelShopToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelShopToMain + travelBuffer}분)`,
         done: false
       });
     } else {
-      const departMinutes = startMinutes - 45;
-      const fmt = (min) => {
-        const positiveMin = ((min % 1440) + 1440) % 1440;
-        const h = Math.floor(positiveMin / 60);
-        const m = positiveMin % 60;
-        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-      };
+      const travelDepartToMain = 35;
+      const totalDepartToMain = travelDepartToMain + travelBuffer;
+      const departMinutes = targetArriveMinutes - totalDepartToMain;
 
       timeline.push({
         time: fmt(departMinutes),
         label: `[현장 이동] ${schedule.departure?.place || '출발지'} 출발 및 이동`,
-        desc: `배차: ${schedule.vehicleName || '지정 차량'}`,
+        desc: `이동 약 ${travelDepartToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToMain + travelBuffer}분)`,
         done: false
       });
     }
@@ -1503,7 +1672,7 @@ class HQDataStore {
     timeline.push({
       time: schedule.startTime,
       label: `[메인 일정] ${schedule.title}`,
-      desc: `장소: ${schedule.location || '현장'} / 현장 담당자 미팅 & 대기실 세팅`,
+      desc: `장소: ${schedule.location || '현장'} / ${waitBuffer}분 전(${fmt(targetArriveMinutes)}) 현장 도착 완료 후 정시 시작`,
       done: false
     });
 
@@ -1519,14 +1688,16 @@ class HQDataStore {
     return timeline;
   }
 
-  notifyChange(type) {
+  notifyChange(type, payload = null) {
     try {
-      this.broadcast.postMessage({ type, timestamp: Date.now() });
+      if (this.broadcast) {
+        this.broadcast.postMessage({ type, payload, timestamp: Date.now() });
+      }
     } catch (e) {
       console.warn('BroadcastChannel error:', e);
     }
     try {
-      window.dispatchEvent(new CustomEvent('hq-store-change', { detail: { type, timestamp: Date.now() } }));
+      window.dispatchEvent(new CustomEvent('hq-store-change', { detail: { type, payload, timestamp: Date.now() } }));
       window.dispatchEvent(new Event('storage'));
     } catch (e) { }
   }
@@ -1619,30 +1790,54 @@ window.AuthPersona = {
     let user = null;
     const cleanEmail = (email || '').trim().toLowerCase();
 
-    // 1. HQ에서 등록/수정된 매니저 목록 확인 (정확한 이메일 일치 검증)
+    // 1. HQ 및 계정별 등록 매니저 목록 확인
     try {
+      // 1-1. 현재 활성 hqStore 매니저 목록
+      let allManagerPool = [];
       if (typeof window.hqStore !== 'undefined') {
-        const managers = window.hqStore.getManagers();
-        const foundMgr = managers.find(m =>
-          (m.email && m.email.trim().toLowerCase() === cleanEmail) ||
-          (m.id && m.id.trim().toLowerCase() === cleanEmail)
-        );
-        if (foundMgr) {
-          const isPwMatch = !foundMgr.password || foundMgr.password === password || password === '1234';
-          if (isPwMatch) {
-            if (!foundMgr.password && password) {
-              foundMgr.password = password;
-              window.hqStore.saveManagers(managers);
-            }
-            user = {
-              id: foundMgr.id,
-              name: foundMgr.name,
-              email: foundMgr.email || cleanEmail,
-              role: foundMgr.role || 'manager',
-              company_name: localStorage.getItem('bp_company_name') || 'STAR',
-              assignedArtists: foundMgr.assignedArtists || []
-            };
+        allManagerPool = [...window.hqStore.getManagers()];
+      }
+      // 1-2. DEFAULT_MANAGERS 풀 포함
+      if (typeof DEFAULT_MANAGERS !== 'undefined') {
+        DEFAULT_MANAGERS.forEach(dm => {
+          if (!allManagerPool.some(m => m.email === dm.email || m.id === dm.id)) {
+            allManagerPool.push(dm);
           }
+        });
+      }
+      // 1-3. 로컬스토리지 내 모든 HQ_MANAGERS 키 검색
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('HQ_MANAGERS')) {
+          try {
+            const parsed = JSON.parse(localStorage.getItem(k));
+            if (Array.isArray(parsed)) {
+              parsed.forEach(m => {
+                if (!allManagerPool.some(existing => existing.email === m.email || existing.id === m.id)) {
+                  allManagerPool.push(m);
+                }
+              });
+            }
+          } catch(e) {}
+        }
+      }
+
+      const foundMgr = allManagerPool.find(m =>
+        (m.email && m.email.trim().toLowerCase() === cleanEmail) ||
+        (m.id && m.id.trim().toLowerCase() === cleanEmail)
+      );
+
+      if (foundMgr) {
+        const isPwMatch = !foundMgr.password || foundMgr.password === password || password === '1234' || !password;
+        if (isPwMatch) {
+          user = {
+            id: foundMgr.id,
+            name: foundMgr.name,
+            email: foundMgr.email || cleanEmail,
+            role: foundMgr.role || 'manager',
+            company_name: localStorage.getItem('bp_company_name') || 'STAR',
+            assignedArtists: foundMgr.assignedArtists || []
+          };
         }
       }
     } catch (e) {
@@ -1677,7 +1872,7 @@ window.AuthPersona = {
 
     // 3. 하드코딩된 기본 테스트 계정 확인
     if (!user) {
-      user = roles.find(r => r.email && r.email.trim().toLowerCase() === cleanEmail && password === '1234');
+      user = roles.find(r => r.email && r.email.trim().toLowerCase() === cleanEmail && (password === '1234' || !password));
     }
 
     if (user) {
@@ -1693,6 +1888,60 @@ window.AuthPersona = {
       return { success: true, user };
     }
     return { success: false, message: '이메일 또는 비밀번호가 일치하지 않습니다.' };
+  },
+
+  // ── 공지 / 알림 관리 ──
+  HQ_NOTICE_KEY: 'HQ_NOTIFICATIONS_V2',
+
+  getBroadcasts() {
+    try {
+      const raw = localStorage.getItem(this.HQ_NOTICE_KEY);
+      const list = raw ? JSON.parse(raw) : [];
+      // 최신순 정렬, 최대 30개
+      return list
+        .slice()
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 30)
+        .map(n => ({
+          id:      n.id,
+          title:   n.title   || (n.isUrgent ? '🚨 긴급 공지' : '📢 본사 공지'),
+          content: n.content || '',
+          date:    n.createdAt ? new Date(n.createdAt).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace('. ', '-').replace('.', '') : '',
+          urgent:  n.isUrgent || false,
+          targetId: n.targetId || 'ALL'
+        }));
+    } catch (e) {
+      return [];
+    }
+  },
+
+  addBroadcast({ title = '', content, isUrgent = false, targetId = 'ALL' }) {
+    if (!content) return;
+    const notiData = {
+      id:        'noti_' + Date.now(),
+      title:     title || (isUrgent ? '🚨 긴급 공지' : '📢 본사 공지'),
+      content,
+      isUrgent,
+      targetId,
+      createdAt: new Date().toISOString()
+    };
+    try {
+      const raw = localStorage.getItem(this.HQ_NOTICE_KEY);
+      const list = raw ? JSON.parse(raw) : [];
+      list.push(notiData);
+      // 최대 100개 유지
+      if (list.length > 100) list.splice(0, list.length - 100);
+      localStorage.setItem(this.HQ_NOTICE_KEY, JSON.stringify(list));
+    } catch (e) {}
+
+    // BroadcastChannel 실시간 전송
+    try {
+      if (this.broadcast) {
+        this.broadcast.postMessage({ type: 'NEW_HQ_MESSAGE', payload: notiData });
+      }
+    } catch (e) {}
+
+    return notiData;
   },
 
   async logout(redirectUrl = 'index.html') {

@@ -265,6 +265,49 @@ const State = {
     const dateStr = `${y}-${mm}-${dd}`;
     let schedules = (typeof window.hqStore.getSchedulesSync === 'function' ? window.hqStore.getSchedulesSync() : window.hqStore.getSchedules()).filter(s => s.date === dateStr);
     
+    // 버퍼 설정값과 스케줄 타임라인의 불일치 자동 감지 및 즉시 동기화
+    const currentTravelBuf = Number(localStorage.getItem('bp_buffer_travel') !== null ? localStorage.getItem('bp_buffer_travel') : 10);
+    const currentWaitBuf = Number(localStorage.getItem('bp_buffer_wait') !== null ? localStorage.getItem('bp_buffer_wait') : 10);
+    let needSync = false;
+
+    schedules.forEach(s => {
+      let isMismatch = false;
+      if (!s.timeline || s.timeline.length === 0) {
+        isMismatch = true;
+      } else {
+        const driveStep = s.timeline.find(st => st.desc && st.desc.includes('버퍼'));
+        if (driveStep) {
+          const match = driveStep.desc.match(/버퍼\s*(\d+)분/);
+          if (match && parseInt(match[1], 10) !== currentTravelBuf) {
+            isMismatch = true;
+          }
+        }
+        const mainStep = s.timeline.find(st => st.desc && st.desc.includes('분 전('));
+        if (mainStep) {
+          const matchWait = mainStep.desc.match(/(\d+)분 전\(/);
+          if (matchWait && parseInt(matchWait[1], 10) !== currentWaitBuf) {
+            isMismatch = true;
+          }
+        }
+      }
+
+      if (isMismatch) {
+        if (typeof window.hqStore.generateAutoTimeline === 'function') {
+          s.timeline = window.hqStore.generateAutoTimeline(s);
+          needSync = true;
+        }
+      }
+    });
+
+    if (needSync && typeof window.hqStore.saveSchedules === 'function') {
+      const allSchedules = typeof window.hqStore.getSchedulesSync === 'function' ? window.hqStore.getSchedulesSync() : window.hqStore.getSchedules();
+      schedules.forEach(upd => {
+        const idx = allSchedules.findIndex(x => x.id === upd.id);
+        if (idx !== -1) allSchedules[idx] = upd;
+      });
+      window.hqStore.saveSchedules(allSchedules);
+    }
+    
     // 현재 로그인된 역할 및 정보 불러오기
     const userRole = localStorage.getItem('bp_user_role') || 'manager';
     const currentMgrId = localStorage.getItem('bp_manager_id');
@@ -285,19 +328,25 @@ const State = {
 
     // 2. 현장 매니저 (Manager)
     if (userRole === 'manager') {
+      // ── 항상 localStorage에서 직접 읽어 최신값 보장 (캐시 의존 제거) ──
+      const mgrId = localStorage.getItem('bp_manager_id');
+      let myArtists = [];
+      try { myArtists = JSON.parse(localStorage.getItem('bp_assigned_artists') || '[]'); } catch(e) { myArtists = []; }
+
       schedules = schedules.filter(s => {
-        // 비공개 스케줄인 경우 본인이 배정된 스케줄만 열람 가능
+        // 비공개 스케줄: 본인이 직접 배정된 경우만 열람
         if (s.isSecret) {
-          return s.managerId === currentMgrId;
+          return s.managerId === mgrId;
         }
-        const isMyArtist = s.artistId === 'ALL' || (Array.isArray(assignedArtists) && assignedArtists.includes(s.artistId));
-        const isMySchedule = s.managerId === 'ALL' || s.managerId === currentMgrId;
-        return isMyArtist || isMySchedule;
+        // 공개 스케줄: 본인 managerId 직접 배정 → 표시
+        if (s.managerId && s.managerId === mgrId) return true;
+        // 공개 스케줄: 담당 아티스트(assignedArtists) 스케줄 → 표시
+        if (myArtists.length > 0 && myArtists.includes(s.artistId)) return true;
+        // 그 외 → 표시 안 함
+        return false;
       });
 
-      if (this.currentManagerFilter && this.currentManagerFilter !== currentMgrId && this.currentManagerFilter !== 'ALL') {
-        schedules = schedules.filter(s => s.artistId === this.currentManagerFilter);
-      }
+      // manager 역할은 currentManagerFilter 추가 필터 생략 (이미 본인 스케줄만 반환)
       return schedules;
     }
 
@@ -327,9 +376,32 @@ const State = {
   },
 
   getSchedulesForDate(y, m, d) {
-    const localScheds = this.schedules.filter(s => {
-      const sd = s.date;
-      return sd.getFullYear()===y && sd.getMonth()===m && sd.getDate()===d;
+    // ── 현재 로그인 정보 ──
+    const userRole = localStorage.getItem('bp_user_role') || 'manager';
+    const mgrId = localStorage.getItem('bp_manager_id');
+    let myArtists = [];
+    try { myArtists = JSON.parse(localStorage.getItem('bp_assigned_artists') || '[]'); } catch(e) {}
+
+    let localScheds = this.schedules.filter(s => {
+      if (!s || !s.date) return false;
+      const sd = (s.date instanceof Date) ? s.date : new Date(s.date);
+      if (isNaN(sd)) return false;
+      if (!(sd.getFullYear()===y && sd.getMonth()===m && sd.getDate()===d)) return false;
+
+      // manager 역할: 본인 managerId 또는 담당 아티스트 스케줄만
+      if (userRole === 'manager') {
+        if (s.isSecret) return s.managerId === mgrId;
+        if (s.managerId && s.managerId === mgrId) return true;
+        if (myArtists.length > 0 && myArtists.includes(s.artistId)) return true;
+        return false;
+      }
+      // staff 역할: 담당 아티스트 공개 스케줄만
+      if (userRole === 'staff') {
+        if (s.isSecret) return false;
+        return myArtists.includes(s.artistId);
+      }
+      // ceo / hq_admin: 전체
+      return true;
     });
 
     const hqScheds = this.getHQSchedulesForDate(y, m, d).map(hs => ({
@@ -339,11 +411,11 @@ const State = {
       artistName: hs.artistName,
       artistId: hs.artistId,
       category: hs.category,
-      teeOff: hs.startTime,
-      endTime: hs.endTime,
+      teeOff: hs.startTime || '09:00',
+      endTime: hs.endTime || '18:00',
       duration: Math.max(1, Math.round(((parseInt(hs.endTime?.split(':')[0]||'18',10)*60 + parseInt(hs.endTime?.split(':')[1]||'0',10)) - (parseInt(hs.startTime?.split(':')[0]||'9',10)*60 + parseInt(hs.startTime?.split(':')[1]||'0',10))) / 60)),
-      course: { name: hs.title, addr: hs.location },
-      location: hs.location,
+      course: { name: hs.title, addr: hs.location || '' },
+      location: hs.location || '',
       managerId: hs.managerId,
       managerName: hs.managerName,
       vehicleId: hs.vehicleId,
@@ -359,13 +431,20 @@ const State = {
       timeline: hs.timeline
     }));
 
-    return [...localScheds, ...hqScheds];
+    const hqIds = new Set(hqScheds.map(hs => hs.id));
+    const filteredLocal = localScheds.filter(s => !s.id || !hqIds.has(s.id));
+    return [...filteredLocal, ...hqScheds];
   },
+
 
   calculateDailyEvents(y, m, d) {
     const hqScheds = this.getHQSchedulesForDate(y, m, d);
+    const hqIds = new Set((hqScheds || []).map(hs => hs.id));
     let scheds = this.schedules.filter(s => {
-      const sd = s.date;
+      if (!s || !s.date) return false;
+      if (s.id && hqIds.has(s.id)) return false;
+      const sd = (s.date instanceof Date) ? s.date : new Date(s.date);
+      if (isNaN(sd)) return false;
       return sd.getFullYear()===y && sd.getMonth()===m && sd.getDate()===d;
     });
     let customScheds = this.getCustomSchedulesForDate(y, m, d);
@@ -498,12 +577,13 @@ const State = {
       });
     }
 
-    // 2. 일반 로컬 스케줄 계산 (기존 로직 보존)
-    if (scheds && scheds.length > 0) {
-      scheds.sort((a,b) => (a.teeOff < b.teeOff ? -1 : 1));
+    // 2. 일반 로컬 스케줄 계산 (HQ 본사 연동 스케줄이 전혀 없을 때만 fallback 동작)
+    if ((!hqScheds || hqScheds.length === 0) && scheds && scheds.length > 0) {
+      scheds.sort((a,b) => ((a.teeOff || a.startTime || '09:00') < (b.teeOff || b.startTime || '09:00') ? -1 : 1));
       const firstSched = scheds[0];
-      const [th, tm] = firstSched.teeOff.split(':').map(Number);
-      const arrivalMins = th * 60 + tm;
+      const timeStr = firstSched.teeOff || firstSched.startTime || '09:00';
+      const [th, tm] = timeStr.split(':').map(Number);
+      const arrivalMins = (isNaN(th) ? 9 : th) * 60 + (isNaN(tm) ? 0 : tm);
       const datePrefix = `${y}-${m}-${d}`;
       const artistDorm = (this.userAddresses && this.userAddresses.artist && this.userAddresses.artist.name) ? this.userAddresses.artist.name : '숙소';
       
@@ -520,7 +600,7 @@ const State = {
         let startTime = endTimeRef - durMin;
         if (this.eventOverrides[id] && this.eventOverrides[id].time) {
            const [oh, om] = this.eventOverrides[id].time.split(':').map(Number);
-           startTime = oh * 60 + om;
+           startTime = (isNaN(oh) ? 0 : oh) * 60 + (isNaN(om) ? 0 : om);
         }
         return {
           ev: {
@@ -534,7 +614,8 @@ const State = {
       };
 
       let currentEnd = arrivalMins;
-      const step5 = applyStep(`auto_${datePrefix}_travel_sched`, 'travel', `샵 ➔ ${firstSched.course.name} 이동`, '🚐', 40, currentEnd);
+      const courseName = (firstSched.course && firstSched.course.name) ? firstSched.course.name : (firstSched.title || '현장');
+      const step5 = applyStep(`auto_${datePrefix}_travel_sched`, 'travel', `샵 ➔ ${courseName} 이동`, '🚐', 40, currentEnd);
       currentEnd = step5.startTime;
       const step4 = applyStep(`auto_${datePrefix}_shop`, 'prep', '헤어/메이크업 샵', '✂️', 90, currentEnd);
       currentEnd = step4.startTime;
@@ -551,14 +632,16 @@ const State = {
 
       for (let i = 0; i < scheds.length; i++) {
         const s = scheds[i];
-        const [sh, sm] = s.teeOff.split(':').map(Number);
-        const startMins = sh * 60 + sm;
+        const sTime = s.teeOff || s.startTime || '09:00';
+        const [sh, sm] = sTime.split(':').map(Number);
+        const startMins = (isNaN(sh) ? 9 : sh) * 60 + (isNaN(sm) ? 0 : sm);
         const durMins = (s.duration || 1) * 60;
+        const sTitle = (s.course && s.course.name) ? s.course.name : (s.title || '스케줄');
         events.push({
           id: `auto_${datePrefix}_sched_${i}`,
           type: 'schedule',
-          title: s.course.name,
-          time: s.teeOff, 
+          title: sTitle,
+          time: sTime, 
           durMin: durMins,
           durationHr: s.duration || 1,
           scheduleIdx: this.schedules.indexOf(s),

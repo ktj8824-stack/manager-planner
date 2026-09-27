@@ -112,18 +112,17 @@ const Home = {
         <div class="split-left" style="width:85px; flex-shrink:0; border-right:1px solid var(--border-default); background:#ffffff; display:flex; flex-direction:column; height:calc(100vh - var(--header-h));">
           
           <!-- Header -->
-          <div style="padding: 14px 4px 10px; flex-shrink:0; border-bottom:1px solid rgba(0,0,0,0.05);">
-            <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
-              <h2 id="mini-cal-title" style="font-size:12px; font-weight:800; color:var(--text-100); text-align:center; line-height:1.2;">${this.calYear}년<br/>${this.calMonth+1}월</h2>
-              <div style="display:flex; gap:2px;">
-                <button onclick="Home.prevMonth()" style="padding:4px; color:var(--text-300);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
-                <button onclick="Home.nextMonth()" style="padding:4px; color:var(--text-300);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
-              </div>
+          <div style="padding: 16px 8px 12px; flex-shrink:0; border-bottom:1px solid rgba(0,0,0,0.06); text-align:center;">
+            <div id="mini-cal-year" style="font-size:11.5px; font-weight:700; color:#94a3b8; margin-bottom:2px;">${this.calYear}년</div>
+            <div id="mini-cal-title" style="font-size:20px; font-weight:900; color:#0f172a; line-height:1.2; margin-bottom:8px;">${this.calMonth+1}월</div>
+            <div style="display:flex; justify-content:center; gap:8px;">
+              <button onclick="Home.prevMonth()" style="background:transparent; border:none; padding:4px 8px; color:#64748b; font-size:14px; font-weight:800; cursor:pointer;">&lt;</button>
+              <button onclick="Home.nextMonth()" style="background:transparent; border:none; padding:4px 8px; color:#64748b; font-size:14px; font-weight:800; cursor:pointer;">&gt;</button>
             </div>
           </div>
           
           <!-- Scrollable Dates -->
-          <div id="mini-cal-grid" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; padding:10px 6px; position:relative;">
+          <div id="mini-cal-grid" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; padding:10px 4px; position:relative;">
             ${this.renderMiniCal()}
           </div>
           
@@ -145,21 +144,31 @@ const Home = {
 
     setTimeout(() => {
       this.centerSelectedDate();
-    }, 100);
+    }, 80);
   },
 
   centerSelectedDate() {
     const grid = U.$('#mini-cal-grid');
-    const selectedEl = grid?.querySelector('.v-cal-day.selected') || grid?.querySelector('.v-cal-day.today');
-    if (grid && selectedEl) {
-      const gridHeight = grid.clientHeight;
-      const elOffset = selectedEl.offsetTop;
-      const elHeight = selectedEl.clientHeight;
-      grid.scrollTo({
-        top: elOffset - (gridHeight / 2) + (elHeight / 2),
-        behavior: 'smooth'
-      });
+    if (!grid) return;
+    const today = new Date();
+    const isCurrentMonth = this.calYear === today.getFullYear() && this.calMonth === today.getMonth();
+
+    if (isCurrentMonth) {
+      const selectedEl = grid.querySelector('.v-cal-day.today') || grid.querySelector('.v-cal-day.selected');
+      if (selectedEl) {
+        const elOffset = selectedEl.offsetTop;
+        grid.scrollTo({
+          top: Math.max(0, elOffset - 6),
+          behavior: 'smooth'
+        });
+        return;
+      }
     }
+    // 현재 달이 아닐 경우 1일부터 보이도록 최상단으로 스크롤
+    grid.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   },
 
   renderMiniCal() {
@@ -170,6 +179,7 @@ const Home = {
     
     let html = '';
     
+    // 1. 현재 선택된 당월 날짜들 (예: 9월 1일 ~ 30일)
     for(let d=1; d<=daysInMonth; d++) {
       const cellDate = new Date(y, m, d);
       const isSelected = y === this.selectedDate.getFullYear() && m === this.selectedDate.getMonth() && d === this.selectedDate.getDate();
@@ -178,35 +188,90 @@ const Home = {
       const hasSched = scheds.length > 0;
       
       const dayName = U.DAYS[cellDate.getDay()];
-      let dayColor = cellDate.getDay() === 0 ? 'color:var(--ios-red);' : cellDate.getDay() === 6 ? 'color:var(--ios-blue);' : 'color:var(--text-400);';
+      let dayColor = cellDate.getDay() === 0 ? 'color:#ef4444;' : cellDate.getDay() === 6 ? 'color:#2563eb;' : 'color:#64748b;';
       
       let cls = 'v-cal-day';
       if(isSelected) cls += ' selected';
       if(isToday && !isSelected) cls += ' today';
       
-      let dot = hasSched ? `<div style="width:6px; height:6px; background:${isSelected?'#fff':'#6366f1'}; border-radius:50%; margin-left:auto;"></div>` : '';
+      let dot = hasSched ? `<div style="width:5px; height:5px; background:${isSelected?'#fff':'#4f46e5'}; border-radius:50%; margin-left:auto;"></div>` : '';
       
       html += `
-        <div class="${cls}" onclick="Home.selectDate(${y},${m},${d})" style="display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 4px; cursor:pointer; border-radius:10px; margin-bottom:2px; transition:all 0.2s; ${isSelected ? 'background:#1e293b; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.1);' : isToday ? 'background:rgba(99,102,241,0.08);' : ''}">
-          <div style="font-size:12px; font-weight:700; ${isSelected ? 'color:rgba(255,255,255,0.7);' : dayColor}">${dayName}</div>
-          <div style="font-size:14px; font-weight:800; width:22px; text-align:center; ${isSelected ? 'color:#fff;' : 'color:var(--text-100);'}">${d}</div>
+        <div class="${cls}" onclick="Home.selectDate(${y},${m},${d})" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 4px; cursor:pointer; border-radius:12px; margin-bottom:4px; transition:all 0.15s; ${isSelected ? 'background:#1e293b; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.12);' : isToday ? 'background:rgba(99,102,241,0.08);' : ''}">
+          <div style="font-size:13px; font-weight:800; ${isSelected ? 'color:rgba(255,255,255,0.8);' : dayColor}">${dayName}</div>
+          <div style="font-size:17px; font-weight:900; width:26px; text-align:center; letter-spacing:-0.5px; ${isSelected ? 'color:#fff;' : 'color:#0f172a;'}">${d}</div>
           <div style="width:4px; height:4px; display:flex; align-items:center; justify-content:center;">${dot}</div>
         </div>
       `;
     }
+
+    // 2. 🌟 다음 달 날짜들 연속 렌더링 (예: 10월 1일 ~ 31일)
+    const nextMonthDate = new Date(y, m + 1, 1);
+    const nextY = nextMonthDate.getFullYear();
+    const nextM = nextMonthDate.getMonth();
+    const nextDaysInMonth = new Date(nextY, nextM + 1, 0).getDate();
+
+    // 월 구분 라벨 (깔끔한 미니 캡슐 뱃지)
+    html += `
+      <div style="display:flex; align-items:center; justify-content:center; padding:12px 0 8px; margin:4px 0;">
+        <span style="background:#eef2ff; color:#4f46e5; font-size:11px; font-weight:800; padding:2px 10px; border-radius:12px; border:1px solid #e0e7ff; letter-spacing:0.5px; box-shadow:0 1px 2px rgba(0,0,0,0.02);">
+          ${nextM + 1}월
+        </span>
+      </div>
+    `;
+
+    for(let d=1; d<=nextDaysInMonth; d++) {
+      const cellDate = new Date(nextY, nextM, d);
+      const isSelected = nextY === this.selectedDate.getFullYear() && nextM === this.selectedDate.getMonth() && d === this.selectedDate.getDate();
+      const isToday = nextY === today.getFullYear() && nextM === today.getMonth() && d === today.getDate();
+      const scheds = State.getSchedulesForDate(nextY, nextM, d);
+      const hasSched = scheds.length > 0;
+      
+      const dayName = U.DAYS[cellDate.getDay()];
+      let dayColor = cellDate.getDay() === 0 ? 'color:#ef4444;' : cellDate.getDay() === 6 ? 'color:#2563eb;' : 'color:#64748b;';
+      
+      let cls = 'v-cal-day';
+      if(isSelected) cls += ' selected';
+      if(isToday && !isSelected) cls += ' today';
+      
+      let dot = hasSched ? `<div style="width:5px; height:5px; background:${isSelected?'#fff':'#4f46e5'}; border-radius:50%; margin-left:auto;"></div>` : '';
+      
+      html += `
+        <div class="${cls}" onclick="Home.selectDate(${nextY},${nextM},${d})" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 4px; cursor:pointer; border-radius:12px; margin-bottom:4px; transition:all 0.15s; ${isSelected ? 'background:#1e293b; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.12);' : isToday ? 'background:rgba(99,102,241,0.08);' : ''}">
+          <div style="font-size:13px; font-weight:800; ${isSelected ? 'color:rgba(255,255,255,0.8);' : dayColor}">${dayName}</div>
+          <div style="font-size:17px; font-weight:900; width:26px; text-align:center; letter-spacing:-0.5px; ${isSelected ? 'color:#fff;' : 'color:#0f172a;'}">${d}</div>
+          <div style="width:4px; height:4px; display:flex; align-items:center; justify-content:center;">${dot}</div>
+        </div>
+      `;
+    }
+
     return html;
   },
   
   prevMonth() {
     this.calMonth--;
     if(this.calMonth < 0) { this.calMonth = 11; this.calYear--; }
-    this.updateLeftCal();
+    this.syncMonthChange();
   },
   
   nextMonth() {
     this.calMonth++;
     if(this.calMonth > 11) { this.calMonth = 0; this.calYear++; }
+    this.syncMonthChange();
+  },
+
+  syncMonthChange() {
+    const today = new Date();
+    if (this.calYear === today.getFullYear() && this.calMonth === today.getMonth()) {
+      this.selectedDate = today;
+    } else {
+      this.selectedDate = new Date(this.calYear, this.calMonth, 1);
+    }
     this.updateLeftCal();
+    this.updateRightTimeline();
+    setTimeout(() => {
+      this.centerSelectedDate();
+    }, 50);
   },
   
   selectDate(y, m, d) {
@@ -218,9 +283,11 @@ const Home = {
   },
   
   updateLeftCal() {
+    const yearEl = U.$('#mini-cal-year');
     const title = U.$('#mini-cal-title');
     const grid = U.$('#mini-cal-grid');
-    if(title) title.innerHTML = `${this.calYear}년<br/>${this.calMonth+1}월`;
+    if(yearEl) yearEl.textContent = `${this.calYear}년`;
+    if(title) title.textContent = `${this.calMonth+1}월`;
     if(grid) grid.innerHTML = this.renderMiniCal();
   },
   
@@ -268,82 +335,70 @@ const Home = {
     const y = this.selectedDate.getFullYear();
     const m = this.selectedDate.getMonth();
     const d = this.selectedDate.getDate();
-    const dateStr = `${y}년 ${m+1}월 ${d}일 (${U.DAYS[this.selectedDate.getDay()]})`;
+    const dateStr = `${m+1}월 ${d}일 (${U.DAYS[this.selectedDate.getDay()]})`;
     const managers = (typeof window.hqStore !== 'undefined' && Array.isArray(window.hqStore.getManagers())) ? window.hqStore.getManagers() : [];
     const currentMgr = State.currentManagerFilter || 'ALL';
-    const userName = localStorage.getItem('bp_user_name') || '담당 매니저';
+    const userName = localStorage.getItem('bp_user_name') || '홍길동 대표이사';
     const userRole = localStorage.getItem('bp_user_role') || 'manager';
-    const currentMgrId = localStorage.getItem('bp_manager_id') || '';
     const assignedJson = localStorage.getItem('bp_assigned_artists');
     
-    // 담당 아티스트명 추출
+    // 담당 아티스트명 추출 (없으면 전체 소속 아티스트 명단 표출)
+    const allArtists = (typeof window.hqStore !== 'undefined') ? window.hqStore.getArtists() : [];
     let artistSummary = '';
     if (assignedJson) {
       try {
         const assignedIds = JSON.parse(assignedJson) || [];
-        const allArtists = (typeof window.hqStore !== 'undefined') ? window.hqStore.getArtists() : [];
         const myArts = allArtists.filter(a => assignedIds.includes(a.id));
         if (myArts.length > 0) {
-          artistSummary = myArts.map(a => `${a.emoji || '✨'} ${a.name}`).join(', ');
+          artistSummary = myArts.map(a => a.name).join(', ');
         }
       } catch(e) {}
     }
-
-    // 현재 로그인된 역할 정보
-    const currentRole = localStorage.getItem('bp_user_role') || 'manager';
-    const persona = (window.AuthPersona && window.AuthPersona.ROLES[currentRole]) 
-      ? window.AuthPersona.ROLES[currentRole] 
-      : { badge: '🚗 현장 매니저', shortBadge: '🚗 매니저', color: '#ec4899' };
-
-    let managerSelectorHtml = '';
-    if (userRole === 'ceo' || userRole === 'hq_admin') {
-      managerSelectorHtml = `
-        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
-          <div style="display:flex; align-items:center; gap:6px; background:#fff; padding:4px 8px; border-radius:10px; border:1px solid var(--border-default); box-shadow:0 1px 4px rgba(0,0,0,0.03);">
-            <span style="font-size:11px; font-weight:700; color:var(--text-400);">👤 관제:</span>
-            <select onchange="Home.setManager(this.value)" style="border:none; background:transparent; font-size:12px; font-weight:800; color:#4f46e5; outline:none; cursor:pointer;">
-              <option value="ALL" ${currentMgr === 'ALL' ? 'selected' : ''}>전체 스케줄 (전사 뷰)</option>
-              ${managers.map(mgr => `<option value="${mgr.id}" ${currentMgr === mgr.id ? 'selected' : ''}>${mgr.name}</option>`).join('')}
-            </select>
-          </div>
-        </div>
-      `;
-    } else {
-      managerSelectorHtml = '';
+    if (!artistSummary && allArtists.length > 0) {
+      artistSummary = allArtists.map(a => a.name).join(', ');
     }
-
-    let subtitleText = '🏢 담당 아티스트의 스케줄표입니다.';
-    if (userRole === 'ceo') subtitleText = '👑 [CEO 전사 모드] 모든 아티스트 및 비공개 일정 열람 중';
-    else if (userRole === 'staff') subtitleText = '🎧 [스태프 뷰어 모드] 당일 현장 타임라인 & 콜타임 중심';
-    else if (this.currentTab === 'timeline') subtitleText = '📍 내 실시간 동선 타임라인입니다.';
+    if (!artistSummary) {
+      artistSummary = '루나스 (LUNAS), 에이펙스 (APEX), 차은호, 유나 (YUNA), 사운드웨이브 (SOUNDWAVE)';
+    }
 
     let html = `
       <div style="margin-bottom:16px;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
-          <div style="width:100%;">
-            <div style="display:flex; align-items:center; gap:10px; width:100%;">
-              <h2 style="font-size:20px; font-weight:800; color:var(--text-100); letter-spacing:-0.5px; word-break:keep-all;">${dateStr}</h2>
-              <div onclick="Home.logout()" style="display:inline-flex; align-items:center; gap:5px; background:${persona.color}15; border:1px solid ${persona.color}40; color:${persona.color}; padding:3px 9px; border-radius:12px; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap; margin-left:auto;">
-                <span>${persona.shortBadge}</span>
-                <span style="font-size:9px; opacity:0.8;">[전환 ▾]</span>
-              </div>
+        <!-- 1. 날짜 타이틀 & 사용자 프로필/로그아웃 캡슐 (한 줄 나란히 배치) -->
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
+          <h2 style="font-size:21px; font-weight:900; color:#0f172a; letter-spacing:-0.5px; margin:0; white-space:nowrap;">
+            ${dateStr}
+          </h2>
+          
+          <div style="display:inline-flex; align-items:center; gap:6px; background:#ffffff; border:1px solid #e2e8f0; border-radius:20px; padding:4px 6px 4px 10px; box-shadow:0 2px 6px rgba(0,0,0,0.04); flex-shrink:0;">
+            <div style="width:22px; height:22px; border-radius:50%; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:#6366f1; font-size:12px;">
+              👤
             </div>
-            <div style="font-size:12px; color:var(--text-400); margin-top:4px;">
-              ${subtitleText}
+            <div style="font-size:13px; font-weight:800; color:#0f172a; white-space:nowrap;">
+              ${userName}
             </div>
+            <button onclick="Home.logout()" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:800; cursor:pointer; line-height:1.2; transition:all 0.15s;">
+              로그아웃
+            </button>
           </div>
-          ${managerSelectorHtml}
+        </div>
+
+        <!-- 2. 담당 아티스트 안내 카드 (연보라 틴트 박스) -->
+        <div style="background:#eef2ff; border:1px solid #e0e7ff; border-radius:14px; padding:10px 14px; margin-bottom:14px; display:flex; align-items:flex-start; gap:8px;">
+          <span style="color:#4f46e5; font-size:13px; font-weight:900; line-height:1.4; flex-shrink:0;">★</span>
+          <div style="font-size:12.5px; line-height:1.5; color:#3730a3; word-break:keep-all;">
+            <strong style="color:#4338ca; margin-right:4px;">담당:</strong>${artistSummary}
+          </div>
         </div>
       </div>
 
-      <!-- 탭 버튼 -->
-      <div style="display:flex; background:rgba(0,0,0,0.04); border-radius:12px; padding:4px; margin-bottom:20px;">
-        <div onclick="Home.setTab('schedule')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:10px 0; border-radius:8px; font-size:13.5px; font-weight:800; cursor:pointer; transition:all 0.2s; ${this.currentTab === 'schedule' ? 'background:#fff; color:#4f46e5; box-shadow:0 2px 6px rgba(0,0,0,0.06);' : 'color:var(--text-400);'}">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <!-- 3. 탭 버튼 -->
+      <div style="display:flex; background:rgba(0,0,0,0.04); border-radius:14px; padding:4px; margin-bottom:20px; gap:4px;">
+        <div onclick="Home.setTab('schedule')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:12px 0; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; transition:all 0.2s; ${this.currentTab === 'schedule' ? 'background:#ffffff; color:#4f46e5; box-shadow:0 2px 8px rgba(0,0,0,0.06);' : 'color:#64748b; background:transparent;'}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           회사 스케줄표
         </div>
-        <div onclick="Home.setTab('timeline')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:10px 0; border-radius:8px; font-size:13.5px; font-weight:800; cursor:pointer; transition:all 0.2s; ${this.currentTab === 'timeline' ? 'background:#fff; color:#4f46e5; box-shadow:0 2px 6px rgba(0,0,0,0.06);' : 'color:var(--text-400);'}">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+        <div onclick="Home.setTab('timeline')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:12px 0; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; transition:all 0.2s; ${this.currentTab === 'timeline' ? 'background:#ffffff; color:#4f46e5; box-shadow:0 2px 8px rgba(0,0,0,0.06);' : 'color:#64748b; background:transparent;'}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
           매니저 동선 타임라인
         </div>
       </div>
@@ -737,8 +792,30 @@ const Home = {
                 })()}
              </div>
              
-             <!-- Description / Notes -->
-             ${ev.desc ? `<div style="font-size:12px; color:var(--text-400); margin-top:2px; line-height:1.4;">${ev.desc}</div>` : ''}
+             <!-- Description / Notes & 역산 정보 -->
+             ${(() => {
+               if (!ev.desc) return '';
+               let cleanDesc = ev.desc;
+               if (isDriveStep) {
+                 cleanDesc = cleanDesc.replace(/담당:\s*[^()]+\s*\(/g, '(')
+                                      .replace(/배차:\s*[^()]+\s*\(/g, '(')
+                                      .trim();
+                 const travelMatch = cleanDesc.match(/이동\s*약\s*(\d+)분/);
+                 const bufferMatch = cleanDesc.match(/버퍼\s*(\d+)분/);
+                 if (travelMatch) {
+                   const tMin = parseInt(travelMatch[1], 10) || 0;
+                   const bMin = bufferMatch ? parseInt(bufferMatch[1], 10) : 0;
+                   const totalMin = tMin + bMin;
+                   const bufferText = bMin > 0 ? ` + 버퍼 ${bMin}분 배정 ` : ' ';
+                   cleanDesc = `이동 약 ${tMin}분${bufferText}(예상 소요 약 ${totalMin}분)`;
+                 }
+               }
+               return `
+                 <div style="font-size:12px; line-height:1.45; margin-top:4px; ${isDriveStep ? 'background:#f8fafc; border:1px solid #e2e8f0; padding:6px 10px; border-radius:8px; color:#334155; font-weight:600;' : 'color:var(--text-400);'}">
+                   ${isDriveStep ? '<span style="color:#4f46e5; font-weight:800; margin-right:4px;">⏱️ 동선 역산 :</span>' : ''}${cleanDesc}
+                 </div>
+               `;
+             })()}
 
               <!-- 하단: 아티스트 & 배차 정보 + [티맵] [카카오] 네비게이션 버튼 (이동 단계에서만 표시) -->
               <div style="margin-top:10px; padding-top:8px; border-top:1px dashed rgba(0,0,0,0.06); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
