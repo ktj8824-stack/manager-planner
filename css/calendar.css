@@ -11,7 +11,7 @@
 }
 
 .split-left {
-  width: 360px;
+  width: 310px;
   flex-shrink: 0;
   border-right: 1px solid var(--border-default);
   overflow-y: auto;
@@ -26,13 +26,13 @@
 
 /* ── Mini Calendar (Left) ── */
 .mini-cal-day {
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  font-size: 14px;
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
   position: relative;
@@ -57,7 +57,7 @@
 
 .tl-row {
   display: flex;
-  min-height: 80px;
+  min-height: 56px;
   border-top: 1px solid rgba(0,0,0,0.05);
 }
 .tl-row:last-child {
@@ -65,52 +65,52 @@
 }
 
 .tl-time {
-  width: 60px;
+  width: 52px;
   flex-shrink: 0;
   text-align: right;
-  padding-right: 16px;
-  padding-top: 12px;
-  font-size: 13px;
+  padding-right: 10px;
+  padding-top: 8px;
+  font-size: 11.5px;
   color: var(--text-400);
   font-weight: 600;
 }
 
 .tl-content {
   flex: 1;
-  padding: 8px 0;
+  padding: 4px 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
 }
 
 .tl-event {
   background: var(--accent-dim);
-  border-left: 4px solid var(--accent);
-  padding: 16px;
-  border-radius: 8px;
+  border-left: 3px solid var(--accent);
+  padding: 10px 12px;
+  border-radius: 6px;
   cursor: pointer;
   position: relative;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .tl-event:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
 }
 
 .tl-empty {
   flex: 1;
-  border-radius: 8px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-400);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 12.5px;
   font-weight: 600;
   border: 1px dashed transparent;
   transition: all 0.2s;
-  min-height: 64px;
+  min-height: 48px;
 }
 .tl-empty:hover {
   border-color: var(--accent);
@@ -132,7 +132,7 @@
 }
 
 .route-timeline {
-  padding: 16px 8px;
+  padding: 12px 6px;
   max-width: 600px;
   margin: 0 auto;
 }
