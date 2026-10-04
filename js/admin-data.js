@@ -122,175 +122,62 @@ const SCHEDULE_CATEGORIES = {
 };
 
 // 기본 데모 스케줄 생성 (오늘/이번주/전후 일정 풍성하게 생성)
+// 기본 데모 스케줄 생성 (2026년 10월 캘린더 기준 12건 완벽 고정)
 function getInitialMockSchedules() {
-  const today = new Date();
-  const fmtDate = (d) => {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  };
-
-  const todayStr = fmtDate(today);
-
-  const getShiftDate = (offsetDays) => {
-    const d = new Date(today);
-    d.setDate(d.getDate() + offsetDays);
-    return fmtDate(d);
-  };
-
-  const yesterdayStr = getShiftDate(-1);
-  const tomorrowStr = getShiftDate(1);
-  const dayAfter2Str = getShiftDate(2);
-  const dayAfter3Str = getShiftDate(3);
-  const dayAfter5Str = getShiftDate(5);
-  const dayAfter7Str = getShiftDate(7);
-
   const schedules = [
-    // 1. 오늘 - 루나스 음악방송 (상암 SBS)
+    // 1. 10월 2일 (금) - 유나 신곡 녹음 및 믹싱
     {
-      id: 'sch_101',
-      title: 'SBS 인기가요 생방송 & 사전녹화',
-      artistId: 'art_1',
-      artistName: '루나스 (LUNAS)',
-      category: 'music_show',
-      date: todayStr,
-      startTime: '07:30',
-      endTime: '17:30',
-      managerId: 'mgr_2',
-      managerName: '박진우 팀장',
-      vehicleId: 'veh_1',
-      vehicleName: '카니발 하이리무진 1호차 (12가 3456)',
-      status: '진행중',
-      location: '상암 SBS 프리즘타워 (서울 마포구 상암산로 82)',
-      shop: {
-        needed: true,
-        name: '정샘물 청담본점',
-        time: '05:30',
-        durationMin: 90,
-        address: '서울 강남구 압구정로79길 19'
-      },
-      departure: {
-        place: '청담동 아티스트 숙소',
-        time: '05:00'
-      },
-      outfit: '1번 메인 타이틀 무대의상 (글리터 핑크 & 블랙) + 인이어 4세트',
-      supplies: '음료 20잔, 비상약품(진통제/테이핑), 인이어 배터리 여분, 사인 CD 50장',
-      notes: '사전녹화 08:30 시작. 딜레이 없도록 07:15까지 방송국 대기실 입실 완료 필수.',
-      timeline: [
-        { time: '05:00', label: '숙소 픽업 및 출발', done: true },
-        { time: '05:30', label: '청담 정샘물 샵 도착 & 헤어/메이크업', done: true },
-        { time: '07:00', label: '상암 SBS 프리즘타워로 이동', done: true },
-        { time: '07:30', label: '방송국 대기실 입실 & 마이크/인이어 세팅', done: true },
-        { time: '08:30', label: '인기가요 사전녹화 진행', done: false },
-        { time: '12:30', label: '점심 식사 (상암 롤링핀 샌드위치 박스)', done: false },
-        { time: '15:20', label: '생방송 출연 및 1위 후보 인터뷰', done: false },
-        { time: '17:30', label: '생방송 종료 후 숙소 복귀 이동', done: false }
-      ]
-    },
-    // 2. 오늘 - 차은호 명품 화보 촬영
-    {
-      id: 'sch_102',
-      title: '보그(VOGUE) 매거진 커버 & 패션 화보',
-      artistId: 'art_3',
-      artistName: '차은호',
-      category: 'shooting',
-      date: todayStr,
-      startTime: '10:00',
-      endTime: '18:00',
-      managerId: 'mgr_4',
-      managerName: '이지은 실장',
-      vehicleId: 'veh_3',
-      vehicleName: '제네시스 G90 VIP 3호차 (56다 1234)',
-      status: '진행중',
-      location: '성수 복합스튜디오 에스팩토리 (서울 성동구 성수이로14길 14)',
-      shop: {
-        needed: true,
-        name: '청담 알루(ALUU) 본점',
-        time: '08:30',
-        durationMin: 60,
-        address: '서울 강남구 도산대로75길 17'
-      },
-      departure: {
-        place: '자택 픽업 (성동구 옥수동)',
-        time: '08:00'
-      },
-      outfit: '2026 F/W 명품 앰버서더 룩 4착장 (의상팀 픽업 완료)',
-      supplies: '스팀 다리미, 헤어 픽서, 따뜻한 디카페인 커피, 대본집',
-      notes: '자연광 루프탑 촬영 14시 예정. 햇빛 알레르기 대비 암막 우산 필수 지참.',
-      timeline: [
-        { time: '08:00', label: '자택 픽업 및 이동', done: true },
-        { time: '08:30', label: '청담 알루 헤메 샵 스타일링', done: true },
-        { time: '10:00', label: '성수동 에스팩토리 스튜디오 도착 및 콘셉트 미팅', done: false },
-        { time: '11:00', label: '메인 실내 A컷 촬영 (1~2착)', done: false },
-        { time: '13:30', label: '점심 식사 및 메이크업 수정', done: false },
-        { time: '15:00', label: '루프탑 야외 B컷 촬영 (3~4착)', done: false },
-        { time: '18:00', label: '촬영 종료 및 협찬 의상 반납 패킹', done: false }
-      ]
-    },
-    // 3. 오늘 저녁 - 유나 라디오 생방송
-    {
-      id: 'sch_103',
-      title: 'SBS 파워FM 영스트리트 게스트 생방송',
+      id: 'sch_109',
+      title: '정규 2집 타이틀곡 보컬 메인 레코딩',
       artistId: 'art_4',
       artistName: '유나 (YUNA)',
-      category: 'broadcast',
-      date: todayStr,
-      startTime: '20:00',
-      endTime: '22:00',
+      category: 'recording',
+      date: '2026-10-02',
+      startTime: '13:00',
+      endTime: '19:00',
       managerId: 'mgr_5',
       managerName: '정다원 매니저',
       vehicleId: 'veh_4',
       vehicleName: '카니발 하이리무진 4호차 (78라 5678)',
       status: '예정',
-      location: '목동 SBS 방송센터 1층 오픈스튜디오 (서울 양천구 목동서로 161)',
-      shop: {
-        needed: true,
-        name: '정샘물 청담본점',
-        time: '18:00',
-        durationMin: 60,
-        address: '서울 강남구 압구정로79길 19'
-      },
-      departure: {
-        place: '청담 사옥 3층 녹음실',
-        time: '17:30'
-      },
-      outfit: '내추럴 캐주얼 니트 & 슬랙스 (보이는 라디오)',
-      supplies: '신곡 음원 CD, 프로폴리스 목 스프레이, 미온수 텀블러',
-      notes: '라이브 코너 2곡 포함 (어쿠스틱 버전 건반 반주 체크). 목 보호 주의.'
-    },
-    // 4. 오늘 밤 - 루나스 글로벌 브랜드 앰버서더 극비 미팅
-    {
-      id: 'sch_104',
-      title: '🔒 글로벌 명품 브랜드 앰버서더 극비 체결 미팅',
-      artistId: 'art_1',
-      artistName: '루나스 (LUNAS)',
-      category: 'meeting',
-      date: todayStr,
-      startTime: '19:30',
-      endTime: '21:30',
-      managerId: 'mgr_ceo',
-      managerName: '홍길동 대표이사',
-      vehicleId: 'veh_3',
-      vehicleName: '제네시스 G90 VIP 3호차 (56다 1234)',
-      status: '예정',
-      location: '조선팰리스 서울 강남 VIP 프라이빗 다이닝',
-      isSecret: true,
-      secretLevel: 'confidential',
+      location: '청담 엔터 사옥 B1 메인 레코딩 스튜디오',
       shop: { needed: false },
-      departure: { place: '상암 SBS 프리즘타워', time: '18:00' },
-      outfit: '포멀 비즈니스 수트',
-      supplies: '브랜드 제안서 5부, 전속계약 법률 검토안',
-      notes: '🔒 [엠바고/극비 보안] 대표이사 및 총괄본부장 외 비공개. 사진 촬영 및 SNS 업로드 일체 엄금.'
+      departure: { place: '자택 픽업', time: '12:15' },
+      outfit: '편안한 트레이닝복',
+      supplies: '악보 5부, 도라지배즙, 가습기 2대, 보컬 마이크 소독제',
+      notes: '해외 유명 프로듀서 화상 미팅 및 보컬 디렉팅 동시 진행.'
     },
-    // 5. 내일 - 에이펙스 대면 팬사인회
+    // 2. 10월 3일 (토) - 사옥 전체 아티스트 & 매니지먼트 정기 기획회의
+    {
+      id: 'sch_110',
+      title: '2026 Q4 아티스트 활동 계획 및 컴백 로드맵 총괄회의',
+      artistId: 'ALL',
+      artistIds: ['art_1', 'art_2', 'art_3', 'art_4', 'art_5'],
+      artistName: '전체 아티스트 (전원)',
+      category: 'meeting',
+      date: '2026-10-03',
+      startTime: '15:00',
+      endTime: '18:00',
+      managerId: 'mgr_ceo',
+      managerName: '공진문 대표이사',
+      vehicleId: 'veh_5',
+      vehicleName: '벤츠 스프린터 투어 5호차 (90마 9999)',
+      status: '예정',
+      location: '청담 사옥 9층 대회의실 & 임원실',
+      shop: { needed: false },
+      departure: { place: '사옥 집결', time: '14:30' },
+      outfit: '자율 비즈니스 캐주얼',
+      supplies: '각 팀별 분기 실적 보고서, 빔프로젝터, 다과 세트',
+      notes: '전체 매니지먼트 본부 및 프로덕션 팀 필수 참석.'
+    },
+    // 3. 10월 5일 (월) - 에이펙스 대면 팬사인회
     {
       id: 'sch_105',
-      title: '미니 4집 발매기념 100인 대면 팬사인회',
+      title: '2026 Q4 아티스트 활동 팬미팅 및 100인 대면 팬사인회',
       artistId: 'art_2',
       artistName: '에이펙스 (APEX)',
       category: 'fansign',
-      date: tomorrowStr,
+      date: '2026-10-05',
       startTime: '14:00',
       endTime: '18:00',
       managerId: 'mgr_3',
@@ -306,154 +193,19 @@ function getInitialMockSchedules() {
         durationMin: 90,
         address: '서울 강남구 압구정로79길 19'
       },
-      departure: {
-        place: '논현동 숙소 픽업',
-        time: '11:15'
-      },
+      departure: { place: '논현동 숙소 픽업', time: '11:15' },
       outfit: '스쿨룩 콘셉트 셔츠 & 타이 착장',
       supplies: '사인용 유성 네임펜 100자루, 포스트잇, 경호팀 무전기 6대, 팬레터 수거함 5개',
       notes: '사전 팬 100명 명단 대조 및 선물 검수 필수. 경호팀 4인 현장 배치.'
     },
-    // 6. 내일 - 사운드웨이브 락 페스티벌
-    {
-      id: 'sch_106',
-      title: '그랜드 민트 페스티벌(GMF) 메인스테이지 헤드라이너',
-      artistId: 'art_5',
-      artistName: '사운드웨이브 (SOUNDWAVE)',
-      category: 'event',
-      date: tomorrowStr,
-      startTime: '17:00',
-      endTime: '21:00',
-      managerId: 'mgr_5',
-      managerName: '정다원 매니저',
-      vehicleId: 'veh_5',
-      vehicleName: '벤츠 스프린터 투어 5호차 (90마 9999)',
-      status: '예정',
-      location: '올림픽공원 KSPO DOME & 88잔디마당 (서울 송파구 올림픽로 424)',
-      shop: {
-        needed: true,
-        name: '청담 알루(ALUU) 본점',
-        time: '13:00',
-        durationMin: 90,
-        address: '서울 강남구 도산대로75길 17'
-      },
-      departure: {
-        place: '홍대 합주실',
-        time: '12:30'
-      },
-      outfit: '빈티지 락시크 레더 재킷 & 커스텀 부츠',
-      supplies: '악기 앰프/이펙터 풀세트, 드럼스틱 10조, 이온음료 3박스, 수건 20장',
-      notes: '사운드 리허설 15:30 정시 진행. 인이어 모니터 밸런스 점검 필수.'
-    },
-    // 7. 2일 뒤 - 에이펙스 월드투어 출국
-    {
-      id: 'sch_107',
-      title: '2026 APEX WORLD TOUR : TOKYO DOME 출국',
-      artistId: 'art_2',
-      artistName: '에이펙스 (APEX)',
-      category: 'overseas',
-      date: dayAfter2Str,
-      startTime: '08:00',
-      endTime: '15:00',
-      managerId: 'mgr_1',
-      managerName: '김태현 본부장',
-      vehicleId: 'veh_5',
-      vehicleName: '벤츠 스프린터 투어 5호차 (90마 9999)',
-      status: '예정',
-      location: '인천국제공항 제2여객터미널 VIP 출국장 ➡️ 도쿄 하네다',
-      shop: {
-        needed: true,
-        name: '정샘물 청담본점',
-        time: '06:00',
-        durationMin: 60,
-        address: '서울 강남구 압구정로79길 19'
-      },
-      departure: { place: '논현동 숙소', time: '05:30' },
-      outfit: '공항패션 (협찬 브랜드 럭셔리 캐주얼 룩)',
-      supplies: '멤버 7인 여권/비자 원본, 수화물 25개 태그, 긴급 구급함, 공항 경호팀 배정표',
-      notes: '출국 게이트 팬 밀집 예상. 인천공항 사설 경호팀 10명 풀가동 및 취재진 포토라인 구축.'
-    },
-    // 8. 3일 뒤 - 차은호 주연 드라마 첫 야외 로케이션 촬영
-    {
-      id: 'sch_108',
-      title: 'tvN 토일드라마 <하늘의 별> 1~2회 야외 세트 촬영',
-      artistId: 'art_3',
-      artistName: '차은호',
-      category: 'shooting',
-      date: dayAfter3Str,
-      startTime: '06:00',
-      endTime: '20:00',
-      managerId: 'mgr_4',
-      managerName: '이지은 실장',
-      vehicleId: 'veh_3',
-      vehicleName: '제네시스 G90 VIP 3호차 (56다 1234)',
-      status: '예정',
-      location: '파주 스튜디오 프리즘 & 탄현 야외세트장 (경기 파주시 탄현면 갈현리)',
-      shop: {
-        needed: true,
-        name: '순수 청담본점',
-        time: '04:30',
-        durationMin: 60,
-        address: '서울 강남구 도산대로 123'
-      },
-      departure: { place: '자택 픽업', time: '04:00' },
-      outfit: '드라마 극중 의상 3세트 + 방한/보온 의류',
-      supplies: '대본 1~4권, 이동식 난로/핫팩, 인공눈물, 스태프 커피차 100잔 쿠폰',
-      notes: '새벽부터 야외 촬영 진행. 탄현 세트장 기사식당 아침 식사 예약 완료.'
-    },
-    // 9. 5일 뒤 - 유나 신곡 녹음 및 믹싱
-    {
-      id: 'sch_109',
-      title: '정규 2집 타이틀곡 보컬 메인 레코딩',
-      artistId: 'art_4',
-      artistName: '유나 (YUNA)',
-      category: 'recording',
-      date: dayAfter5Str,
-      startTime: '13:00',
-      endTime: '19:00',
-      managerId: 'mgr_5',
-      managerName: '정다원 매니저',
-      vehicleId: 'veh_4',
-      vehicleName: '카니발 하이리무진 4호차 (78라 5678)',
-      status: '예정',
-      location: '청담 엔터 사옥 B1 메인 레코딩 스튜디오',
-      shop: { needed: false },
-      departure: { place: '자택 픽업', time: '12:15' },
-      outfit: '편안한 트레이닝복',
-      supplies: '악보 5부, 도라지배즙, 가습기 2대, 보컬 마이크 소독제',
-      notes: '해외 유명 프로듀서 화상 미팅 및 보컬 디렉팅 동시 진행.'
-    },
-    // 10. 7일 뒤 - 사옥 전체 아티스트 & 매니지먼트 정기 기획회의
-    {
-      id: 'sch_110',
-      title: '2026 Q4 아티스트 활동 계획 및 컴백 로드맵 총괄회의',
-      artistId: 'ALL',
-      artistIds: ['art_1', 'art_2', 'art_3', 'art_4'],
-      artistName: '전체 아티스트 (전원)',
-      category: 'meeting',
-      date: dayAfter7Str,
-      startTime: '15:00',
-      endTime: '18:00',
-      managerId: 'mgr_ceo',
-      managerName: '홍길동 대표이사',
-      vehicleId: 'veh_5',
-      vehicleName: '벤츠 스프린터 투어 5호차 (90마 9999)',
-      status: '예정',
-      location: '청담 사옥 9층 대회의실 & 임원실',
-      shop: { needed: false },
-      departure: { place: '사옥 집결', time: '14:30' },
-      outfit: '자율 비즈니스 캐주얼',
-      supplies: '각 팀별 분기 실적 보고서, 빔프로젝터, 다과 세트',
-      notes: '전체 매니지먼트 본부 및 프로덕션 팀 필수 참석.'
-    },
-    // 11. 어제 일정 - KBS 뮤직뱅크 (완료 상태 데모)
+    // 4. 10월 8일 (목) - 루나스 KBS 뮤직뱅크 생방송 & 컴백 인터뷰
     {
       id: 'sch_100',
       title: 'KBS 뮤직뱅크 생방송 & 컴백 인터뷰',
       artistId: 'art_1',
       artistName: '루나스 (LUNAS)',
       category: 'music_show',
-      date: yesterdayStr,
+      date: '2026-10-08',
       startTime: '09:00',
       endTime: '18:30',
       managerId: 'mgr_2',
@@ -482,6 +234,226 @@ function getInitialMockSchedules() {
         { time: '17:00', label: '생방송 출연 및 1위 수상 트로피 수령', done: true },
         { time: '18:30', label: '일정 종료 및 사옥 복귀', done: true }
       ]
+    },
+    // 5. 10월 11일 (일) - 루나스 SBS 인기가요 생방송 & 사전녹화
+    {
+      id: 'sch_101',
+      title: 'SBS 인기가요 생방송 & 사전녹화',
+      artistId: 'art_1',
+      artistName: '루나스 (LUNAS)',
+      category: 'music_show',
+      date: '2026-10-11',
+      startTime: '07:30',
+      endTime: '17:30',
+      managerId: 'mgr_2',
+      managerName: '박진우 팀장',
+      vehicleId: 'veh_1',
+      vehicleName: '카니발 하이리무진 1호차 (12가 3456)',
+      status: '예정',
+      location: '상암 SBS 프리즘타워 (서울 마포구 상암산로 82)',
+      shop: {
+        needed: true,
+        name: '정샘물 청담본점',
+        time: '05:30',
+        durationMin: 90,
+        address: '서울 강남구 압구정로79길 19'
+      },
+      departure: { place: '청담동 아티스트 숙소', time: '05:00' },
+      outfit: '1번 메인 타이틀 무대의상 (글리터 핑크 & 블랙) + 인이어 4세트',
+      supplies: '음료 20잔, 비상약품(진통제/테이핑), 인이어 배터리 여분, 사인 CD 50장',
+      notes: '사전녹화 08:30 시작. 딜레이 없도록 07:15까지 방송국 대기실 입실 완료 필수.'
+    },
+    // 6. 10월 14일 (수) - 차은호 보그 화보 촬영
+    {
+      id: 'sch_102',
+      title: '보그(VOGUE) 매거진 커버 & 패션 화보',
+      artistId: 'art_3',
+      artistName: '차은호',
+      category: 'shooting',
+      date: '2026-10-14',
+      startTime: '10:00',
+      endTime: '18:00',
+      managerId: 'mgr_4',
+      managerName: '이지은 실장',
+      vehicleId: 'veh_3',
+      vehicleName: '제네시스 G90 VIP 3호차 (56다 1234)',
+      status: '예정',
+      location: '성수 복합스튜디오 에스팩토리 (서울 성동구 성수이로14길 14)',
+      shop: {
+        needed: true,
+        name: '청담 알루(ALUU) 본점',
+        time: '08:30',
+        durationMin: 60,
+        address: '서울 강남구 도산대로75길 17'
+      },
+      departure: { place: '자택 픽업 (성동구 옥수동)', time: '08:00' },
+      outfit: '2026 F/W 명품 앰버서더 룩 4착장 (의상팀 픽업 완료)',
+      supplies: '스팀 다리미, 헤어 픽서, 따뜻한 디카페인 커피, 대본집',
+      notes: '자연광 루프탑 촬영 14시 예정. 햇빛 알레르기 대비 암막 우산 필수 지참.'
+    },
+    // 7. 10월 15일 (목) - 유나 라디오 생방송
+    {
+      id: 'sch_103',
+      title: 'SBS 파워FM 영스트리트 게스트 생방송',
+      artistId: 'art_4',
+      artistName: '유나 (YUNA)',
+      category: 'broadcast',
+      date: '2026-10-15',
+      startTime: '20:00',
+      endTime: '22:00',
+      managerId: 'mgr_5',
+      managerName: '정다원 매니저',
+      vehicleId: 'veh_4',
+      vehicleName: '카니발 하이리무진 4호차 (78라 5678)',
+      status: '예정',
+      location: '목동 SBS 방송센터 1층 오픈스튜디오 (서울 양천구 목동서로 161)',
+      shop: {
+        needed: true,
+        name: '정샘물 청담본점',
+        time: '18:00',
+        durationMin: 60,
+        address: '서울 강남구 압구정로79길 19'
+      },
+      departure: { place: '청담 사옥 3층 녹음실', time: '17:30' },
+      outfit: '내추럴 캐주얼 니트 & 슬랙스 (보이는 라디오)',
+      supplies: '신곡 음원 CD, 프로폴리스 목 스프레이, 미온수 텀블러',
+      notes: '라이브 코너 2곡 포함 (어쿠스틱 버전 건반 반주 체크). 목 보호 주의.'
+    },
+    // 8. 10월 16일 (금) - 루나스 글로벌 브랜드 앰버서더 극비 체결 미팅
+    {
+      id: 'sch_104',
+      title: '🔒 글로벌 명품 브랜드 앰버서더 극비 체결 미팅',
+      artistId: 'art_1',
+      artistName: '루나스 (LUNAS)',
+      category: 'meeting',
+      date: '2026-10-16',
+      startTime: '19:30',
+      endTime: '21:30',
+      managerId: 'mgr_ceo',
+      managerName: '공진문 대표이사',
+      vehicleId: 'veh_3',
+      vehicleName: '제네시스 G90 VIP 3호차 (56다 1234)',
+      status: '예정',
+      location: '조선팰리스 서울 강남 VIP 프라이빗 다이닝',
+      isSecret: true,
+      secretLevel: 'confidential',
+      shop: { needed: false },
+      departure: { place: '상암 SBS 프리즘타워', time: '18:00' },
+      outfit: '포멀 비즈니스 수트',
+      supplies: '브랜드 제안서 5부, 전속계약 법률 검토안',
+      notes: '🔒 [엠바고/극비 보안] 대표이사 및 총괄본부장 외 비공개. 사진 촬영 및 SNS 업로드 일체 엄금.'
+    },
+    // 9. 10월 17일 (토) - 사운드웨이브 락 페스티벌
+    {
+      id: 'sch_106',
+      title: '그랜드 민트 페스티벌(GMF) 메인스테이지 헤드라이너',
+      artistId: 'art_5',
+      artistName: '사운드웨이브 (SOUNDWAVE)',
+      category: 'event',
+      date: '2026-10-17',
+      startTime: '17:00',
+      endTime: '21:00',
+      managerId: 'mgr_5',
+      managerName: '정다원 매니저',
+      vehicleId: 'veh_5',
+      vehicleName: '벤츠 스프린터 투어 5호차 (90마 9999)',
+      status: '예정',
+      location: '올림픽공원 KSPO DOME & 88잔디마당 (서울 송파구 올림픽로 424)',
+      shop: {
+        needed: true,
+        name: '청담 알루(ALUU) 본점',
+        time: '13:00',
+        durationMin: 90,
+        address: '서울 강남구 도산대로75길 17'
+      },
+      departure: { place: '홍대 합주실', time: '12:30' },
+      outfit: '빈티지 락시크 레더 재킷 & 커스텀 부츠',
+      supplies: '악기 앰프/이펙터 풀세트, 드럼스틱 10조, 이온음료 3박스, 수건 20장',
+      notes: '사운드 리허설 15:30 정시 진행. 인이어 모니터 밸런스 점검 필수.'
+    },
+    // 10. 10월 19일 (월) - 에이펙스 월드투어 출국
+    {
+      id: 'sch_107',
+      title: '2026 APEX WORLD TOUR : TOKYO DOME 출국',
+      artistId: 'art_2',
+      artistName: '에이펙스 (APEX)',
+      category: 'overseas',
+      date: '2026-10-19',
+      startTime: '08:00',
+      endTime: '15:00',
+      managerId: 'mgr_1',
+      managerName: '김태현 본부장',
+      vehicleId: 'veh_5',
+      vehicleName: '벤츠 스프린터 투어 5호차 (90마 9999)',
+      status: '예정',
+      location: '인천국제공항 제2여객터미널 VIP 출국장 ➡️ 도쿄 하네다',
+      shop: {
+        needed: true,
+        name: '정샘물 청담본점',
+        time: '06:00',
+        durationMin: 60,
+        address: '서울 강남구 압구정로79길 19'
+      },
+      departure: { place: '논현동 숙소', time: '05:30' },
+      outfit: '공항패션 (협찬 브랜드 럭셔리 캐주얼 룩)',
+      supplies: '멤버 7인 여권/비자 원본, 수화물 25개 태그, 긴급 구급함, 공항 경호팀 배정표',
+      notes: '출국 게이트 팬 밀집 예상. 인천공항 사설 경호팀 10명 풀가동 및 취재진 포토라인 구축.'
+    },
+    // 11. 10월 21일 (수) - 차은호 주연 드라마 첫 야외 로케이션 촬영
+    {
+      id: 'sch_108',
+      title: 'tvN 토일드라마 <하늘의 별> 1~2회 야외 세트 촬영',
+      artistId: 'art_3',
+      artistName: '차은호',
+      category: 'shooting',
+      date: '2026-10-21',
+      startTime: '06:00',
+      endTime: '20:00',
+      managerId: 'mgr_4',
+      managerName: '이지은 실장',
+      vehicleId: 'veh_3',
+      vehicleName: '제네시스 G90 VIP 3호차 (56다 1234)',
+      status: '예정',
+      location: '파주 스튜디오 프리즘 & 탄현 야외세트장 (경기 파주시 탄현면 갈현리)',
+      shop: {
+        needed: true,
+        name: '순수 청담본점',
+        time: '04:30',
+        durationMin: 60,
+        address: '서울 강남구 도산대로 123'
+      },
+      departure: { place: '자택 픽업', time: '04:00' },
+      outfit: '드라마 극중 의상 3세트 + 방한/보온 의류',
+      supplies: '대본 1~4권, 이동식 난로/핫팩, 인공눈물, 스태프 커피차 100잔 쿠폰',
+      notes: '새벽부터 야외 촬영 진행. 탄현 세트장 기사식당 아침 식사 예약 완료.'
+    },
+    // 12. 10월 24일 (토) - 루나스 글로벌 팬미팅 콘서트 라이브 투어
+    {
+      id: 'sch_111',
+      title: '2026 LUNAS FANMEETING & CONCERT LIVE TOUR',
+      artistId: 'art_1',
+      artistName: '루나스 (LUNAS)',
+      category: 'event',
+      date: '2026-10-24',
+      startTime: '16:00',
+      endTime: '21:00',
+      managerId: 'mgr_2',
+      managerName: '박진우 팀장',
+      vehicleId: 'veh_1',
+      vehicleName: '카니발 하이리무진 1호차 (12가 3456)',
+      status: '예정',
+      location: '올림픽공원 올림픽홀 메인 스테이지',
+      shop: {
+        needed: true,
+        name: '정샘물 청담본점',
+        time: '12:00',
+        durationMin: 90,
+        address: '서울 강남구 압구정로79길 19'
+      },
+      departure: { place: '청담동 아티스트 숙소', time: '11:30' },
+      outfit: '콘서트 오프닝 의상 및 팬미팅 굿즈 티셔츠',
+      supplies: '인이어 4세트, 사인볼 100개, 비상 구급함, 음료 30잔',
+      notes: '오후 2시 무대 리허설 정시 시작. 팬 입장 15시.'
     }
   ];
 
@@ -612,8 +584,8 @@ class HQDataStore {
     const schKey = this.getUserStorageKey(HQ_STORAGE_KEYS.SCHEDULES);
     const subKey = this.getUserStorageKey(HQ_STORAGE_KEYS.SUBSCRIPTION);
 
-    // 최고 관리자(ceo@jm-ent.com) 및 데모 계정은 실무 자료/기본 템플릿 유지
-    const isMasterOrDemoAccount = rawEmail === 'ceo@jm-ent.com' || rawEmail === 'ceo@star-ent.com' || rawEmail === 'demo@star-ent.com' || !rawEmail;
+    // 최고 관리자(ceo 계정들) 및 데모 계정은 실무 자료/기본 템플릿 유지
+    const isMasterOrDemoAccount = rawEmail.startsWith('ceo@') || rawEmail === 'demo@star-ent.com' || !rawEmail;
 
     // 헬퍼: 레거시 전역 데이터가 있으면 승계, 없으면 기본값(또는 빈배열) 세팅
     const getInitialData = (legacyBaseKey, defaultData) => {
@@ -1112,11 +1084,12 @@ class HQDataStore {
       }
       
       const rawEmail = (localStorage.getItem('bp_user_email') || '').trim().toLowerCase();
-      const role = localStorage.getItem('bp_user_role') || 'manager';
-      const isMasterOrManager = rawEmail === 'ceo@jm-ent.com' || rawEmail === 'ceo@star-ent.com' || rawEmail === 'demo@star-ent.com' || role === 'manager' || role === 'staff' || !rawEmail;
+      const role = localStorage.getItem('bp_user_role') || 'ceo';
+      const isMasterOrManager = role === 'ceo' || role === 'hq_admin' || role === 'manager' || role === 'staff' || rawEmail.startsWith('ceo@') || !rawEmail;
 
-      // 🌟 저장된 스케줄이 아예 없을 때만 최초 1회 초기 목업 데이터 생성 (사용자 수정본 영구 보존)
-      if (schedules.length === 0 && isMasterOrManager) {
+      // 🌟 저장된 스케줄이 없거나, 구버전(11건 등) 목업 데이터인 경우 최신 12건 고정 목업으로 자동 갱신
+      const hasLatestSch111 = schedules.some(s => s.id === 'sch_111');
+      if ((schedules.length === 0 || !hasLatestSch111 || schedules.length < 12) && isMasterOrManager) {
         schedules = getInitialMockSchedules();
         this.saveSchedules(schedules);
       }
