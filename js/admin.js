@@ -1939,6 +1939,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isSec = sch.isSecret === true;
         const artColor = isSec ? '#9333ea' : (isAll ? '#0284c7' : (art ? (art.color || '#f59e0b') : '#4f46e5'));
         const lockPrefix = isSec ? '🔒 ' : '';
+        const memberTag = (sch.targetMembers && sch.targetMembers !== 'ALL' && Array.isArray(sch.targetMembers)) ? ` (${sch.targetMembers.join('/')})` : '';
         const badgeText = isAll ? '전원' : (art ? `${art.name.split(' ')[0]}${memberTag}` : (sch.artistName || '아티스트'));
         html += `
           <div class="cal-event-pill" style="background:#e2e8f0; border:1px solid #cbd5e1; border-left:3px solid ${artColor}; color:#0f172a; padding:0 6px; height:23px; line-height:21px; border-radius:5px; font-size:11px; font-weight:600; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.04); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; min-width:0; display:flex; align-items:center; gap:4px;" data-sch-id="${sch.id}">
