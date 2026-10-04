@@ -2665,6 +2665,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const isAll = sch.artistId === 'ALL' || (sch.artistName && (sch.artistName.includes('전원') || sch.artistName.includes('전체')));
       const displayArtName = isAll ? '전체 아티스트 (전원)' : (sch.artistName || '아티스트');
       const badgeColor = isAll ? '#4f46e5' : (art ? art.color : '#6366f1');
+      const conflictResult = typeof window.hqStore?.checkConflict === 'function' 
+        ? window.hqStore.checkConflict(sch) 
+        : { hasConflict: false, conflicts: [] };
 
       let html = `
       ${conflictResult.hasConflict ? `
