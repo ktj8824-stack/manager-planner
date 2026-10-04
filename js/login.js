@@ -69,7 +69,7 @@ const Login = {
         </div>
 
         <div style="text-align:center; margin-top:auto;">
-          <a href="admin-login.html" style="font-size:13px; color:var(--text-400); text-decoration:underline; font-weight:600;">
+          <a href="${typeof U !== 'undefined' && U.getHQLoginUrl ? U.getHQLoginUrl() : 'admin-login.html'}" style="font-size:13px; color:var(--text-400); text-decoration:underline; font-weight:600;">
             🏢 본사 총괄 관리 포털(HQ) 접속
           </a>
         </div>
@@ -162,9 +162,9 @@ const Login = {
         
         // 권한에 따른 라우팅
         if (result.user.role === 'ceo' || result.user.role === 'hq_admin') {
-          // HQ 권한이면 admin.html 이동 여부를 물어보거나 홈으로 이동
+          // HQ 권한이면 본사 포털 이동 여부를 물어보거나 홈으로 이동
           if (confirm('본사 관리자 계정입니다. 마스터 관제 포털(PC)로 이동하시겠습니까?')) {
-            window.location.href = 'admin.html';
+            window.location.href = typeof U !== 'undefined' && U.getHQPortalUrl ? U.getHQPortalUrl() : 'admin.html';
             return;
           }
         }

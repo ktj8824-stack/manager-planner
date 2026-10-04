@@ -128,7 +128,7 @@ const Home = {
           
           <!-- Footer -->
           <div style="padding:10px 6px; flex-shrink:0; border-top:1px solid rgba(0,0,0,0.05); display:flex; flex-direction:column; gap:6px;">
-             <a href="admin.html" target="_blank" style="display:inline-flex; align-items:center; justify-content:center; gap:5px; width:100%; padding:8px 0; border-radius:8px; background:linear-gradient(135deg, #4f46e5, #7c3aed); color:#fff; font-weight:800; font-size:11px; text-align:center; text-decoration:none; box-shadow:0 2px 8px rgba(79,70,229,0.3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="12" y1="22" x2="12" y2="22.01"/><line x1="8" y1="6" x2="8" y2="6.01"/><line x1="16" y1="6" x2="16" y2="6.01"/><line x1="8" y1="10" x2="8" y2="10.01"/><line x1="16" y1="10" x2="16" y2="10.01"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="16" y1="14" x2="16" y2="14.01"/></svg> 본사</a>
+             <a href="${typeof U !== 'undefined' && U.getHQPortalUrl ? U.getHQPortalUrl() : 'admin.html'}" target="_blank" style="display:inline-flex; align-items:center; justify-content:center; gap:5px; width:100%; padding:8px 0; border-radius:8px; background:linear-gradient(135deg, #4f46e5, #7c3aed); color:#fff; font-weight:800; font-size:11px; text-align:center; text-decoration:none; box-shadow:0 2px 8px rgba(79,70,229,0.3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="12" y1="22" x2="12" y2="22.01"/><line x1="8" y1="6" x2="8" y2="6.01"/><line x1="16" y1="6" x2="16" y2="6.01"/><line x1="8" y1="10" x2="8" y2="10.01"/><line x1="16" y1="10" x2="16" y2="10.01"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="16" y1="14" x2="16" y2="14.01"/></svg> 본사</a>
              <button onclick="App.navigate('profile')" style="width:100%; padding:8px 0; border-radius:8px; background:var(--bg-input); font-weight:700; font-size:11px; color:var(--text-200); text-align:center; border:none; cursor:pointer;">내 정보</button>
           </div>
         </div>
@@ -409,12 +409,12 @@ const Home = {
 
     if (events.length === 0 && rawSchedules.length === 0) {
       html += `
-        <div class="tl-empty" onclick="window.open('admin.html','_blank')" style="border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-400); cursor:pointer; font-size:14px; font-weight:600; border:2px dashed rgba(0,0,0,0.15); min-height:300px; background:rgba(255,255,255,0.4); text-align:center; padding:20px;">
+        <div class="tl-empty" onclick="U.openHQPortal ? U.openHQPortal() : window.open('admin.html','_blank')" style="border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-400); cursor:pointer; font-size:14px; font-weight:600; border:2px dashed rgba(0,0,0,0.15); min-height:300px; background:rgba(255,255,255,0.4); text-align:center; padding:20px;">
            <span style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:14px; background:rgba(99,102,241,0.1); color:#6366f1; margin-bottom:12px;">
              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
            </span>
            <span style="font-size:16px; font-weight:800; color:var(--text-100); margin-bottom:4px;">등록된 스케줄이 없습니다.</span>
-           <span style="color:#4f46e5; font-size:13px; font-weight:700;">본사 마스터 스케줄러(admin.html)에서 일정을 등록하면 자동으로 동기화됩니다 ↗</span>
+           <span style="color:#4f46e5; font-size:13px; font-weight:700;">본사 마스터 관제 포털에서 일정을 등록하면 자동으로 동기화됩니다 ↗</span>
         </div>
       `;
       return html;
@@ -595,8 +595,8 @@ const Home = {
     }
 
     html += `
-      <div onclick="window.open('admin.html','_blank')" style="text-align:center; padding:12px; background:#fff; border:2px dashed rgba(99,102,241,0.3); border-radius:12px; color:#4f46e5; font-size:12px; font-weight:800; cursor:pointer; margin-top:16px;">
-        + 본사 마스터 스케줄러에서 신규 등록 ↗
+      <div onclick="U.openHQPortal ? U.openHQPortal() : window.open('admin.html','_blank')" style="text-align:center; padding:12px; background:#fff; border:2px dashed rgba(99,102,241,0.3); border-radius:12px; color:#4f46e5; font-size:12px; font-weight:800; cursor:pointer; margin-top:16px;">
+        + 본사 마스터 관제 포털에서 신규 등록 ↗
       </div>
     </div>`;
 

@@ -3,6 +3,25 @@
    ========================================= */
 
 const U = {
+  /* ── Environment Aware HQ Portal Navigation ── */
+  getHQPortalUrl() {
+    const isGithub = window.location.hostname.includes('github.io');
+    if (isGithub) {
+      return 'https://ktj8824-stack.github.io/manager-planner-web/';
+    }
+    return 'admin.html';
+  },
+  getHQLoginUrl() {
+    const isGithub = window.location.hostname.includes('github.io');
+    if (isGithub) {
+      return 'https://ktj8824-stack.github.io/manager-planner-web/admin-login.html';
+    }
+    return 'admin-login.html';
+  },
+  openHQPortal() {
+    window.open(this.getHQPortalUrl(), '_blank');
+  },
+
   /* ── Korean Chosung Search ── */
   CHO: ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'],
 

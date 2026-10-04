@@ -152,7 +152,7 @@ const Profile = {
         <div style="margin:0 var(--sp-5) var(--sp-4);">
           <div class="profile-section-title" style="margin-bottom:10px;">🏢 HQ 엔터테인먼트 마스터 포털</div>
           <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:16px;overflow:hidden;">
-            <a href="admin.html" target="_blank" style="display:flex;align-items:center;gap:12px;padding:14px 16px;text-decoration:none;cursor:pointer;">
+            <a href="${typeof U !== 'undefined' && U.getHQPortalUrl ? U.getHQPortalUrl() : 'admin.html'}" target="_blank" style="display:flex;align-items:center;gap:12px;padding:14px 16px;text-decoration:none;cursor:pointer;">
               <span style="color:var(--primary-400);">${ProfileIcons.building}</span>
               <span style="font-size:13.5px;font-weight:700;color:var(--text-100);flex:1;">본사 마스터 스케줄러 열기 (관리자용)</span>
               ${ProfileIcons.chevron}
