@@ -1848,6 +1848,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // 아티스트 필터 매칭 헬퍼 함수
+  function matchArtistSchedule(s, filterId, artistsList) {
+    if (!filterId || filterId === 'ALL') return true;
+    if (s.artistId === filterId) return true;
+    if (s.artistId === 'ALL') return true;
+    if (Array.isArray(s.artistIds) && s.artistIds.includes(filterId)) return true;
+    if (s.artistName) {
+      if (s.artistName.includes('전체') || s.artistName.includes('전원')) return true;
+      if (artistsList && Array.isArray(artistsList)) {
+        const targetArt = artistsList.find(a => a.id === filterId);
+        if (targetArt && targetArt.name) {
+          const shortName = targetArt.name.split(' ')[0];
+          if (s.artistName.includes(shortName)) return true;
+        }
+      }
+    }
+    return false;
+  }
+
   // ── 1. 월간 캘린더 뷰 (Month View) ──
   async function renderMonthView() {
     const year = state.currentDate.getFullYear();
@@ -1860,11 +1879,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const startDayOfWeek = firstDay.getDay(); // 0(일) ~ 6(토)
     const totalDays = lastDay.getDate();
 
+    const artists = await window.hqStore.getArtists();
     let allSchedules = await window.hqStore.getSchedules();
     if (state.selectedArtistFilter !== 'ALL') {
-      allSchedules = allSchedules.filter(s => s.artistId === state.selectedArtistFilter);
+      allSchedules = allSchedules.filter(s => matchArtistSchedule(s, state.selectedArtistFilter, artists));
     }
-    const artists = await window.hqStore.getArtists();
 
     let html = `
       <!-- 요일 헤더 (컴팩트 슬림 바) -->
@@ -1911,14 +1930,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 최대 5개까지 일정 뱃지로 직접 노출 (일정이 많아지면 셀이 아래로 자동 확장됨)
       daySchedules.slice(0, 5).forEach(sch => {
-        const art = artists.find(a => a.id === sch.artistId);
+        const isAll = sch.artistId === 'ALL' || (sch.artistName && (sch.artistName.includes('전원') || sch.artistName.includes('전체')));
+        const art = isAll ? null : artists.find(a => a.id === sch.artistId);
         const isSec = sch.isSecret === true;
-        const artColor = isSec ? '#9333ea' : (art ? art.color : '#4f46e5');
+        const artColor = isSec ? '#9333ea' : (isAll ? '#0284c7' : (art ? art.color : '#4f46e5'));
         const lockPrefix = isSec ? '🔒 ' : '';
         const memberTag = (sch.targetMembers && sch.targetMembers !== 'ALL' && Array.isArray(sch.targetMembers)) ? ` (${sch.targetMembers.join('/')})` : '';
+        const badgeTag = isAll ? '[전원] ' : (art ? `[${art.name.split(' ')[0]}${memberTag}] ` : '');
         html += `
           <div class="cal-event-pill" style="background:${artColor}; color:#fff; padding:0 8px; height:23px; line-height:23px; border-radius:5px; font-size:11px; font-weight:700; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.05); border-left:3px solid ${isSec ? '#f43f5e' : 'rgba(255,255,255,0.9)'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; min-width:0;" data-sch-id="${sch.id}">
-            ${lockPrefix}${art ? `[${art.name.split(' ')[0]}${memberTag}] ` : ''}${sch.title}
+            ${lockPrefix}${badgeTag}${sch.title}
           </div>
         `;
       });
@@ -1966,11 +1987,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el.calendarTitle) el.calendarTitle.textContent = `${titleText} 주간 시간표`;
     if (el.currentDateText) el.currentDateText.textContent = titleText;
 
+    const artists = await window.hqStore.getArtists();
     let allSchedules = await window.hqStore.getSchedules();
     if (state.selectedArtistFilter !== 'ALL') {
-      allSchedules = allSchedules.filter(s => s.artistId === state.selectedArtistFilter);
+      allSchedules = allSchedules.filter(s => matchArtistSchedule(s, state.selectedArtistFilter, artists));
     }
-    const artists = await window.hqStore.getArtists();
 
     const weekDays = [];
     for (let i = 0; i < 7; i++) {
@@ -2008,13 +2029,15 @@ document.addEventListener('DOMContentLoaded', () => {
           const canView = window.AuthPersona ? window.AuthPersona.canViewSecret(sch) : true;
           const displayTitle = (isSec && !canView) ? '🔒 [극비 보안 스케줄]' : (isSec ? `🔒 [비공개] ${sch.title}` : sch.title);
 
-          const art = artists.find(a => a.id === sch.artistId);
-          const artColor = art ? art.color : '#4f46e5';
+          const isAll = sch.artistId === 'ALL' || (sch.artistName && (sch.artistName.includes('전원') || sch.artistName.includes('전체')));
+          const art = isAll ? null : artists.find(a => a.id === sch.artistId);
+          const artColor = isAll ? '#0284c7' : (art ? art.color : '#4f46e5');
+          const artistLabel = isAll ? '전체 아티스트' : (sch.artistName || '아티스트');
           html += `
             <div class="cal-event-pill" style="--art-color: ${artColor}; padding:8px; border-radius:6px; cursor:pointer; min-width:0; overflow:hidden;" data-sch-id="${sch.id}">
               <div style="font-weight:600; font-size:12px; color:#ffffff;">${sch.startTime} ~ ${sch.endTime}</div>
               <div style="font-size:13px; font-weight:700; color:#ffffff; margin:2px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${displayTitle}</div>
-              <div style="font-size:11px; color:rgba(255,255,255,0.8); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">👤 ${sch.artistName || '아티스트'} | 🚗 ${sch.managerName || '매니저'}</div>
+              <div style="font-size:11px; color:rgba(255,255,255,0.8); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">👤 ${artistLabel} | 🚗 ${sch.managerName || '매니저'}</div>
             </div>
           `;
         });
@@ -2049,7 +2072,7 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     artists.forEach(art => {
-      const artSch = schedules.filter(s => s.artistId === art.id);
+      const artSch = schedules.filter(s => matchArtistSchedule(s, art.id, artists));
       html += `
         <div style="background:#1e293b; border-radius:10px; padding:16px; border:1px solid #334155;">
           <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
@@ -2113,9 +2136,10 @@ document.addEventListener('DOMContentLoaded', () => {
       el.currentDateText.textContent = `${y}년 ${m}월 ${d}일`;
     }
 
+    const artists = await window.hqStore.getArtists();
     let schedules = await window.hqStore.getSchedules({ date: todayStr });
     if (state.selectedArtistFilter !== 'ALL') {
-      schedules = schedules.filter(s => s.artistId === state.selectedArtistFilter);
+      schedules = schedules.filter(s => matchArtistSchedule(s, state.selectedArtistFilter, artists));
     }
     const artists = await window.hqStore.getArtists();
 
@@ -2248,12 +2272,12 @@ document.addEventListener('DOMContentLoaded', () => {
       el.currentDateText.textContent = `${y}년 ${m}월 ${d}일`;
     }
 
-    let schedules = await window.hqStore.getSchedules({ date: todayStr });
-    if (state.selectedArtistFilter !== 'ALL') {
-      schedules = schedules.filter(s => s.artistId === state.selectedArtistFilter);
-    }
     const artists = await window.hqStore.getArtists();
     const vehicles = await window.hqStore.getVehicles();
+    let schedules = await window.hqStore.getSchedules({ date: todayStr });
+    if (state.selectedArtistFilter !== 'ALL') {
+      schedules = schedules.filter(s => matchArtistSchedule(s, state.selectedArtistFilter, artists));
+    }
 
     // Map control grid
     let html = `

@@ -339,9 +339,12 @@ const State = {
     const isArtistMatch = (s, targetArtistList) => {
       if (!targetArtistList || targetArtistList.length === 0) return true;
       if (targetArtistList.includes('ALL')) return true;
+      if (s.artistId === 'ALL') return true;
       if (s.artistId && targetArtistList.includes(s.artistId)) return true;
+      if (Array.isArray(s.artistIds) && s.artistIds.some(id => targetArtistList.includes(id))) return true;
       
       const sName = (s.artistName || s.artist || '').toLowerCase();
+      if (sName.includes('전원') || sName.includes('전체') || sName.includes('all')) return true;
       return targetArtistList.some(item => {
         if (!item) return false;
         const low = String(item).toLowerCase();
@@ -418,12 +421,14 @@ const State = {
       if (userRole === 'manager') {
         if (s.isSecret) return s.managerId === mgrId;
         if (s.managerId && s.managerId === mgrId) return true;
+        if (s.artistId === 'ALL' || (Array.isArray(s.artistIds) && s.artistIds.some(id => myArtists.includes(id)))) return true;
         if (myArtists.length > 0 && myArtists.includes(s.artistId)) return true;
         return false;
       }
       // staff 역할: 담당 아티스트 공개 스케줄만
       if (userRole === 'staff') {
         if (s.isSecret) return false;
+        if (s.artistId === 'ALL' || (Array.isArray(s.artistIds) && s.artistIds.some(id => myArtists.includes(id)))) return true;
         return myArtists.includes(s.artistId);
       }
       // ceo / hq_admin: 전체
