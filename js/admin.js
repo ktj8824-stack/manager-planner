@@ -1761,8 +1761,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const managers = await window.hqStore.getManagers();
     const vehicles = await window.hqStore.getVehicles();
 
-    // 아티스트 select
-    el.formArtist.innerHTML = artists.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+    // 아티스트 select (전체 소속 아티스트 전원 옵션 포함)
+    el.formArtist.innerHTML = '<option value="ALL">✨ 전체 (소속 아티스트 전원)</option>' + artists.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
 
     // 매니저 select
     el.formManager.innerHTML = managers.map(m => `<option value="${m.id}">${m.name} (${m.phone || '로드'})</option>`).join('');
@@ -3120,7 +3120,9 @@ document.addEventListener('DOMContentLoaded', () => {
       el.scheduleFormTitle.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> 스케줄 정보 수정`;
       el.formSchId.value = editSch.id;
       el.formTitle.value = editSch.title || '';
-      if (el.formArtist) el.formArtist.value = editSch.artistId || '';
+      if (el.formArtist) {
+        el.formArtist.value = editSch.artistId || (editSch.artistName && (editSch.artistName.includes('전원') || editSch.artistName.includes('전체')) ? 'ALL' : '');
+      }
       const normCat = (c) => {
         if (!c) return 'music_show';
         const str = String(c).toLowerCase().trim();
@@ -3775,7 +3777,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const managers = await window.hqStore.getManagers();
       const vehicles = await window.hqStore.getVehicles();
 
-      const art = artists.find(a => a.id === el.formArtist.value);
+      const isAllArtists = el.formArtist.value === 'ALL';
+      const art = isAllArtists ? null : artists.find(a => a.id === el.formArtist.value);
       const mgr = managers.find(m => m.id === el.formManager.value);
       const veh = vehicles.find(v => v.id === el.formVehicle.value);
 
@@ -3807,7 +3810,8 @@ document.addEventListener('DOMContentLoaded', () => {
         id: schId,
         title: el.formTitle.value,
         artistId: el.formArtist.value,
-        artistName: art ? art.name : '',
+        artistIds: isAllArtists ? artists.map(a => a.id) : [el.formArtist.value],
+        artistName: isAllArtists ? '전체 아티스트 (전원)' : (art ? art.name : ''),
         targetMembers: targetMembers,
         category: el.formCategory.value,
         date: dateVal,
