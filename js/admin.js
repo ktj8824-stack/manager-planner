@@ -1939,13 +1939,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const isSec = sch.isSecret === true;
         const artColor = isSec ? '#9333ea' : (isAll ? '#0284c7' : (art ? (art.color || '#f59e0b') : '#4f46e5'));
         const lockPrefix = isSec ? '🔒 ' : '';
-        const memberTag = (sch.targetMembers && sch.targetMembers !== 'ALL' && Array.isArray(sch.targetMembers)) ? ` (${sch.targetMembers.join('/')})` : '';
-        const badgeTag = isAll ? '[전원]' : (art ? `[${art.name.split(' ')[0]}${memberTag}]` : (sch.artistName ? `[${sch.artistName}]` : ''));
+        const badgeText = isAll ? '전원' : (art ? `${art.name.split(' ')[0]}${memberTag}` : (sch.artistName || '아티스트'));
         html += `
-          <div class="cal-event-pill" style="background:#ffffff; border:1px solid #e2e8f0; border-left:3px solid ${artColor}; color:#1e293b; padding:0 6px; height:23px; line-height:21px; border-radius:5px; font-size:11px; font-weight:600; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.04); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; min-width:0; display:flex; align-items:center; gap:3px;" data-sch-id="${sch.id}">
+          <div class="cal-event-pill" style="background:#e2e8f0; border:1px solid #cbd5e1; border-left:3px solid ${artColor}; color:#0f172a; padding:0 6px; height:23px; line-height:21px; border-radius:5px; font-size:11px; font-weight:600; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.04); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; min-width:0; display:flex; align-items:center; gap:4px;" data-sch-id="${sch.id}">
             ${lockPrefix ? `<span style="flex-shrink:0;">${lockPrefix}</span>` : ''}
-            ${badgeTag ? `<strong style="color:${artColor}; font-weight:800; flex-shrink:0;">${badgeTag}</strong>` : ''}
-            <span style="color:#1e293b; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${sch.title}</span>
+            <span style="background:${artColor}; color:#ffffff; font-size:10px; font-weight:700; padding:1px 5px; border-radius:3px; flex-shrink:0; line-height:1.2;">${badgeText}</span>
+            <span style="color:#0f172a; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${sch.title}</span>
           </div>
         `;
       });
@@ -3441,11 +3440,11 @@ document.addEventListener('DOMContentLoaded', () => {
           const badgeText = isAll ? '전원' : (art ? art.name.split(' ')[0] : (sch.artistName || '아티스트'));
           popHtml += `
             <div onclick="Admin.openScheduleDetail('${sch.id}')" 
-              style="background:#f8fafc; border-radius:8px; padding:10px 12px; border:1px solid #cbd5e1; border-left:4px solid ${artColor}; cursor:pointer; transition:all 0.15s ease;"
-              onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#94a3b8'; this.style.transform='translateY(-1px)';"
-              onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1'; this.style.transform='none';">
+              style="background:#e2e8f0; border-radius:8px; padding:10px 12px; border:1px solid #cbd5e1; border-left:4px solid ${artColor}; cursor:pointer; transition:all 0.15s ease;"
+              onmouseover="this.style.background='#cbd5e1'; this.style.borderColor='#94a3b8'; this.style.transform='translateY(-1px)';"
+              onmouseout="this.style.background='#e2e8f0'; this.style.borderColor='#cbd5e1'; this.style.transform='none';">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                <span style="font-size:11.5px; font-weight:800; color:${artColor}; font-family:monospace; display:flex; align-items:center; gap:4px;">
+                <span style="font-size:11.5px; font-weight:800; color:#2563eb; font-family:monospace; display:flex; align-items:center; gap:4px;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                   ${sch.startTime} ~ ${sch.endTime}
                 </span>
@@ -3453,8 +3452,8 @@ document.addEventListener('DOMContentLoaded', () => {
                   ${sch.status || '예정'}
                 </span>
               </div>
-              <div style="font-size:13px; font-weight:800; color:#0f172a; margin-bottom:6px; display:flex; align-items:center; gap:5px;">
-                <strong style="color:${artColor}; font-weight:800; flex-shrink:0;">[${badgeText}]</strong>
+              <div style="font-size:13px; font-weight:800; color:#0f172a; margin-bottom:6px; display:flex; align-items:flex-start; gap:6px;">
+                <span style="background:${artColor}; color:#ffffff; font-size:10.5px; padding:2px 7px; border-radius:4px; font-weight:700; white-space:nowrap; flex-shrink:0; line-height:1.3;">${badgeText}</span>
                 <span style="line-height:1.4; word-break:keep-all; flex:1; min-width:0; color:#0f172a;">${sch.title}</span>
               </div>
               <div style="font-size:11.5px; color:#475569; display:flex; flex-direction:column; gap:4px;">
