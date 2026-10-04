@@ -2141,7 +2141,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state.selectedArtistFilter !== 'ALL') {
       schedules = schedules.filter(s => matchArtistSchedule(s, state.selectedArtistFilter, artists));
     }
-    const artists = await window.hqStore.getArtists();
 
     // 5 Columns with sleek Line SVGs
     const cols = [
