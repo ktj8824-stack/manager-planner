@@ -634,7 +634,7 @@ body {
   align-items: center;
   gap: 4px;
   cursor: pointer;
-  background: var(--art-color, var(--primary)) !important;
+  background: var(--art-color, var(--primary));
   margin-bottom: 2px;
 }
 

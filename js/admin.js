@@ -1931,14 +1931,18 @@ document.addEventListener('DOMContentLoaded', () => {
       // 최대 5개까지 일정 뱃지로 직접 노출 (일정이 많아지면 셀이 아래로 자동 확장됨)
       daySchedules.slice(0, 5).forEach(sch => {
         const isAll = sch.artistId === 'ALL' || (sch.artistName && (sch.artistName.includes('전원') || sch.artistName.includes('전체')));
-        const art = isAll ? null : artists.find(a => a.id === sch.artistId);
+        let art = isAll ? null : artists.find(a => a.id === sch.artistId);
+        if (!art && !isAll && (sch.artistName || sch.artist)) {
+          const sName = sch.artistName || sch.artist || '';
+          art = artists.find(a => sName.includes(a.name.split(' ')[0]) || a.name.includes(sName));
+        }
         const isSec = sch.isSecret === true;
-        const artColor = isSec ? '#9333ea' : (isAll ? '#0284c7' : (art ? art.color : '#4f46e5'));
+        const artColor = isSec ? '#9333ea' : (isAll ? '#0284c7' : (art ? (art.color || '#f59e0b') : '#4f46e5'));
         const lockPrefix = isSec ? '🔒 ' : '';
         const memberTag = (sch.targetMembers && sch.targetMembers !== 'ALL' && Array.isArray(sch.targetMembers)) ? ` (${sch.targetMembers.join('/')})` : '';
         const badgeTag = isAll ? '[전원] ' : (art ? `[${art.name.split(' ')[0]}${memberTag}] ` : '');
         html += `
-          <div class="cal-event-pill" style="background:${artColor}; color:#fff; padding:0 8px; height:23px; line-height:23px; border-radius:5px; font-size:11px; font-weight:700; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.05); border-left:3px solid ${isSec ? '#f43f5e' : 'rgba(255,255,255,0.9)'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; min-width:0;" data-sch-id="${sch.id}">
+          <div class="cal-event-pill" style="--art-color:${artColor}; background:${artColor} !important; color:#fff; padding:0 8px; height:23px; line-height:23px; border-radius:5px; font-size:11px; font-weight:700; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.05); border-left:3px solid ${isSec ? '#f43f5e' : 'rgba(255,255,255,0.9)'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; min-width:0;" data-sch-id="${sch.id}">
             ${lockPrefix}${badgeTag}${sch.title}
           </div>
         `;
