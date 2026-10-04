@@ -537,8 +537,8 @@ const Home = {
                   </div>
                 </div>
 
-                <div style="font-size:10px; font-weight:700; color:${isExpanded ? (isSecret ? '#9333ea' : '#4f46e5') : '#94a3b8'}; text-align:right; line-height:1.2; padding-top:2px;">
-                  ${isExpanded ? '상세<br>접기 ▲' : '상세<br>보기 ▼'}
+                <div style="font-size:10px; font-weight:700; color:${isExpanded ? (isSecret ? '#9333ea' : '#4f46e5') : '#94a3b8'}; text-align:right; line-height:1; white-space:nowrap; flex-shrink:0; padding-top:2px;">
+                  ${isExpanded ? '상세접기 ▲' : '상세보기 ▼'}
                 </div>
               </div>
 
@@ -625,8 +625,18 @@ const Home = {
       </div>
     `;
 
-    events.forEach((ev, idx) => {
-      const isLast = idx === events.length - 1;
+    // 타임라인 동일 시간 및 동일 라벨 단계 중복 제거 (Deduplication)
+    const seenEvents = new Set();
+    const uniqueEvents = (events || []).filter(ev => {
+      if (!ev) return false;
+      const key = `${ev.time}_${(ev.title || '').trim()}`;
+      if (seenEvents.has(key)) return false;
+      seenEvents.add(key);
+      return true;
+    });
+
+    uniqueEvents.forEach((ev, idx) => {
+      const isLast = idx === uniqueEvents.length - 1;
       const isDone = ev.done || false;
       const isHQ = ev.isHQ;
       

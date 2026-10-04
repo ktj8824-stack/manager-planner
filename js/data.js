@@ -272,9 +272,26 @@ const State = {
 
     schedules.forEach(s => {
       let isMismatch = false;
+      const isShopNeeded = (s.shop && typeof s.shop === 'object') ? Boolean(s.shop.needed) : false;
+
       if (!s.timeline || s.timeline.length === 0) {
         isMismatch = true;
       } else {
+        // 1. 샵 미경유 스케줄인데 과거에 생성된 샵 단계가 남아있는 경우 즉시 재동기화
+        if (!isShopNeeded) {
+          const hasShopStep = s.timeline.some(st => st.label && (st.label.includes('헤어') || st.label.includes('메이크업') || st.label.includes('스타일링') || (st.label.includes('샵') && !st.label.includes('현장'))));
+          if (hasShopStep) {
+            isMismatch = true;
+          }
+        }
+
+        // 2. 타임라인 중복 단계 검사 (동일 시간/라벨 중복 누적 방지)
+        const timeLabelKeys = s.timeline.map(st => `${st.time}_${st.label}`);
+        if (new Set(timeLabelKeys).size !== timeLabelKeys.length) {
+          isMismatch = true;
+        }
+
+        // 3. 이동/대기 버퍼 불일치 검사
         const driveStep = s.timeline.find(st => st.desc && st.desc.includes('버퍼'));
         if (driveStep) {
           const match = driveStep.desc.match(/버퍼\s*(\d+)분/);
@@ -318,35 +335,49 @@ const State = {
       try { assignedArtists = JSON.parse(assignedJson) || []; } catch(e) {}
     }
 
-    // 1. CEO 및 본사 총괄 관리자 (전체 스케줄 및 비공개 스케줄 완전 열람)
+    // 아티스트 매칭 판별 헬퍼 (ID 또는 그룹명 매칭)
+    const isArtistMatch = (s, targetArtistList) => {
+      if (!targetArtistList || targetArtistList.length === 0) return true;
+      if (targetArtistList.includes('ALL')) return true;
+      if (s.artistId && targetArtistList.includes(s.artistId)) return true;
+      
+      const sName = (s.artistName || s.artist || '').toLowerCase();
+      return targetArtistList.some(item => {
+        if (!item) return false;
+        const low = String(item).toLowerCase();
+        if (low === 'art_1' && sName.includes('루나스')) return true;
+        if (low === 'art_2' && sName.includes('에이펙스')) return true;
+        if (low === 'art_3' && sName.includes('차은호')) return true;
+        if (low === 'art_4' && sName.includes('유나')) return true;
+        if (low === 'art_5' && sName.includes('사운드웨이브')) return true;
+        return sName.includes(low);
+      });
+    };
+
+    // 1. CEO 및 본사 총괄 관리자 (전체 스케줄 및 담당 아티스트 스케줄 완전 열람)
     if (userRole === 'ceo' || userRole === 'hq_admin') {
-      if (this.currentManagerFilter && this.currentManagerFilter !== 'ALL') {
-        schedules = schedules.filter(s => s.managerId === this.currentManagerFilter || s.artistId === this.currentManagerFilter);
+      if (assignedArtists.length > 0 && !assignedArtists.includes('ALL')) {
+        schedules = schedules.filter(s => {
+          if (s.managerId && s.managerId === currentMgrId) return true;
+          return isArtistMatch(s, assignedArtists);
+        });
       }
       return schedules;
     }
 
     // 2. 현장 매니저 (Manager)
     if (userRole === 'manager') {
-      // ── 항상 localStorage에서 직접 읽어 최신값 보장 (캐시 의존 제거) ──
-      const mgrId = localStorage.getItem('bp_manager_id');
-      let myArtists = [];
-      try { myArtists = JSON.parse(localStorage.getItem('bp_assigned_artists') || '[]'); } catch(e) { myArtists = []; }
-
       schedules = schedules.filter(s => {
         // 비공개 스케줄: 본인이 직접 배정된 경우만 열람
         if (s.isSecret) {
-          return s.managerId === mgrId;
+          return s.managerId === currentMgrId;
         }
-        // 공개 스케줄: 본인 managerId 직접 배정 → 표시
-        if (s.managerId && s.managerId === mgrId) return true;
-        // 공개 스케줄: 담당 아티스트(assignedArtists) 스케줄 → 표시
-        if (myArtists.length > 0 && myArtists.includes(s.artistId)) return true;
-        // 그 외 → 표시 안 함
+        // 본인 직접 배정 스케줄
+        if (s.managerId && s.managerId === currentMgrId) return true;
+        // 담당 아티스트 스케줄
+        if (isArtistMatch(s, assignedArtists)) return true;
         return false;
       });
-
-      // manager 역할은 currentManagerFilter 추가 필터 생략 (이미 본인 스케줄만 반환)
       return schedules;
     }
 
@@ -355,13 +386,8 @@ const State = {
       // 비공개 스케줄은 완전 숨김, 본인 배정 아티스트의 스케줄만 노출
       schedules = schedules.filter(s => {
         if (s.isSecret) return false;
-        const isMyArtist = s.artistId === 'ALL' || (Array.isArray(assignedArtists) && assignedArtists.includes(s.artistId));
-        return isMyArtist;
+        return isArtistMatch(s, assignedArtists);
       });
-
-      if (this.currentManagerFilter && this.currentManagerFilter !== 'ALL') {
-        schedules = schedules.filter(s => s.artistId === this.currentManagerFilter);
-      }
       return schedules;
     }
 
@@ -514,9 +540,42 @@ const State = {
         const endMins = eh * 60 + em;
         const durMin = Math.max(30, endMins - startMins);
 
+        // 스마트 샵 필요 여부 정밀 판별
+        const titleLower = (hs.title || '').toLowerCase();
+        const isMeeting = hs.category === 'meeting' || titleLower.includes('회의') || titleLower.includes('미팅') || titleLower.includes('기획') || titleLower.includes('총괄') || titleLower.includes('로드맵');
+        
+        let isShopNeeded = false;
+        if (hs.shop && typeof hs.shop === 'object') {
+          isShopNeeded = hs.shop.needed === true;
+        } else if (hs.hasShop === true || hs.needShop === true) {
+          isShopNeeded = true;
+        } else if (isMeeting) {
+          isShopNeeded = false;
+        } else {
+          const cat = hs.category || '';
+          isShopNeeded = (cat === 'broadcast' || cat === 'shoot' || cat === 'concert' || cat === 'music_show' || cat === 'recording');
+        }
+
+        // 스케줄 타임라인 유효성 검사 및 정제
+        let activeTimeline = hs.timeline;
+        const hasShopInTimeline = (activeTimeline || []).some(st => st.label && (st.label.includes('헤어') || st.label.includes('메이크업') || st.label.includes('스타일링') || (st.label.includes('샵') && !st.label.includes('현장'))));
+        const hasDuplicates = (activeTimeline || []).length > 6 || (new Set((activeTimeline || []).map(st => `${st.time}_${st.label}`)).size !== (activeTimeline || []).length);
+
+        if (!activeTimeline || activeTimeline.length === 0 || (!isShopNeeded && hasShopInTimeline) || hasDuplicates) {
+          if (typeof window.hqStore !== 'undefined' && typeof window.hqStore.generateAutoTimeline === 'function') {
+            const sanitizedHs = { ...hs, shop: { needed: isShopNeeded } };
+            activeTimeline = window.hqStore.generateAutoTimeline(sanitizedHs);
+            hs.timeline = activeTimeline;
+          }
+        }
+
         // 스케줄에 저장된 세부 동선 타임라인이 있으면 그것을 직접 이벤트로 풀어서 전달
-        if (hs.timeline && hs.timeline.length > 0) {
-          hs.timeline.forEach((step, stepIdx) => {
+        if (activeTimeline && activeTimeline.length > 0) {
+          activeTimeline.forEach((step, stepIdx) => {
+            // 샵 미경유 스케줄인 경우 샵/헤어/스타일링 관련 잘못 누적된 단계 최종 스킵
+            if (!isShopNeeded && (step.label.includes('헤어') || step.label.includes('메이크업') || step.label.includes('스타일링') || (step.label.includes('샵') && !step.label.includes('현장')))) {
+              return;
+            }
             let icon = '⏱️';
             let type = 'schedule';
             if (step.label.includes('출발') || step.label.includes('픽업')) { icon = '🚗'; type = 'travel'; }
@@ -551,7 +610,7 @@ const State = {
           });
 
           // Update previous end time for next iteration
-          const lastEvent = hs.timeline[hs.timeline.length - 1];
+          const lastEvent = activeTimeline[activeTimeline.length - 1];
           previousEndTimeStr = lastEvent.time;
         } else {
           // 타임라인이 아직 없을 경우 기본 일정으로 추가
@@ -613,19 +672,38 @@ const State = {
         };
       };
 
-      let currentEnd = arrivalMins;
-      const courseName = (firstSched.course && firstSched.course.name) ? firstSched.course.name : (firstSched.title || '현장');
-      const step5 = applyStep(`auto_${datePrefix}_travel_sched`, 'travel', `샵 ➔ ${courseName} 이동`, '🚐', 40, currentEnd);
-      currentEnd = step5.startTime;
-      const step4 = applyStep(`auto_${datePrefix}_shop`, 'prep', '헤어/메이크업 샵', '✂️', 90, currentEnd);
-      currentEnd = step4.startTime;
-      const step3 = applyStep(`auto_${datePrefix}_travel_shop`, 'travel', `${artistDorm} ➔ 샵 이동`, '🚗', 30, currentEnd);
-      currentEnd = step3.startTime;
-      const step2 = applyStep(`auto_${datePrefix}_call`, 'prep', `${artistDorm} 모닝콜 및 대기`, '📱', 30, currentEnd);
-      currentEnd = step2.startTime;
-      const step1 = applyStep(`auto_${datePrefix}_wakeup`, 'prep', '매니저 기상 및 출근 준비', '⏰', 60, currentEnd);
+      let needShop = false;
+      if (firstSched.shop && typeof firstSched.shop === 'object') {
+        needShop = firstSched.shop.needed === true;
+      } else if (firstSched.hasShop === true || firstSched.needShop === true) {
+        needShop = true;
+      }
 
-      const baseAutoEvents = [step1.ev, step2.ev, step3.ev, step4.ev, step5.ev];
+      let baseAutoEvents = [];
+      const courseName = (firstSched.course && firstSched.course.name) ? firstSched.course.name : (firstSched.title || '현장');
+
+      if (needShop) {
+        let currentEnd = arrivalMins;
+        const step5 = applyStep(`auto_${datePrefix}_travel_sched`, 'travel', `샵 ➔ ${courseName} 이동`, '🚐', 40, currentEnd);
+        currentEnd = step5.startTime;
+        const step4 = applyStep(`auto_${datePrefix}_shop`, 'prep', '헤어/메이크업 샵', '✂️', 90, currentEnd);
+        currentEnd = step4.startTime;
+        const step3 = applyStep(`auto_${datePrefix}_travel_shop`, 'travel', `${artistDorm} ➔ 샵 이동`, '🚗', 30, currentEnd);
+        currentEnd = step3.startTime;
+        const step2 = applyStep(`auto_${datePrefix}_call`, 'prep', `${artistDorm} 모닝콜 및 대기`, '📱', 30, currentEnd);
+        currentEnd = step2.startTime;
+        const step1 = applyStep(`auto_${datePrefix}_wakeup`, 'prep', '매니저 기상 및 출근 준비', '⏰', 60, currentEnd);
+        baseAutoEvents = [step1.ev, step2.ev, step3.ev, step4.ev, step5.ev];
+      } else {
+        let currentEnd = arrivalMins;
+        const step3 = applyStep(`auto_${datePrefix}_travel_direct`, 'travel', `${artistDorm} ➔ ${courseName} 이동`, '🚗', 40, currentEnd);
+        currentEnd = step3.startTime;
+        const step2 = applyStep(`auto_${datePrefix}_pickup`, 'prep', `${artistDorm} 픽업 및 준비`, '📱', 20, currentEnd);
+        currentEnd = step2.startTime;
+        const step1 = applyStep(`auto_${datePrefix}_wakeup`, 'prep', '매니저 기상 및 출근 준비', '⏰', 60, currentEnd);
+        baseAutoEvents = [step1.ev, step2.ev, step3.ev];
+      }
+
       baseAutoEvents.forEach(ev => {
         if (!this.hiddenAutoEvents.includes(ev.id)) events.push(ev);
       });
