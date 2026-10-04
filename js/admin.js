@@ -1940,10 +1940,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const artColor = isSec ? '#9333ea' : (isAll ? '#0284c7' : (art ? (art.color || '#f59e0b') : '#4f46e5'));
         const lockPrefix = isSec ? '🔒 ' : '';
         const memberTag = (sch.targetMembers && sch.targetMembers !== 'ALL' && Array.isArray(sch.targetMembers)) ? ` (${sch.targetMembers.join('/')})` : '';
-        const badgeTag = isAll ? '[전원] ' : (art ? `[${art.name.split(' ')[0]}${memberTag}] ` : '');
+        const badgeTag = isAll ? '[전원]' : (art ? `[${art.name.split(' ')[0]}${memberTag}]` : (sch.artistName ? `[${sch.artistName}]` : ''));
         html += `
-          <div class="cal-event-pill" style="--art-color:${artColor}; background:${artColor} !important; color:#fff; padding:0 8px; height:23px; line-height:23px; border-radius:5px; font-size:11px; font-weight:700; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.05); border-left:3px solid ${isSec ? '#f43f5e' : 'rgba(255,255,255,0.9)'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; min-width:0;" data-sch-id="${sch.id}">
-            ${lockPrefix}${badgeTag}${sch.title}
+          <div class="cal-event-pill" style="background:#ffffff; border:1px solid #e2e8f0; border-left:3px solid ${artColor}; color:#1e293b; padding:0 6px; height:23px; line-height:21px; border-radius:5px; font-size:11px; font-weight:600; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.04); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; min-width:0; display:flex; align-items:center; gap:3px;" data-sch-id="${sch.id}">
+            ${lockPrefix ? `<span style="flex-shrink:0;">${lockPrefix}</span>` : ''}
+            ${badgeTag ? `<strong style="color:${artColor}; font-weight:800; flex-shrink:0;">${badgeTag}</strong>` : ''}
+            <span style="color:#1e293b; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${sch.title}</span>
           </div>
         `;
       });
