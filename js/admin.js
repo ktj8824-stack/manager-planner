@@ -3430,16 +3430,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         daySchedules.forEach(sch => {
           const isAll = sch.artistId === 'ALL' || (sch.artistName && (sch.artistName.includes('전원') || sch.artistName.includes('전체')));
-          const art = isAll ? null : window.hqStore.getArtists().find(a => a.id === sch.artistId);
-          const artColor = isAll ? '#4f46e5' : (art ? art.color : '#4f46e5');
-          const badgeText = isAll ? '전체 아티스트 (전원)' : (sch.artistName || '아티스트');
+          const allArtists = window.hqStore.getArtists() || [];
+          let art = isAll ? null : allArtists.find(a => a.id === sch.artistId);
+          if (!art && !isAll && (sch.artistName || sch.artist)) {
+            const sName = sch.artistName || sch.artist || '';
+            art = allArtists.find(a => sName.includes(a.name.split(' ')[0]) || a.name.includes(sName));
+          }
+          const isSec = sch.isSecret === true;
+          const artColor = isSec ? '#9333ea' : (isAll ? '#0284c7' : (art ? (art.color || '#f59e0b') : '#4f46e5'));
+          const badgeText = isAll ? '전원' : (art ? art.name.split(' ')[0] : (sch.artistName || '아티스트'));
           popHtml += `
             <div onclick="Admin.openScheduleDetail('${sch.id}')" 
-              style="background:#e2e8f0; border-radius:8px; padding:10px 12px; border:1px solid #cbd5e1; border-left:4px solid ${artColor}; cursor:pointer; transition:all 0.15s ease;"
-              onmouseover="this.style.background='#cbd5e1'; this.style.borderColor='#94a3b8'; this.style.transform='translateY(-1px)';"
-              onmouseout="this.style.background='#e2e8f0'; this.style.borderColor='#cbd5e1'; this.style.transform='none';">
+              style="background:#f8fafc; border-radius:8px; padding:10px 12px; border:1px solid #cbd5e1; border-left:4px solid ${artColor}; cursor:pointer; transition:all 0.15s ease;"
+              onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#94a3b8'; this.style.transform='translateY(-1px)';"
+              onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1'; this.style.transform='none';">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                <span style="font-size:11.5px; font-weight:800; color:#2563eb; font-family:monospace; display:flex; align-items:center; gap:4px;">
+                <span style="font-size:11.5px; font-weight:800; color:${artColor}; font-family:monospace; display:flex; align-items:center; gap:4px;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                   ${sch.startTime} ~ ${sch.endTime}
                 </span>
@@ -3447,13 +3453,13 @@ document.addEventListener('DOMContentLoaded', () => {
                   ${sch.status || '예정'}
                 </span>
               </div>
-              <div style="font-size:13px; font-weight:800; color:#0f172a; margin-bottom:6px; display:flex; align-items:flex-start; gap:6px;">
-                <span style="background:${artColor}; color:#fff; font-size:10.5px; padding:2px 7px; border-radius:4px; font-weight:700; white-space:nowrap; flex-shrink:0; line-height:1.3;">${badgeText}</span>
-                <span style="line-height:1.4; word-break:keep-all; flex:1; min-width:0;">${sch.title}</span>
+              <div style="font-size:13px; font-weight:800; color:#0f172a; margin-bottom:6px; display:flex; align-items:center; gap:5px;">
+                <strong style="color:${artColor}; font-weight:800; flex-shrink:0;">[${badgeText}]</strong>
+                <span style="line-height:1.4; word-break:keep-all; flex:1; min-width:0; color:#0f172a;">${sch.title}</span>
               </div>
               <div style="font-size:11.5px; color:#475569; display:flex; flex-direction:column; gap:4px;">
                 <div style="display:flex; align-items:center; gap:5px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${artColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                   <span style="color:#334155; font-weight:500; word-break:keep-all;">${sch.location || '장소 미지정'}</span>
                 </div>
                 <div style="display:flex; align-items:center; gap:14px; margin-top:2px; flex-wrap:wrap;">
