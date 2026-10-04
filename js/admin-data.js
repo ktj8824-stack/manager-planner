@@ -429,7 +429,7 @@ function getInitialMockSchedules() {
       title: '2026 Q4 아티스트 활동 계획 및 컴백 로드맵 총괄회의',
       artistId: 'ALL',
       artistIds: ['art_1', 'art_2', 'art_3', 'art_4'],
-      artistName: '루나스 / 에이펙스 / 차은호 / 유나 전원',
+      artistName: '전체 아티스트 (전원)',
       category: 'meeting',
       date: dayAfter7Str,
       startTime: '15:00',

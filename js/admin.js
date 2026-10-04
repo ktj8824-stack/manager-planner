@@ -2658,10 +2658,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const artists = await window.hqStore.getArtists();
     const art = artists.find(a => a.id === sch.artistId);
 
-    // 중복 배차 충돌 검사
-    const conflictResult = window.hqStore.checkConflict ? window.hqStore.checkConflict(sch) : { hasConflict: false };
+      const isAll = sch.artistId === 'ALL' || (sch.artistName && (sch.artistName.includes('전원') || sch.artistName.includes('전체')));
+      const displayArtName = isAll ? '전체 아티스트 (전원)' : (sch.artistName || '아티스트');
+      const badgeColor = isAll ? '#4f46e5' : (art ? art.color : '#6366f1');
 
-    let html = `
+      let html = `
       ${conflictResult.hasConflict ? `
         <div style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); border-radius:8px; padding:12px; margin-bottom:16px;">
           <div style="font-size:13px; font-weight:800; color:#f87171; display:flex; align-items:center; gap:6px; margin-bottom:4px;">
@@ -2678,8 +2679,8 @@ document.addEventListener('DOMContentLoaded', () => {
       <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid #e2e8f0; padding-bottom:14px; margin-bottom:16px;">
         <div>
           <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-            <span style="background:${art ? art.color : '#6366f1'}; color:#fff; font-size:12px; padding:3px 10px; border-radius:6px; font-weight:700; display:inline-block;">
-              ${sch.artistName || '아티스트'}
+            <span style="background:${badgeColor}; color:#fff; font-size:12px; padding:3px 10px; border-radius:6px; font-weight:700; display:inline-block;">
+              ${displayArtName}
             </span>
             ${(sch.targetMembers && sch.targetMembers !== 'ALL' && Array.isArray(sch.targetMembers)) ? `
               <span style="background:#fdf2f8; color:#db2777; border:1px solid #fbcfe8; font-size:11.5px; padding:2px 8px; border-radius:6px; font-weight:800; display:inline-flex; align-items:center; gap:3px;">
@@ -3419,8 +3420,10 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         daySchedules.forEach(sch => {
-          const art = window.hqStore.getArtists().find(a => a.id === sch.artistId);
-          const artColor = art ? art.color : '#4f46e5';
+          const isAll = sch.artistId === 'ALL' || (sch.artistName && (sch.artistName.includes('전원') || sch.artistName.includes('전체')));
+          const art = isAll ? null : window.hqStore.getArtists().find(a => a.id === sch.artistId);
+          const artColor = isAll ? '#4f46e5' : (art ? art.color : '#4f46e5');
+          const badgeText = isAll ? '전체 아티스트 (전원)' : (sch.artistName || '아티스트');
           popHtml += `
             <div onclick="Admin.openScheduleDetail('${sch.id}')" 
               style="background:#e2e8f0; border-radius:8px; padding:10px 12px; border:1px solid #cbd5e1; border-left:4px solid ${artColor}; cursor:pointer; transition:all 0.15s ease;"
@@ -3436,7 +3439,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </span>
               </div>
               <div style="font-size:13px; font-weight:800; color:#0f172a; margin-bottom:6px; display:flex; align-items:flex-start; gap:6px;">
-                <span style="background:${artColor}; color:#fff; font-size:10.5px; padding:2px 7px; border-radius:4px; font-weight:700; white-space:nowrap; flex-shrink:0; line-height:1.3;">${sch.artistName || '아티스트'}</span>
+                <span style="background:${artColor}; color:#fff; font-size:10.5px; padding:2px 7px; border-radius:4px; font-weight:700; white-space:nowrap; flex-shrink:0; line-height:1.3;">${badgeText}</span>
                 <span style="line-height:1.4; word-break:keep-all; flex:1; min-width:0;">${sch.title}</span>
               </div>
               <div style="font-size:11.5px; color:#475569; display:flex; flex-direction:column; gap:4px;">
