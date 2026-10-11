@@ -397,12 +397,12 @@ const Home = {
 
     if (events.length === 0 && rawSchedules.length === 0) {
       html += `
-        <div class="tl-empty" onclick="U.openHQPortal ? U.openHQPortal() : window.open('admin.html','_blank')" style="border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-400); cursor:pointer; font-size:14px; font-weight:600; border:2px dashed rgba(0,0,0,0.15); min-height:300px; background:rgba(255,255,255,0.4); text-align:center; padding:20px;">
+        <div class="tl-empty" onclick="Home.openScheduleRegisterModal()" style="border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-400); cursor:pointer; font-size:14px; font-weight:600; border:2px dashed rgba(99,102,241,0.3); min-height:280px; background:rgba(255,255,255,0.7); text-align:center; padding:20px;">
            <span style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:14px; background:rgba(99,102,241,0.1); color:#6366f1; margin-bottom:12px;">
              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
            </span>
            <span style="font-size:16px; font-weight:800; color:var(--text-100); margin-bottom:4px;">등록된 스케줄이 없습니다.</span>
-           <span style="color:#4f46e5; font-size:13px; font-weight:700;">본사 마스터 관제 포털에서 일정을 등록하면 자동으로 동기화됩니다 ↗</span>
+           <span style="color:#4f46e5; font-size:13px; font-weight:800; display:inline-flex; align-items:center; gap:4px; margin-top:4px;">+ 새 스케줄 등록하기</span>
         </div>
       `;
       return html;
@@ -583,8 +583,9 @@ const Home = {
     }
 
     html += `
-      <div onclick="U.openHQPortal ? U.openHQPortal() : window.open('admin.html','_blank')" style="text-align:center; padding:12px; background:#fff; border:2px dashed rgba(99,102,241,0.3); border-radius:12px; color:#4f46e5; font-size:12px; font-weight:800; cursor:pointer; margin-top:16px;">
-        + 본사 마스터 관제 포털에서 신규 등록 ↗
+      <div onclick="Home.openScheduleRegisterModal()" style="text-align:center; padding:13px; background:#ffffff; border:2px dashed #6366f1; border-radius:12px; color:#4f46e5; font-size:13.5px; font-weight:800; cursor:pointer; margin-top:16px; box-shadow:0 2px 6px rgba(99,102,241,0.06); display:flex; align-items:center; justify-content:center; gap:6px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        스케줄 등록
       </div>
     </div>`;
 
@@ -618,7 +619,7 @@ const Home = {
           </div>
 
           <!-- 우측: [+ 스케줄 / 추가] 버튼 (슬림 패딩 & 대칭 높이) -->
-          <button onclick="Home.openCustomScheduleModal()" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; background:#4f46e5; color:#ffffff; padding:6px 11px; border-radius:9px; font-size:11.5px; font-weight:800; border:none; cursor:pointer; box-shadow:0 2px 6px rgba(79,70,229,0.25); flex-shrink:0; line-height:1.2;">
+          <button onclick="Home.openScheduleRegisterModal()" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; background:#4f46e5; color:#ffffff; padding:6px 11px; border-radius:9px; font-size:11.5px; font-weight:800; border:none; cursor:pointer; box-shadow:0 2px 6px rgba(79,70,229,0.25); flex-shrink:0; line-height:1.2;">
             <span style="display:flex; align-items:center; gap:3px;">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               스케줄
@@ -1031,5 +1032,251 @@ const Home = {
     App.closeModal();
     U.toast('매니저 일정이 추가되었습니다.');
     this.updateRightTimeline();
+  },
+
+  // 🌟 웹과 100% 동일한 '스케줄 등록' 모달 앱 내 팝업 렌더링
+  openScheduleRegisterModal() {
+    const y = this.selectedDate.getFullYear();
+    const m = String(this.selectedDate.getMonth() + 1).padStart(2, '0');
+    const d = String(this.selectedDate.getDate()).padStart(2, '0');
+    const defaultDate = `${y}-${m}-${d}`;
+
+    const artists = (window.hqStore ? window.hqStore.getArtists() : []) || [];
+    const vehicles = (window.hqStore ? window.hqStore.getVehicles() : []) || [];
+    const managers = (window.hqStore ? window.hqStore.getManagers() : []) || [];
+
+    const artistOptions = artists.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+    const vehicleOptions = vehicles.map(v => `<option value="${v.id}">${v.name} (${v.number || ''})</option>`).join('');
+    const managerOptions = managers.map(m => `<option value="${m.id}">${m.name} (${m.title || '매니저'})</option>`).join('');
+
+    const modalHtml = `
+      <div id="app-schedule-form-container" style="padding:4px 0 20px; max-height:75vh; overflow-y:auto; -webkit-overflow-scrolling:touch;">
+        <form id="app-schedule-form" onsubmit="event.preventDefault(); Home.submitScheduleFromModal();" style="display:flex; flex-direction:column; gap:14px;">
+          
+          <!-- 1. 스케줄 기본 정보 -->
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
+            <div style="font-size:13px; font-weight:800; color:#4f46e5; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              기본 스케줄 정보
+            </div>
+
+            <div style="margin-bottom:12px;">
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">스케줄명 (일정 / 방송 / 행사명) <span style="color:#ef4444;">*</span></label>
+              <input type="text" id="m-sch-title" required placeholder="예: 뮤직뱅크 사전녹화, 브랜드 팝업 행사" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;" />
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">담당 아티스트 <span style="color:#ef4444;">*</span></label>
+                <select id="m-sch-artist" required style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; background:#fff; box-sizing:border-box;">
+                  <option value="ALL">전체 아티스트 (전원)</option>
+                  ${artistOptions}
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">스케줄 분류 <span style="color:#ef4444;">*</span></label>
+                <select id="m-sch-category" required style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; background:#fff; box-sizing:border-box;">
+                  <option value="music_show">음악방송 / 생방송</option>
+                  <option value="broadcast">예능 / 라디오 / 인터뷰</option>
+                  <option value="shooting">화보 / 촬영 / 광고</option>
+                  <option value="event">행사 / 콘서트 / 페스티벌</option>
+                  <option value="fansign">팬미팅 / 팬사인회</option>
+                  <option value="recording">녹음 / 안무레슨 / 연습</option>
+                  <option value="overseas">해외 투어 / 출국</option>
+                  <option value="meeting">미팅 / 기획회의 / 기타</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="margin-bottom:12px;">
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">스케줄 일자 <span style="color:#ef4444;">*</span></label>
+              <input type="date" id="m-sch-date" value="${defaultDate}" required style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-weight:700; background:#fff; box-sizing:border-box;" />
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">시작 시간 <span style="color:#ef4444;">*</span></label>
+                <input type="time" id="m-sch-start" value="10:00" required style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-weight:700; background:#fff; box-sizing:border-box;" />
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">종료 시간 <span style="color:#ef4444;">*</span></label>
+                <input type="time" id="m-sch-end" value="18:00" required style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-weight:700; background:#fff; box-sizing:border-box;" />
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. 장소 정보 -->
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
+            <div style="font-size:13px; font-weight:800; color:#2563eb; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              현장 장소 및 이동
+            </div>
+
+            <div style="margin-bottom:10px;">
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">행사장 / 촬영 위치 <span style="color:#ef4444;">*</span></label>
+              <input type="text" id="m-sch-loc" required placeholder="예: 상암 SBS 프리즘타워, 성수 에스팩토리" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;" />
+            </div>
+
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">상세 도로명 주소 (네비 연동용)</label>
+              <input type="text" id="m-sch-addr" placeholder="예: 서울 마포구 상암산로 82" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;" />
+            </div>
+          </div>
+
+          <!-- 3. 헤어/메이크업(샵) 경유 -->
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <div style="font-size:13px; font-weight:800; color:#ec4899; display:flex; align-items:center; gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg>
+                헤어 / 메이크업(샵) 경유
+              </div>
+              <label style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:800; cursor:pointer;">
+                <input type="checkbox" id="m-sch-shop-needed" onchange="document.getElementById('m-sch-shop-fields').style.display = this.checked ? 'block' : 'none';" style="width:16px; height:16px; accent-color:#ec4899; cursor:pointer;" />
+                <span>경유함</span>
+              </label>
+            </div>
+
+            <div id="m-sch-shop-fields" style="display:none; padding-top:6px;">
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">샵 이름 및 주소</label>
+              <input type="text" id="m-sch-shop-name" value="순수 청담본점" placeholder="예: 순수 청담본점, 알루(ALUU) 본점" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;" />
+            </div>
+          </div>
+
+          <!-- 4. 배차 및 매니저 지정 -->
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
+            <div style="font-size:13px; font-weight:800; color:#0f172a; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg>
+              차량 배차 & 담당 매니저
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">배차 차량</label>
+                <select id="m-sch-veh" style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; background:#fff; box-sizing:border-box;">
+                  ${vehicleOptions}
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">담당 매니저</label>
+                <select id="m-sch-mgr" style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; background:#fff; box-sizing:border-box;">
+                  ${managerOptions}
+                </select>
+              </div>
+            </div>
+
+            <!-- 비공개 토글 -->
+            <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1; display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:12px; font-weight:800; color:#64748b; display:flex; align-items:center; gap:4px;">
+                <span>🔒</span> 비공개 보안 스케줄
+              </span>
+              <input type="checkbox" id="m-sch-secret" style="width:16px; height:16px; accent-color:#9333ea; cursor:pointer;" />
+            </div>
+          </div>
+
+          <!-- 등록 버튼 -->
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <button type="button" onclick="App.closeModal();" style="flex:1; padding:14px 0; border:1px solid #cbd5e1; background:#ffffff; color:#475569; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer;">
+              취소
+            </button>
+            <button type="submit" style="flex:2; padding:14px 0; border:none; background:linear-gradient(135deg, #4f46e5, #6366f1); color:#ffffff; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(79,70,229,0.3);">
+              스케줄 등록 완료
+            </button>
+          </div>
+        </form>
+      </div>
+    `;
+
+    App.showModal('📅 신규 스케줄 등록', modalHtml);
+  },
+
+  async submitScheduleFromModal() {
+    const title = document.getElementById('m-sch-title')?.value.trim();
+    const artistId = document.getElementById('m-sch-artist')?.value;
+    const category = document.getElementById('m-sch-category')?.value;
+    const dateVal = document.getElementById('m-sch-date')?.value;
+    const startVal = document.getElementById('m-sch-start')?.value;
+    const endVal = document.getElementById('m-sch-end')?.value;
+    const locationVal = document.getElementById('m-sch-loc')?.value.trim();
+    const addressVal = document.getElementById('m-sch-addr')?.value.trim();
+    const shopNeeded = document.getElementById('m-sch-shop-needed')?.checked;
+    const shopName = document.getElementById('m-sch-shop-name')?.value.trim();
+    const vehicleId = document.getElementById('m-sch-veh')?.value;
+    const managerId = document.getElementById('m-sch-mgr')?.value;
+    const isSecret = document.getElementById('m-sch-secret')?.checked;
+
+    if (!title || !dateVal || !startVal || !locationVal) {
+      U.toast('필수 항목(스케줄명, 날짜, 시작시간, 장소)을 모두 입력해주세요.');
+      return;
+    }
+
+    const artists = (window.hqStore ? window.hqStore.getArtists() : []) || [];
+    const vehicles = (window.hqStore ? window.hqStore.getVehicles() : []) || [];
+    const managers = (window.hqStore ? window.hqStore.getManagers() : []) || [];
+
+    const isAll = artistId === 'ALL';
+    const art = isAll ? null : artists.find(a => a.id === artistId);
+    const veh = vehicles.find(v => v.id === vehicleId);
+    const mgr = managers.find(m => m.id === managerId);
+
+    const schId = 'sch_' + Date.now();
+    const schData = {
+      id: schId,
+      title: title,
+      artistId: artistId,
+      artistIds: isAll ? artists.map(a => a.id) : [artistId],
+      artistName: isAll ? '전체 아티스트 (전원)' : (art ? art.name : '아티스트'),
+      targetMembers: 'ALL',
+      category: category || 'music_show',
+      date: dateVal,
+      startTime: startVal,
+      endTime: endVal || '18:00',
+      managerId: managerId,
+      managerName: mgr ? mgr.name : '김태현 본부장',
+      vehicleId: vehicleId,
+      vehicleName: veh ? veh.name : '카니발 하이리무진 1호차 (12가 3456)',
+      location: locationVal,
+      locationAddress: addressVal || locationVal,
+      status: '확정',
+      isSecret: isSecret,
+      secretLevel: isSecret ? 'confidential' : 'public',
+      shop: {
+        needed: !!shopNeeded,
+        name: shopName || '순수 청담본점',
+        durationMin: 90,
+        address: '서울 강남구 도산대로'
+      },
+      departure: {
+        place: '숙소 (청담 래미안)',
+        address: '서울 강남구 청담동'
+      }
+    };
+
+    // 실시간 교통/소요시간 기반 스마트 동선 타임라인 역산 자동 생성
+    if (window.hqStore && typeof window.hqStore.generateSmartTimelineAsync === 'function') {
+      try {
+        schData.timeline = await window.hqStore.generateSmartTimelineAsync(schData);
+      } catch (err) {
+        console.warn('스마트 타임라인 생성 fallback:', err);
+      }
+    }
+
+    // hqStore에 저장 (DB 및 로컬 스토리지 자동 반영)
+    if (window.hqStore && typeof window.hqStore.saveSchedule === 'function') {
+      await window.hqStore.saveSchedule(schData);
+    } else {
+      State.addSchedule(schData);
+    }
+
+    App.closeModal();
+    U.toast('✅ 스케줄이 성공적으로 등록되었습니다!');
+
+    // 등록한 날짜로 화면 포커스 및 타임라인 자동 갱신
+    if (dateVal) {
+      const parts = dateVal.split('-').map(Number);
+      if (parts.length === 3) {
+        this.selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      }
+    }
+    this.render();
   }
 };
