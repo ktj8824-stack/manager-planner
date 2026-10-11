@@ -210,14 +210,13 @@ const App = {
       <div class="top-brand">
         🎬 매니저플래너
       </div>
-      <div class="top-nav-right">
-        <button class="top-nav-item hq-notice-nav" data-s="notice" onclick="App.openNoticeModal()">
-          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="1.8" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-          <span class="nav-label">공지/알림</span>
-        </button>
-        <button class="top-nav-item hq-emergency-nav" data-s="emergency" onclick="App.openEmergencyModal()" style="color:#f87171;">
-          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="1.8" fill="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          <span class="nav-label" style="color:#f87171;">긴급지원</span>
+      <div class="top-nav-right" style="display:flex; align-items:center; gap:6px; padding-right:10px;">
+        <span style="font-size:14px; font-weight:800; color:#f8fafc; white-space:nowrap; display:flex; align-items:center; gap:4px;">
+          <span style="font-size:13px;">👤</span> ${((localStorage.getItem('bp_user_name') || '김태현').replace(/본부장|팀장|매니저/g, '').trim())} 님
+        </span>
+        <button onclick="if(typeof Home !== 'undefined' && Home.logout) Home.logout(); else if(typeof App !== 'undefined' && App.logout) App.logout();" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca; padding:3px 6px; border-radius:6px; font-size:10px; font-weight:900; line-height:1.15; cursor:pointer; text-align:center; transition:all 0.15s; white-space:nowrap; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+          <span>로그</span>
+          <span>아웃</span>
         </button>
       </div>
     `;

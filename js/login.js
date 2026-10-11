@@ -157,19 +157,13 @@ const Login = {
     if (window.AuthPersona) {
       const result = window.AuthPersona.login(email, pw);
       if (result.success) {
-        U.toast(`✅ 환영합니다! [${result.user.name}] 로그인 성공`);
-        if (typeof State !== 'undefined') State.setManagerFilter(result.user.id);
-        
-        // 권한에 따른 라우팅
-        if (result.user.role === 'ceo' || result.user.role === 'hq_admin') {
-          // HQ 권한이면 본사 포털 이동 여부를 물어보거나 홈으로 이동
-          if (confirm('본사 관리자 계정입니다. 마스터 관제 포털(PC)로 이동하시겠습니까?')) {
-            window.location.href = typeof U !== 'undefined' && U.getHQPortalUrl ? U.getHQPortalUrl() : 'admin.html';
-            return;
-          }
-        }
-        
-        App.navigate('home');
+        // 앱 로그인 완료 후 플래너 홈 화면으로 바로 진입
+        this.finishLogin('persona', {
+          id: result.user.id,
+          name: result.user.name,
+          email: result.user.email,
+          role: result.user.role
+        });
       } else {
         // 미등록 매니저 계정인 경우 신규 매니저로 즉시 시작 안내
         if (confirm(`'${email}' 계정이 본사 매니저 풀에 아직 등록되지 않았습니다.\n\n이 계정으로 매니저 플래너를 바로 시작하시겠습니까?`)) {

@@ -340,22 +340,15 @@
           successEl.style.display = 'block';
 
           setTimeout(() => {
-            window.location.href = 'index.html';
+            window.location.href = 'admin.html';
           }, 700);
 
         } else {
-          // 매니저 / 스태프 권한: 매니저 전용 플래너로 이동
-          localStorage.setItem('bp_logged_in', 'true');
-          localStorage.setItem('bp_user_role', role);
-          localStorage.setItem('bp_user_name', displayName || email.split('@')[0]);
-          localStorage.setItem('bp_user_email', email);
-          localStorage.setItem('bp_manager_id', profile?.id || SupabaseClient.currentUser?.id || 'mgr_2');
-          successEl.textContent = `✅ 현장 매니저 [${displayName || email}] 로그인 성공! 매니저 플래너로 이동합니다...`;
-          successEl.style.display = 'block';
-
-          setTimeout(() => {
-            window.location.href = 'index.html';
-          }, 700);
+          // 매니저 / 스태프 권한인 경우 알림
+          errEl.textContent = '⚠️ 현장 매니저 계정입니다. 현장 매니저는 모바일 플래너 앱에서 로그인해 주세요.';
+          errEl.style.display = 'block';
+          btnLogin.disabled = false;
+          btnLogin.innerHTML = '포털 접속 (Sign In)';
         }
 
       } catch (err) {

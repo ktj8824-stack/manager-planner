@@ -135,7 +135,7 @@ const Home = {
 
         <!-- RIGHT: Timeline -->
         <div class="split-right" style="flex:1; overflow-y:auto; overflow-x:hidden; background:var(--bg-default); position:relative; height:calc(100vh - var(--header-h));">
-          <div id="timeline-area" style="padding:24px 16px; max-width:800px; margin:0 auto; min-height:100%;">
+          <div id="timeline-area" style="padding:16px 8px; max-width:800px; margin:0 auto; min-height:100%;">
             ${this.renderTimeline()}
           </div>
         </div>
@@ -344,55 +344,46 @@ const Home = {
     
     // 담당 아티스트명 추출 (없으면 전체 소속 아티스트 명단 표출)
     const allArtists = (typeof window.hqStore !== 'undefined') ? window.hqStore.getArtists() : [];
+    const cleanArtName = (name) => (name || '').replace(/\s*\([^)]*\)/g, '').trim();
     let artistSummary = '';
     if (assignedJson) {
       try {
         const assignedIds = JSON.parse(assignedJson) || [];
         const myArts = allArtists.filter(a => assignedIds.includes(a.id));
         if (myArts.length > 0) {
-          artistSummary = myArts.map(a => a.name).join(', ');
+          artistSummary = myArts.map(a => cleanArtName(a.name)).join(', ');
         }
       } catch(e) {}
     }
     if (!artistSummary && allArtists.length > 0) {
-      artistSummary = allArtists.map(a => a.name).join(', ');
+      artistSummary = allArtists.map(a => cleanArtName(a.name)).join(', ');
     }
     if (!artistSummary) {
-      artistSummary = '루나스 (LUNAS), 에이펙스 (APEX), 차은호, 유나 (YUNA), 사운드웨이브 (SOUNDWAVE)';
+      artistSummary = '루나스, 에이펙스, 차은호, 유나, 사운드웨이브';
     }
 
-    let html = `
-      <div style="margin-bottom:16px;">
-        <!-- 1. 날짜 타이틀 & 사용자 프로필/로그아웃 캡슐 (한 줄 나란히 배치) -->
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
-          <h2 style="font-size:21px; font-weight:900; color:#0f172a; letter-spacing:-0.5px; margin:0; white-space:nowrap;">
-            ${dateStr}
-          </h2>
-          
-          <div style="display:inline-flex; align-items:center; gap:6px; background:#ffffff; border:1px solid #e2e8f0; border-radius:20px; padding:4px 6px 4px 10px; box-shadow:0 2px 6px rgba(0,0,0,0.04); flex-shrink:0;">
-            <div style="width:22px; height:22px; border-radius:50%; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:#6366f1; font-size:12px;">
-              👤
-            </div>
-            <div style="font-size:13px; font-weight:800; color:#0f172a; white-space:nowrap;">
-              ${userName}
-            </div>
-            <button onclick="Home.logout()" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:800; cursor:pointer; line-height:1.2; transition:all 0.15s;">
-              로그아웃
-            </button>
-          </div>
-        </div>
+    const events = State.calculateDailyEvents(y, m, d);
+    const rawSchedules = State.getSchedulesForDate(y, m, d);
 
-        <!-- 2. 담당 아티스트 안내 카드 (연보라 틴트 박스) -->
-        <div style="background:#eef2ff; border:1px solid #e0e7ff; border-radius:14px; padding:10px 14px; margin-bottom:14px; display:flex; align-items:flex-start; gap:8px;">
-          <span style="color:#4f46e5; font-size:13px; font-weight:900; line-height:1.4; flex-shrink:0;">★</span>
-          <div style="font-size:12.5px; line-height:1.5; color:#3730a3; word-break:keep-all;">
-            <strong style="color:#4338ca; margin-right:4px;">담당:</strong>${artistSummary}
-          </div>
+    // 배차 차량 정보 추출 (당일 일정의 차량 -> 사용자 지정 차량 -> 기본값)
+    const foundVehicle = events.find(e => e.vehicleName)?.vehicleName || 
+                         rawSchedules.find(s => s.vehicleName)?.vehicleName || 
+                         localStorage.getItem('bp_user_vehicle') || 
+                         '카니발 하이리무진 1호차 (12가 3456)';
+    const vehicleSummary = foundVehicle;
+
+    let html = `
+      <!-- 상단: 담당 아티스트 안내 -->
+      <div style="margin-bottom:10px; padding:2px 2px;">
+        <div style="font-size:13.5px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:5px;">
+          <span style="color:#4f46e5; flex-shrink:0;">★</span>
+          <span style="color:#4338ca; flex-shrink:0;">담당:</span>
+          <span style="color:#1e293b;">${artistSummary}</span>
         </div>
       </div>
 
       <!-- 3. 탭 버튼 -->
-      <div style="display:flex; background:rgba(0,0,0,0.04); border-radius:14px; padding:4px; margin-bottom:20px; gap:4px;">
+      <div style="display:flex; background:rgba(0,0,0,0.04); border-radius:14px; padding:4px; margin-bottom:12px; gap:4px;">
         <div onclick="Home.setTab('schedule')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:12px 0; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; transition:all 0.2s; ${this.currentTab === 'schedule' ? 'background:#ffffff; color:#4f46e5; box-shadow:0 2px 8px rgba(0,0,0,0.06);' : 'color:#64748b; background:transparent;'}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           회사 스케줄표
@@ -403,9 +394,6 @@ const Home = {
         </div>
       </div>
     `;
-
-    const events = State.calculateDailyEvents(y, m, d);
-    const rawSchedules = State.getSchedulesForDate(y, m, d);
 
     if (events.length === 0 && rawSchedules.length === 0) {
       html += `
@@ -607,20 +595,42 @@ const Home = {
     this.currentEvents = events;
     let html = '<div style="padding: 8px 4px 40px;">';
     
+    // 상단 요약용 아티스트 및 배차 차량 정보 추출
+    const rawArtist = (events || []).find(e => e.artistName)?.artistName || '루나스';
+    const topArtist = rawArtist.replace(/\s*\([^)]*\)/g, '').trim() || '루나스';
+    const topVehicle = (events || []).find(e => e.vehicleName)?.vehicleName || 
+                       localStorage.getItem('bp_user_vehicle') || 
+                       '카니발 하이리무진 1호차 (12가 3456)';
+    
     html += `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <div style="font-size:13px; font-weight:700; color:var(--text-400);">
-          ✅ [이동중] 또는 [완료]를 선택하면 실시간 반영됩니다.
+      <!-- 탭 아래: 아티스트/배차 정보 + 우측 스케줄 추가 버튼 + 실시간 안내 -->
+      <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px 14px; margin-bottom:14px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+        <!-- 1행: 좌측 2단(아티스트 / 차량) & 우측 [+ 스케줄 추가] 버튼 -->
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <!-- 좌측: 1행 아티스트 / 2행 배차 차량 -->
+          <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:0;">
+            <div style="font-size:13.5px; font-weight:800; color:#1e293b; display:flex; align-items:center; gap:4px; line-height:1.3;">
+              <span style="flex-shrink:0;">✨</span> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${topArtist}</span>
+            </div>
+            <div style="font-size:12px; font-weight:700; color:#475569; display:flex; align-items:center; gap:4px; line-height:1.3;">
+              <span style="flex-shrink:0;">🚗</span> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${topVehicle}</span>
+            </div>
+          </div>
+
+          <!-- 우측: [+ 스케줄 / 추가] 버튼 (슬림 패딩 & 대칭 높이) -->
+          <button onclick="Home.openCustomScheduleModal()" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; background:#4f46e5; color:#ffffff; padding:6px 11px; border-radius:9px; font-size:11.5px; font-weight:800; border:none; cursor:pointer; box-shadow:0 2px 6px rgba(79,70,229,0.25); flex-shrink:0; line-height:1.2;">
+            <span style="display:flex; align-items:center; gap:3px;">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              스케줄
+            </span>
+            <span>추가</span>
+          </button>
         </div>
-        <div style="display:flex; gap:6px;">
-          <button onclick="Home.copyBriefing()" style="display:inline-flex; align-items:center; gap:4px; background:#10b981; color:#fff; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:800; border:none; cursor:pointer;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            공지 복사
-          </button>
-          <button onclick="Home.openCustomScheduleModal()" style="display:inline-flex; align-items:center; gap:4px; background:#4f46e5; color:#fff; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:800; border:none; cursor:pointer;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            개인 메모
-          </button>
+
+        <!-- 2행: 실시간 관제 안내 -->
+        <div style="margin-top:7px; padding-top:7px; border-top:1px dashed #f1f5f9; font-size:11.5px; color:#64748b; display:flex; align-items:center; gap:5px;">
+          <span style="color:#10b981; font-weight:800;">✓</span>
+          <span>이동중 또는 완료 선택 시 본사 시스템에 실시간 반영</span>
         </div>
       </div>
     `;
@@ -663,29 +673,96 @@ const Home = {
         destinationTarget = ev.locationAddress || ev.location || ev.title;
       }
 
+      // 1. 타이틀 및 태그 스마트 분류 사전 처리
+      let rawTitle = (ev.title || '').trim();
+      const cleanTitle = rawTitle.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '').trim();
+      
+      const getLineIcon = (type) => {
+        const strokeStyle = 'width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"';
+        if (type === 'shop') return `<svg ${strokeStyle}><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg>`;
+        if (type === 'car') return `<svg ${strokeStyle}><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg>`;
+        if (type === 'main') return `<svg ${strokeStyle}><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 9 15 12 10 15 10 9"/></svg>`;
+        if (type === 'finish') return `<svg ${strokeStyle}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`;
+        if (type === 'rest') return `<svg ${strokeStyle}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+        return `<svg ${strokeStyle}><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+      };
+
+      let tag = '';
+      let restText = cleanTitle;
+      let badgeStyle = 'background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;';
+      let iconType = 'info';
+
+      const bracketMatch = cleanTitle.match(/^\[([^\]]+)\]\s*(.*)$/);
+      if (bracketMatch) {
+        tag = bracketMatch[1];
+        restText = bracketMatch[2] || '';
+      }
+
+      const lowerText = cleanTitle.toLowerCase();
+      if (tag.includes('헤어') || tag.includes('메이크업') || lowerText.includes('도착 및 스타일링') || lowerText.includes('헤메') || lowerText.includes('스타일링')) {
+        tag = '헤어·메이크업';
+        badgeStyle = 'background:rgba(139, 92, 246, 0.15); color:#7c3aed; border:1px solid rgba(139, 92, 246, 0.35);';
+        iconType = 'shop';
+        restText = restText.replace(/^\[?헤어[\/·]메이크업\]?\s*/, '');
+      } else if (tag.includes('픽업') || lowerText.includes('픽업 및 출발')) {
+        tag = '픽업 출발';
+        badgeStyle = 'background:rgba(59, 130, 246, 0.15); color:#2563eb; border:1px solid rgba(59, 130, 246, 0.35);';
+        iconType = 'car';
+        restText = restText.replace(/^\[?픽업 출발\]?\s*/, '');
+      } else if (tag.includes('이동') || tag.includes('출발') || lowerText.includes('이동 출발') || lowerText.includes('출발 및 이동')) {
+        tag = '현장 이동';
+        badgeStyle = 'background:rgba(59, 130, 246, 0.15); color:#2563eb; border:1px solid rgba(59, 130, 246, 0.35);';
+        iconType = 'car';
+        restText = restText.replace(/^\[?현장 이동\]?\s*/, '');
+      } else if (tag.includes('철수') || tag.includes('복귀') || lowerText.includes('철수') || lowerText.includes('복귀 이동')) {
+        tag = '현장 철수';
+        badgeStyle = 'background:rgba(16, 185, 129, 0.15); color:#059669; border:1px solid rgba(16, 185, 129, 0.35);';
+        iconType = 'finish';
+        restText = restText.replace(/^\[?현장 철수\]?\s*/, '');
+      } else if (tag.includes('휴식') || tag.includes('식사') || tag.includes('대기') || lowerText.includes('대기/휴식') || lowerText.includes('식사 및 이동')) {
+        tag = '대기·휴식';
+        badgeStyle = 'background:rgba(245, 158, 11, 0.15); color:#d97706; border:1px solid rgba(245, 158, 11, 0.35);';
+        iconType = 'rest';
+        restText = restText.replace(/^\[?(대기\/휴식|식사\/정비|대기·휴식)\]?\s*/, '');
+      } else if (tag.includes('메인') || lowerText.includes('메인 일정') || lowerText.includes('방송') || lowerText.includes('공연') || lowerText.includes('촬영')) {
+        tag = '메인 일정';
+        badgeStyle = 'background:rgba(99, 102, 241, 0.2); color:#4f46e5; border:1px solid rgba(99, 102, 241, 0.4);';
+        iconType = 'main';
+        restText = restText.replace(/^\[?메인 일정\]?\s*/, '');
+      }
+      if (!tag) tag = '일정';
+
       html += `
-        <div id="route-step-${ev.hqScheduleId || ''}-${ev.timelineIdx ?? idx}" style="display:flex; position:relative; margin-bottom:18px;">
-          <!-- Vertical Track Line -->
-          ${!isLast ? `<div style="position:absolute; top:24px; bottom:-20px; left:9px; width:2px; background:${isDone ? '#10b981' : isMoving ? '#f59e0b' : '#e2e8f0'};"></div>` : ''}
-          
-          <!-- Dot -->
-          <div style="width:20px; height:20px; flex-shrink:0; border-radius:50%; background:#fff; border:3px solid ${dotBg}; position:relative; z-index:2; margin-top:4px; display:flex; align-items:center; justify-content:center; color:${dotBg};">
-            ${isDone ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : isMoving ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/></svg>' : ''}
+        <div id="route-step-${ev.hqScheduleId || ''}-${ev.timelineIdx ?? idx}" style="display:flex; position:relative; margin-bottom:16px;">
+          <!-- 좌측 컬럼: Vertical Track Line & Dot(O) & 시간 -->
+          <div style="display:flex; flex-direction:column; align-items:center; width:48px; flex-shrink:0; position:relative;">
+            <!-- Vertical Track Line -->
+            ${!isLast ? `<div style="position:absolute; top:20px; bottom:-22px; left:23px; width:2px; background:${isDone ? '#10b981' : isMoving ? '#f59e0b' : '#e2e8f0'}; z-index:1;"></div>` : ''}
+            
+            <!-- Dot (O) -->
+            <div style="width:20px; height:20px; border-radius:50%; background:#fff; border:3px solid ${dotBg}; position:relative; z-index:2; display:flex; align-items:center; justify-content:center; color:${dotBg};">
+              ${isDone ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : isMoving ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/></svg>' : ''}
+            </div>
+            
+            <!-- 시간 (O 아래에 배치 - 크기 및 선명도 확대) -->
+            <div style="margin-top:6px; font-size:13.5px; font-weight:900; color:${isDone ? '#10b981' : isMoving ? '#d97706' : '#0f172a'}; text-align:center; white-space:nowrap; background:#ffffff; padding:2px 4px; border-radius:6px; border:1.5px solid ${isDone ? '#10b981' : isMoving ? '#f59e0b' : '#cbd5e1'}; z-index:2; letter-spacing:-0.3px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+              ${ev.time}
+            </div>
           </div>
           
           <!-- Route Card -->
-          <div style="flex:1; margin-left:14px; background:#fff; border-radius:14px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,0.03); border:1px solid rgba(0,0,0,0.04); ${cardBorder} position:relative;">
+          <div style="flex:1; margin-left:8px; background:#fff; border-radius:14px; padding:12px 14px; box-shadow:0 2px 10px rgba(0,0,0,0.03); border:1px solid rgba(0,0,0,0.04); ${cardBorder} position:relative;">
              
-             <!-- 상단 시간 & [이동중] [완료] 진행 상태 버튼 -->
-             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <div style="display:flex; align-items:center; gap:8px;">
-                  <div style="font-size:19px; font-weight:800; color:${isDone ? '#10b981' : isMoving ? '#d97706' : 'var(--text-100)'}; letter-spacing:0.3px;">
-                     [${ev.time}]
-                  </div>
+             <!-- 카드 1행: 좌측 카테고리 뱃지 & 우측 [이동중] [완료] 버튼 (같은 라인에 배치) -->
+             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px;">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:7px; font-size:11px; font-weight:800; letter-spacing:-0.2px; ${badgeStyle}">
+                    ${getLineIcon(iconType)}
+                    <span>${tag}</span>
+                  </span>
                   ${isDone && ev.doneAt ? `
-                    <span style="display:inline-flex; align-items:center; gap:4px; background:#ecfdf5; color:#059669; font-size:11px; font-weight:700; padding:2px 7px; border-radius:6px; border:1px solid rgba(16,185,129,0.3);">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                      ${ev.doneAt} 기록
+                    <span style="display:inline-flex; align-items:center; gap:3px; background:#ecfdf5; color:#059669; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px; border:1px solid rgba(16,185,129,0.3);">
+                      ${ev.doneAt} 완료
                     </span>
                   ` : ''}
                 </div>
@@ -693,24 +770,24 @@ const Home = {
                 ${isHQ && ev.hqScheduleId ? `
                   <div style="display:flex; align-items:center; gap:5px;">
                     ${isDriveStep ? `
-                      <!-- 이동중 버튼 (이동 단계에서만 노출) -->
+                      <!-- 이동중 버튼 (더 진하고 뚜렷하게) -->
                       <button type="button"
                         onclick="Home.setHQRouteStatus('${ev.hqScheduleId}', ${ev.timelineIdx}, '이동중')"
-                        style="padding:4px 10px; border-radius:6px; font-size:12px; font-weight:800; cursor:pointer; transition:all 0.2s;
+                        style="padding:4px 10px; border-radius:6px; font-size:12px; font-weight:800; cursor:pointer; transition:all 0.15s;
                                ${isMoving
-                                  ? 'border:2px solid #f59e0b; background:#fff7ed; color:#d97706; box-shadow:0 0 0 2px rgba(245,158,11,0.15);'
-                                  : 'border:1px solid #e2e8f0; background:#f8fafc; color:#c0cad6; opacity:0.7; font-weight:600;'
+                                  ? 'border:2px solid #f59e0b; background:#fef3c7; color:#b45309; box-shadow:0 0 0 2px rgba(245,158,11,0.2);'
+                                  : 'border:1.5px solid #94a3b8; background:#ffffff; color:#334155; box-shadow:0 1px 2px rgba(0,0,0,0.04);'
                                }">
                         이동중
                       </button>
                     ` : ''}
-                    <!-- 완료 버튼 -->
+                    <!-- 완료 버튼 (더 진하고 뚜렷하게) -->
                     <button type="button"
                       onclick="Home.setHQRouteStatus('${ev.hqScheduleId}', ${ev.timelineIdx}, '완료')"
-                      style="padding:4px 10px; border-radius:6px; font-size:12px; font-weight:800; cursor:pointer; transition:all 0.2s;
+                      style="padding:4px 10px; border-radius:6px; font-size:12px; font-weight:800; cursor:pointer; transition:all 0.15s;
                              ${isDone
-                                ? 'border:2px solid #10b981; background:#ecfdf5; color:#059669; box-shadow:0 0 0 2px rgba(16,185,129,0.15);'
-                                : 'border:1px solid #e2e8f0; background:#f8fafc; color:#c0cad6; opacity:0.7; font-weight:600;'
+                                ? 'border:2px solid #10b981; background:#d1fae5; color:#047857; box-shadow:0 0 0 2px rgba(16,185,129,0.2);'
+                                : 'border:1.5px solid #94a3b8; background:#ffffff; color:#334155; box-shadow:0 1px 2px rgba(0,0,0,0.04);'
                              }">
                       완료
                     </button>
@@ -718,88 +795,9 @@ const Home = {
                 ` : ''}
              </div>
              
-             <!-- Title & Modern Category Badge + Minimalist Line Vector Icon -->
-             <div style="font-size:15px; font-weight:800; color:var(--text-100); display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap;">
-                ${(() => {
-                  let rawTitle = (ev.title || '').trim();
-                  
-                  // 1. 기존 데이터에 포함된 투박한 유니코드 이모지 일괄 제거
-                  const cleanTitle = rawTitle.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '').trim();
-                  
-                  // SF Symbols / iOS 모던 라인 벡터 아이콘 매핑
-                  const getLineIcon = (type) => {
-                    const strokeStyle = 'width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"';
-                    if (type === 'shop') {
-                      return `<svg ${strokeStyle}><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg>`;
-                    } else if (type === 'car') {
-                      return `<svg ${strokeStyle}><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg>`;
-                    } else if (type === 'main') {
-                      return `<svg ${strokeStyle}><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 9 15 12 10 15 10 9"/></svg>`;
-                    } else if (type === 'finish') {
-                      return `<svg ${strokeStyle}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`;
-                    } else if (type === 'rest') {
-                      return `<svg ${strokeStyle}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
-                    }
-                    return `<svg ${strokeStyle}><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
-                  };
-
-                  let tag = '';
-                  let restText = cleanTitle;
-                  let badgeStyle = 'background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;';
-                  let iconType = 'info';
-
-                  const bracketMatch = cleanTitle.match(/^\[([^\]]+)\]\s*(.*)$/);
-                  if (bracketMatch) {
-                    tag = bracketMatch[1];
-                    restText = bracketMatch[2] || '';
-                  }
-
-                  // 태그 또는 텍스트 내용 기반 스마트 분류
-                  const lowerText = cleanTitle.toLowerCase();
-                  if (tag.includes('헤어') || tag.includes('메이크업') || lowerText.includes('도착 및 스타일링') || lowerText.includes('헤메') || lowerText.includes('스타일링')) {
-                    tag = '헤어·메이크업';
-                    badgeStyle = 'background:rgba(139, 92, 246, 0.15); color:#c084fc; border:1px solid rgba(139, 92, 246, 0.3);';
-                    iconType = 'shop';
-                    restText = restText.replace(/^\[?헤어[\/·]메이크업\]?\s*/, '');
-                  } else if (tag.includes('픽업') || lowerText.includes('픽업 및 출발')) {
-                    tag = '픽업 출발';
-                    badgeStyle = 'background:rgba(59, 130, 246, 0.15); color:#60a5fa; border:1px solid rgba(59, 130, 246, 0.3);';
-                    iconType = 'car';
-                    restText = restText.replace(/^\[?픽업 출발\]?\s*/, '');
-                  } else if (tag.includes('이동') || tag.includes('출발') || lowerText.includes('이동 출발') || lowerText.includes('출발 및 이동')) {
-                    tag = '현장 이동';
-                    badgeStyle = 'background:rgba(59, 130, 246, 0.15); color:#60a5fa; border:1px solid rgba(59, 130, 246, 0.3);';
-                    iconType = 'car';
-                    restText = restText.replace(/^\[?현장 이동\]?\s*/, '');
-                  } else if (tag.includes('철수') || tag.includes('복귀') || lowerText.includes('철수') || lowerText.includes('복귀 이동')) {
-                    tag = '현장 철수';
-                    badgeStyle = 'background:rgba(16, 185, 129, 0.15); color:#34d399; border:1px solid rgba(16, 185, 129, 0.3);';
-                    iconType = 'finish';
-                    restText = restText.replace(/^\[?현장 철수\]?\s*/, '');
-                  } else if (tag.includes('휴식') || tag.includes('식사') || tag.includes('대기') || lowerText.includes('대기/휴식') || lowerText.includes('식사 및 이동')) {
-                    tag = '대기·휴식';
-                    badgeStyle = 'background:rgba(245, 158, 11, 0.15); color:#fbbf24; border:1px solid rgba(245, 158, 11, 0.3);';
-                    iconType = 'rest';
-                    restText = restText.replace(/^\[?(대기\/휴식|식사\/정비|대기·휴식)\]?\s*/, '');
-                  } else if (tag.includes('메인') || lowerText.includes('메인 일정') || lowerText.includes('방송') || lowerText.includes('공연') || lowerText.includes('촬영')) {
-                    tag = '메인 일정';
-                    badgeStyle = 'background:rgba(99, 102, 241, 0.2); color:#818cf8; border:1px solid rgba(99, 102, 241, 0.35);';
-                    iconType = 'main';
-                    restText = restText.replace(/^\[?메인 일정\]?\s*/, '');
-                  }
-
-                  if (!tag) {
-                    tag = '일정';
-                  }
-
-                  return `
-                    <span style="display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:7px; font-size:11px; font-weight:800; letter-spacing:-0.2px; ${badgeStyle}">
-                      ${getLineIcon(iconType)}
-                      <span>${tag}</span>
-                    </span>
-                    <span style="${isDone ? 'text-decoration:line-through; color:#94a3b8;' : 'color:var(--text-100);'} line-height:1.35; font-size:15px; font-weight:800;">${restText || cleanTitle}</span>
-                  `;
-                })()}
+             <!-- 카드 2행: Title 텍스트 -->
+             <div style="font-size:15px; font-weight:800; line-height:1.35; ${isDone ? 'text-decoration:line-through; color:#94a3b8;' : 'color:var(--text-100);'} margin-bottom:6px;">
+               ${restText || cleanTitle}
              </div>
              
              <!-- Description / Notes & 역산 정보 -->
@@ -827,14 +825,9 @@ const Home = {
                `;
              })()}
 
-              <!-- 하단: 아티스트 & 배차 정보 + [티맵] [카카오] 네비게이션 버튼 (이동 단계에서만 표시) -->
-              <div style="margin-top:10px; padding-top:8px; border-top:1px dashed rgba(0,0,0,0.06); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                <div style="font-size:11px; color:#64748b; display:flex; align-items:center; gap:6px;">
-                  ${ev.artistName ? `<span>✨ <strong>${ev.artistName}</strong></span>` : ''}
-                  ${ev.vehicleName ? `<span>🚗 ${ev.vehicleName}</span>` : ''}
-                </div>
-
-                ${isDriveStep ? `
+              <!-- 하단: [티맵] [카카오] 네비게이션 버튼 (이동 단계에서만 표시) -->
+              ${isDriveStep ? `
+                <div style="margin-top:10px; padding-top:8px; border-top:1px dashed rgba(0,0,0,0.06); display:flex; justify-content:flex-end; align-items:center;">
                   <div style="display:flex; align-items:center; gap:6px; margin-left:auto; flex:1; max-width:180px; justify-content:flex-end;">
                     <button type="button" onclick="U.openNavigation('${destinationTarget.replace(/'/g, "\\'")}', '', 'tmap')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:4px; padding:6px 0; border-radius:6px; background:#000000; color:#ffffff; font-size:11px; font-weight:800; border:none; cursor:pointer;" title="티맵 길안내">
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="#ffffff" style="margin-top:-1px"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16zM11.99 1.5L2.5 9l9.49 7.5L21.5 9l-9.51-7.5z"/></svg>
@@ -845,8 +838,8 @@ const Home = {
                       카카오내비
                     </button>
                   </div>
-                ` : ''}
-              </div>
+                </div>
+              ` : ''}
 
           </div>
         </div>

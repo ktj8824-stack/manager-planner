@@ -1713,9 +1713,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Init ──
   async function init() {
-    // 🛡️ Auth & Role Guard (관리자 전용 세션 우선 검증)
-    const isLoggedIn = localStorage.getItem('admin_bp_logged_in') === 'true' || localStorage.getItem('bp_logged_in') === 'true';
-    const role = localStorage.getItem('admin_bp_user_role') || (window.AuthPersona ? window.AuthPersona.getCurrentRole() : 'manager');
+    // 🛡️ Auth & Role Guard (관리자 전용 세션 검증)
+    const isLoggedIn = localStorage.getItem('admin_bp_logged_in') === 'true';
+    const role = localStorage.getItem('admin_bp_user_role') || (window.AuthPersona ? window.AuthPersona.getCurrentRole() : 'ceo');
 
     if (!isLoggedIn) {
       window.location.replace('admin-login.html');
@@ -1724,7 +1724,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (role === 'manager' || role === 'staff') {
       alert('권한이 없습니다. (HQ 관리자 또는 CEO 전용 페이지입니다)');
-      window.location.href = 'index.html';
+      window.location.replace('admin-login.html');
       return;
     }
 

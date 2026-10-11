@@ -595,7 +595,7 @@ class HQDataStore {
           const parsed = JSON.parse(legacy);
           if (Array.isArray(parsed) && parsed.length > 0) return parsed;
         }
-      } catch (e) {}
+      } catch (e) { }
       if (isMasterOrDemoAccount) {
         return defaultData;
       }
@@ -1070,19 +1070,19 @@ class HQDataStore {
     let schedules = [];
     try {
       const userKey = this.getUserStorageKey(HQ_STORAGE_KEYS.SCHEDULES);
-      const stored = localStorage.getItem(userKey) || 
-                     localStorage.getItem(HQ_STORAGE_KEYS.SCHEDULES) || 
-                     localStorage.getItem('HQ_SCHEDULES_V6_ceo_jm_ent_com') ||
-                     localStorage.getItem('HQ_SCHEDULES_V6_ceo_star_ent_com') ||
-                     localStorage.getItem('HQ_SCHEDULES_V2_ceo_jm_ent_com') ||
-                     localStorage.getItem('bp_schedules_v2');
+      const stored = localStorage.getItem(userKey) ||
+        localStorage.getItem(HQ_STORAGE_KEYS.SCHEDULES) ||
+        localStorage.getItem('HQ_SCHEDULES_V6_ceo_jm_ent_com') ||
+        localStorage.getItem('HQ_SCHEDULES_V6_ceo_star_ent_com') ||
+        localStorage.getItem('HQ_SCHEDULES_V2_ceo_jm_ent_com') ||
+        localStorage.getItem('bp_schedules_v2');
       if (stored !== null) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
           schedules = parsed;
         }
       }
-      
+
       const rawEmail = (localStorage.getItem('bp_user_email') || '').trim().toLowerCase();
       const role = localStorage.getItem('bp_user_role') || 'ceo';
       const isMasterOrManager = role === 'ceo' || role === 'hq_admin' || role === 'manager' || role === 'staff' || rawEmail.startsWith('ceo@') || !rawEmail;
@@ -1792,7 +1792,7 @@ window.AuthPersona = {
                 }
               });
             }
-          } catch(e) {}
+          } catch (e) { }
         }
       }
 
@@ -1877,11 +1877,11 @@ window.AuthPersona = {
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
         .slice(0, 30)
         .map(n => ({
-          id:      n.id,
-          title:   n.title   || (n.isUrgent ? '🚨 긴급 공지' : '📢 본사 공지'),
+          id: n.id,
+          title: n.title || (n.isUrgent ? '🚨 긴급 공지' : '📢 본사 공지'),
           content: n.content || '',
-          date:    n.createdAt ? new Date(n.createdAt).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace('. ', '-').replace('.', '') : '',
-          urgent:  n.isUrgent || false,
+          date: n.createdAt ? new Date(n.createdAt).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace('. ', '-').replace('.', '') : '',
+          urgent: n.isUrgent || false,
           targetId: n.targetId || 'ALL'
         }));
     } catch (e) {
@@ -1892,8 +1892,8 @@ window.AuthPersona = {
   addBroadcast({ title = '', content, isUrgent = false, targetId = 'ALL' }) {
     if (!content) return;
     const notiData = {
-      id:        'noti_' + Date.now(),
-      title:     title || (isUrgent ? '🚨 긴급 공지' : '📢 본사 공지'),
+      id: 'noti_' + Date.now(),
+      title: title || (isUrgent ? '🚨 긴급 공지' : '📢 본사 공지'),
       content,
       isUrgent,
       targetId,
@@ -1906,14 +1906,14 @@ window.AuthPersona = {
       // 최대 100개 유지
       if (list.length > 100) list.splice(0, list.length - 100);
       localStorage.setItem(this.HQ_NOTICE_KEY, JSON.stringify(list));
-    } catch (e) {}
+    } catch (e) { }
 
     // BroadcastChannel 실시간 전송
     try {
       if (this.broadcast) {
         this.broadcast.postMessage({ type: 'NEW_HQ_MESSAGE', payload: notiData });
       }
-    } catch (e) {}
+    } catch (e) { }
 
     return notiData;
   },
