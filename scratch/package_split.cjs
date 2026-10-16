@@ -89,6 +89,16 @@ copyDir(path.join(ROOT, 'img'), path.join(DIST_APP, 'img'));
 copyDir(path.join(ROOT, 'icons'), path.join(DIST_APP, 'icons'));
 copyDir(path.join(ROOT, 'js'), path.join(DIST_APP, 'js'));
 
+copyFile(path.join(ROOT, 'icon.svg'), path.join(DIST_APP, 'icon.svg'));
+copyFile(path.join(ROOT, 'icon-192.png'), path.join(DIST_APP, 'icon-192.png'));
+copyFile(path.join(ROOT, 'icon-512.png'), path.join(DIST_APP, 'icon-512.png'));
+copyFile(path.join(ROOT, 'privacy.html'), path.join(DIST_APP, 'privacy.html'));
+
+copyFile(path.join(ROOT, 'icon.svg'), path.join(DIST_WEB, 'icon.svg'));
+copyFile(path.join(ROOT, 'icon-192.png'), path.join(DIST_WEB, 'icon-192.png'));
+copyFile(path.join(ROOT, 'icon-512.png'), path.join(DIST_WEB, 'icon-512.png'));
+copyFile(path.join(ROOT, 'privacy.html'), path.join(DIST_WEB, 'privacy.html'));
+
 // dist_app README 생성
 fs.writeFileSync(path.join(DIST_APP, 'README.md'), `# 매니저 플래너 (Manager App)
 

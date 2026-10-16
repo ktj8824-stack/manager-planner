@@ -1,3 +1,5 @@
 scratch/
 node_modules/
 .vscode/
+dist_app/
+dist_web/
