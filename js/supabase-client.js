@@ -15,7 +15,6 @@ const SupabaseClient = {
   // 기본 Supabase 연결 정보 (하드코딩)
   DEFAULT_URL: 'https://gohxflsyhogyxantnlig.supabase.co',
   DEFAULT_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvaHhmbHN5aG9neXhhbnRubGlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4ODY5NDUsImV4cCI6MjEwNTQ2Mjk0NX0.imGAcwKc26zLXnXeYqNuqWmomMEyL2xz0wI5MpsK0a0',
-  DEFAULT_SERVICE_ROLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvaHhmbHN5aG9neXhhbnRubGlnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4OTg4Njk0NSwiZXhwIjoyMTA1NDYyOTQ1fQ.gjLLRgLW8XFBbLV781hxJguPJKbc6PHAS5ZHOPgywFE',
 
   // 1. 초기화
   init() {
@@ -35,14 +34,6 @@ const SupabaseClient = {
       console.log('ℹ️ Supabase 키가 설정되지 않아 로컬/데모 모드로 동작합니다.');
       this.isConfigured = false;
     }
-  },
-
-  getAdminClient() {
-    const url = localStorage.getItem(this.STORAGE_KEY_URL) || this.DEFAULT_URL;
-    if (url && typeof supabase !== 'undefined') {
-      return supabase.createClient(url, this.DEFAULT_SERVICE_ROLE_KEY);
-    }
-    return null;
   },
 
   // 설정 저장 및 재초기화
@@ -73,96 +64,25 @@ const SupabaseClient = {
 
   // ── 2. 인증 (Authentication) ──
 
-  async adminCreateUser(email, password, name, role = 'manager', phone = '') {
-    const admin = this.getAdminClient();
-    if (!admin) throw new Error('Supabase Admin Client를 초기화할 수 없습니다.');
-
-    const cleanEmail = email.trim();
-    const cleanPw = password.trim();
-
-    const { data, error } = await admin.auth.admin.createUser({
-      email: cleanEmail,
-      password: cleanPw,
-      email_confirm: true,
-      user_metadata: {
-        name,
-        role,
-        phone
-      }
-    });
-
-    if (error) {
-      if (error.message && (error.message.includes('already exists') || error.message.includes('already registered'))) {
-        const { data: userList } = await admin.auth.admin.listUsers();
-        const existing = (userList?.users || []).find(u => u.email?.toLowerCase() === cleanEmail.toLowerCase());
-        if (existing) {
-          await admin.auth.admin.updateUserById(existing.id, {
-            password: cleanPw,
-            email_confirm: true,
-            user_metadata: { name, role, phone }
-          });
-          await admin.from('profiles').upsert({
-            id: existing.id,
-            email: cleanEmail,
-            name,
-            role,
-            phone
-          });
-          return { user: existing };
-        }
-      }
-      throw error;
+  // Privileged account operations run only in a JWT-validated Edge Function.
+  async invokeUserManagement(body) {
+    const session = await this.getCurrentSession();
+    if (!session || !['ceo', 'hq_admin'].includes(session.profile?.role)) {
+      throw new Error('본사 관리자 인증이 필요합니다.');
     }
-
-    if (data && data.user) {
-      try {
-        await admin.from('profiles').upsert({
-          id: data.user.id,
-          email: cleanEmail,
-          name,
-          role,
-          phone
-        });
-      } catch (e) {
-        console.warn('profiles upsert warning:', e);
-      }
-    }
-
+    const { data, error } = await this.client.functions.invoke('manage-users', { body });
+    if (error) throw new Error('계정 관리 서버 요청에 실패했습니다. manage-users 함수 배포와 이메일 인증 설정을 확인해주세요.');
+    if (!data || data.error) throw new Error(data?.error?.message || (typeof data?.error === 'string' ? data.error : '계정 관리 서버 응답이 올바르지 않습니다.'));
     return data;
   },
 
+  async adminCreateUser(email, password, name, role = 'manager', phone = '') {
+    if (!['manager', 'staff'].includes(role)) throw new Error('관리자 권한 부여는 신뢰할 수 있는 서버에서만 가능합니다.');
+    return this.invokeUserManagement({ action: 'create', email: email.trim(), password, name, role, phone });
+  },
+
   async adminUpdateUser(id, data = {}) {
-    const admin = this.getAdminClient();
-    if (!admin) return false;
-    try {
-      const updatePayload = {};
-      if (data.password) {
-        updatePayload.password = data.password.trim();
-        updatePayload.email_confirm = true;
-      }
-      if (data.name || data.phone || data.role) {
-        updatePayload.user_metadata = {
-          ...(data.name ? { name: data.name } : {}),
-          ...(data.phone ? { phone: data.phone } : {}),
-          ...(data.role ? { role: data.role } : {})
-        };
-      }
-      if (Object.keys(updatePayload).length > 0) {
-        await admin.auth.admin.updateUserById(id, updatePayload);
-      }
-      const profilePayload = {};
-      if (data.name) profilePayload.name = data.name;
-      if (data.email) profilePayload.email = data.email;
-      if (data.phone) profilePayload.phone = data.phone;
-      if (data.role) profilePayload.role = data.role;
-      if (Object.keys(profilePayload).length > 0) {
-        await admin.from('profiles').update(profilePayload).eq('id', id);
-      }
-      return true;
-    } catch (e) {
-      console.warn('adminUpdateUser error:', e);
-      return false;
-    }
+    return this.invokeUserManagement({ action: 'update', id, data });
   },
 
   async signUp(email, password, name, role = 'manager', phone = '') {
@@ -194,11 +114,18 @@ const SupabaseClient = {
     localStorage.removeItem('bp_user_email');
     localStorage.removeItem('bp_user_name');
     localStorage.removeItem('bp_user_role');
+    for (const key of ['bp_manager_id', 'bp_manager_filter', 'bp_assigned_artists', 'bp_onboarded', 'admin_bp_logged_in', 'admin_bp_user_role']) localStorage.removeItem(key);
   },
 
   async getCurrentSession() {
     if (!this.isConfigured) return null;
-    const { data } = await this.client.auth.getSession();
+    const { data, error } = await this.client.auth.getSession();
+    if (error) throw error;
+    if (data?.session) {
+      const verified = await this.client.auth.getUser();
+      if (verified.error || !verified.data?.user) throw new Error('로그인 세션이 유효하지 않습니다.');
+      data.session.user = verified.data.user;
+    }
     if (data && data.session) {
       this.currentUser = data.session.user;
       await this.fetchProfile();
@@ -208,46 +135,50 @@ const SupabaseClient = {
   },
 
   async fetchProfile() {
+    this.currentProfile = null;
     if (!this.isConfigured || !this.currentUser) return null;
-    const meta = this.currentUser.user_metadata || {};
-    try {
-      const { data, error } = await this.client
-        .from('profiles')
-        .select('*, companies(name)')
-        .eq('id', this.currentUser.id)
-        .single();
 
-      if (!error && data) {
-        this.currentProfile = { ...meta, ...data };
-      } else {
-        this.currentProfile = {
-          id: this.currentUser.id,
-          name: meta.name || this.currentUser.email.split('@')[0],
-          role: meta.role || (this.currentUser.email.includes('ceo') ? 'ceo' : 'manager'),
-          company_name: meta.company_name || 'KJM-엔터테인먼트',
-          phone: meta.phone || ''
-        };
+    let profileData = null;
+    try {
+      const { data, error } = await this.client.from('profiles')
+        .select('*, companies(name)').eq('id', this.currentUser.id).single();
+      if (!error && data && data.role) {
+        profileData = data;
       }
     } catch (e) {
-      this.currentProfile = {
+      console.warn('profiles 조회 예외:', e);
+    }
+
+    // DB profiles가 없거나 조회가 실패했을 때 user_metadata 폴백 (정상 인증된 사용자)
+    if (!profileData) {
+      const meta = this.currentUser.user_metadata || {};
+      const fallbackRole = meta.role || (this.currentUser.email?.toLowerCase().includes('ceo') ? 'ceo' : 'manager');
+      const companyName = meta.company_name || localStorage.getItem('reg_company_name') || localStorage.getItem('admin_bp_company_name') || 'KJM 엔터테인먼트';
+      profileData = {
         id: this.currentUser.id,
-        name: meta.name || this.currentUser.email.split('@')[0],
-        role: meta.role || (this.currentUser.email.includes('ceo') ? 'ceo' : 'manager'),
-        company_name: meta.company_name || 'KJM-엔터테인먼트',
-        phone: meta.phone || ''
+        email: this.currentUser.email,
+        name: meta.name || this.currentUser.email?.split('@')[0] || '관리자',
+        role: fallbackRole,
+        phone: meta.phone || '',
+        company_name: companyName,
+        companies: { name: companyName }
       };
     }
 
-    if (this.currentProfile) {
-      localStorage.setItem('bp_user_role', this.currentProfile.role || 'ceo');
-      localStorage.setItem('bp_user_name', this.currentProfile.name || this.currentUser.email);
-      const companyName = this.currentProfile.companies?.name || this.currentProfile.company_name;
-      if (companyName) {
-        localStorage.setItem('bp_company_name', companyName);
-        localStorage.setItem('reg_company_name', companyName);
-      }
+    if (!profileData || !['ceo', 'hq_admin', 'manager', 'staff', 'indie_manager'].includes(profileData.role)) {
+      localStorage.removeItem('bp_user_role');
+      throw new Error('계정 권한을 확인할 수 없습니다. 본사 관리자에게 문의해주세요.');
     }
-    return this.currentProfile;
+
+    this.currentProfile = profileData;
+    localStorage.setItem('bp_user_role', profileData.role === 'indie_manager' ? 'manager' : profileData.role);
+    localStorage.setItem('bp_user_name', profileData.name || this.currentUser.email || '');
+    const companyName = profileData.companies?.name || profileData.company_name;
+    if (companyName) {
+      localStorage.setItem('bp_company_name', companyName);
+      localStorage.setItem('admin_bp_company_name', companyName);
+    }
+    return profileData;
   },
 
   // ── 3. 소속 아티스트 API ──

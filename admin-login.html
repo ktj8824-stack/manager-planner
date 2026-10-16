@@ -274,7 +274,7 @@
       e.preventDefault();
 
       const email = document.getElementById('admin-email').value.trim();
-      const pw = document.getElementById('admin-pw').value.trim();
+      const pw = document.getElementById('admin-pw').value;
       const btnLogin = document.getElementById('btn-login');
       const errEl = document.getElementById('login-error');
       const successEl = document.getElementById('login-success');
@@ -299,7 +299,12 @@
         // 프로필(role) 판정: user_metadata 및 profile 우선
         const meta = SupabaseClient.currentUser?.user_metadata || {};
         const profile = SupabaseClient.currentProfile;
-        const role = meta.role || profile?.role || localStorage.getItem('bp_user_role') || (email.toLowerCase().includes('ceo') || email.toLowerCase().includes('admin') ? 'ceo' : 'ceo');
+        const role = profile?.role;
+        if (!['ceo', 'hq_admin'].includes(role)) {
+          localStorage.removeItem('admin_bp_logged_in');
+          localStorage.removeItem('admin_bp_user_role');
+          throw new Error('HQ_ROLE_REQUIRED');
+        }
 
         // 관리자 전용 세션 정보 저장 (앱과 세션 분리)
         localStorage.setItem('admin_saved_email', email);
@@ -353,7 +358,7 @@
 
       } catch (err) {
         console.error('로그인 오류:', err);
-        let msg = '이메일 또는 비밀번호가 일치하지 않습니다.';
+        let msg = err.message === 'HQ_ROLE_REQUIRED' ? '본사 관리자 권한이 필요합니다. 현장 계정은 매니저 앱에서 로그인해주세요.' : '로그인에 실패했습니다. 이메일·비밀번호와 계정 권한을 확인해주세요.';
         if (err.message && err.message.includes('Email not confirmed')) {
           msg = '📧 이메일 인증이 필요합니다. 가입 시 받은 인증 메일을 확인해 주세요.';
         } else if (err.message && err.message.includes('Invalid login credentials')) {

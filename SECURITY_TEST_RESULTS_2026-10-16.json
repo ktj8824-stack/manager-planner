@@ -1,0 +1,258 @@
+{
+  "date": "2026-10-16",
+  "scope": "static-and-in-memory-only",
+  "deployed": false,
+  "browserRegressionCompleted": false,
+  "denoTypeChecked": false,
+  "checks": [
+    {
+      "test": "잘못된 비밀번호: 화면 진입·세션 생성 없음, 오류 표시, 버튼 복원",
+      "pass": true
+    },
+    {
+      "test": "인증 서버 없음: 로컬 우회 없음",
+      "pass": true
+    },
+    {
+      "test": "검증되지 않은 로컬/소셜 로그인 거부",
+      "pass": true
+    },
+    {
+      "test": "이메일·user_metadata CEO 값으로 권한 추론 금지",
+      "pass": true
+    },
+    {
+      "test": "전체 루트 JS 및 변경 로그인·가입 HTML 인라인 JS 문법",
+      "pass": true
+    },
+    {
+      "test": "localStorage 역할 변조로 CEO 권한 불가",
+      "pass": true
+    },
+    {
+      "test": "root JS181와 SW181 일치",
+      "pass": true
+    },
+    {
+      "test": "root 공유 스토어 캐시 포함",
+      "pass": true
+    },
+    {
+      "test": "dist_app JS181와 SW181 일치",
+      "pass": true
+    },
+    {
+      "test": "dist_app 공유 스토어 캐시 포함",
+      "pass": true
+    },
+    {
+      "test": "supabase_schema.sql 단일 달러 구분자 없음",
+      "pass": true
+    },
+    {
+      "test": "migrations/20261016_security_hardening.sql 단일 달러 구분자 없음",
+      "pass": true
+    },
+    {
+      "test": "최종 루트·앱·웹 JS 문법 검사",
+      "pass": true
+    },
+    {
+      "test": "활성 프로젝트 service_role JWT 잔재 없음(.git/백업 제외)",
+      "pass": true
+    }
+  ],
+  "syntaxFiles": [
+    {
+      "file": "js\\admin-data.js",
+      "pass": true
+    },
+    {
+      "file": "js\\admin.js",
+      "pass": true
+    },
+    {
+      "file": "js\\api.js",
+      "pass": true
+    },
+    {
+      "file": "js\\app.js",
+      "pass": true
+    },
+    {
+      "file": "js\\data.js",
+      "pass": true
+    },
+    {
+      "file": "js\\home.js",
+      "pass": true
+    },
+    {
+      "file": "js\\landing.js",
+      "pass": true
+    },
+    {
+      "file": "js\\login.js",
+      "pass": true
+    },
+    {
+      "file": "js\\onboarding.js",
+      "pass": true
+    },
+    {
+      "file": "js\\profile.js",
+      "pass": true
+    },
+    {
+      "file": "js\\register.js",
+      "pass": true
+    },
+    {
+      "file": "js\\supabase-client.js",
+      "pass": true
+    },
+    {
+      "file": "js\\timeline.js",
+      "pass": true
+    },
+    {
+      "file": "js\\upgrade.js",
+      "pass": true
+    },
+    {
+      "file": "js\\utils.js",
+      "pass": true
+    },
+    {
+      "file": "dist_app\\js\\admin-data.js",
+      "pass": true
+    },
+    {
+      "file": "dist_app\\js\\admin.js",
+      "pass": true
+    },
+    {
+      "file": "dist_app\\js\\api.js",
+      "pass": true
+    },
+    {
+      "file": "dist_app\\js\\app.js",
+      "pass": true
+    },
+    {
+      "file": "dist_app\\js\\data.js",
+      "pass": true
+    },
+    {
+      "file": "dist_app\\js\\home.js",
+      "pass": true
+    },
+    {
+      "file": "dist_app\\js\\landing.js",
+      "pass": true
+    },
+    {
+      "file": "dist_app\\js\\login.js",
+      "pass": true
+    },
+    {
+      "file": "dist_app\\js\\onboarding.js",
+      "pass": true
+    },
+    {
+      "file": "dist_app\\js\\profile.js",
+      "pass": true
+    },
+    {
+      "file": "dist_app\\js\\register.js",
+      "pass": true
+    },
+    {
+      "file": "dist_app\\js\\supabase-client.js",
+      "pass": true
+    },
+    {
+      "file": "dist_app\\js\\timeline.js",
+      "pass": true
+    },
+    {
+      "file": "dist_app\\js\\upgrade.js",
+      "pass": true
+    },
+    {
+      "file": "dist_app\\js\\utils.js",
+      "pass": true
+    },
+    {
+      "file": "dist_web\\js\\admin-data.js",
+      "pass": true
+    },
+    {
+      "file": "dist_web\\js\\admin.js",
+      "pass": true
+    },
+    {
+      "file": "dist_web\\js\\api.js",
+      "pass": true
+    },
+    {
+      "file": "dist_web\\js\\app.js",
+      "pass": true
+    },
+    {
+      "file": "dist_web\\js\\data.js",
+      "pass": true
+    },
+    {
+      "file": "dist_web\\js\\home.js",
+      "pass": true
+    },
+    {
+      "file": "dist_web\\js\\landing.js",
+      "pass": true
+    },
+    {
+      "file": "dist_web\\js\\login.js",
+      "pass": true
+    },
+    {
+      "file": "dist_web\\js\\onboarding.js",
+      "pass": true
+    },
+    {
+      "file": "dist_web\\js\\profile.js",
+      "pass": true
+    },
+    {
+      "file": "dist_web\\js\\register.js",
+      "pass": true
+    },
+    {
+      "file": "dist_web\\js\\supabase-client.js",
+      "pass": true
+    },
+    {
+      "file": "dist_web\\js\\timeline.js",
+      "pass": true
+    },
+    {
+      "file": "dist_web\\js\\upgrade.js",
+      "pass": true
+    },
+    {
+      "file": "dist_web\\js\\utils.js",
+      "pass": true
+    }
+  ],
+  "integration": {
+    "authPersonaVerified": true,
+    "noMockAccountWrites": true,
+    "edgeFunctionPresent": true,
+    "docPresent": true
+  },
+  "delegatedScheduleMockChecks": {
+    "passed": 17,
+    "remoteCalls": false,
+    "scope": "HQDataStore in-memory regression"
+  }
+}

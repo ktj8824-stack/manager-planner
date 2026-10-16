@@ -4,9 +4,6 @@
    ========================================= */
 
 const Login = {
-  KAKAO_JS_KEY: '5729341d219d8cb6f0a189fa86c91456',
-  GOOGLE_CLIENT_ID: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
-
   async init() {
     this.render();
     this.initOAuth();
@@ -34,19 +31,20 @@ const Login = {
         <!-- B2B 로그인 폼 -->
         <div id="login-b2b-section" style="background:var(--bg-card); border-radius:16px; padding:24px; margin-bottom:24px; border:1px solid var(--border-default); box-shadow:var(--shadow-md); display:block;">
           <form id="form-supabase-login" onsubmit="Login.handleEmailLogin(event)" style="display:flex; flex-direction:column; gap:14px;">
-            <input type="email" id="login-email" class="form-input" placeholder="사내 이메일 (ID)" required 
+            <input type="email" id="login-email" class="form-input" placeholder="사내 이메일 (ID)" aria-label="사내 이메일" autocomplete="username" required 
               style="background:var(--bg-input); border:1px solid transparent; color:var(--text-100); padding:16px; border-radius:12px; font-size:15px; width:100%; transition:all 0.2s; outline:none;" 
               onfocus="this.style.background='var(--bg-input-focus)'; this.style.borderColor='var(--accent)';" 
               onblur="this.style.background='var(--bg-input)'; this.style.borderColor='transparent';" />
-            <input type="password" id="login-pw" class="form-input" placeholder="비밀번호" required 
+            <input type="password" id="login-pw" class="form-input" placeholder="비밀번호" aria-label="비밀번호" autocomplete="current-password" required 
               style="background:var(--bg-input); border:1px solid transparent; color:var(--text-100); padding:16px; border-radius:12px; font-size:15px; width:100%; transition:all 0.2s; outline:none;" 
               onfocus="this.style.background='var(--bg-input-focus)'; this.style.borderColor='var(--accent)';" 
               onblur="this.style.background='var(--bg-input)'; this.style.borderColor='transparent';" />
             <button type="submit" class="btn-social" 
               style="background:var(--accent); color:#fff; font-weight:800; font-size:16px; justify-content:center; padding:16px; border-radius:12px; margin-top:8px; border:none; box-shadow:0 4px 12px rgba(0,122,255,0.3); cursor:pointer;">
-              시작하기 (Sign In)
+              로그인
             </button>
           </form>
+          <p id="login-auth-error" role="alert" aria-live="polite" style="display:none;color:#ef4444;font-size:13px;margin-top:14px;"></p>
           <div style="font-size:12px; color:var(--text-400); text-align:center; margin-top:16px;">
             ※ 본사에서 발급받은 계정으로 로그인해주세요.
           </div>
@@ -108,145 +106,71 @@ const Login = {
     }
   },
 
-  selectManager(id, name, email, artistName, assignedArtists) {
-    localStorage.setItem('bp_logged_in', 'true');
-    localStorage.setItem('bp_manager_id', id);
-    localStorage.setItem('bp_manager_filter', id);
-    localStorage.setItem('bp_user_name', name);
-    localStorage.setItem('bp_user_email', email);
-    localStorage.setItem('bp_user_role', 'manager');
-    localStorage.setItem('bp_assigned_artists', JSON.stringify(assignedArtists));
-    localStorage.setItem('bp_onboarded', 'true');
-
-    if (typeof State !== 'undefined') {
-      State.setManagerFilter(id);
-    }
-
-    U.toast(`✅ ${name} (${artistName} 담당) 로그인 완료!`);
-    App.navigate('home');
-  },
-
   async handleEmailLogin(e) {
     e.preventDefault();
     const email = document.getElementById('login-email').value.trim();
-    const pw = document.getElementById('login-pw').value.trim();
-
-    // 1. Supabase가 연결되어 있으면 우선 클라우드 인증 시도
-    let supabaseSuccess = false;
-    if (window.SupabaseClient && window.SupabaseClient.isConfigured) {
-      try {
-        const res = await window.SupabaseClient.signIn(email, pw);
-        if (!res.error && res.user) {
-          supabaseSuccess = true;
-          // res.profile = fetchProfile() 결과, res.user.user_metadata = Supabase auth 메타
-          const profile = res.profile || res.user.user_metadata || {};
-          this.finishLogin('supabase', {
-            id: res.user.id,
-            name: profile.name || res.user.user_metadata?.name || email,
-            email: email,
-            role: profile.role || res.user.user_metadata?.role || 'manager'
-          });
-          return;
-        }
-      } catch (err) {
-        console.warn('Supabase 인증 실패, 로컬/본사 매니저 계정 검증으로 전환합니다:', err.message);
-      }
-    }
-
-    // 2. 로컬 모드 및 본사 등록 매니저 계정 검증 (AuthPersona)
-    if (window.AuthPersona) {
-      const result = window.AuthPersona.login(email, pw);
-      if (result.success) {
-        // 앱 로그인 완료 후 플래너 홈 화면으로 바로 진입
-        this.finishLogin('persona', {
-          id: result.user.id,
-          name: result.user.name,
-          email: result.user.email,
-          role: result.user.role
-        });
-      } else {
-        // 미등록 매니저 계정인 경우 신규 매니저로 즉시 시작 안내
-        if (confirm(`'${email}' 계정이 본사 매니저 풀에 아직 등록되지 않았습니다.\n\n이 계정으로 매니저 플래너를 바로 시작하시겠습니까?`)) {
-          this.finishLogin('local', {
-            id: 'mgr_' + Date.now().toString(36),
-            name: email.split('@')[0] + ' 매니저',
-            email: email,
-            role: 'manager'
-          });
-        } else {
-          alert(result.message || '이메일 또는 비밀번호를 다시 확인해주세요.');
-        }
-      }
-    } else {
-      alert('인증 시스템이 초기화되지 않았습니다.');
+    const password = document.getElementById('login-pw').value;
+    const button = e.target.querySelector('button[type="submit"]');
+    const errorEl = document.getElementById('login-auth-error');
+    errorEl.textContent = '';
+    button.disabled = true;
+    button.textContent = '로그인 확인 중...';
+    try {
+      if (!window.SupabaseClient?.isConfigured) throw new Error('로그인 서버에 연결할 수 없습니다. 연결 상태를 확인해주세요.');
+      const result = await window.SupabaseClient.signIn(email, password);
+      this.finishLogin('supabase', { ...result.profile, id: result.user.id, email: result.user.email });
+    } catch (error) {
+      errorEl.textContent = '로그인하지 못했습니다. 이메일·비밀번호, 이메일 인증 및 계정 권한을 확인해주세요.';
+      errorEl.style.display = 'block';
+    } finally {
+      button.disabled = false;
+      button.textContent = '로그인';
     }
   },
 
   initOAuth() {
-    if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
-      if (this.KAKAO_JS_KEY !== 'YOUR_KAKAO_JS_KEY') {
-        Kakao.init(this.KAKAO_JS_KEY);
-      }
-    }
-
-    if (typeof google !== 'undefined') {
-      google.accounts.id.initialize({
-        client_id: this.GOOGLE_CLIENT_ID,
-        callback: this.handleGoogleResponse.bind(this)
-      });
-      const wrap = document.getElementById('google_btn_wrapper');
-      if (wrap) {
-        google.accounts.id.renderButton(
-          wrap,
-          { theme: 'outline', size: 'large', type: 'standard', width: 300 }
-        );
-      }
-    }
+    const wrap = document.getElementById('google_btn_wrapper');
+    if (!wrap) return;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'btn-social';
+    button.style.cssText = 'width:100%;justify-content:center;padding:16px;border-radius:12px;';
+    button.textContent = 'Google로 시작하기';
+    button.addEventListener('click', () => this.startOAuth('google'));
+    wrap.replaceChildren(button);
   },
 
-  doKakaoLogin() {
-    if (typeof Kakao === 'undefined') {
-      U.toast('⚠️ 카카오 SDK 로드 대기중');
-      return;
-    }
-    Kakao.Auth.login({
-      success: () => {
-        Kakao.API.request({
-          url: '/v2/user/me',
-          success: (res) => {
-            const name = res.properties?.nickname || '카카오 매니저';
-            const email = res.kakao_account?.email || 'kakao@manager.com';
-            this.finishLogin('kakao', { name, email });
-          }
-        });
-      },
-      fail: () => {
-        this.selectManager('mgr_2', '카카오 매니저', 'kakao@manager.com', '루나스', ['art_1']);
-      }
-    });
-  },
-
-  handleGoogleResponse(response) {
+  async startOAuth(provider) {
     try {
-      const payload = JSON.parse(atob(response.credential.split('.')[1]));
-      const name = payload.name || '구글 매니저';
-      const email = payload.email || '';
-      this.finishLogin('google', { name, email });
-    } catch (e) {
-      console.error(e);
-      U.toast('구글 로그인 오류');
+      if (!window.SupabaseClient?.isConfigured || !['google', 'kakao'].includes(provider)) throw new Error('로그인 서버 연결이 필요합니다.');
+      if (!['http:', 'https:'].includes(window.location.protocol)) throw new Error('소셜 로그인은 앱 서버 주소에서 이용해주세요.');
+      const { error } = await window.SupabaseClient.client.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: window.location.origin + window.location.pathname }
+      });
+      if (error) throw error;
+    } catch (error) {
+      U.toast(error.message || '소셜 로그인 설정을 확인해주세요.');
     }
   },
+
+  doKakaoLogin() { return this.startOAuth('kakao'); },
 
   finishLogin(provider, user) {
-    const mgrId = user.id || 'mgr_2';
+    const verified = window.SupabaseClient?.currentUser;
+    const profile = window.SupabaseClient?.currentProfile;
+    if (provider !== 'supabase' || !verified || !profile || user.id !== verified.id) {
+      throw new Error('검증된 로그인 세션이 필요합니다.');
+    }
+    user = { ...profile, id: verified.id, email: verified.email };
+    const mgrId = user.id;
     localStorage.setItem('bp_logged_in', 'true');
     localStorage.setItem('bp_provider', provider);
     localStorage.setItem('bp_manager_id', mgrId);
     localStorage.setItem('bp_manager_filter', mgrId);
     localStorage.setItem('bp_user_name', user.name);
     localStorage.setItem('bp_user_email', user.email);
-    localStorage.setItem('bp_user_role', user.role || 'manager');
+    localStorage.setItem('bp_user_role', user.role === 'indie_manager' ? 'manager' : user.role);
 
     // 매니저에 배정된 아티스트 목록 조회 및 세팅
     const managers = (typeof window.hqStore !== 'undefined') ? window.hqStore.getManagers() : [];
@@ -257,8 +181,8 @@ const Login = {
       assigned = foundMgr.assignedArtists;
     } else {
       // 본사 아티스트 목록에서 기본 배정 또는 전체 조회 가능하도록 세팅
-      const allArtists = (typeof window.hqStore !== 'undefined') ? window.hqStore.getArtists() : [];
-      assigned = allArtists.map(a => a.id);
+      // Unassigned managers must not inherit all artists.
+      assigned = [];
     }
     
     localStorage.setItem('bp_assigned_artists', JSON.stringify(assigned));
@@ -268,6 +192,13 @@ const Login = {
     }
 
     U.toast(`✅ ${user.name}님 환영합니다!`);
+    localStorage.setItem('bp_onboarded', 'true');
+    if (window.hqStore) window.hqStore.flushPendingSchedules()
+      .then(() => window.hqStore.syncFromSupabase())
+      .then(() => App.refreshActiveScreens())
+      .catch(() => U.toast('기기 저장 데이터를 유지합니다. 서버 동기화를 확인해주세요.'));
+    App.renderNav();
+    App.initRealtimeSync();
     App.navigate('home');
   }
 };

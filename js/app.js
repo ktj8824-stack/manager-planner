@@ -5,7 +5,7 @@
 const App = {
   screens: ['home','register','timeline','login','onboarding','profile','upgrade'],
 
-  init() {
+  async init() {
     if (!State.loadSchedules()) {
       State.initDemo();
     }
@@ -26,7 +26,12 @@ const App = {
     };
 
     // 로컬 창 및 탭 간 커스텀 이벤트/스토리지 이벤트 즉시 수신
-    window.addEventListener('hq-store-change', () => this.refreshActiveScreens());
+    window.addEventListener('hq-store-change', (event) => {
+      const type = event.detail?.type;
+      if (type === 'SCHEDULE_SYNC_FAILED' || type === 'SUPABASE_SYNC_FAILED') U.toast('기기에 저장되어 있습니다. 서버 동기화에 실패해 재시도가 필요합니다.');
+      else if (type === 'SCHEDULE_SYNC_PENDING') U.toast('기기에 저장됨 · 서버 동기화 대기 중');
+      this.refreshActiveScreens();
+    });
     window.addEventListener('storage', (e) => {
       if (!e.key || e.key.startsWith('HQ_') || e.key.startsWith('bp_')) {
         this.refreshActiveScreens();
@@ -34,30 +39,43 @@ const App = {
     });
 
     // 2. Supabase Cloud Realtime 구독 (기기 간 실시간 동기화)
-    this.initRealtimeSync();
+    // Realtime subscriptions start only after a verified session.
 
     // 3. 네트워크 온라인/오프라인 상태 감지
-    window.addEventListener('online', () => {
-      U.toast('⚡ 네트워크 연결 복구 (클라우드 동기화 완료)');
-      if (window.hqStore) window.hqStore.syncFromSupabase().then(() => this.refreshActiveScreens());
+    window.addEventListener('online', async () => {
+      U.toast('네트워크 연결 복구 · 동기화 확인 중');
+      try {
+        const session = await window.SupabaseClient?.getCurrentSession();
+        if (!session) return;
+        const result = await window.hqStore?.flushPendingSchedules();
+        await window.hqStore?.syncFromSupabase();
+        if (result?.pending || result?.deferred) U.toast('기기에 저장됨 · 아직 동기화 대기 중인 일정이 있습니다.');
+        else U.toast('서버 동기화를 확인했습니다.');
+        this.refreshActiveScreens();
+      } catch (error) {
+        U.toast('기기에 저장된 일정을 유지합니다. 서버 동기화를 다시 시도해주세요.');
+      }
     });
     window.addEventListener('offline', () => {
       U.toast('📶 오프라인 모드 전환 (로컬 데이터 보관)');
     });
     
-    const isLoggedIn = localStorage.getItem('bp_logged_in') === 'true';
-    const hasOnboarded = localStorage.getItem('bp_onboarded') === 'true';
     State.isPro = localStorage.getItem('bp_pro') === 'true';
-
-    if (!isLoggedIn) {
-      this.navigate('login');
-    } else if (!hasOnboarded) {
-      this.navigate('onboarding');
-    } else {
-      this.navigate('home');
-      setTimeout(()=>U.toast('🎬 매니저플래너에 오신 것을 환영합니다!'), 700);
+    this.navigate('login');
+    try {
+      const session = await window.SupabaseClient?.getCurrentSession();
+      if (session?.user && session.profile) {
+        Login.finishLogin('supabase', { ...session.profile, id: session.user.id, email: session.user.email });
+      } else {
+        localStorage.removeItem('bp_logged_in');
+        localStorage.removeItem('bp_user_role');
+      }
+    } catch (error) {
+      localStorage.removeItem('bp_logged_in');
+      localStorage.removeItem('bp_user_role');
+      U.toast('로그인 권한을 확인할 수 없습니다. 다시 로그인해주세요.');
     }
-    
+
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -194,6 +212,7 @@ const App = {
   },
 
   renderNav() {
+    U.$('#top-header')?.remove();
     const nav = U.el('header','top-header');
     nav.id = 'top-header';
     nav.innerHTML = `

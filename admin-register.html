@@ -275,7 +275,7 @@
       <div class="form-group">
         <label class="form-label" for="reg-email">이메일 (로그인 ID)<span>*</span></label>
         <input type="email" id="reg-email" class="form-input"
-          placeholder="ceo@star-ent.com" required autocomplete="email">
+          placeholder="ceo@kjm-ent.com" required autocomplete="email">
       </div>
 
       <div class="form-row">
@@ -297,7 +297,7 @@
       <div class="form-group">
         <label class="form-label" for="reg-company">회사명 (엔터테인먼트명)<span>*</span></label>
         <input type="text" id="reg-company" class="form-input"
-          placeholder="STAR 엔터테인먼트" required>
+          placeholder="KJM 엔터테인먼트" required>
       </div>
 
       <div class="form-group">
@@ -375,11 +375,12 @@
       btnReg.innerHTML = '<span class="loading-spinner"></span>가입 처리 중...';
 
       try {
-        // Admin API로 CEO 계정 생성 (이메일 도메인 검증 우회)
         const SUPABASE_URL = 'https://gohxflsyhogyxantnlig.supabase.co';
         const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvaHhmbHN5aG9neXhhbnRubGlnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4OTg4Njk0NSwiZXhwIjoyMTA1NDYyOTQ1fQ.gjLLRgLW8XFBbLV781hxJguPJKbc6PHAS5ZHOPgywFE';
 
         const adminClient = supabase.createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+        let targetUserId = null;
 
         const { data: userData, error: adminError } = await adminClient.auth.admin.createUser({
           email,
@@ -393,35 +394,74 @@
           }
         });
 
-        if (adminError) throw adminError;
-
-        // ── companies 테이블에 회사 INSERT ──
-        const { data: companyData, error: companyError } = await adminClient
-          .from('companies')
-          .insert([{ name: company }])
-          .select()
-          .single();
-
-        if (companyError) {
-          console.warn('회사 생성 오류:', companyError);
-        } else {
-          // profiles.company_id 업데이트
-          await adminClient
-            .from('profiles')
-            .update({ company_id: companyData.id })
-            .eq('id', userData.user.id);
-          console.log('✅ 회사 등록 완료:', companyData);
+        if (adminError) {
+          if (adminError.message && (adminError.message.includes('already exists') || adminError.message.includes('already registered'))) {
+            // 이미 존재하는 경우 비밀번호 갱신 및 profiles role='ceo' 확정
+            const { data: userList } = await adminClient.auth.admin.listUsers();
+            const existing = (userList?.users || []).find(u => u.email?.toLowerCase() === email.toLowerCase());
+            if (existing) {
+              targetUserId = existing.id;
+              await adminClient.auth.admin.updateUserById(existing.id, {
+                password: pw,
+                email_confirm: true,
+                user_metadata: { name, role: 'ceo', phone, company_name: company }
+              });
+            } else {
+              throw adminError;
+            }
+          } else {
+            throw adminError;
+          }
+        } else if (userData && userData.user) {
+          targetUserId = userData.user.id;
         }
 
-        // 회사명 로컬에 저장 (두 키 모두 저장하여 호환성 확보)
+        // ── profiles에 role: 'ceo' 보장 ──
+        if (targetUserId) {
+          await adminClient.from('profiles').upsert({
+            id: targetUserId,
+            email: email,
+            name: name,
+            role: 'ceo',
+            phone: phone
+          });
+
+          // ── companies 테이블 확인 및 연결 ──
+          let companyId = null;
+          const { data: existingComp } = await adminClient
+            .from('companies')
+            .select('id')
+            .eq('name', company)
+            .maybeSingle();
+
+          if (existingComp?.id) {
+            companyId = existingComp.id;
+          } else {
+            const { data: newComp } = await adminClient
+              .from('companies')
+              .insert([{ name: company }])
+              .select('id')
+              .single();
+            if (newComp?.id) companyId = newComp.id;
+          }
+
+          if (companyId) {
+            await adminClient
+              .from('profiles')
+              .update({ company_id: companyId })
+              .eq('id', targetUserId);
+          }
+        }
+
+        // 회사명 로컬에 저장
         localStorage.setItem('reg_company_name', company);
         localStorage.setItem('bp_company_name', company);
+        localStorage.setItem('admin_saved_email', email);
 
         successEl.innerHTML = `
-          ✅ <strong>${name}</strong> CEO 계정이 성공적으로 생성되었습니다!<br><br>
+          ✅ <strong>${name}</strong> CEO 계정이 성공적으로 준비되었습니다!<br><br>
           🏢 <strong>${company}</strong> 회사 등록 완료<br>
-          🔑 <strong>${email}</strong>로 바로 로그인하실 수 있습니다.<br>
-          (이메일 인증 없이 즉시 사용 가능)
+          🔑 <strong>${email}</strong>로 바로 로그인하실 수 있습니다.
         `;
         successEl.style.display = 'block';
 
@@ -429,10 +469,9 @@
         btnReg.innerHTML = '가입 완료 ✓';
         btnReg.style.background = '#059669';
 
-        // 3초 후 로그인 페이지로 이동
         setTimeout(() => {
           window.location.href = 'admin-login.html';
-        }, 4000);
+        }, 1500);
 
       } catch (err) {
         console.error('가입 오류:', err);

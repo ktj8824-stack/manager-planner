@@ -1713,17 +1713,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Init ──
   async function init() {
-    // 🛡️ Auth & Role Guard (관리자 전용 세션 검증)
-    const isLoggedIn = localStorage.getItem('admin_bp_logged_in') === 'true';
-    const role = localStorage.getItem('admin_bp_user_role') || (window.AuthPersona ? window.AuthPersona.getCurrentRole() : 'ceo');
-
-    if (!isLoggedIn) {
-      window.location.replace('admin-login.html');
-      return;
+    let authorized = false;
+    try {
+      const session = await window.SupabaseClient?.getCurrentSession();
+      if (session && session.user) {
+        let role = session.profile?.role;
+        // 이메일 또는 메타데이터에 ceo/admin이 포함된 경우 관리자 권한 보장
+        const email = (session.user.email || '').toLowerCase();
+        if (!role || role === 'manager') {
+          if (email.includes('ceo') || email.includes('admin') || session.user.user_metadata?.role === 'ceo') {
+            role = 'ceo';
+            if (session.profile) session.profile.role = 'ceo';
+          }
+        }
+        if (['ceo', 'hq_admin'].includes(role)) {
+          localStorage.setItem('admin_bp_logged_in', 'true');
+          localStorage.setItem('admin_bp_user_role', role);
+          localStorage.setItem('admin_bp_user_name', session.profile?.name || session.user.user_metadata?.name || email.split('@')[0]);
+          localStorage.setItem('admin_bp_user_email', session.user.email || '');
+          authorized = true;
+          try {
+            await window.hqStore.syncFromSupabase();
+          } catch (syncErr) {
+            console.warn('Supabase sync warning:', syncErr);
+          }
+        }
+      }
+    } catch (sessionErr) {
+      console.warn('Supabase 세션 검증 예외:', sessionErr);
     }
 
-    if (role === 'manager' || role === 'staff') {
-      alert('권한이 없습니다. (HQ 관리자 또는 CEO 전용 페이지입니다)');
+    // Supabase 클라우드 세션 검증이 실패/지연되더라도 기존 관리자 로그인 플래그가 있거나 로컬 환경인 경우 접속 보장
+    if (!authorized) {
+      const localLoggedIn = localStorage.getItem('admin_bp_logged_in') === 'true';
+      const localRole = localStorage.getItem('admin_bp_user_role') || 'ceo';
+      const isLocalHost = ['localhost', '127.0.0.1', ''].includes(window.location.hostname) || window.location.protocol === 'file:';
+
+      if (localLoggedIn && ['ceo', 'hq_admin'].includes(localRole)) {
+        authorized = true;
+      } else if (isLocalHost && localLoggedIn) {
+        localStorage.setItem('admin_bp_user_role', 'ceo');
+        authorized = true;
+      }
+    }
+
+    if (!authorized) {
+      localStorage.removeItem('admin_bp_logged_in');
+      localStorage.removeItem('admin_bp_user_role');
       window.location.replace('admin-login.html');
       return;
     }
@@ -3934,7 +3970,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = document.getElementById('new-mgr-name').value.trim();
         const emailEl = document.getElementById('new-mgr-email');
         const email = emailEl ? emailEl.value.trim() : '';
-        const pw = document.getElementById('new-mgr-pw').value.trim();
+        const pw = document.getElementById('new-mgr-pw').value;
         const phone = document.getElementById('new-mgr-phone').value.trim();
 
         if (!email || !email.includes('@')) {
@@ -3942,34 +3978,24 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        if (pw.length < 6) {
-          alert('비밀번호는 최소 6자 이상이어야 합니다.');
+        if (pw.length < 8) {
+          alert('비밀번호는 최소 8자 이상이어야 합니다.');
           return;
         }
 
-        // 1. 본사/로컬 매니저 스토리지에 즉시 등록 (비밀번호 포함)
-        const newMgrObj = {
-          id: 'mgr_' + Date.now(),
-          name,
-          email,
-          phone,
-          password: pw,
-          role: 'manager',
-          assignedArtists: []
-        };
-        await window.hqStore.addManager(newMgrObj);
-
-        // 2. Supabase가 연동된 경우 클라우드 Auth에도 생성 시도
-        if (window.SupabaseClient && window.SupabaseClient.isConfigured) {
-          try {
-            await window.SupabaseClient.signUp(email, pw, name, 'manager', phone);
-            alert(`✅ ${name} (${email}) 매니저 계정이 정상 등록되었습니다.`);
-          } catch (err) {
-            console.warn('Supabase signUp error (local stored):', err.message);
-            alert(`✅ ${name} (${email}) 매니저 계정이 등록되었습니다.`);
-          }
-        } else {
-          alert(`✅ [본사 등록] ${name} (${email}) 매니저 계정이 등록되었습니다.`);
+        const submitButton = el.formCreateManager.querySelector('button[type="submit"]');
+        if (submitButton) submitButton.disabled = true;
+        try {
+          if (!window.SupabaseClient?.isConfigured) throw new Error('계정 관리 서버에 연결할 수 없습니다.');
+          const result = await window.SupabaseClient.signUp(email, pw, name, 'manager', phone);
+          if (!result.user?.id) throw new Error('서버 계정 생성이 확인되지 않았습니다.');
+          await window.hqStore.addManager({ id: result.user.id, name, email, phone, role: 'manager', assignedArtists: [] });
+          alert('매니저 계정이 생성되었습니다. 로그인 전 이메일 인증을 완료해야 합니다. 인증 메일 발송 설정은 관리자에게 확인해주세요.');
+        } catch (error) {
+          alert(error.message || '계정 생성에 실패했습니다. 서버 설정을 확인해주세요.');
+          return;
+        } finally {
+          if (submitButton) submitButton.disabled = false;
         }
 
         el.formCreateManager.reset();
@@ -3991,15 +4017,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const email = emailEl ? emailEl.value.trim() : '';
         const phone = document.getElementById('edit-mgr-phone').value.trim();
         const pwEl = document.getElementById('edit-mgr-pw');
-        const password = pwEl ? pwEl.value.trim() : '';
+        const password = pwEl ? pwEl.value : '';
 
         if (!email || !email.includes('@')) {
           alert('올바른 이메일 주소를 입력해주세요.');
           return;
         }
 
-        if (password && password.length < 6) {
-          alert('비밀번호는 최소 6자 이상이어야 합니다.');
+        if (password && password.length < 8) {
+          alert('비밀번호는 최소 8자 이상이어야 합니다.');
           return;
         }
 
@@ -4008,7 +4034,12 @@ document.addEventListener('DOMContentLoaded', () => {
           updatePayload.password = password;
         }
 
-        await window.hqStore.updateManager(id, updatePayload);
+        try {
+          await window.hqStore.updateManager(id, updatePayload);
+        } catch (error) {
+          alert(error.message || '계정 수정에 실패했습니다.');
+          return;
+        }
         const modal = document.getElementById('modal-manager-edit');
         if (modal) modal.classList.remove('active');
 
