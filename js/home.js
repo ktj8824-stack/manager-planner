@@ -445,142 +445,167 @@ const Home = {
 
     let html = `<div style="padding: 4px 0 40px; position:relative; max-width:340px;">`;
 
+    // 단일 스케줄 카드 렌더링 헬퍼
+    const renderCard = (activeSched, hourLabel) => {
+      const schId = activeSched.id || `sch_${sortedSchedules.indexOf(activeSched)}`;
+      const isExpanded = this.expandedScheduleId === schId;
+      const isHQ = activeSched.isHQ;
+
+      const startTime = activeSched.teeOff || activeSched.startTime || '07:30';
+      const endTime = activeSched.endTime || '17:00';
+
+      let departureText = '';
+      if (activeSched.departure) {
+        if (typeof activeSched.departure === 'string') {
+          departureText = activeSched.departure;
+        } else if (typeof activeSched.departure === 'object') {
+          departureText = activeSched.departure.place || activeSched.departure.name || activeSched.departure.address || '';
+        }
+      }
+
+      const isSecret = activeSched.isSecret === true;
+      const canViewSecret = window.AuthPersona ? window.AuthPersona.canViewSecret(activeSched) : true;
+      const currentRole = localStorage.getItem('bp_user_role') || 'manager';
+      const isStaff = currentRole === 'staff';
+      const rawTitle = (activeSched.title || '').replace(/^[🎬🔒📌🏁\s]+/g, '').trim();
+
+      const displayTitle = (isSecret && !canViewSecret) 
+        ? '비공개 스케줄 (보안 일정 - 열람 제한)' 
+        : (isSecret ? `[극비 보안] ${rawTitle}` : rawTitle);
+      
+      const displayLocation = (isSecret && !canViewSecret) 
+        ? '[비공개 보안 대상]' 
+        : (activeSched.location || activeSched.course?.name || '장소 미정');
+
+      const cardBg = isSecret ? (canViewSecret ? 'linear-gradient(135deg, #ffffff, #faf5ff)' : '#f8fafc') : '#ffffff';
+      const cardBorderColor = isExpanded ? (isSecret ? '#9333ea' : '#6366f1') : (isSecret ? '#d8b4fe' : '#cbd5e1');
+      const cardBorderLeft = isSecret ? 'border-left:4px solid #9333ea;' : 'border-left:4px solid #4f46e5;';
+
+      const allArtists = (typeof window.hqStore !== 'undefined') ? window.hqStore.getArtists() : [];
+      const artObj = allArtists.find(a => a.id === activeSched.artistId) || { name: activeSched.artistName || '아티스트' };
+
+      return `
+        <div style="margin-bottom:12px; position:relative;">
+          <!-- 시작 시간 텍스트 -->
+          <div style="font-size:12px; font-weight:800; color:${isSecret ? '#9333ea' : '#4f46e5'}; margin-bottom:6px;">
+            ${hourLabel}
+          </div>
+
+          <!-- 스케줄 카드 -->
+          <div onclick="Home.toggleScheduleDetail('${schId}')" 
+               style="width:100%; background:${cardBg}; border-radius:14px; padding:14px 14px 16px; border:1px solid ${cardBorderColor}; ${cardBorderLeft} box-shadow:0 2px 10px rgba(0,0,0,0.04); cursor:pointer; transition:all 0.2s ease; box-sizing:border-box;">
+            
+            <!-- 상단: 시간 & 아티스트 태그 & 상세보기 -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+              <div style="display:flex; flex-direction:column; gap:4px;">
+                <div style="font-size:11px; font-weight:800; color:${isSecret ? '#9333ea' : '#4f46e5'}; display:flex; align-items:center; gap:4px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <span>${startTime} ~ ${endTime}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+                  <span style="background:${artObj.color || '#1e293b'}; color:#fff; font-size:11px; font-weight:800; padding:2px 7px; border-radius:5px; display:inline-flex; align-items:center; gap:4px;">
+                    ${getArtistTypeIcon(artObj, 11)}
+                    <span>${activeSched.artistName || '아티스트'}</span>
+                  </span>
+                  ${isHQ ? '<span style="background:rgba(99,102,241,0.1); color:#4f46e5; font-size:10px; font-weight:800; padding:1px 6px; border-radius:4px; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="12" y1="22" x2="12" y2="22.01"/></svg>HQ연동</span>' : ''}
+                  ${isSecret ? '<span style="background:#f3e8ff; color:#9333ea; font-size:10px; font-weight:800; padding:1px 6px; border-radius:4px; border:1px solid #d8b4fe; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Secret</span>' : ''}
+                </div>
+              </div>
+
+              <div style="font-size:10px; font-weight:700; color:${isExpanded ? (isSecret ? '#9333ea' : '#4f46e5') : '#94a3b8'}; text-align:right; line-height:1; white-space:nowrap; flex-shrink:0; padding-top:2px;">
+                ${isExpanded ? '상세접기 ▲' : '상세보기 ▼'}
+              </div>
+            </div>
+
+            <!-- 일정 타이틀 -->
+            <div style="font-size:14px; font-weight:800; color:${isSecret ? '#581c87' : 'var(--text-100)'}; margin-bottom:6px; line-height:1.35; word-break:keep-all;">
+              ${displayTitle}
+            </div>
+            
+            <!-- 장소 -->
+            <div style="font-size:11px; color:#64748b; font-weight:600; line-height:1.3; word-break:keep-all; display:flex; align-items:center; gap:4px;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>${displayLocation}</span>
+            </div>
+
+            <!-- 클릭 시 제자리 확장 상세 정보 -->
+            ${isExpanded ? `
+              <div style="margin-top:12px; padding-top:12px; border-top:1px dashed ${isSecret ? '#e9d5ff' : '#e2e8f0'}; animation:fadeIn 0.2s ease-in-out;">
+                <div style="background:${isSecret ? '#faf5ff' : '#f8fafc'}; border-radius:8px; padding:10px 12px; font-size:11px; color:var(--text-200); display:flex; flex-direction:column; gap:6px; border:1px solid ${isSecret ? '#f3e8ff' : '#f1f5f9'};">
+                  ${(isSecret && !canViewSecret) ? `
+                    <div style="color:#dc2626; font-weight:700; display:flex; align-items:center; gap:4px;">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      <span>본 일정은 비공개 보안 스케줄로, 담당 배정자 및 경영진 외에는 열람이 제한됩니다.</span>
+                    </div>
+                  ` : `
+                    <div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <strong>매니저:</strong> ${activeSched.managerName || '미지정'}</div>
+                    ${!isStaff ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg> <strong>배차:</strong> ${activeSched.vehicleName || '미지정'}</div>` : ''}
+                    ${activeSched.shop && activeSched.shop.needed ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2"><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg> <strong>샵:</strong> ${activeSched.shop.name} (${activeSched.shop.durationMin || 90}분)</div>` : ''}
+                    ${departureText ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> <strong>픽업:</strong> ${departureText}</div>` : ''}
+                    ${activeSched.outfit ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg> <strong>의상:</strong> ${activeSched.outfit}</div>` : ''}
+                    ${activeSched.notes ? `<div style="color:#475569; background:#fff; padding:6px 8px; border-radius:4px; border:1px solid #e2e8f0; margin-top:2px; display:flex; align-items:flex-start; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="flex-shrink:0; margin-top:2px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> <span><strong>특이사항:</strong> ${activeSched.notes}</span></div>` : ''}
+                  `}
+                </div>
+              </div>
+            ` : ''}
+
+          </div>
+        </div>
+      `;
+    };
+
     // 첫 스케줄의 시작 시간(Hour)부터 타임라인 시작 (이전 새벽 시간 00:00~06:00 등은 숨김)
     const firstStartHour = sortedSchedules.length > 0 ? timeToHour(sortedSchedules[0].teeOff || sortedSchedules[0].startTime, 7) : 7;
+    const renderedIds = new Set();
     let currentHour = firstStartHour;
 
     while (currentHour <= 23) {
       const hourStr = String(currentHour).padStart(2, '0') + ':00';
 
-      // 현재 시간에 시작하거나 걸쳐있는 스케줄 찾기
-      const activeSched = sortedSchedules.find(s => {
+      // 현재 시간에 시작하는 스케줄 목록
+      const matchingScheds = sortedSchedules.filter(s => {
         const sHour = timeToHour(s.teeOff || s.startTime);
         return sHour === currentHour;
       });
 
-      if (activeSched) {
-        const schId = activeSched.id || `sch_${sortedSchedules.indexOf(activeSched)}`;
-        const isExpanded = this.expandedScheduleId === schId;
-        const isHQ = activeSched.isHQ;
-
-        const startTime = activeSched.teeOff || activeSched.startTime || '07:30';
-        const endTime = activeSched.endTime || '17:00';
-        const endHour = timeToHour(endTime, currentHour + 1);
-
-        let departureText = '';
-        if (activeSched.departure) {
-          if (typeof activeSched.departure === 'string') {
-            departureText = activeSched.departure;
-          } else if (typeof activeSched.departure === 'object') {
-            departureText = activeSched.departure.place || activeSched.departure.name || activeSched.departure.address || '';
-          }
-        }
-
-        const isSecret = activeSched.isSecret === true;
-        const canViewSecret = window.AuthPersona ? window.AuthPersona.canViewSecret(activeSched) : true;
-        const currentRole = localStorage.getItem('bp_user_role') || 'manager';
-        const isStaff = currentRole === 'staff';
-        const rawTitle = (activeSched.title || '').replace(/^[🎬🔒📌🏁\s]+/g, '').trim();
-
-        const displayTitle = (isSecret && !canViewSecret) 
-          ? '비공개 스케줄 (보안 일정 - 열람 제한)' 
-          : (isSecret ? `[극비 보안] ${rawTitle}` : rawTitle);
-        
-        const displayLocation = (isSecret && !canViewSecret) 
-          ? '[비공개 보안 대상]' 
-          : (activeSched.location || activeSched.course?.name || '장소 미정');
-
-        const cardBg = isSecret ? (canViewSecret ? 'linear-gradient(135deg, #ffffff, #faf5ff)' : '#f8fafc') : '#ffffff';
-        const cardBorderColor = isExpanded ? (isSecret ? '#9333ea' : '#6366f1') : (isSecret ? '#d8b4fe' : '#cbd5e1');
-        const cardBorderLeft = isSecret ? 'border-left:4px solid #9333ea;' : 'border-left:4px solid #4f46e5;';
-
-        const allArtists = (typeof window.hqStore !== 'undefined') ? window.hqStore.getArtists() : [];
-        const artObj = allArtists.find(a => a.id === activeSched.artistId) || { name: activeSched.artistName || '아티스트' };
-
-        html += `
-          <div style="margin-bottom:12px; position:relative;">
-            <!-- 시작 시간 텍스트 -->
-            <div style="font-size:12px; font-weight:800; color:${isSecret ? '#9333ea' : '#4f46e5'}; margin-bottom:6px;">
-              ${hourStr}
-            </div>
-
-            <!-- 스케줄 카드 (07:30 ~ 17:00) -->
-            <div onclick="Home.toggleScheduleDetail('${schId}')" 
-                 style="width:100%; background:${cardBg}; border-radius:14px; padding:14px 14px 16px; border:1px solid ${cardBorderColor}; ${cardBorderLeft} box-shadow:0 2px 10px rgba(0,0,0,0.04); cursor:pointer; transition:all 0.2s ease; box-sizing:border-box;">
-              
-              <!-- 상단: 시간 & 아티스트 태그 & 상세보기 -->
-              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-                <div style="display:flex; flex-direction:column; gap:4px;">
-                  <div style="font-size:11px; font-weight:800; color:${isSecret ? '#9333ea' : '#4f46e5'}; display:flex; align-items:center; gap:4px;">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    <span>${startTime} ~ ${endTime}</span>
-                  </div>
-                  <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
-                    <span style="background:${artObj.color || '#1e293b'}; color:#fff; font-size:11px; font-weight:800; padding:2px 7px; border-radius:5px; display:inline-flex; align-items:center; gap:4px;">
-                      ${getArtistTypeIcon(artObj, 11)}
-                      <span>${activeSched.artistName || '아티스트'}</span>
-                    </span>
-                    ${isHQ ? '<span style="background:rgba(99,102,241,0.1); color:#4f46e5; font-size:10px; font-weight:800; padding:1px 6px; border-radius:4px; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="12" y1="22" x2="12" y2="22.01"/></svg>HQ연동</span>' : ''}
-                    ${isSecret ? '<span style="background:#f3e8ff; color:#9333ea; font-size:10px; font-weight:800; padding:1px 6px; border-radius:4px; border:1px solid #d8b4fe; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Secret</span>' : ''}
-                  </div>
-                </div>
-
-                <div style="font-size:10px; font-weight:700; color:${isExpanded ? (isSecret ? '#9333ea' : '#4f46e5') : '#94a3b8'}; text-align:right; line-height:1; white-space:nowrap; flex-shrink:0; padding-top:2px;">
-                  ${isExpanded ? '상세접기 ▲' : '상세보기 ▼'}
-                </div>
-              </div>
-
-              <!-- 일정 타이틀 -->
-              <div style="font-size:14px; font-weight:800; color:${isSecret ? '#581c87' : 'var(--text-100)'}; margin-bottom:6px; line-height:1.35; word-break:keep-all;">
-                ${displayTitle}
-              </div>
-              
-              <!-- 장소 -->
-              <div style="font-size:11px; color:#64748b; font-weight:600; line-height:1.3; word-break:keep-all; display:flex; align-items:center; gap:4px;">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                <span>${displayLocation}</span>
-              </div>
-
-              <!-- 클릭 시 제자리 확장 상세 정보 -->
-              ${isExpanded ? `
-                <div style="margin-top:12px; padding-top:12px; border-top:1px dashed ${isSecret ? '#e9d5ff' : '#e2e8f0'}; animation:fadeIn 0.2s ease-in-out;">
-                  <div style="background:${isSecret ? '#faf5ff' : '#f8fafc'}; border-radius:8px; padding:10px 12px; font-size:11px; color:var(--text-200); display:flex; flex-direction:column; gap:6px; border:1px solid ${isSecret ? '#f3e8ff' : '#f1f5f9'};">
-                    ${(isSecret && !canViewSecret) ? `
-                      <div style="color:#dc2626; font-weight:700; display:flex; align-items:center; gap:4px;">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        <span>본 일정은 비공개 보안 스케줄로, 담당 배정자 및 경영진 외에는 열람이 제한됩니다.</span>
-                      </div>
-                    ` : `
-                      <div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <strong>매니저:</strong> ${activeSched.managerName || '미지정'}</div>
-                      ${!isStaff ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg> <strong>배차:</strong> ${activeSched.vehicleName || '미지정'}</div>` : ''}
-                      ${activeSched.shop && activeSched.shop.needed ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2"><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg> <strong>샵:</strong> ${activeSched.shop.name} (${activeSched.shop.durationMin || 90}분)</div>` : ''}
-                      ${departureText ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> <strong>픽업:</strong> ${departureText}</div>` : ''}
-                      ${activeSched.outfit ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg> <strong>의상:</strong> ${activeSched.outfit}</div>` : ''}
-                      ${activeSched.notes ? `<div style="color:#475569; background:#fff; padding:6px 8px; border-radius:4px; border:1px solid #e2e8f0; margin-top:2px; display:flex; align-items:flex-start; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="flex-shrink:0; margin-top:2px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> <span><strong>특이사항:</strong> ${activeSched.notes}</span></div>` : ''}
-                    `}
-                  </div>
-                </div>
-              ` : ''}
-
-            </div>
-          </div>
-        `;
-
-        // 스케줄이 17:00에 끝나므로, 다음 시간대를 17:00로 바로 이동!
-        currentHour = Math.max(currentHour + 1, endHour);
+      if (matchingScheds.length > 0) {
+        // 해당 시간에 시작하는 모든 스케줄 렌더링
+        matchingScheds.forEach(s => {
+          renderedIds.add(s.id);
+          html += renderCard(s, hourStr);
+        });
+        currentHour++;
       } else {
-        // 일정이 없는 빈 시간대
-        html += `
-          <div style="margin-bottom:8px; position:relative;">
-            <div style="font-size:11px; font-weight:700; color:#94a3b8; margin-bottom:4px;">
-              ${hourStr}
+        // 현재 시간에 시작하는 스케줄이 없는 경우
+        // 진행 중인 다른 스케줄의 시간대인지 확인
+        const isCovered = sortedSchedules.some(s => {
+          const sHour = timeToHour(s.teeOff || s.startTime);
+          const eHour = timeToHour(s.endTime, sHour + 1);
+          return sHour < currentHour && currentHour < eHour;
+        });
+
+        // 진행 중인 스케줄이 없을 때만 빈 시간 표시선 렌더링
+        if (!isCovered) {
+          html += `
+            <div style="margin-bottom:8px; position:relative;">
+              <div style="font-size:11px; font-weight:700; color:#94a3b8; margin-bottom:4px;">
+                ${hourStr}
+              </div>
+              <div style="border-bottom:1px solid #f1f5f9; margin-bottom:6px;"></div>
             </div>
-            <div style="border-bottom:1px solid #f1f5f9; margin-bottom:6px;"></div>
-          </div>
-        `;
+          `;
+        }
         currentHour++;
       }
     }
+
+    // 24시 이후 또는 예외적인 시간으로 인해 누락된 스케줄이 있다면 추가 렌더링
+    sortedSchedules.forEach(s => {
+      if (!renderedIds.has(s.id)) {
+        const startTime = s.teeOff || s.startTime || '09:00';
+        html += renderCard(s, startTime);
+      }
+    });
 
     html += `
       <div onclick="Home.openScheduleRegisterModal()" style="text-align:center; padding:13px; background:#ffffff; border:2px dashed #6366f1; border-radius:12px; color:#4f46e5; font-size:13.5px; font-weight:800; cursor:pointer; margin-top:16px; box-shadow:0 2px 6px rgba(99,102,241,0.06); display:flex; align-items:center; justify-content:center; gap:6px;">

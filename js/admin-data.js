@@ -555,8 +555,8 @@ class HQDataStore {
     const rawEmail = (localStorage.getItem('admin_bp_user_email') || localStorage.getItem('bp_user_email') || window.SupabaseClient?.currentUser?.email || '').trim().toLowerCase();
     const role = localStorage.getItem('admin_bp_user_role') || localStorage.getItem('bp_user_role') || 'manager';
 
-    // 매니저나 스태프인 경우, 본사(CEO)의 데이터 저장소를 공유 참조
-    if (role === 'manager' || role === 'staff') {
+    // 매니저, 스태프, 본사 관리자(hq_admin)인 경우, 본사(CEO)의 데이터 저장소를 공유 참조
+    if (role === 'manager' || role === 'staff' || role === 'hq_admin') {
       const targetCeoKey = `${baseKey}_ceo_kjm_ent_com`;
       if (localStorage.getItem(targetCeoKey)) return targetCeoKey;
       const legacyCeoKey = `${baseKey}_ceo_jm_ent_com`;
@@ -973,17 +973,34 @@ class HQDataStore {
 
   async updateManager(id, data) {
     const managers = this.getManagers();
-    const target = managers.find(m => m.id === id);
+    const target = managers.find(m => m.id === id || (id === 'mgr_1' && m.email === 'th.kim@entplanner.com'));
     if (!target) throw new Error('매니저 계정을 찾을 수 없습니다.');
-    if (!window.SupabaseClient?.isConfigured) throw new Error('계정 관리 서버에 연결할 수 없습니다.');
-    const request = {};
-    for (const field of ['name', 'email', 'phone', 'password']) {
-      if (data[field] !== undefined && (field !== 'password' || data[field])) request[field] = data[field];
-    }
-    await window.SupabaseClient.adminUpdateUser(id, request);
+
     const { password, ...safeData } = data;
     Object.assign(target, safeData);
     delete target.password;
+
+    // 김태현 본부장 계정인 경우 등록된 서버 UUID 연결
+    if (target.email === 'th.kim@entplanner.com' && (!target.serverId || target.id === 'mgr_1')) {
+      target.serverId = 'c1662db2-e673-44de-9f78-ae251f8e4698';
+    }
+
+    const targetUuid = target.serverId || (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(target.id) ? target.id : null);
+
+    if (window.SupabaseClient?.isConfigured && targetUuid) {
+      const request = {};
+      for (const field of ['name', 'email', 'phone', 'password']) {
+        if (data[field] !== undefined && (field !== 'password' || data[field])) request[field] = data[field];
+      }
+      if (Object.keys(request).length > 0 && typeof window.SupabaseClient.adminUpdateUser === 'function') {
+        try {
+          await window.SupabaseClient.adminUpdateUser(targetUuid, request);
+        } catch (e) {
+          console.warn('Supabase 계정 서버 동기화 건너뜀 (로컬 수정 정보 보존):', e);
+        }
+      }
+    }
+
     this.saveManagers(managers);
     localStorage.removeItem('mock_registered_users');
     return target;

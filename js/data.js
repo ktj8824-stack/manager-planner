@@ -357,14 +357,8 @@ const State = {
       });
     };
 
-    // 1. CEO 및 본사 총괄 관리자 (전체 스케줄 및 담당 아티스트 스케줄 완전 열람)
+    // 1. CEO 및 본사 총괄 관리자 (전사 전체 스케줄 및 타임라인 완전 열람)
     if (userRole === 'ceo' || userRole === 'hq_admin') {
-      if (assignedArtists.length > 0 && !assignedArtists.includes('ALL')) {
-        schedules = schedules.filter(s => {
-          if (s.managerId && s.managerId === currentMgrId) return true;
-          return isArtistMatch(s, assignedArtists);
-        });
-      }
       return schedules;
     }
 
@@ -463,7 +457,15 @@ const State = {
     }));
 
     const hqIds = new Set(hqScheds.map(hs => hs.id));
-    const filteredLocal = localScheds.filter(s => !s.id || !hqIds.has(s.id));
+    // 본사 스케줄(sch_로 시작하거나 isHQ)은 본사 스토어(hqScheds)에서만 단일 소스로 공급받으며,
+    // 본사에서 삭제/이동된 일정이 로컬 캐시(bp_schedules_v2)의 유령 스케줄로 부활하지 않도록 엄격히 차단
+    const filteredLocal = localScheds.filter(s => {
+      if (!s) return false;
+      if (s.isHQ || (typeof s.id === 'string' && s.id.startsWith('sch_'))) {
+        return false;
+      }
+      return !s.id || !hqIds.has(s.id);
+    });
     return [...filteredLocal, ...hqScheds];
   },
 
@@ -473,6 +475,8 @@ const State = {
     const hqIds = new Set((hqScheds || []).map(hs => hs.id));
     let scheds = this.schedules.filter(s => {
       if (!s || !s.date) return false;
+      // 본사 스케줄(sch_ 또는 isHQ)은 본사 스토어에서만 처리되므로 로컬 잔여 데이터 배제
+      if (s.isHQ || (typeof s.id === 'string' && s.id.startsWith('sch_'))) return false;
       if (s.id && hqIds.has(s.id)) return false;
       const sd = (s.date instanceof Date) ? s.date : new Date(s.date);
       if (isNaN(sd)) return false;

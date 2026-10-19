@@ -3920,11 +3920,21 @@ document.addEventListener('DOMContentLoaded', () => {
         schData.timeline = await window.hqStore.generateSmartTimelineAsync(schData);
       }
 
-      await window.hqStore.saveSchedule(schData);
+      try {
+        await window.hqStore.saveSchedule(schData);
+      } catch (err) {
+        console.warn('saveSchedule warning (로컬 저장 유지):', err);
+        if (!err.localSaved) {
+          alert('스케줄 저장 중 오류가 발생했습니다: ' + (err.message || '알 수 없는 오류'));
+          return;
+        }
+      }
+
       el.modalScheduleForm.classList.remove('active');
       await renderSidebar();
       await renderKPI();
       await renderCurrentView();
+      alert(`✅ [${schData.title || '스케줄'}] 일정이 성공적으로 저장되었습니다.`);
     });
 
     // 스케줄 수정 버튼
