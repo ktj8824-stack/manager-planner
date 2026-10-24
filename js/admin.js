@@ -1495,6 +1495,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const state = {
     currentDate: new Date(),
     selectedArtistFilter: 'ALL',
+    selectedManagerFilter: 'ALL',
     currentView: 'month', // 'month', 'week', 'gantt'
     activeScheduleId: null
   };
@@ -1843,7 +1844,42 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
     });
-    el.artistFilterList.innerHTML = artistHtml;
+    if (el.artistFilterList) el.artistFilterList.innerHTML = artistHtml;
+
+    // 2. 매니저 칩 목록
+    if (el.managerStatusList) {
+      let managerHtml = `
+        <div class="artist-chip ${state.selectedManagerFilter === 'ALL' ? 'active' : ''}" data-manager-id="ALL">
+          <div class="artist-avatar" style="background:#10b981; color:#fff; display:flex; align-items:center; justify-content:center;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
+          <div class="artist-meta">
+            <div class="name">전체 매니저</div>
+            <div class="sub">전사 통합 모드</div>
+          </div>
+          <span class="count-badge">${schedules.length}</span>
+        </div>
+      `;
+
+      managers.forEach(mgr => {
+        const count = schedules.filter(s => s.managerId === mgr.id).length;
+        const isSel = state.selectedManagerFilter === mgr.id;
+        const avatarColor = mgr.color || '#3b82f6';
+        managerHtml += `
+          <div class="artist-chip ${isSel ? 'active' : ''}" data-manager-id="${mgr.id}">
+            <div class="artist-avatar" style="background:${avatarColor}; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px;">
+              ${mgr.role === 'hq_admin' ? '👑' : '👔'}
+            </div>
+            <div class="artist-meta">
+              <div class="name">${mgr.name}</div>
+              <div class="sub">${mgr.title || (mgr.role === 'hq_admin' ? '총괄 관리자' : '현장 매니저')}</div>
+            </div>
+            <span class="count-badge">${count}</span>
+          </div>
+        `;
+      });
+      el.managerStatusList.innerHTML = managerHtml;
+    }
   }
 
   // ── KPI 통계 렌더링 ──
@@ -1919,6 +1955,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let allSchedules = await window.hqStore.getSchedules();
     if (state.selectedArtistFilter !== 'ALL') {
       allSchedules = allSchedules.filter(s => matchArtistSchedule(s, state.selectedArtistFilter, artists));
+    }
+    if (state.selectedManagerFilter && state.selectedManagerFilter !== 'ALL') {
+      allSchedules = allSchedules.filter(s => s.managerId === state.selectedManagerFilter);
     }
 
     let html = `
@@ -2033,6 +2072,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let allSchedules = await window.hqStore.getSchedules();
     if (state.selectedArtistFilter !== 'ALL') {
       allSchedules = allSchedules.filter(s => matchArtistSchedule(s, state.selectedArtistFilter, artists));
+    }
+    if (state.selectedManagerFilter && state.selectedManagerFilter !== 'ALL') {
+      allSchedules = allSchedules.filter(s => s.managerId === state.selectedManagerFilter);
     }
 
     const weekDays = [];
@@ -2183,6 +2225,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state.selectedArtistFilter !== 'ALL') {
       schedules = schedules.filter(s => matchArtistSchedule(s, state.selectedArtistFilter, artists));
     }
+    if (state.selectedManagerFilter && state.selectedManagerFilter !== 'ALL') {
+      schedules = schedules.filter(s => s.managerId === state.selectedManagerFilter);
+    }
 
     // 5 Columns with sleek Line SVGs
     const cols = [
@@ -2318,6 +2363,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let schedules = await window.hqStore.getSchedules({ date: todayStr });
     if (state.selectedArtistFilter !== 'ALL') {
       schedules = schedules.filter(s => matchArtistSchedule(s, state.selectedArtistFilter, artists));
+    }
+    if (state.selectedManagerFilter && state.selectedManagerFilter !== 'ALL') {
+      schedules = schedules.filter(s => s.managerId === state.selectedManagerFilter);
     }
 
     // Map control grid
@@ -3386,6 +3434,18 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    // 사이드바 매니저 필터 클릭 위임
+    if (el.managerStatusList) {
+      el.managerStatusList.addEventListener('click', (e) => {
+        const chip = e.target.closest('.artist-chip');
+        if (chip && chip.dataset.managerId) {
+          state.selectedManagerFilter = chip.dataset.managerId;
+          renderSidebar();
+          renderCurrentView();
+        }
+      });
+    }
+
     // ── 🌟 마우스 호버 시 상세 일정 팝오버 카드 표시 (인터랙티브 클릭 지원) ──
     const popover = document.getElementById('hover-schedule-popover');
     let hoverDate = null;
@@ -3438,6 +3498,9 @@ document.addEventListener('DOMContentLoaded', () => {
       let daySchedules = allSchedules.filter(s => s.date === dateStr);
       if (state.selectedArtistFilter !== 'ALL') {
         daySchedules = daySchedules.filter(s => s.artistId === state.selectedArtistFilter);
+      }
+      if (state.selectedManagerFilter && state.selectedManagerFilter !== 'ALL') {
+        daySchedules = daySchedules.filter(s => s.managerId === state.selectedManagerFilter);
       }
 
       if (daySchedules.length === 0) {

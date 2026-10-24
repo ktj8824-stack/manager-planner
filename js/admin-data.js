@@ -4,7 +4,7 @@
    =================================================== */
 
 const HQ_STORAGE_KEYS = {
-  SCHEDULES: 'HQ_SCHEDULES_V6',
+  SCHEDULES: 'HQ_SCHEDULES_V7',
   ARTISTS: 'HQ_ARTISTS_V6',
   MANAGERS: 'HQ_MANAGERS_V6',
   VEHICLES: 'HQ_VEHICLES_V6',
@@ -122,17 +122,17 @@ const SCHEDULE_CATEGORIES = {
 };
 
 // 기본 데모 스케줄 생성 (오늘/이번주/전후 일정 풍성하게 생성)
-// 기본 데모 스케줄 생성 (2026년 10월 캘린더 기준 12건 완벽 고정)
+// 기본 데모 스케줄 생성 (2026년 11월 캘린더 기준 12건 완벽 고정)
 function getInitialMockSchedules() {
   const schedules = [
-    // 1. 10월 2일 (금) - 유나 신곡 녹음 및 믹싱
+    // 1. 11월 2일 (월) - 유나 신곡 녹음 및 믹싱
     {
       id: 'sch_109',
       title: '정규 2집 타이틀곡 보컬 메인 레코딩',
       artistId: 'art_4',
       artistName: '유나 (YUNA)',
       category: 'recording',
-      date: '2026-10-02',
+      date: '2026-11-02',
       startTime: '13:00',
       endTime: '19:00',
       managerId: 'mgr_5',
@@ -147,7 +147,7 @@ function getInitialMockSchedules() {
       supplies: '악보 5부, 도라지배즙, 가습기 2대, 보컬 마이크 소독제',
       notes: '해외 유명 프로듀서 화상 미팅 및 보컬 디렉팅 동시 진행.'
     },
-    // 2. 10월 3일 (토) - 사옥 전체 아티스트 & 매니지먼트 정기 기획회의
+    // 2. 11월 3일 (화) - 사옥 전체 아티스트 & 매니지먼트 정기 기획회의
     {
       id: 'sch_110',
       title: '2026 Q4 아티스트 활동 계획 및 컴백 로드맵 총괄회의',
@@ -155,7 +155,7 @@ function getInitialMockSchedules() {
       artistIds: ['art_1', 'art_2', 'art_3', 'art_4', 'art_5'],
       artistName: '전체 아티스트 (전원)',
       category: 'meeting',
-      date: '2026-10-03',
+      date: '2026-11-03',
       startTime: '15:00',
       endTime: '18:00',
       managerId: 'mgr_ceo',
@@ -170,14 +170,14 @@ function getInitialMockSchedules() {
       supplies: '각 팀별 분기 실적 보고서, 빔프로젝터, 다과 세트',
       notes: '전체 매니지먼트 본부 및 프로덕션 팀 필수 참석.'
     },
-    // 3. 10월 5일 (월) - 에이펙스 대면 팬사인회
+    // 3. 11월 5일 (목) - 에이펙스 대면 팬사인회
     {
       id: 'sch_105',
       title: '2026 Q4 아티스트 활동 팬미팅 및 100인 대면 팬사인회',
       artistId: 'art_2',
       artistName: '에이펙스 (APEX)',
       category: 'fansign',
-      date: '2026-10-05',
+      date: '2026-11-05',
       startTime: '14:00',
       endTime: '18:00',
       managerId: 'mgr_3',
@@ -198,14 +198,14 @@ function getInitialMockSchedules() {
       supplies: '사인용 유성 네임펜 100자루, 포스트잇, 경호팀 무전기 6대, 팬레터 수거함 5개',
       notes: '사전 팬 100명 명단 대조 및 선물 검수 필수. 경호팀 4인 현장 배치.'
     },
-    // 4. 10월 8일 (목) - 루나스 KBS 뮤직뱅크 생방송 & 컴백 인터뷰
+    // 4. 11월 8일 (일) - 루나스 KBS 뮤직뱅크 생방송 & 컴백 인터뷰
     {
       id: 'sch_100',
       title: 'KBS 뮤직뱅크 생방송 & 컴백 인터뷰',
       artistId: 'art_1',
       artistName: '루나스 (LUNAS)',
       category: 'music_show',
-      date: '2026-10-08',
+      date: '2026-11-08',
       startTime: '09:00',
       endTime: '18:30',
       managerId: 'mgr_2',
@@ -235,14 +235,14 @@ function getInitialMockSchedules() {
         { time: '18:30', label: '일정 종료 및 사옥 복귀', done: true }
       ]
     },
-    // 5. 10월 11일 (일) - 루나스 SBS 인기가요 생방송 & 사전녹화
+    // 5. 11월 11일 (수) - 루나스 SBS 인기가요 생방송 & 사전녹화
     {
       id: 'sch_101',
       title: 'SBS 인기가요 생방송 & 사전녹화',
       artistId: 'art_1',
       artistName: '루나스 (LUNAS)',
       category: 'music_show',
-      date: '2026-10-11',
+      date: '2026-11-11',
       startTime: '07:30',
       endTime: '17:30',
       managerId: 'mgr_2',
@@ -263,14 +263,14 @@ function getInitialMockSchedules() {
       supplies: '음료 20잔, 비상약품(진통제/테이핑), 인이어 배터리 여분, 사인 CD 50장',
       notes: '사전녹화 08:30 시작. 딜레이 없도록 07:15까지 방송국 대기실 입실 완료 필수.'
     },
-    // 6. 10월 14일 (수) - 차은호 보그 화보 촬영
+    // 6. 11월 14일 (토) - 차은호 보그 화보 촬영
     {
       id: 'sch_102',
       title: '보그(VOGUE) 매거진 커버 & 패션 화보',
       artistId: 'art_3',
       artistName: '차은호',
       category: 'shooting',
-      date: '2026-10-14',
+      date: '2026-11-14',
       startTime: '10:00',
       endTime: '18:00',
       managerId: 'mgr_4',
@@ -291,14 +291,14 @@ function getInitialMockSchedules() {
       supplies: '스팀 다리미, 헤어 픽서, 따뜻한 디카페인 커피, 대본집',
       notes: '자연광 루프탑 촬영 14시 예정. 햇빛 알레르기 대비 암막 우산 필수 지참.'
     },
-    // 7. 10월 15일 (목) - 유나 라디오 생방송
+    // 7. 11월 15일 (일) - 유나 라디오 생방송
     {
       id: 'sch_103',
       title: 'SBS 파워FM 영스트리트 게스트 생방송',
       artistId: 'art_4',
       artistName: '유나 (YUNA)',
       category: 'broadcast',
-      date: '2026-10-15',
+      date: '2026-11-15',
       startTime: '20:00',
       endTime: '22:00',
       managerId: 'mgr_5',
@@ -319,14 +319,14 @@ function getInitialMockSchedules() {
       supplies: '신곡 음원 CD, 프로폴리스 목 스프레이, 미온수 텀블러',
       notes: '라이브 코너 2곡 포함 (어쿠스틱 버전 건반 반주 체크). 목 보호 주의.'
     },
-    // 8. 10월 16일 (금) - 루나스 글로벌 브랜드 앰버서더 극비 체결 미팅
+    // 8. 11월 16일 (월) - 루나스 글로벌 브랜드 앰버서더 극비 체결 미팅
     {
       id: 'sch_104',
       title: '🔒 글로벌 명품 브랜드 앰버서더 극비 체결 미팅',
       artistId: 'art_1',
       artistName: '루나스 (LUNAS)',
       category: 'meeting',
-      date: '2026-10-16',
+      date: '2026-11-16',
       startTime: '19:30',
       endTime: '21:30',
       managerId: 'mgr_ceo',
@@ -343,14 +343,14 @@ function getInitialMockSchedules() {
       supplies: '브랜드 제안서 5부, 전속계약 법률 검토안',
       notes: '🔒 [엠바고/극비 보안] 대표이사 및 총괄본부장 외 비공개. 사진 촬영 및 SNS 업로드 일체 엄금.'
     },
-    // 9. 10월 17일 (토) - 사운드웨이브 락 페스티벌
+    // 9. 11월 17일 (화) - 사운드웨이브 락 페스티벌
     {
       id: 'sch_106',
       title: '그랜드 민트 페스티벌(GMF) 메인스테이지 헤드라이너',
       artistId: 'art_5',
       artistName: '사운드웨이브 (SOUNDWAVE)',
       category: 'event',
-      date: '2026-10-17',
+      date: '2026-11-17',
       startTime: '17:00',
       endTime: '21:00',
       managerId: 'mgr_5',
@@ -371,14 +371,14 @@ function getInitialMockSchedules() {
       supplies: '악기 앰프/이펙터 풀세트, 드럼스틱 10조, 이온음료 3박스, 수건 20장',
       notes: '사운드 리허설 15:30 정시 진행. 인이어 모니터 밸런스 점검 필수.'
     },
-    // 10. 10월 19일 (월) - 에이펙스 월드투어 출국
+    // 10. 11월 19일 (목) - 에이펙스 월드투어 출국
     {
       id: 'sch_107',
       title: '2026 APEX WORLD TOUR : TOKYO DOME 출국',
       artistId: 'art_2',
       artistName: '에이펙스 (APEX)',
       category: 'overseas',
-      date: '2026-10-19',
+      date: '2026-11-19',
       startTime: '08:00',
       endTime: '15:00',
       managerId: 'mgr_1',
@@ -399,14 +399,14 @@ function getInitialMockSchedules() {
       supplies: '멤버 7인 여권/비자 원본, 수화물 25개 태그, 긴급 구급함, 공항 경호팀 배정표',
       notes: '출국 게이트 팬 밀집 예상. 인천공항 사설 경호팀 10명 풀가동 및 취재진 포토라인 구축.'
     },
-    // 11. 10월 21일 (수) - 차은호 주연 드라마 첫 야외 로케이션 촬영
+    // 11. 11월 21일 (토) - 차은호 주연 드라마 첫 야외 로케이션 촬영
     {
       id: 'sch_108',
       title: 'tvN 토일드라마 <하늘의 별> 1~2회 야외 세트 촬영',
       artistId: 'art_3',
       artistName: '차은호',
       category: 'shooting',
-      date: '2026-10-21',
+      date: '2026-11-21',
       startTime: '06:00',
       endTime: '20:00',
       managerId: 'mgr_4',
@@ -427,14 +427,14 @@ function getInitialMockSchedules() {
       supplies: '대본 1~4권, 이동식 난로/핫팩, 인공눈물, 스태프 커피차 100잔 쿠폰',
       notes: '새벽부터 야외 촬영 진행. 탄현 세트장 기사식당 아침 식사 예약 완료.'
     },
-    // 12. 10월 24일 (토) - 루나스 글로벌 팬미팅 콘서트 라이브 투어
+    // 12. 11월 24일 (화) - 루나스 글로벌 팬미팅 콘서트 라이브 투어
     {
       id: 'sch_111',
       title: '2026 LUNAS FANMEETING & CONCERT LIVE TOUR',
       artistId: 'art_1',
       artistName: '루나스 (LUNAS)',
       category: 'event',
-      date: '2026-10-24',
+      date: '2026-11-24',
       startTime: '16:00',
       endTime: '21:00',
       managerId: 'mgr_2',
