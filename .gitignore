@@ -3,3 +3,11 @@ node_modules/
 .vscode/
 dist_app/
 dist_web/
+
+# 비밀값·개인 파일·임시 파일이 실수로 올라가지 않도록
+.env
+.env.*
+*.pem
+*.key
+*.url
+__pycache__/
