@@ -227,11 +227,11 @@ const App = {
         </button>
       </div>
       <div class="top-brand">
-        🎬 매니저플래너
+        <span>🎬</span><span class="top-brand-text">매니저플래너</span>
       </div>
       <div class="top-nav-right" style="display:flex; align-items:center; gap:6px; padding-right:10px;">
-        <span style="font-size:14px; font-weight:800; color:#f8fafc; white-space:nowrap; display:flex; align-items:center; gap:4px;">
-          <span style="font-size:13px;">👤</span> ${((localStorage.getItem('bp_user_name') || '김태현').replace(/본부장|팀장|매니저/g, '').trim())} 님
+        <span class="top-user">
+          <span class="top-user-icon" style="font-size:13px;">👤</span><span class="top-user-name">${esc((localStorage.getItem('bp_user_name') || '김태현').replace(/본부장|팀장|매니저/g, '').trim())}</span><span class="top-user-suffix">님</span>
         </span>
         <button onclick="if(typeof Home !== 'undefined' && Home.logout) Home.logout(); else if(typeof App !== 'undefined' && App.logout) App.logout();" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca; padding:3px 6px; border-radius:6px; font-size:10px; font-weight:900; line-height:1.15; cursor:pointer; text-align:center; transition:all 0.15s; white-space:nowrap; display:flex; flex-direction:column; align-items:center; justify-content:center;">
           <span>로그</span>

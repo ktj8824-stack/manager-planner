@@ -311,9 +311,11 @@
 }
 
 .top-brand {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  position: static;
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: center;
+  overflow: hidden;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -326,6 +328,28 @@
   z-index: 1;
 }
 
+.top-user {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: #f8fafc;
+  white-space: nowrap;
+}
+.top-user-name {
+  max-width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 480px) {
+  .top-brand-text { display: none; }
+  .top-user-icon, .top-user-suffix { display: none; }
+  .top-user-name { max-width: 110px; }
+  .top-brand { font-size: 20px; }
+}
+
 .top-nav-left,
 .top-nav-right {
   display: flex;
@@ -333,6 +357,7 @@
   gap: 4px;
   position: relative;
   z-index: 2;
+  flex: 0 0 auto;
 }
 
 .top-nav-item {

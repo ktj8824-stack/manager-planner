@@ -24,8 +24,8 @@ const Login = {
         </div>
 
         <div style="display:flex; margin-bottom:24px; border-radius:12px; background:var(--bg-card); padding:4px; box-shadow:var(--shadow-sm); border:1px solid var(--border-default);">
-          <button onclick="Login.setTab('b2b')" id="tab-b2b" style="flex:1; padding:12px; font-weight:800; font-size:14px; border-radius:10px; border:none; background:var(--accent); color:#fff; cursor:pointer; transition:all 0.2s;">소속 매니저 로그인</button>
-          <button onclick="Login.setTab('b2c')" id="tab-b2c" style="flex:1; padding:12px; font-weight:700; font-size:14px; border-radius:10px; border:none; background:transparent; color:var(--text-400); cursor:pointer; transition:all 0.2s;">개인 매니저 시작</button>
+          <button onclick="Login.setTab('b2b')" id="tab-b2b" style="flex:1; padding:12px 6px; white-space:nowrap; font-weight:800; font-size:13px; border-radius:10px; border:none; background:var(--accent); color:#fff; cursor:pointer; transition:all 0.2s;">소속 매니저 로그인</button>
+          <button onclick="Login.setTab('b2c')" id="tab-b2c" style="flex:1; padding:12px 6px; white-space:nowrap; font-weight:700; font-size:14px; border-radius:10px; border:none; background:transparent; color:var(--text-400); cursor:pointer; transition:all 0.2s;">개인 매니저 시작</button>
         </div>
 
         <!-- B2B 로그인 폼 -->
