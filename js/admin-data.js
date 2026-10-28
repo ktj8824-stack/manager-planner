@@ -3,6 +3,14 @@
    (Supabase Cloud + Local Storage 100% Synchronous Compatible Store)
    =================================================== */
 
+// ── HTML 이스케이프 (XSS 방지) ──
+// 사용자가 입력한 글자를 innerHTML 템플릿에 넣을 때는 반드시 esc()로 감쌉니다.
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"'`]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' }[c]));
+}
+// onclick="fn(${escJs(x)})" 처럼 속성 안의 JS 문자열 인자로 넣을 때 사용합니다.
+function escJs(value) { return esc(JSON.stringify(String(value ?? ''))); }
+
 const HQ_STORAGE_KEYS = {
   SCHEDULES: 'HQ_SCHEDULES_V8',
   ARTISTS: 'HQ_ARTISTS_V6',

@@ -38,16 +38,16 @@ const Timeline = {
         <!-- Hero -->
         <div class="tl-hero">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <h2 class="tl-course" style="margin:0;"><span class="accent">${(s.course && s.course.name) || s.title || s.artistName || '스케줄'}</span></h2>
+            <h2 class="tl-course" style="margin:0;"><span class="accent">${esc((s.course && s.course.name) || s.title || s.artistName || '스케줄')}</span></h2>
             <div class="tl-dday" style="display:inline-flex; align-items:center; gap:6px; font-size:15px; padding:6px 12px; margin:0;">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              <span>${dday}</span>
+              <span>${esc(dday)}</span>
             </div>
           </div>
           <div class="tl-meta" style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
             <span style="display:inline-flex; align-items:center; gap:4px;">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.75;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              ${dateStr}
+              ${esc(dateStr)}
             </span>
             <span style="display:inline-flex; align-items:center; gap:4px;">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.75;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -55,7 +55,7 @@ const Timeline = {
             </span>
             <span style="display:inline-flex; align-items:center; gap:4px;">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.75;"><path d="M12 2c3.866 0 7 3.134 7 7 0 5.25-7 13-7 13S5 14.25 5 9c0-3.866 3.134-7 7-7z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>
-              ${(s.course && s.course.region) || s.location || '장소 미정'}
+              ${esc((s.course && s.course.region) || s.location || '장소 미정')}
             </span>
           </div>
         </div>
@@ -271,21 +271,21 @@ const Timeline = {
         <div class="route-summary">
           <div class="route-node active">
             <div class="route-icon">${startSvg}</div>
-            <span class="route-label">${startPt.slice(0, 5)}</span>
+            <span class="route-label">${esc(startPt.slice(0, 5))}</span>
           </div>
-          <div class="route-arrow"><span class="route-time">${tl.homeTravelDur}분</span></div>
+          <div class="route-arrow"><span class="route-time">${esc(tl.homeTravelDur)}분</span></div>
           <div class="route-node gold">
             <div class="route-icon">
               <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
             </div>
-            <span class="route-label">${tl.restaurantName.slice(0, 5)}</span>
+            <span class="route-label">${esc(tl.restaurantName.slice(0, 5))}</span>
           </div>
-          <div class="route-arrow"><span class="route-time">${tl.restTravelDur}분</span></div>
+          <div class="route-arrow"><span class="route-time">${esc(tl.restTravelDur)}분</span></div>
           <div class="route-node">
             <div class="route-icon">
               <svg viewBox="0 0 24 24"><path d="M4 22V2l10 5-10 5"></path></svg>
             </div>
-            <span class="route-label">${s.course.name.slice(0,6)}</span>
+            <span class="route-label">${esc(s.course.name.slice(0,6))}</span>
           </div>
         </div>
       `;
@@ -294,14 +294,14 @@ const Timeline = {
       <div class="route-summary">
         <div class="route-node active">
           <div class="route-icon">${startSvg}</div>
-          <span class="route-label">${startPt.slice(0, 5)}</span>
+          <span class="route-label">${esc(startPt.slice(0, 5))}</span>
         </div>
-        <div class="route-arrow"><span class="route-time">${tl.homeTravelDur}분</span></div>
+        <div class="route-arrow"><span class="route-time">${esc(tl.homeTravelDur)}분</span></div>
         <div class="route-node">
           <div class="route-icon">
             <svg viewBox="0 0 24 24"><path d="M4 22V2l10 5-10 5"></path></svg>
           </div>
-          <span class="route-label">${s.course.name.slice(0,6)}</span>
+          <span class="route-label">${esc(s.course.name.slice(0,6))}</span>
         </div>
       </div>
     `;
@@ -325,7 +325,7 @@ const Timeline = {
     steps.forEach((step, idx) => {
       const isDone = step.done;
       const doneClass = isDone ? 'done' : '';
-      const checkMark = isDone ? ` <span style="color:var(--accent); font-weight:bold;">[${step.actualTime ? step.actualTime + ' ' : ''}완료]</span>` : '';
+      const checkMark = isDone ? ` <span style="color:var(--accent); font-weight:bold;">[${esc(step.actualTime ? step.actualTime + ' ' : '')}완료]</span>` : '';
       
       // 자정/심야 경계 감지 (전일/익일 뱃지)
       let timeBadge = '';
@@ -344,17 +344,17 @@ const Timeline = {
       }
 
       items += `
-        <div class="tl-item ${doneClass}" data-time="${step.time}">
+        <div class="tl-item ${esc(doneClass)}" data-time="${esc(step.time)}">
           <div class="tl-dot" style="${isDone ? 'background:var(--accent); border-color:var(--accent);' : ''}"></div>
           <div class="tl-card" style="${isDone ? 'opacity:0.65;' : ''}">
-            <div class="tl-time">${timeBadge}${step.time || ''}</div>
+            <div class="tl-time">${esc(timeBadge)}${esc(step.time || '')}</div>
             <div class="tl-event" style="display:flex; align-items:center; justify-space-between;">
-              <span style="${isDone ? 'text-decoration:line-through;' : ''}">${step.label}${checkMark}</span>
+              <span style="${isDone ? 'text-decoration:line-through;' : ''}">${esc(step.label)}${esc(checkMark)}</span>
             </div>
             ${!isDone && (step.label.includes('출발') || step.label.includes('도착')) ? `
               <div class="tl-nav-btns" style="margin-top:8px;">
-                <button class="tl-nav-btn tmap" onclick="Timeline.openNav('tmap','${destName}',${destLat},${destLng})">${tmapIcon} TMAP</button>
-                <button class="tl-nav-btn kakao" onclick="Timeline.openNav('kakao','${destName}',${destLat},${destLng})">${kakaoIcon} 카카오내비</button>
+                <button class="tl-nav-btn tmap" onclick="Timeline.openNav('tmap',${escJs(destName)},${Number(destLat) || 0},${Number(destLng) || 0})">${tmapIcon} TMAP</button>
+                <button class="tl-nav-btn kakao" onclick="Timeline.openNav('kakao',${escJs(destName)},${Number(destLat) || 0},${Number(destLng) || 0})">${kakaoIcon} 카카오내비</button>
               </div>
             ` : ''}
           </div>
@@ -372,19 +372,19 @@ const Timeline = {
         <div class="comp-card">
           <div class="comp-head">
             <h3 class="comp-title">💬 스태프 방</h3>
-            <span class="chip chip-gold">${companions.length}명</span>
+            <span class="chip chip-gold">${esc(companions.length)}명</span>
           </div>
           <div class="comp-list">
             ${companions.map(c => `
               <div class="comp-row">
                 <div class="comp-info">
-                  <div class="comp-avatar" style="background:linear-gradient(135deg,${c.color},${c.color}88)">${c.emoji}</div>
+                  <div class="comp-avatar" style="background:linear-gradient(135deg,${esc(c.color)},${esc(c.color)}88)">${esc(c.emoji)}</div>
                   <div>
-                    <div class="comp-name">${c.name}</div>
+                    <div class="comp-name">${esc(c.name)}</div>
                     <div class="comp-status">대기 중</div>
                   </div>
                 </div>
-                <button class="status-btn" onclick="Timeline.toggleStatus(this,'${c.name}')">출발함</button>
+                <button class="status-btn" onclick="Timeline.toggleStatus(this,${escJs(c.name)})">출발함</button>
               </div>
             `).join('')}
           </div>
@@ -517,7 +517,7 @@ const Timeline = {
     const items = CHECKLIST.map((c,i) => `
       <div class="modal-item" onclick="this.classList.toggle('selected');U.haptic();">
         <div class="modal-item-icon">${icons[i]}</div>
-        <span class="modal-item-text">${c}</span>
+        <span class="modal-item-text">${esc(c)}</span>
         <div class="modal-item-check">✓</div>
       </div>
     `).join('');
@@ -554,7 +554,7 @@ const Timeline = {
     const stopHtml = `
       <div style="text-align:center; padding:var(--sp-4);">
         <div style="font-size:3rem; margin-bottom:var(--sp-3);">⏰</div>
-        <p style="font-size:var(--fs-lg); margin-bottom:var(--sp-5);">${msg}</p>
+        <p style="font-size:var(--fs-lg); margin-bottom:var(--sp-5);">${esc(msg)}</p>
         <button class="btn btn-gold" style="width:100%;" onclick="Timeline.stopAlarmSound()">알람 끄기</button>
       </div>
     `;
@@ -607,7 +607,7 @@ const Timeline = {
     const nextItem = steps.find(t => !t.done);
     if (nextItem) {
       let label = nextItem.label.replace(/🎬 |🏁 |💄 |🚗 /g, '');
-      return `<button class="btn btn-primary" style="width:100%; font-size:16px; padding:14px;" onclick="Timeline.advanceStatus()">✅ 실시간 상태 전송: ${label}</button>`;
+      return `<button class="btn btn-primary" style="width:100%; font-size:16px; padding:14px;" onclick="Timeline.advanceStatus()">✅ 실시간 상태 전송: ${esc(label)}</button>`;
     } else {
       return `<button class="btn" style="width:100%; font-size:16px; padding:14px;" disabled>🎉 모든 일정이 완료되었습니다</button>`;
     }
@@ -697,25 +697,25 @@ const Timeline = {
       <div style="display:flex; flex-direction:column; gap:16px;">
         <div style="background:var(--bg-input); padding:16px; border-radius:12px; border:1px solid var(--border-subtle);">
           <label style="display:block; font-size:13px; color:var(--text-400); margin-bottom:6px; font-weight:600;">🚫 알러지 / 주의사항</label>
-          <input type="text" id="mob-care-allergies" value="${care.allergies || ''}" style="width:100%; padding:10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--text-100); font-size:15px;" placeholder="예) 복숭아, 갑각류">
+          <input type="text" id="mob-care-allergies" value="${esc(care.allergies || '')}" style="width:100%; padding:10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--text-100); font-size:15px;" placeholder="예) 복숭아, 갑각류">
         </div>
         <div style="background:var(--bg-input); padding:16px; border-radius:12px; border:1px solid var(--border-subtle);">
           <label style="display:block; font-size:13px; color:var(--text-400); margin-bottom:6px; font-weight:600;">☕ 선호 식음료</label>
-          <input type="text" id="mob-care-beverages" value="${care.beverages || ''}" style="width:100%; padding:10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--text-100); font-size:15px;" placeholder="예) 아이스 아메리카노">
+          <input type="text" id="mob-care-beverages" value="${esc(care.beverages || '')}" style="width:100%; padding:10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--text-100); font-size:15px;" placeholder="예) 아이스 아메리카노">
         </div>
         <div style="background:var(--bg-input); padding:16px; border-radius:12px; border:1px solid var(--border-subtle);">
           <label style="display:block; font-size:13px; color:var(--text-400); margin-bottom:6px; font-weight:600;">🚙 차량 세팅</label>
-          <input type="text" id="mob-care-vehicle" value="${care.vehicle_pref || ''}" style="width:100%; padding:10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--text-100); font-size:15px;" placeholder="예) 조수석 선호, 에어컨 약하게">
+          <input type="text" id="mob-care-vehicle" value="${esc(care.vehicle_pref || '')}" style="width:100%; padding:10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--text-100); font-size:15px;" placeholder="예) 조수석 선호, 에어컨 약하게">
         </div>
         <div style="background:var(--bg-input); padding:16px; border-radius:12px; border:1px solid var(--border-subtle);">
           <label style="display:block; font-size:13px; color:var(--text-400); margin-bottom:6px; font-weight:600;">💊 비상 약품 / 메모</label>
-          <input type="text" id="mob-care-emergency" value="${care.emergency || ''}" style="width:100%; padding:10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--text-100); font-size:15px;" placeholder="비상 메모 입력">
+          <input type="text" id="mob-care-emergency" value="${esc(care.emergency || '')}" style="width:100%; padding:10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--text-100); font-size:15px;" placeholder="비상 메모 입력">
         </div>
         <div style="background:var(--bg-input); padding:16px; border-radius:12px; border:1px solid var(--border-subtle);">
           <label style="display:block; font-size:13px; color:var(--text-400); margin-bottom:6px; font-weight:600;">📞 스태프 연락처</label>
-          <input type="text" id="mob-care-contacts" value="${care.contacts || ''}" style="width:100%; padding:10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--text-100); font-size:15px;" placeholder="헤어: 010-...">
+          <input type="text" id="mob-care-contacts" value="${esc(care.contacts || '')}" style="width:100%; padding:10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--text-100); font-size:15px;" placeholder="헤어: 010-...">
         </div>
-        <button class="btn btn-primary" style="margin-top:8px; padding:16px; font-size:16px; border-radius:12px;" onclick="Timeline.saveCareInfo('${artist.id}')">💾 현장 변경사항 업데이트</button>
+        <button class="btn btn-primary" style="margin-top:8px; padding:16px; font-size:16px; border-radius:12px;" onclick="Timeline.saveCareInfo(${escJs(artist.id)})">💾 현장 변경사항 업데이트</button>
       </div>
     `;
 
