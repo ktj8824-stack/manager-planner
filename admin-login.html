@@ -234,7 +234,7 @@
       </div>
 
       <button type="submit" class="btn-submit" id="btn-login">포털 접속 (Sign In)</button>
-      <button type="button" onclick="quickCeoLogin()" 
+      <button type="button" id="quick-ceo-btn" onclick="quickCeoLogin()" hidden
         style="width: 100%; margin-top: 10px; padding: 13px; border-radius: 12px; border: 1.5px dashed rgba(99,102,241,0.5); background: rgba(99,102,241,0.06); color: #4f46e5; font-weight: 800; font-size: 13.5px; cursor: pointer; transition: all 0.2s; font-family: 'Pretendard', sans-serif;">
         ⚡ 테스트 대표 계정 1초 바로 접속 (ceo@kjm-ent.com)
       </button>
@@ -369,7 +369,12 @@
       }
     });
 
+    // 테스트용 버튼은 내 컴퓨터의 개발 서버(localhost)에서만 보이고 동작합니다. 운영 주소에서는 나타나지 않습니다.
+    const IS_DEV_HOST = ['localhost', '127.0.0.1', ''].includes(window.location.hostname) || window.location.protocol === 'file:';
+    if (IS_DEV_HOST) { const quickBtn = document.getElementById('quick-ceo-btn'); if (quickBtn) quickBtn.hidden = false; }
+
     function quickCeoLogin() {
+      if (!IS_DEV_HOST) return;
       localStorage.setItem('admin_saved_email', 'ceo@kjm-ent.com');
       localStorage.setItem('admin_bp_logged_in', 'true');
       localStorage.setItem('admin_bp_user_role', 'ceo');
