@@ -160,19 +160,19 @@ const Register = {
     
     const artistChips = artists.map(a => `
       <div class="artist-chip ${this.artistId === a.id ? 'active' : ''}" 
-           onclick="Register.selectArtist('${a.id}')"
-           style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; background:${this.artistId === a.id ? a.color : '#f1f5f9'}; color:${this.artistId === a.id ? '#fff' : '#475569'}; border-radius:20px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s; margin-right:8px; white-space:nowrap; border:1px solid ${this.artistId === a.id ? 'transparent' : '#e2e8f0'}">
-        <span>${a.emoji}</span>
-        <span>${a.name}</span>
+           onclick="Register.selectArtist(${escJs(a.id)})"
+           style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; background:${esc(this.artistId === a.id ? a.color : '#f1f5f9')}; color:${this.artistId === a.id ? '#fff' : '#475569'}; border-radius:20px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s; margin-right:8px; white-space:nowrap; border:1px solid ${this.artistId === a.id ? 'transparent' : '#e2e8f0'}">
+        <span>${esc(a.emoji)}</span>
+        <span>${esc(a.name)}</span>
       </div>
     `).join('');
     
     const catOptions = Object.keys(categories).map(k => `
-      <option value="${k}" ${this.category === k ? 'selected' : ''}>${categories[k].icon} ${categories[k].name}</option>
+      <option value="${esc(k)}" ${this.category === k ? 'selected' : ''}>${categories[k].icon} ${categories[k].name}</option>
     `).join('');
     
     const vehOptions = vehicles.map(v => `
-      <option value="${v.id}" ${this.vehicleId === v.id ? 'selected' : ''}>🚗 ${v.name}</option>
+      <option value="${esc(v.id)}" ${this.vehicleId === v.id ? 'selected' : ''}>🚗 ${esc(v.name)}</option>
     `).join('');
     
     el.innerHTML = `
@@ -230,7 +230,7 @@ const Register = {
             <div class="field" style="margin-top:20px">
               <label class="field-label"><span class="req">*</span> 현장 도착(시작) 시간</label>
               <button class="picker-btn" onclick="Register.openTimePicker('main')" style="width:100%; display:flex; justify-content:space-between; align-items:center; padding:14px; border:1px solid #e2e8f0; border-radius:12px; font-size:15px; font-weight:600; background:#f8fafc; color:#1e293b;">
-                <span class="picker-val ${this.timeH === null ? 'is-empty' : ''}" id="r-time">${timeStr}</span>
+                <span class="picker-val ${this.timeH === null ? 'is-empty' : ''}" id="r-time">${esc(timeStr)}</span>
                 <span class="picker-ico">⏰</span>
               </button>
             </div>
@@ -253,7 +253,7 @@ const Register = {
                   <div>
                     <label style="font-size:12px; color:#64748b; font-weight:600; display:block; margin-bottom:6px;">샵 도착 시간</label>
                     <button class="picker-btn" onclick="Register.openTimePicker('shop')" style="width:100%; display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; font-weight:600; background:#fff; color:#1e293b;">
-                      <span class="picker-val ${this.shopTimeH === null ? 'is-empty' : ''}" id="r-shop-time">${shopTimeStr}</span>
+                      <span class="picker-val ${this.shopTimeH === null ? 'is-empty' : ''}" id="r-shop-time">${esc(shopTimeStr)}</span>
                       <span class="picker-ico">🕒</span>
                     </button>
                   </div>
@@ -291,7 +291,7 @@ const Register = {
             <div class="field" style="margin-top:20px">
               <label class="field-label">예상 소요 시간 (시간)</label>
               <div class="pills" id="r-dur-pills">
-                ${durOptions.map(t => `<button class="pill ${t===this.duration?'on':''}" onclick="Register.setDuration(${t},this)">${t}</button>`).join('')}
+                ${durOptions.map(t => `<button class="pill ${t===this.duration?'on':''}" onclick="Register.setDuration(${t},this)">${esc(t)}</button>`).join('')}
               </div>
             </div>
 
@@ -359,10 +359,10 @@ const Register = {
     }
     
     drop.innerHTML = this.searchResults.map(c => `
-      <div class="search-item" onclick="Register.selectCourse('${c.id}')">
+      <div class="search-item" onclick="Register.selectCourse(${escJs(c.id)})">
         <div class="search-item-info">
           <div class="search-item-name">${U.hlMatch(c.place_name, q)}</div>
-          <div class="search-item-addr">${c.address_name}</div>
+          <div class="search-item-addr">${esc(c.address_name)}</div>
         </div>
       </div>`).join('');
   },
@@ -407,14 +407,14 @@ const Register = {
     const REPEAT = 40;
     const MID = Math.floor(REPEAT / 2);
 
-    let yearHtml = years.map(y => `<div class="wheel-item" data-val="${y}">${y}년</div>`).join('');
+    let yearHtml = years.map(y => `<div class="wheel-item" data-val="${esc(y)}">${esc(y)}년</div>`).join('');
     
     let monthItemsHtml = '';
-    for(let i=1; i<=12; i++) monthItemsHtml += `<div class="wheel-item" data-val="${i}">${i}월</div>`;
+    for(let i=1; i<=12; i++) monthItemsHtml += `<div class="wheel-item" data-val="${esc(i)}">${esc(i)}월</div>`;
     let monthHtml = monthItemsHtml.repeat(REPEAT);
     
     let dayItemsHtml = '';
-    for(let i=1; i<=31; i++) dayItemsHtml += `<div class="wheel-item" data-val="${i}">${i}일</div>`;
+    for(let i=1; i<=31; i++) dayItemsHtml += `<div class="wheel-item" data-val="${esc(i)}">${esc(i)}일</div>`;
     let dayHtml = dayItemsHtml.repeat(REPEAT);
 
     const content = `
@@ -501,13 +501,13 @@ const Register = {
     const REPEAT = 40;
     const MID = Math.floor(REPEAT / 2);
 
-    let ampmHtml = ['오전', '오후'].map(v => `<div class="wheel-item" data-val="${v}">${v}</div>`).join('');
+    let ampmHtml = ['오전', '오후'].map(v => `<div class="wheel-item" data-val="${esc(v)}">${esc(v)}</div>`).join('');
     let hourItems = '';
-    for (let i = 1; i <= 12; i++) hourItems += `<div class="wheel-item" data-val="${i}">${i}</div>`;
+    for (let i = 1; i <= 12; i++) hourItems += `<div class="wheel-item" data-val="${esc(i)}">${esc(i)}</div>`;
     let hourHtml = hourItems.repeat(REPEAT);
     
     let minItems = '';
-    for (let i = 0; i < 60; i+=10) minItems += `<div class="wheel-item" data-val="${i}">${String(i).padStart(2, '0')}</div>`;
+    for (let i = 0; i < 60; i+=10) minItems += `<div class="wheel-item" data-val="${esc(i)}">${String(i).padStart(2, '0')}</div>`;
     let minHtml = minItems.repeat(REPEAT);
 
     const title = isShop ? '🕒 샵 도착 시간' : '⏰ 현장 도착 시간';

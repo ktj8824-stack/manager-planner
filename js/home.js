@@ -1,19 +1,19 @@
 // ── 🎨 아티스트 고유 활동 유형별 라인 SVG 아이콘 헬퍼 ──
 function getArtistTypeIcon(art, size = 14) {
-  if (!art) return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>`;
+  if (!art) return `<svg width="${esc(size)}" height="${esc(size)}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>`;
   const nameStr = (typeof art === 'string' ? art : (art.name || '')).toLowerCase();
   const typeStr = (art.type || '').toLowerCase();
   
   if (typeStr.includes('배우') || typeStr.includes('actor') || nameStr.includes('은호') || nameStr.includes('eunho')) {
-    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m4 4 3 4"/><path d="m11 4 3 4"/><path d="m18 4 3 4"/><line x1="2" y1="8" x2="22" y2="8"/></svg>`;
+    return `<svg width="${esc(size)}" height="${esc(size)}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m4 4 3 4"/><path d="m11 4 3 4"/><path d="m18 4 3 4"/><line x1="2" y1="8" x2="22" y2="8"/></svg>`;
   }
   if (typeStr.includes('솔로') || typeStr.includes('solo') || typeStr.includes('보컬') || nameStr.includes('유나') || nameStr.includes('yuna')) {
-    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`;
+    return `<svg width="${esc(size)}" height="${esc(size)}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`;
   }
   if (typeStr.includes('보이') || typeStr.includes('boy') || nameStr.includes('에이펙스') || nameStr.includes('apex')) {
-    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`;
+    return `<svg width="${esc(size)}" height="${esc(size)}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`;
   }
-  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+  return `<svg width="${esc(size)}" height="${esc(size)}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
 }
 
 const Home = {
@@ -197,9 +197,9 @@ const Home = {
       let dot = hasSched ? `<div style="width:5px; height:5px; background:${isSelected?'#fff':'#4f46e5'}; border-radius:50%; margin-left:auto;"></div>` : '';
       
       html += `
-        <div class="${cls}" onclick="Home.selectDate(${y},${m},${d})" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 4px; cursor:pointer; border-radius:12px; margin-bottom:4px; transition:all 0.15s; ${isSelected ? 'background:#1e293b; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.12);' : isToday ? 'background:rgba(99,102,241,0.08);' : ''}">
-          <div style="font-size:13px; font-weight:800; ${isSelected ? 'color:rgba(255,255,255,0.8);' : dayColor}">${dayName}</div>
-          <div style="font-size:17px; font-weight:900; width:26px; text-align:center; letter-spacing:-0.5px; ${isSelected ? 'color:#fff;' : 'color:#0f172a;'}">${d}</div>
+        <div class="${esc(cls)}" onclick="Home.selectDate(${y},${m},${d})" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 4px; cursor:pointer; border-radius:12px; margin-bottom:4px; transition:all 0.15s; ${isSelected ? 'background:#1e293b; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.12);' : isToday ? 'background:rgba(99,102,241,0.08);' : ''}">
+          <div style="font-size:13px; font-weight:800; ${esc(isSelected ? 'color:rgba(255,255,255,0.8);' : dayColor)}">${esc(dayName)}</div>
+          <div style="font-size:17px; font-weight:900; width:26px; text-align:center; letter-spacing:-0.5px; ${isSelected ? 'color:#fff;' : 'color:#0f172a;'}">${esc(d)}</div>
           <div style="width:4px; height:4px; display:flex; align-items:center; justify-content:center;">${dot}</div>
         </div>
       `;
@@ -215,7 +215,7 @@ const Home = {
     html += `
       <div style="display:flex; align-items:center; justify-content:center; padding:12px 0 8px; margin:4px 0;">
         <span style="background:#eef2ff; color:#4f46e5; font-size:11px; font-weight:800; padding:2px 10px; border-radius:12px; border:1px solid #e0e7ff; letter-spacing:0.5px; box-shadow:0 1px 2px rgba(0,0,0,0.02);">
-          ${nextM + 1}월
+          ${esc(nextM + 1)}월
         </span>
       </div>
     `;
@@ -237,9 +237,9 @@ const Home = {
       let dot = hasSched ? `<div style="width:5px; height:5px; background:${isSelected?'#fff':'#4f46e5'}; border-radius:50%; margin-left:auto;"></div>` : '';
       
       html += `
-        <div class="${cls}" onclick="Home.selectDate(${nextY},${nextM},${d})" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 4px; cursor:pointer; border-radius:12px; margin-bottom:4px; transition:all 0.15s; ${isSelected ? 'background:#1e293b; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.12);' : isToday ? 'background:rgba(99,102,241,0.08);' : ''}">
-          <div style="font-size:13px; font-weight:800; ${isSelected ? 'color:rgba(255,255,255,0.8);' : dayColor}">${dayName}</div>
-          <div style="font-size:17px; font-weight:900; width:26px; text-align:center; letter-spacing:-0.5px; ${isSelected ? 'color:#fff;' : 'color:#0f172a;'}">${d}</div>
+        <div class="${esc(cls)}" onclick="Home.selectDate(${nextY},${nextM},${d})" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 4px; cursor:pointer; border-radius:12px; margin-bottom:4px; transition:all 0.15s; ${isSelected ? 'background:#1e293b; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.12);' : isToday ? 'background:rgba(99,102,241,0.08);' : ''}">
+          <div style="font-size:13px; font-weight:800; ${esc(isSelected ? 'color:rgba(255,255,255,0.8);' : dayColor)}">${esc(dayName)}</div>
+          <div style="font-size:17px; font-weight:900; width:26px; text-align:center; letter-spacing:-0.5px; ${isSelected ? 'color:#fff;' : 'color:#0f172a;'}">${esc(d)}</div>
           <div style="width:4px; height:4px; display:flex; align-items:center; justify-content:center;">${dot}</div>
         </div>
       `;
@@ -378,7 +378,7 @@ const Home = {
         <div style="font-size:13.5px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:5px;">
           <span style="color:#4f46e5; flex-shrink:0;">★</span>
           <span style="color:#4338ca; flex-shrink:0;">담당:</span>
-          <span style="color:#1e293b;">${artistSummary}</span>
+          <span style="color:#1e293b;">${esc(artistSummary)}</span>
         </div>
       </div>
 
@@ -488,24 +488,24 @@ const Home = {
         <div style="margin-bottom:12px; position:relative;">
           <!-- 시작 시간 텍스트 -->
           <div style="font-size:12px; font-weight:800; color:${isSecret ? '#9333ea' : '#4f46e5'}; margin-bottom:6px;">
-            ${hourLabel}
+            ${esc(hourLabel)}
           </div>
 
           <!-- 스케줄 카드 -->
-          <div onclick="Home.toggleScheduleDetail('${schId}')" 
-               style="width:100%; background:${cardBg}; border-radius:14px; padding:14px 14px 16px; border:1px solid ${cardBorderColor}; ${cardBorderLeft} box-shadow:0 2px 10px rgba(0,0,0,0.04); cursor:pointer; transition:all 0.2s ease; box-sizing:border-box;">
+          <div onclick="Home.toggleScheduleDetail(${escJs(schId)})" 
+               style="width:100%; background:${esc(cardBg)}; border-radius:14px; padding:14px 14px 16px; border:1px solid ${esc(cardBorderColor)}; ${esc(cardBorderLeft)} box-shadow:0 2px 10px rgba(0,0,0,0.04); cursor:pointer; transition:all 0.2s ease; box-sizing:border-box;">
             
             <!-- 상단: 시간 & 아티스트 태그 & 상세보기 -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
               <div style="display:flex; flex-direction:column; gap:4px;">
                 <div style="font-size:11px; font-weight:800; color:${isSecret ? '#9333ea' : '#4f46e5'}; display:flex; align-items:center; gap:4px;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  <span>${startTime} ~ ${endTime}</span>
+                  <span>${esc(startTime)} ~ ${esc(endTime)}</span>
                 </div>
                 <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
-                  <span style="background:${artObj.color || '#1e293b'}; color:#fff; font-size:11px; font-weight:800; padding:2px 7px; border-radius:5px; display:inline-flex; align-items:center; gap:4px;">
+                  <span style="background:${esc(artObj.color || '#1e293b')}; color:#fff; font-size:11px; font-weight:800; padding:2px 7px; border-radius:5px; display:inline-flex; align-items:center; gap:4px;">
                     ${getArtistTypeIcon(artObj, 11)}
-                    <span>${activeSched.artistName || '아티스트'}</span>
+                    <span>${esc(activeSched.artistName || '아티스트')}</span>
                   </span>
                   ${isHQ ? '<span style="background:rgba(99,102,241,0.1); color:#4f46e5; font-size:10px; font-weight:800; padding:1px 6px; border-radius:4px; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="12" y1="22" x2="12" y2="22.01"/></svg>HQ연동</span>' : ''}
                   ${isSecret ? '<span style="background:#f3e8ff; color:#9333ea; font-size:10px; font-weight:800; padding:1px 6px; border-radius:4px; border:1px solid #d8b4fe; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Secret</span>' : ''}
@@ -519,13 +519,13 @@ const Home = {
 
             <!-- 일정 타이틀 -->
             <div style="font-size:14px; font-weight:800; color:${isSecret ? '#581c87' : 'var(--text-100)'}; margin-bottom:6px; line-height:1.35; word-break:keep-all;">
-              ${displayTitle}
+              ${esc(displayTitle)}
             </div>
             
             <!-- 장소 -->
             <div style="font-size:11px; color:#64748b; font-weight:600; line-height:1.3; word-break:keep-all; display:flex; align-items:center; gap:4px;">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <span>${displayLocation}</span>
+              <span>${esc(displayLocation)}</span>
             </div>
 
             <!-- 클릭 시 제자리 확장 상세 정보 -->
@@ -538,12 +538,12 @@ const Home = {
                       <span>본 일정은 비공개 보안 스케줄로, 담당 배정자 및 경영진 외에는 열람이 제한됩니다.</span>
                     </div>
                   ` : `
-                    <div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <strong>매니저:</strong> ${activeSched.managerName || '미지정'}</div>
-                    ${!isStaff ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg> <strong>배차:</strong> ${activeSched.vehicleName || '미지정'}</div>` : ''}
-                    ${activeSched.shop && activeSched.shop.needed ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2"><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg> <strong>샵:</strong> ${activeSched.shop.name} (${activeSched.shop.durationMin || 90}분)</div>` : ''}
-                    ${departureText ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> <strong>픽업:</strong> ${departureText}</div>` : ''}
-                    ${activeSched.outfit ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg> <strong>의상:</strong> ${activeSched.outfit}</div>` : ''}
-                    ${activeSched.notes ? `<div style="color:#475569; background:#fff; padding:6px 8px; border-radius:4px; border:1px solid #e2e8f0; margin-top:2px; display:flex; align-items:flex-start; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="flex-shrink:0; margin-top:2px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> <span><strong>특이사항:</strong> ${activeSched.notes}</span></div>` : ''}
+                    <div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <strong>매니저:</strong> ${esc(activeSched.managerName || '미지정')}</div>
+                    ${!isStaff ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg> <strong>배차:</strong> ${esc(activeSched.vehicleName || '미지정')}</div>` : ''}
+                    ${activeSched.shop && activeSched.shop.needed ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2"><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg> <strong>샵:</strong> ${esc(activeSched.shop.name)} (${esc(activeSched.shop.durationMin || 90)}분)</div>` : ''}
+                    ${departureText ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> <strong>픽업:</strong> ${esc(departureText)}</div>` : ''}
+                    ${activeSched.outfit ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg> <strong>의상:</strong> ${esc(activeSched.outfit)}</div>` : ''}
+                    ${activeSched.notes ? `<div style="color:#475569; background:#fff; padding:6px 8px; border-radius:4px; border:1px solid #e2e8f0; margin-top:2px; display:flex; align-items:flex-start; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="flex-shrink:0; margin-top:2px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> <span><strong>특이사항:</strong> ${esc(activeSched.notes)}</span></div>` : ''}
                   `}
                 </div>
               </div>
@@ -589,7 +589,7 @@ const Home = {
           html += `
             <div style="margin-bottom:8px; position:relative;">
               <div style="font-size:11px; font-weight:700; color:#94a3b8; margin-bottom:4px;">
-                ${hourStr}
+                ${esc(hourStr)}
               </div>
               <div style="border-bottom:1px solid #f1f5f9; margin-bottom:6px;"></div>
             </div>
@@ -636,10 +636,10 @@ const Home = {
           <!-- 좌측: 1행 아티스트 / 2행 배차 차량 -->
           <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:0;">
             <div style="font-size:13.5px; font-weight:800; color:#1e293b; display:flex; align-items:center; gap:4px; line-height:1.3;">
-              <span style="flex-shrink:0;">✨</span> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${topArtist}</span>
+              <span style="flex-shrink:0;">✨</span> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(topArtist)}</span>
             </div>
             <div style="font-size:12px; font-weight:700; color:#475569; display:flex; align-items:center; gap:4px; line-height:1.3;">
-              <span style="flex-shrink:0;">🚗</span> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${topVehicle}</span>
+              <span style="flex-shrink:0;">🚗</span> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(topVehicle)}</span>
             </div>
           </div>
 
@@ -705,12 +705,12 @@ const Home = {
       
       const getLineIcon = (type) => {
         const strokeStyle = 'width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"';
-        if (type === 'shop') return `<svg ${strokeStyle}><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg>`;
-        if (type === 'car') return `<svg ${strokeStyle}><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg>`;
-        if (type === 'main') return `<svg ${strokeStyle}><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 9 15 12 10 15 10 9"/></svg>`;
-        if (type === 'finish') return `<svg ${strokeStyle}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`;
-        if (type === 'rest') return `<svg ${strokeStyle}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
-        return `<svg ${strokeStyle}><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+        if (type === 'shop') return `<svg ${esc(strokeStyle)}><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg>`;
+        if (type === 'car') return `<svg ${esc(strokeStyle)}><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg>`;
+        if (type === 'main') return `<svg ${esc(strokeStyle)}><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 9 15 12 10 15 10 9"/></svg>`;
+        if (type === 'finish') return `<svg ${esc(strokeStyle)}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`;
+        if (type === 'rest') return `<svg ${esc(strokeStyle)}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+        return `<svg ${esc(strokeStyle)}><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
       };
 
       let tag = '';
@@ -759,36 +759,36 @@ const Home = {
       if (!tag) tag = '일정';
 
       html += `
-        <div id="route-step-${ev.hqScheduleId || ''}-${ev.timelineIdx ?? idx}" style="display:flex; position:relative; margin-bottom:16px;">
+        <div id="route-step-${esc(ev.hqScheduleId || '')}-${esc(ev.timelineIdx ?? idx)}" style="display:flex; position:relative; margin-bottom:16px;">
           <!-- 좌측 컬럼: Vertical Track Line & Dot(O) & 시간 -->
           <div style="display:flex; flex-direction:column; align-items:center; width:48px; flex-shrink:0; position:relative;">
             <!-- Vertical Track Line -->
             ${!isLast ? `<div style="position:absolute; top:20px; bottom:-22px; left:23px; width:2px; background:${isDone ? '#10b981' : isMoving ? '#f59e0b' : '#e2e8f0'}; z-index:1;"></div>` : ''}
             
             <!-- Dot (O) -->
-            <div style="width:20px; height:20px; border-radius:50%; background:#fff; border:3px solid ${dotBg}; position:relative; z-index:2; display:flex; align-items:center; justify-content:center; color:${dotBg};">
+            <div style="width:20px; height:20px; border-radius:50%; background:#fff; border:3px solid ${esc(dotBg)}; position:relative; z-index:2; display:flex; align-items:center; justify-content:center; color:${esc(dotBg)};">
               ${isDone ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : isMoving ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/></svg>' : ''}
             </div>
             
             <!-- 시간 (O 아래에 배치 - 크기 및 선명도 확대) -->
             <div style="margin-top:6px; font-size:13.5px; font-weight:900; color:${isDone ? '#10b981' : isMoving ? '#d97706' : '#0f172a'}; text-align:center; white-space:nowrap; background:#ffffff; padding:2px 4px; border-radius:6px; border:1.5px solid ${isDone ? '#10b981' : isMoving ? '#f59e0b' : '#cbd5e1'}; z-index:2; letter-spacing:-0.3px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
-              ${ev.time}
+              ${esc(ev.time)}
             </div>
           </div>
           
           <!-- Route Card -->
-          <div style="flex:1; margin-left:8px; background:#fff; border-radius:14px; padding:12px 14px; box-shadow:0 2px 10px rgba(0,0,0,0.03); border:1px solid rgba(0,0,0,0.04); ${cardBorder} position:relative;">
+          <div style="flex:1; margin-left:8px; background:#fff; border-radius:14px; padding:12px 14px; box-shadow:0 2px 10px rgba(0,0,0,0.03); border:1px solid rgba(0,0,0,0.04); ${esc(cardBorder)} position:relative;">
              
              <!-- 카드 1행: 좌측 카테고리 뱃지 & 우측 [이동중] [완료] 버튼 (같은 라인에 배치) -->
              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px;">
                 <div style="display:flex; align-items:center; gap:6px;">
-                  <span style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:7px; font-size:11px; font-weight:800; letter-spacing:-0.2px; ${badgeStyle}">
+                  <span style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:7px; font-size:11px; font-weight:800; letter-spacing:-0.2px; ${esc(badgeStyle)}">
                     ${getLineIcon(iconType)}
-                    <span>${tag}</span>
+                    <span>${esc(tag)}</span>
                   </span>
                   ${isDone && ev.doneAt ? `
                     <span style="display:inline-flex; align-items:center; gap:3px; background:#ecfdf5; color:#059669; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px; border:1px solid rgba(16,185,129,0.3);">
-                      ${ev.doneAt} 완료
+                      ${esc(ev.doneAt)} 완료
                     </span>
                   ` : ''}
                 </div>
@@ -798,7 +798,7 @@ const Home = {
                     ${isDriveStep ? `
                       <!-- 이동중 버튼 (더 진하고 뚜렷하게) -->
                       <button type="button"
-                        onclick="Home.setHQRouteStatus('${ev.hqScheduleId}', ${ev.timelineIdx}, '이동중')"
+                        onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '이동중')"
                         style="padding:4px 10px; border-radius:6px; font-size:12px; font-weight:800; cursor:pointer; transition:all 0.15s;
                                ${isMoving
                                   ? 'border:2px solid #f59e0b; background:#fef3c7; color:#b45309; box-shadow:0 0 0 2px rgba(245,158,11,0.2);'
@@ -809,7 +809,7 @@ const Home = {
                     ` : ''}
                     <!-- 완료 버튼 (더 진하고 뚜렷하게) -->
                     <button type="button"
-                      onclick="Home.setHQRouteStatus('${ev.hqScheduleId}', ${ev.timelineIdx}, '완료')"
+                      onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '완료')"
                       style="padding:4px 10px; border-radius:6px; font-size:12px; font-weight:800; cursor:pointer; transition:all 0.15s;
                              ${isDone
                                 ? 'border:2px solid #10b981; background:#d1fae5; color:#047857; box-shadow:0 0 0 2px rgba(16,185,129,0.2);'
@@ -823,7 +823,7 @@ const Home = {
              
              <!-- 카드 2행: Title 텍스트 -->
              <div style="font-size:15px; font-weight:800; line-height:1.35; ${isDone ? 'text-decoration:line-through; color:#94a3b8;' : 'color:var(--text-100);'} margin-bottom:6px;">
-               ${restText || cleanTitle}
+               ${esc(restText || cleanTitle)}
              </div>
              
              <!-- Description / Notes & 역산 정보 -->
@@ -846,7 +846,7 @@ const Home = {
                }
                return `
                  <div style="font-size:12px; line-height:1.45; margin-top:4px; ${isDriveStep ? 'background:#f8fafc; border:1px solid #e2e8f0; padding:6px 10px; border-radius:8px; color:#334155; font-weight:600;' : 'color:var(--text-400);'}">
-                   ${isDriveStep ? '<span style="color:#4f46e5; font-weight:800; margin-right:4px;">⏱️ 동선 역산 :</span>' : ''}${cleanDesc}
+                   ${isDriveStep ? '<span style="color:#4f46e5; font-weight:800; margin-right:4px;">⏱️ 동선 역산 :</span>' : ''}${esc(cleanDesc)}
                  </div>
                `;
              })()}
@@ -1070,9 +1070,9 @@ const Home = {
     const vehicles = (window.hqStore ? window.hqStore.getVehicles() : []) || [];
     const managers = (window.hqStore ? window.hqStore.getManagers() : []) || [];
 
-    const artistOptions = artists.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
-    const vehicleOptions = vehicles.map(v => `<option value="${v.id}">${v.name} (${v.number || ''})</option>`).join('');
-    const managerOptions = managers.map(m => `<option value="${m.id}">${m.name} (${m.title || '매니저'})</option>`).join('');
+    const artistOptions = artists.map(a => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
+    const vehicleOptions = vehicles.map(v => `<option value="${esc(v.id)}">${esc(v.name)} (${esc(v.number || '')})</option>`).join('');
+    const managerOptions = managers.map(m => `<option value="${esc(m.id)}">${esc(m.name)} (${esc(m.title || '매니저')})</option>`).join('');
 
     const modalHtml = `
       <div id="app-schedule-form-container" style="padding:4px 0 20px; max-height:75vh; overflow-y:auto; -webkit-overflow-scrolling:touch;">
@@ -1115,7 +1115,7 @@ const Home = {
 
             <div style="margin-bottom:12px;">
               <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">스케줄 일자 <span style="color:#ef4444;">*</span></label>
-              <input type="date" id="m-sch-date" value="${defaultDate}" required style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-weight:700; background:#fff; box-sizing:border-box;" />
+              <input type="date" id="m-sch-date" value="${esc(defaultDate)}" required style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-weight:700; background:#fff; box-sizing:border-box;" />
             </div>
 
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">

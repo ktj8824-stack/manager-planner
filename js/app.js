@@ -298,7 +298,7 @@ const App = {
     this.closeModal();
     const bg = U.el('div','modal-bg');
     bg.id = 'app-modal';
-    bg.innerHTML = `<div class="modal-panel"><div class="modal-handle"></div><h3 class="modal-title">${title}</h3><div class="modal-list">${content}</div></div>`;
+    bg.innerHTML = `<div class="modal-panel"><div class="modal-handle"></div><h3 class="modal-title">${esc(title)}</h3><div class="modal-list">${content}</div></div>`;
     document.body.appendChild(bg);
     bg.addEventListener('click', e => { if (e.target===bg) this.closeModal(); });
     requestAnimationFrame(() => bg.classList.add('open'));
@@ -316,7 +316,7 @@ const App = {
     this.closeBottomSheet();
     const bg = U.el('div','modal-bg');
     bg.id = 'app-bottom-sheet';
-    bg.innerHTML = `<div class="modal-panel" style="padding-bottom:env(safe-area-inset-bottom); border-radius: 20px 20px 0 0;"><div class="modal-handle"></div><h3 class="modal-title" style="text-align:left; font-size:20px; font-weight:800; margin-bottom:16px;">${title}</h3><div class="modal-list">${content}</div></div>`;
+    bg.innerHTML = `<div class="modal-panel" style="padding-bottom:env(safe-area-inset-bottom); border-radius: 20px 20px 0 0;"><div class="modal-handle"></div><h3 class="modal-title" style="text-align:left; font-size:20px; font-weight:800; margin-bottom:16px;">${esc(title)}</h3><div class="modal-list">${content}</div></div>`;
     document.body.appendChild(bg);
     bg.addEventListener('click', e => { if (e.target===bg) this.closeBottomSheet(); });
     requestAnimationFrame(() => bg.classList.add('open'));
@@ -355,8 +355,8 @@ const App = {
       
       resContainer.innerHTML = places.map((p, i) => `
         <div class="list-item" style="cursor:pointer" onclick="window._selectAddress(${i})">
-          <div class="item-title">${p.name || p.place_name}</div>
-          ${(p.address || p.address_name) ? `<div class="item-sub">${p.address || p.address_name}</div>` : ''}
+          <div class="item-title">${esc(p.name || p.place_name)}</div>
+          ${(p.address || p.address_name) ? `<div class="item-sub">${esc(p.address || p.address_name)}</div>` : ''}
         </div>
       `).join('');
     };
@@ -374,7 +374,7 @@ const App = {
     bg.innerHTML = `
       <div class="modal-panel" style="display:flex; flex-direction:column; height:80vh;">
         <div class="modal-handle"></div>
-        <h3 class="modal-title">${title}</h3>
+        <h3 class="modal-title">${esc(title)}</h3>
         <div style="padding:0 var(--sp-4) var(--sp-4) var(--sp-4); display:flex; gap:var(--sp-2);">
           <input type="text" id="addr-search-input" class="address-input" placeholder="정확한 주소 또는 건물명" style="flex:1" onkeypress="if(event.key==='Enter') window._searchAddress()" />
           <button class="btn btn-primary" onclick="window._searchAddress()" style="width:auto; padding:0 var(--sp-4);">검색</button>
@@ -426,7 +426,7 @@ const App = {
           <span style="font-size:10.5px; font-weight:700; padding:1px 6px; border-radius:10px; ${noti.isUrgent ? 'background:#ef4444; color:#fff;' : 'background:#3b82f6; color:#fff;'}">${noti.isUrgent ? 'URGENT' : 'NOTICE'}</span>
         </div>
         <div style="line-height:1.45; font-size:13px; color:#f1f5f9; word-break:break-word;">${safeContent}</div>
-        <div style="font-size:11px; color:#94a3b8; margin-top:6px;">${timeStr}</div>
+        <div style="font-size:11px; color:#94a3b8; margin-top:6px;">${esc(timeStr)}</div>
       </div>
       <button style="background:transparent; border:none; color:#94a3b8; font-size:16px; cursor:pointer; padding:2px 4px; line-height:1;" onclick="this.parentElement.remove()" title="닫기">✕</button>
     `;
@@ -477,10 +477,10 @@ const App = {
               <div style="background:var(--bg-card); border:1px solid ${n.urgent ? 'rgba(239,68,68,0.35)' : 'var(--border-subtle)'}; border-radius:var(--r-lg); padding:14px; position:relative;">
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
                   <span style="font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; ${n.urgent ? 'background:#ef4444; color:#fff;' : 'background:var(--primary-500); color:#fff;'}">${n.urgent ? '긴급 공지' : '본사 공지'}</span>
-                  <span style="font-size:11px; color:var(--text-400);">${n.date || '최신'}</span>
+                  <span style="font-size:11px; color:var(--text-400);">${esc(n.date || '최신')}</span>
                 </div>
-                <div style="font-size:14px; font-weight:700; color:var(--text-100); margin-bottom:6px;">${n.title}</div>
-                <div style="font-size:12.5px; color:var(--text-300); line-height:1.5;">${n.content}</div>
+                <div style="font-size:14px; font-weight:700; color:var(--text-100); margin-bottom:6px;">${esc(n.title)}</div>
+                <div style="font-size:12.5px; color:var(--text-300); line-height:1.5;">${esc(n.content)}</div>
               </div>
             `).join('')}
           </div>

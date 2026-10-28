@@ -93,7 +93,7 @@ const Upgrade = {
           토스페이먼츠 금융 보안 결제망으로 안전하게 결제됩니다.
         </p>
 
-        <button class="btn-primary" style="width:100%; padding:14px; margin-bottom:10px; font-weight:700; font-size:14px; background:linear-gradient(135deg, #6366f1, #8b5cf6);" onclick="location.href='${payUrl}'">
+        <button class="btn-primary" style="width:100%; padding:14px; margin-bottom:10px; font-weight:700; font-size:14px; background:linear-gradient(135deg, #6366f1, #8b5cf6);" onclick="location.href=${escJs(payUrl)}">
           신용카드 / 간편결제 진행
         </button>
 

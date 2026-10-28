@@ -816,14 +816,14 @@ const ReviewStore = {
     for (let i = 0; i < full; i++) html += '★';
     if (half) html += '☆';
     for (let i = 0; i < empty; i++) html += '☆';
-    return `<span style="color:#f59e0b; font-size:0.85rem; letter-spacing:1px;">${html}</span> <span style="font-size:0.75rem; color:var(--text-400);">${avgRating} (${count}명)</span>`;
+    return `<span style="color:#f59e0b; font-size:0.85rem; letter-spacing:1px;">${html}</span> <span style="font-size:0.75rem; color:var(--text-400);">${esc(avgRating)} (${esc(count)}명)</span>`;
   },
 
   // 별점 입력 UI (인터랙티브)
   renderStarInput(currentStars = 0) {
     let html = '<div class="star-input" style="display:flex; gap:4px; font-size:1.8rem; cursor:pointer;">';
     for (let i = 1; i <= 5; i++) {
-      html += `<span class="star-btn" data-star="${i}" onclick="ReviewStore.onStarClick(${i})" style="color:${i <= currentStars ? '#f59e0b' : '#d1d5db'}; transition:color 0.15s; user-select:none;">${i <= currentStars ? '★' : '☆'}</span>`;
+      html += `<span class="star-btn" data-star="${esc(i)}" onclick="ReviewStore.onStarClick(${i})" style="color:${i <= currentStars ? '#f59e0b' : '#d1d5db'}; transition:color 0.15s; user-select:none;">${i <= currentStars ? '★' : '☆'}</span>`;
     }
     html += '</div>';
     return html;
@@ -865,10 +865,10 @@ const ReviewStore = {
           existingHtml += `
             <div style="padding:8px; margin-bottom:6px; background:var(--bg); border-radius:6px; border:1px solid var(--border);">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
-                <span style="font-size:var(--text-sm); color:#f59e0b;">${stars}</span>
-                <span style="font-size:0.7rem; color:var(--text-500);">${r.user} · ${dateStr}</span>
+                <span style="font-size:var(--text-sm); color:#f59e0b;">${esc(stars)}</span>
+                <span style="font-size:0.7rem; color:var(--text-500);">${esc(r.user)} · ${esc(dateStr)}</span>
               </div>
-              ${r.comment ? `<div style="font-size:var(--text-sm); color:var(--text-300);">${r.comment}</div>` : ''}
+              ${r.comment ? `<div style="font-size:var(--text-sm); color:var(--text-300);">${esc(r.comment)}</div>` : ''}
             </div>
           `;
         });

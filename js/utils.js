@@ -198,7 +198,7 @@ const U = {
     ` : '';
     
     const googleBtn = showGoogle ? `
-        <a href="${googleUrl}" target="_blank" class="btn" style="margin-bottom:var(--sp-3);display:flex;align-items:center;justify-content:center;width:100%;background:var(--bg-input);border:1px solid var(--border-default);color:var(--text-100);text-decoration:none;font-weight:var(--fw-bold);height:48px;border-radius:var(--r-md);" onclick="App.closeModal()">
+        <a href="${esc(googleUrl)}" target="_blank" class="btn" style="margin-bottom:var(--sp-3);display:flex;align-items:center;justify-content:center;width:100%;background:var(--bg-input);border:1px solid var(--border-default);color:var(--text-100);text-decoration:none;font-weight:var(--fw-bold);height:48px;border-radius:var(--r-md);" onclick="App.closeModal()">
           🤖 안드로이드 캘린더 연동
         </a>
     ` : '';
@@ -371,7 +371,7 @@ const U = {
     const modalHtml = `
       <div style="padding:16px 0; text-align:center;">
         <div style="font-size:15px; font-weight:800; color:var(--text-100); margin-bottom:6px;">
-          📍 목적지: ${query}
+          📍 목적지: ${esc(query)}
         </div>
         <p style="font-size:13px; color:var(--text-400); margin-bottom:20px;">
           사용하실 네비게이션 앱을 선택해주세요.

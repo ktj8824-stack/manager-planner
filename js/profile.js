@@ -79,11 +79,11 @@ const Profile = {
 
           <div style="display:flex;align-items:center;gap:14px;position:relative;">
             <!-- 아바타 -->
-            <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;flex-shrink:0;letter-spacing:-1px;">${initials}</div>
+            <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;flex-shrink:0;letter-spacing:-1px;">${esc(initials)}</div>
             <div style="flex:1;min-width:0;">
-              <div style="font-size:17px;font-weight:800;color:#fff;letter-spacing:-0.4px;margin-bottom:3px;">${userName}</div>
-              <div style="font-size:11.5px;color:rgba(255,255,255,0.55);margin-bottom:2px;">${userEmail}</div>
-              <div style="font-size:11px;color:rgba(255,255,255,0.4);">${userCompany} · ${userDept}</div>
+              <div style="font-size:17px;font-weight:800;color:#fff;letter-spacing:-0.4px;margin-bottom:3px;">${esc(userName)}</div>
+              <div style="font-size:11.5px;color:rgba(255,255,255,0.55);margin-bottom:2px;">${esc(userEmail)}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.4);">${esc(userCompany)} · ${esc(userDept)}</div>
             </div>
           </div>
 
@@ -91,7 +91,7 @@ const Profile = {
           <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:space-between;position:relative;">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
               <span style="font-size:11px;color:rgba(255,255,255,0.4);font-weight:500;">담당 아티스트</span>
-              ${assignedArtists.map(a => `<span style="background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9);font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);">${a}</span>`).join('')}
+              ${assignedArtists.map(a => `<span style="background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9);font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);">${esc(a)}</span>`).join('')}
             </div>
             <button onclick="Profile.editArtists()" style="display:flex;align-items:center;gap:4px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:11px;font-weight:600;padding:5px 10px;border-radius:8px;cursor:pointer;">${ProfileIcons.edit} 변경</button>
           </div>
@@ -185,18 +185,18 @@ const Profile = {
     const rows = items.map((item, i) => {
       const border = i < items.length - 1 ? 'border-bottom:1px solid var(--border-subtle);' : '';
       return `
-        <div onclick="${item.action}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;${border}cursor:pointer;">
+        <div onclick="${item.action}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;${esc(border)}cursor:pointer;">
           <span style="color:${type==='red'?'#f87171':'var(--primary-400)'};flex-shrink:0;">${item.icon}</span>
           <div style="flex:1;min-width:0;">
-            <div style="font-size:13.5px;font-weight:700;color:var(--text-100);">${item.label}</div>
-            ${item.sub ? `<div style="font-size:11.5px;color:var(--text-400);margin-top:2px;">${item.sub}</div>` : ''}
+            <div style="font-size:13.5px;font-weight:700;color:var(--text-100);">${esc(item.label)}</div>
+            ${item.sub ? `<div style="font-size:11.5px;color:var(--text-400);margin-top:2px;">${esc(item.sub)}</div>` : ''}
           </div>
           <div style="flex-shrink:0;color:var(--text-400);">${item.badge}</div>
         </div>`;
     }).join('');
     return `
       <div style="margin:0 var(--sp-5) var(--sp-4);">
-        <div class="profile-section-title" style="margin-bottom:10px;${titleColor}">${title}</div>
+        <div class="profile-section-title" style="margin-bottom:10px;${esc(titleColor)}">${esc(title)}</div>
         <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:16px;overflow:hidden;">
           ${rows}
         </div>
@@ -209,8 +209,8 @@ const Profile = {
       <div onclick="${action}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;${border?'border-bottom:1px solid var(--border-subtle);':''}cursor:pointer;">
         <span style="color:var(--primary-400);flex-shrink:0;">${icon}</span>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:11px;color:var(--text-400);margin-bottom:2px;">${label}</div>
-          <div style="font-size:13px;font-weight:${value?'600':'400'};color:${value?'var(--text-100)':'var(--text-400)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${value || placeholder}</div>
+          <div style="font-size:11px;color:var(--text-400);margin-bottom:2px;">${esc(label)}</div>
+          <div style="font-size:13px;font-weight:${value?'600':'400'};color:${value?'var(--text-100)':'var(--text-400)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(value || placeholder)}</div>
         </div>
         <div style="color:var(--text-400);flex-shrink:0;">${ProfileIcons.chevron}</div>
       </div>`;
@@ -324,7 +324,7 @@ const Profile = {
           <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;" id="artist-chip-group">
             ${artistList.map(a => {
               const sel = current.includes(a);
-              return `<button type="button" class="artist-select-chip ${sel?'selected':''}" onclick="this.classList.toggle('selected')" data-name="${a}" style="padding:8px 14px;border-radius:var(--r-full);font-size:13px;font-weight:700;border:1px solid ${sel?'var(--primary-400)':'var(--border-subtle)'};background:${sel?'rgba(34,201,135,0.15)':'var(--bg-card)'};color:${sel?'var(--primary-400)':'var(--text-200)'};cursor:pointer;">${sel?'✓ ':''}${a}</button>`;
+              return `<button type="button" class="artist-select-chip ${sel?'selected':''}" onclick="this.classList.toggle('selected')" data-name="${esc(a)}" style="padding:8px 14px;border-radius:var(--r-full);font-size:13px;font-weight:700;border:1px solid ${sel?'var(--primary-400)':'var(--border-subtle)'};background:${sel?'rgba(34,201,135,0.15)':'var(--bg-card)'};color:${sel?'var(--primary-400)':'var(--text-200)'};cursor:pointer;">${sel?'✓ ':''}${esc(a)}</button>`;
             }).join('')}
           </div>
           <div style="display:flex;gap:8px;">
@@ -374,10 +374,10 @@ const Profile = {
             ].map(c => `
               <div style="background:var(--bg-card);border:1px solid ${c.accent?'rgba(239,68,68,0.3)':'var(--border-subtle)'};border-radius:var(--r-lg);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;">
                 <div>
-                  <div style="font-weight:700;color:${c.accent||'var(--text-100)'};font-size:13.5px;">${c.label}</div>
-                  <div style="font-size:12px;color:var(--text-400);margin-top:2px;">${c.sub}</div>
+                  <div style="font-weight:700;color:${esc(c.accent||'var(--text-100)')};font-size:13.5px;">${esc(c.label)}</div>
+                  <div style="font-size:12px;color:var(--text-400);margin-top:2px;">${esc(c.sub)}</div>
                 </div>
-                <a href="tel:${c.tel}" style="background:${c.accent||'var(--bg-elevated)'};border:1px solid ${c.accent?'transparent':'var(--border-subtle)'};color:${c.accent?'#fff':'var(--text-100)'};padding:6px 14px;border-radius:var(--r-md);text-decoration:none;font-size:12px;font-weight:700;">전화</a>
+                <a href="tel:${esc(c.tel)}" style="background:${esc(c.accent||'var(--bg-elevated)')};border:1px solid ${c.accent?'transparent':'var(--border-subtle)'};color:${c.accent?'#fff':'var(--text-100)'};padding:6px 14px;border-radius:var(--r-md);text-decoration:none;font-size:12px;font-weight:700;">전화</a>
               </div>`).join('')}
           </div>
           <button onclick="document.getElementById('emergency-contact-modal').remove()" class="btn btn-secondary" style="width:100%;margin-top:16px;">닫기</button>
