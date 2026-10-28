@@ -1740,13 +1740,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Supabase 클라우드 세션 검증이 실패/지연되더라도 기존 관리자 로그인 플래그가 있거나 로컬 환경인 경우 접속 보장
     if (!authorized) {
+      // 서버 세션 확인에 실패하면 접속할 수 없습니다. 브라우저에 저장된 값(localStorage)만으로는
+      // 관리자 화면을 열지 않습니다. 단, 내 컴퓨터의 개발용 로컬 서버에서만 테스트용으로 허용합니다.
       const localLoggedIn = localStorage.getItem('admin_bp_logged_in') === 'true';
-      const localRole = localStorage.getItem('admin_bp_user_role') || 'ceo';
       const isLocalHost = ['localhost', '127.0.0.1', ''].includes(window.location.hostname) || window.location.protocol === 'file:';
 
-      if (localLoggedIn && ['ceo', 'hq_admin'].includes(localRole)) {
-        authorized = true;
-      } else if (isLocalHost && localLoggedIn) {
+      if (isLocalHost && localLoggedIn) {
         localStorage.setItem('admin_bp_user_role', 'ceo');
         authorized = true;
       }
