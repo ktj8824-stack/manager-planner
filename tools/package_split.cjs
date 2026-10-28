@@ -161,13 +161,15 @@ cleanDirExceptGit(DIST_APP);
 console.log('📦 1. dist_web (웹 관리자 관제 포털) 패키징 시작...');
 copyFile(path.join(ROOT, 'admin.html'), path.join(DIST_WEB, 'index.html')); // admin.html -> index.html
 copyFile(path.join(ROOT, 'admin-login.html'), path.join(DIST_WEB, 'admin-login.html'));
+// 테스트 결제 페이지 (배포본에도 포함)
+for (const f of ['payment.html', 'payment-result.html']) copyFile(path.join(ROOT, f), path.join(DIST_WEB, f));
 
 copyDir(path.join(ROOT, 'css'), path.join(DIST_WEB, 'css'));
 copyDir(path.join(ROOT, 'img'), path.join(DIST_WEB, 'img'));
 copyDir(path.join(ROOT, 'js'), path.join(DIST_WEB, 'js'));
 
 // admin.html -> index.html 링크 치환
-for (const name of ['index.html', 'admin-login.html']) {
+for (const name of ['index.html', 'admin-login.html', 'payment.html', 'payment-result.html']) {
   const p = path.join(DIST_WEB, name);
   if (!fs.existsSync(p)) continue;
   fs.writeFileSync(p, fs.readFileSync(p, 'utf8').replace(/admin\.html/g, 'index.html'), 'utf8');
@@ -188,6 +190,7 @@ copyFile(path.join(ROOT, 'index.html'), path.join(DIST_APP, 'index.html'));
 copyFile(path.join(ROOT, 'login.html'), path.join(DIST_APP, 'login.html'));
 copyFile(path.join(ROOT, 'manifest.json'), path.join(DIST_APP, 'manifest.json'));
 copyFile(path.join(ROOT, 'sw.js'), path.join(DIST_APP, 'sw.js'));
+for (const f of ['payment.html', 'payment-result.html']) copyFile(path.join(ROOT, f), path.join(DIST_APP, f));
 
 copyDir(path.join(ROOT, 'css'), path.join(DIST_APP, 'css'));
 copyDir(path.join(ROOT, 'img'), path.join(DIST_APP, 'img'));

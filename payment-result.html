@@ -52,6 +52,7 @@
   </style>
 </head>
 <body>
+<div id="test-banner" style="position:sticky;top:0;z-index:9999;background:#f59e0b;color:#1f1300;text-align:center;font:700 13px/1.4 Pretendard,sans-serif;padding:8px 12px;">🧪 테스트 결제 — 실제 결제되지 않습니다 (카드가 청구되지 않아요)</div>
 <canvas class="confetti" id="confetti-canvas"></canvas>
 <div class="wrap" id="result-wrap">
   <div class="icon" id="result-icon">⏳</div>
@@ -75,6 +76,7 @@
 </div>
 
 <script>
+  const IS_DEV_HOST = ['localhost','127.0.0.1',''].includes(location.hostname) || location.protocol === 'file:';
   const params       = new URLSearchParams(location.search);
   const status       = params.get('status');
   const plan         = params.get('plan') || 'standard';
@@ -133,10 +135,15 @@
           showFail(data.message || data.error || '토스페이먼츠 승인 처리에 실패했습니다. (코드: ' + (data.code || 'UNKNOWN') + ')');
         }
       } catch (err) {
-        console.warn('결제 승인 통신 에러, 로컬 테스트 폴백 확인:', err);
-        showSuccess({ method: '신용카드(테스트)', status: 'DONE' });
+        console.warn('결제 승인 통신 에러:', err);
+        if (IS_DEV_HOST) showSuccess({ method: '신용카드(테스트)', status: 'DONE' });
+        else showFail('테스트 결제 서버가 연결되지 않아 승인할 수 없습니다. 결제는 진행되지 않았습니다.');
       }
     } else if (status === 'success') {
+      if (!IS_DEV_HOST) {
+        showFail('결제 승인 정보가 없어 완료 처리할 수 없습니다. 결제는 진행되지 않았습니다.');
+        return;
+      }
       const vaBank = params.get('vaBank');
       const vaAcc = params.get('vaAcc');
       const vaHolder = params.get('vaHolder');
@@ -157,6 +164,7 @@
     }
   }
 
+  const esc = (v) => String(v ?? '').replace(/[&<>"'`]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;' }[c]));
   function showVirtualAccount(payData) {
     iconEl.textContent  = '🏦';
     titleEl.textContent = '가상계좌 발급 완료';
@@ -180,7 +188,12 @@
       document.getElementById('r-va-bank-row').style.display = 'flex';
     }
     if (va.accountNumber) {
-      document.getElementById('r-va-acc').innerHTML = `<span style="color:#a5f3fc;font-weight:700;">${va.accountNumber}</span> <button type="button" onclick="navigator.clipboard.writeText('${va.accountNumber}');alert('계좌번호가 복사되었습니다: ${va.accountNumber}');" style="margin-left:6px;padding:2px 8px;border-radius:6px;border:1px solid #475569;background:#1e293b;color:#cbd5e1;font-size:11px;cursor:pointer;">복사</button>`;
+      {
+        const acc = String(va.accountNumber);
+        const box = document.getElementById('r-va-acc');
+        box.innerHTML = `<span style="color:#a5f3fc;font-weight:700;">${esc(acc)}</span> <button type="button" id="btn-copy-acc" style="margin-left:6px;padding:2px 8px;border-radius:6px;border:1px solid #475569;background:#1e293b;color:#cbd5e1;font-size:11px;cursor:pointer;">복사</button>`;
+        document.getElementById('btn-copy-acc').onclick = () => { navigator.clipboard.writeText(acc); alert('계좌번호가 복사되었습니다: ' + acc); };
+      }
       document.getElementById('r-va-acc-row').style.display = 'flex';
     }
     if (va.customerName) {
@@ -193,7 +206,7 @@
     }
 
     // 입금 확인 시뮬레이션 버튼 표시 (테스트용)
-    btnVaConfirm.style.display = 'block';
+    btnVaConfirm.style.display = IS_DEV_HOST ? 'block' : 'none';
     btnMain.textContent = (isProPlan || returnTarget === 'mobile') ? '플래너 앱으로 돌아가기' : '관제 포털로 돌아가기';
 
     // 스토리지에 입금 대기 상태 저장
@@ -201,6 +214,7 @@
   }
 
   function simulateVirtualDepositDone() {
+    if (!IS_DEV_HOST) return;
     btnVaConfirm.style.display = 'none';
     showSuccess({
       ...currentPayData,
@@ -245,7 +259,7 @@
       if (payData.receipt && payData.receipt.url) {
         const receiptRow = document.getElementById('r-receipt-row');
         const receiptEl = document.getElementById('r-receipt');
-        receiptEl.innerHTML = `<a href="${payData.receipt.url}" target="_blank" style="color:#6366f1;text-decoration:underline;">영수증 보기</a>`;
+        receiptEl.innerHTML = `<a href="${esc(payData.receipt.url)}" target="_blank" rel="noopener" style="color:#6366f1;text-decoration:underline;">영수증 보기</a>`;
         receiptRow.style.display = 'flex';
       }
     }

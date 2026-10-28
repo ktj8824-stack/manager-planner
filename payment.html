@@ -105,6 +105,7 @@
   </style>
 </head>
 <body>
+<div id="test-banner" style="position:sticky;top:0;z-index:9999;background:#f59e0b;color:#1f1300;text-align:center;font:700 13px/1.4 Pretendard,sans-serif;padding:8px 12px;">🧪 테스트 결제 — 실제 결제되지 않습니다 (카드가 청구되지 않아요)</div>
 <div class="page-wrap">
   <div class="pay-header">
     <button class="pay-back-btn" onclick="history.back()">&#8592;</button>
@@ -211,7 +212,7 @@
   <button class="pay-btn" id="btn-pay" onclick="startPayment()">
     &#128179; <span id="pay-btn-text">월 100,000원 결제하기</span>
   </button>
-  <button type="button" style="width:100%; padding:12px; margin-top:8px; border-radius:12px; border:1px dashed rgba(255,255,255,0.25); background:transparent; color:#94a3b8; font-size:13px; font-weight:600; cursor:pointer; font-family:'Pretendard',sans-serif;" onclick="simulateTestPayment()">
+  <button type="button" id="btn-mock" hidden style="width:100%; padding:12px; margin-top:8px; border-radius:12px; border:1px dashed rgba(255,255,255,0.25); background:transparent; color:#94a3b8; font-size:13px; font-weight:600; cursor:pointer; font-family:'Pretendard',sans-serif;" onclick="simulateTestPayment()">
     ⚡ 테스트 즉시 승인 (모의 결제)
   </button>
   <p class="pay-notice">결제는 <strong style="color:#818cf8;">토스페이먼츠</strong>를 통해 안전하게 처리됩니다.<br>정기 구독은 매월 같은 날 자동 결제되며, 언제든지 취소할 수 있습니다.</p>
@@ -224,6 +225,7 @@
 
 <script src="https://js.tosspayments.com/v2/standard"></script>
 <script>
+  const IS_DEV_HOST = ['localhost','127.0.0.1',''].includes(location.hostname) || location.protocol === 'file:';
   const params      = new URLSearchParams(location.search);
   const plan        = params.get('plan') || 'standard';
   const isProPlan   = (plan === 'pro');
@@ -349,6 +351,7 @@
     }
   }
 
+  if (IS_DEV_HOST) { const m = document.getElementById('btn-mock'); if (m) m.hidden = false; }
   // 위젯 초기화 실행
   initTossWidget();
 
@@ -398,8 +401,10 @@
           customerEmail: email,
           customerMobilePhone: phone.replace(/-/g, '') || undefined,
         });
-      } else {
+      } else if (IS_DEV_HOST) {
         simulateTestPayment();
+      } else {
+        throw new Error('결제 모듈을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
       }
     } catch (err) {
       console.error('결제 오류:', err);
@@ -410,6 +415,12 @@
   }
 
   function handleVirtualAccountIssue(name, email, phone) {
+    if (!IS_DEV_HOST) {
+      alert('가상계좌 결제는 테스트 중에는 사용할 수 없습니다. 카드 결제를 이용해 주세요.');
+      const b = document.getElementById('btn-pay'); b.disabled = false;
+      b.innerHTML = '&#128179; <span id="pay-btn-text">월 ' + totalFee.toLocaleString() + '원 결제하기</span>';
+      return;
+    }
     const bank = document.getElementById('va-bank-select').value;
     const depositor = document.getElementById('va-depositor').value.trim() || name || '공진문';
     const taxNumber = document.getElementById('va-tax-number').value.trim();
@@ -440,6 +451,7 @@
   }
 
   function simulateTestPayment() {
+    if (!IS_DEV_HOST) return;
     const orderId = (isProPlan ? 'PRO-TEST-' : 'HQ-TEST-') + Date.now();
     const base = location.href.replace('payment.html', 'payment-result.html');
     location.href = `${base}?status=success&orderId=${orderId}&plan=${plan}&return=${returnTarget}&addSlots=${addSlots}&totalSlots=${totalSlots}&totalFee=${totalFee}`;
