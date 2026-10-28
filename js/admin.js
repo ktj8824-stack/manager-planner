@@ -454,6 +454,39 @@ window.Admin = {
   // ── 📍 거점 및 샵/숙소/사옥 관리 ──
   currentPlaceFilter: 'ALL',
 
+  // 담당 매니저별 현장 지원 현황을 엑셀에서 열리는 CSV로 내려받기
+  async exportExcel() {
+    try {
+      const schedules = await window.hqStore.getSchedules();
+      const managers = await window.hqStore.getManagers();
+      const isDone = (s) => s.status === '완료' || s.status === 'completed' || (s.timeline && s.timeline.length && s.timeline.every((t) => t.done));
+      // 엑셀 수식 실행 방지: = + - @ 로 시작하는 값 앞에 ' 를 붙임
+      const cell = (v) => {
+        let t = String(v ?? '');
+        if (/^[=+\-@\t\r]/.test(t)) t = "'" + t;
+        return '"' + t.replace(/"/g, '""') + '"';
+      };
+      const rows = [['매니저', '연락처', '총 수행 건수', '완료 건수', '완수율(%)']];
+      managers.forEach((m) => {
+        const mine = schedules.filter((s) => s.managerId === m.id || s.managerName === m.name);
+        const done = mine.filter(isDone).length;
+        rows.push([m.name, m.phone || '', mine.length, done, mine.length ? Math.round((done / mine.length) * 100) : 0]);
+      });
+      const csv = '\uFEFF' + rows.map((r) => r.map(cell).join(',')).join('\r\n');
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `manager_support_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) {
+      console.error('엑셀 내보내기 실패:', e);
+      alert('엑셀 파일을 만들지 못했습니다. 잠시 후 다시 시도해 주세요.');
+    }
+  },
+
   openPlaceModal() {
     const modal = document.getElementById('modal-place-management');
     if (modal) {
