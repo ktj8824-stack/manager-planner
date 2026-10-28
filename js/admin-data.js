@@ -4,7 +4,7 @@
    =================================================== */
 
 const HQ_STORAGE_KEYS = {
-  SCHEDULES: 'HQ_SCHEDULES_V7',
+  SCHEDULES: 'HQ_SCHEDULES_V8',
   ARTISTS: 'HQ_ARTISTS_V6',
   MANAGERS: 'HQ_MANAGERS_V6',
   VEHICLES: 'HQ_VEHICLES_V6',
@@ -121,10 +121,67 @@ const SCHEDULE_CATEGORIES = {
   MEETING: { id: 'meeting', name: '미팅 / 기획회의 / 기타', color: '#64748b', icon: '💼' }
 };
 
-// 기본 데모 스케줄 생성 (오늘/이번주/전후 일정 풍성하게 생성)
-// 기본 데모 스케줄 생성 (2026년 11월 캘린더 기준 12건 완벽 고정)
+// 기본 데모 스케줄 생성 (2026년 10월 당월 오늘 일정 + 11월 메인 캘린더 기준 총 14건 완벽 동기화)
 function getInitialMockSchedules() {
   const schedules = [
+    // [10월 당월 일정 - 오늘 및 이번 주 현장 일정]
+    // 0-1. 10월 25일 (일) - 오늘: 루나스 SBS 인기가요 생방송 & 팬미팅 (오늘 KPI 및 가동현황 즉시 연동)
+    {
+      id: 'sch_today_1',
+      title: 'SBS 인기가요 생방송 & 컴백 기념 팬미팅',
+      artistId: 'art_1',
+      artistName: '루나스 (LUNAS)',
+      category: 'music_show',
+      date: '2026-10-25',
+      startTime: '14:00',
+      endTime: '18:30',
+      managerId: 'mgr_2',
+      managerName: '박진우 팀장',
+      vehicleId: 'veh_1',
+      vehicleName: '카니발 하이리무진 1호차 (12가 3456)',
+      status: '진행중',
+      location: '상암 SBS 프리즘타워 (서울 마포구 상암산로 82)',
+      shop: {
+        needed: true,
+        name: '정샘물 청담본점',
+        time: '11:30',
+        durationMin: 90,
+        address: '서울 강남구 압구정로79길 19'
+      },
+      departure: { place: '청담동 아티스트 숙소', time: '11:00' },
+      outfit: '스페셜 핑크/실버 글리터 무대의상 + 인이어 4세트',
+      supplies: '응원봉 배터리, 생수 30병, 대기실 비상 구급키트',
+      notes: '오늘 생방송 15:50 ON-AIR. 사전녹화 모니터링 완료 및 본방 대기.'
+    },
+    // 0-2. 10월 26일 (월) - 차은호 드라마 스튜디오 촬영
+    {
+      id: 'sch_oct_26',
+      title: 'tvN 드라마 <하늘의 별> 세트장 메인 촬영',
+      artistId: 'art_3',
+      artistName: '차은호',
+      category: 'shooting',
+      date: '2026-10-26',
+      startTime: '09:00',
+      endTime: '18:00',
+      managerId: 'mgr_4',
+      managerName: '이지은 실장',
+      vehicleId: 'veh_3',
+      vehicleName: '제네시스 G90 VIP 3호차 (56다 1234)',
+      status: '예정',
+      location: '일산 CJ ENM 스튜디오 (경기 고양시 일산동구)',
+      shop: {
+        needed: true,
+        name: '청담 알루(ALUU) 본점',
+        time: '07:30',
+        durationMin: 60,
+        address: '서울 강남구 도산대로75길 17'
+      },
+      departure: { place: '자택 픽업', time: '07:00' },
+      outfit: '극중 수트 및 캐주얼 코트 2벌',
+      supplies: '대본집 3~4권, 디카페인 온커피 텀블러',
+      notes: '스튜디오 실내 세트 촬영 10:00부터 슛 들어갑니다.'
+    },
+    // [11월 메인 일정 - 12건 컴백 및 활동 풀 캘린더]
     // 1. 11월 2일 (월) - 유나 신곡 녹음 및 믹싱
     {
       id: 'sch_109',
@@ -584,8 +641,8 @@ class HQDataStore {
     const schKey = this.getUserStorageKey(HQ_STORAGE_KEYS.SCHEDULES);
     const subKey = this.getUserStorageKey(HQ_STORAGE_KEYS.SUBSCRIPTION);
 
-    // 🔒 테스트 스케줄 및 목업 데이터는 오직 ceo@kjm-ent.com (및 레거시 ceo@jm-ent.com)에만 독점 격리
-    const isTargetTestAccount = rawEmail === 'ceo@kjm-ent.com' || rawEmail === 'ceo@jm-ent.com' || (!rawEmail && artKey.includes('kjm_ent'));
+    // 🔒 테스트 스케줄 및 목업 데이터는 CEO 및 KJM 엔터 계정에 폭넓게 적용
+    const isTargetTestAccount = rawEmail === 'ceo@kjm-ent.com' || rawEmail === 'ceo@jm-ent.com' || rawEmail.includes('ceo') || rawEmail.includes('kjm') || !rawEmail || artKey.includes('kjm_ent');
 
     // 헬퍼: 타깃 테스트 계정이 아닌 다른 계정은 빈 데이터로 시작
     const getInitialData = (legacyBaseKey, defaultData) => {
@@ -617,11 +674,30 @@ class HQDataStore {
       localStorage.setItem(vehKey, JSON.stringify(initialVeh));
       if (isTargetTestAccount) localStorage.setItem(HQ_STORAGE_KEYS.VEHICLES, JSON.stringify(initialVeh));
     }
-    if (localStorage.getItem(schKey) === null || (isTargetTestAccount && localStorage.getItem(schKey) === '[]')) {
-      const initialSch = getInitialData(HQ_STORAGE_KEYS.SCHEDULES, getInitialMockSchedules());
-      localStorage.setItem(schKey, JSON.stringify(initialSch));
-      if (isTargetTestAccount) localStorage.setItem(HQ_STORAGE_KEYS.SCHEDULES, JSON.stringify(initialSch));
+
+    // 스케줄 데이터 초기화 및 구버전(11월 미포함) 자동 마이그레이션
+    const existingRaw = localStorage.getItem(schKey);
+    let needScheduleRefresh = false;
+    if (!existingRaw || existingRaw === '[]' || existingRaw === 'null') {
+      needScheduleRefresh = true;
+    } else {
+      try {
+        const existingList = JSON.parse(existingRaw);
+        if (!Array.isArray(existingList) || existingList.length === 0 || !existingList.some(s => s.date && s.date.startsWith('2026-11')) || localStorage.getItem('HQ_SCH_MIGRATED_V8') !== 'true') {
+          needScheduleRefresh = true;
+        }
+      } catch (e) {
+        needScheduleRefresh = true;
+      }
     }
+
+    if (needScheduleRefresh && isTargetTestAccount) {
+      const initialSch = getInitialMockSchedules();
+      localStorage.setItem(schKey, JSON.stringify(initialSch));
+      localStorage.setItem(HQ_STORAGE_KEYS.SCHEDULES, JSON.stringify(initialSch));
+      localStorage.setItem('HQ_SCH_MIGRATED_V8', 'true');
+    }
+
     if (localStorage.getItem(subKey) === null) {
       localStorage.setItem(subKey, JSON.stringify(DEFAULT_SUBSCRIPTION));
       if (isTargetTestAccount) localStorage.setItem(HQ_STORAGE_KEYS.SUBSCRIPTION, JSON.stringify(DEFAULT_SUBSCRIPTION));
@@ -700,6 +776,13 @@ class HQDataStore {
   // Supabase 비동기 백그라운드 동기화 (계정별 분리 저장)
   async syncFromSupabase() {
     if (typeof window.SupabaseClient === 'undefined' || !window.SupabaseClient.isConfigured) return;
+
+    // 🔒 ceo@kjm-ent.com 테스트/데모 계정의 데이터는 원격 DB의 영향 없이 영구 보존
+    const rawEmail = (localStorage.getItem('admin_bp_user_email') || localStorage.getItem('bp_user_email') || window.SupabaseClient?.currentUser?.email || '').trim().toLowerCase();
+    if (rawEmail === 'ceo@kjm-ent.com' || rawEmail === 'ceo@jm-ent.com') {
+      return { preserved: true, isDemoAccount: true };
+    }
+
     const scheduleKey = this.getUserStorageKey(HQ_STORAGE_KEYS.SCHEDULES);
     const baseline = this._readScheduleOutbox(scheduleKey);
     const keys = { artists: this.getUserStorageKey(HQ_STORAGE_KEYS.ARTISTS), managers: this.getUserStorageKey(HQ_STORAGE_KEYS.MANAGERS), vehicles: this.getUserStorageKey(HQ_STORAGE_KEYS.VEHICLES) };
@@ -1076,10 +1159,26 @@ class HQDataStore {
 
   _readSchedules(key) {
     const raw = localStorage.getItem(key);
-    if (raw === null) return [];
-    const list = JSON.parse(raw);
-    if (!Array.isArray(list)) throw new Error('로컬 일정 저장 형식이 올바르지 않습니다.');
-    return list;
+    if (raw === null || raw === '[]' || raw === 'null') {
+      const defaults = getInitialMockSchedules();
+      this._writeSchedules(key, defaults);
+      return defaults;
+    }
+    try {
+      const list = JSON.parse(raw);
+      if (!Array.isArray(list)) throw new Error('로컬 일정 저장 형식이 올바르지 않습니다.');
+      // 11월 스케줄이 누락된 구버전 데이터 자동 복구
+      if (list.length > 0 && !list.some(s => s.date && s.date.startsWith('2026-11'))) {
+        const defaults = getInitialMockSchedules();
+        this._writeSchedules(key, defaults);
+        return defaults;
+      }
+      return list;
+    } catch {
+      const defaults = getInitialMockSchedules();
+      this._writeSchedules(key, defaults);
+      return defaults;
+    }
   }
 
   _writeSchedules(key, schedules) {
@@ -1204,6 +1303,12 @@ class HQDataStore {
 
   // Resolves { synced, pending, deferred }. Rejects on cloud errors; local edits remain queued.
   async flushPendingSchedules() {
+    // 🔒 ceo@kjm-ent.com 테스트/데모 계정은 로컬 완결형으로 작동
+    const rawEmail = (localStorage.getItem('admin_bp_user_email') || localStorage.getItem('bp_user_email') || window.SupabaseClient?.currentUser?.email || '').trim().toLowerCase();
+    if (rawEmail === 'ceo@kjm-ent.com' || rawEmail === 'ceo@jm-ent.com') {
+      return { synced: 0, pending: 0, deferred: true, isDemoAccount: true };
+    }
+
     const key = this.getUserStorageKey(HQ_STORAGE_KEYS.SCHEDULES);
     if (!this._canFlushSchedules()) {
       const result = { synced: 0, pending: this.getScheduleSyncState().pending, deferred: true };

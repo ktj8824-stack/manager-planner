@@ -234,6 +234,10 @@
       </div>
 
       <button type="submit" class="btn-submit" id="btn-login">포털 접속 (Sign In)</button>
+      <button type="button" onclick="quickCeoLogin()" 
+        style="width: 100%; margin-top: 10px; padding: 13px; border-radius: 12px; border: 1.5px dashed rgba(99,102,241,0.5); background: rgba(99,102,241,0.06); color: #4f46e5; font-weight: 800; font-size: 13.5px; cursor: pointer; transition: all 0.2s; font-family: 'Pretendard', sans-serif;">
+        ⚡ 테스트 대표 계정 1초 바로 접속 (ceo@kjm-ent.com)
+      </button>
 
       <div id="login-error" class="error-msg"></div>
       <div id="login-success" class="success-msg"></div>
@@ -370,6 +374,25 @@
         btnLogin.innerHTML = '포털 접속 (Sign In)';
       }
     });
+
+    function quickCeoLogin() {
+      localStorage.setItem('admin_saved_email', 'ceo@kjm-ent.com');
+      localStorage.setItem('admin_bp_logged_in', 'true');
+      localStorage.setItem('admin_bp_user_role', 'ceo');
+      localStorage.setItem('admin_bp_user_name', '공진문 대표');
+      localStorage.setItem('admin_bp_user_email', 'ceo@kjm-ent.com');
+      localStorage.setItem('admin_bp_company_name', 'KJM-엔터테인먼트');
+      localStorage.setItem('reg_company_name', 'KJM-엔터테인먼트');
+      localStorage.setItem('admin_bp_onboarded', 'true');
+      
+      const successEl = document.getElementById('login-success');
+      successEl.textContent = '✅ 공진문 대표님 테스트 세션으로 즉시 이동합니다...';
+      successEl.style.display = 'block';
+
+      setTimeout(() => {
+        window.location.href = 'admin.html';
+      }, 500);
+    }
   </script>
 </body>
 </html>

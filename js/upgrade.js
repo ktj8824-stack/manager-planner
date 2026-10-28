@@ -79,18 +79,29 @@ const Upgrade = {
   },
 
   startPayment() {
-    App.showModal('결제 진행', `
-      <div class="pay-loader">
-        <div class="pay-spinner"></div>
-        <div class="pay-msg">안전하게 결제를 진행 중입니다...</div>
-        <p style="font-size:var(--fs-sm); color:var(--text-400); margin-top:var(--sp-2);">창을 닫지 마세요.</p>
+    const userName = encodeURIComponent(localStorage.getItem('bp_user_name') || '담당 매니저');
+    const userEmail = encodeURIComponent(localStorage.getItem('bp_user_email') || 'manager@kjm-ent.com');
+    const company = encodeURIComponent(localStorage.getItem('bp_company_name') || 'HQ 엔터테인먼트');
+    const payUrl = `payment.html?plan=pro&totalFee=4900&company=${company}&ceo=${userName}&email=${userEmail}&return=mobile`;
+
+    App.showModal('구독 결제 수단 선택', `
+      <div style="padding:4px 0; text-align:center;">
+        <div style="font-size:36px; margin-bottom:12px;">💳</div>
+        <h3 style="font-size:17px; font-weight:700; margin-bottom:6px; color:var(--text-100);">매니저플래너 PRO 구독</h3>
+        <p style="font-size:13px; color:var(--text-400); margin-bottom:20px; line-height:1.5;">
+          월 <strong>4,900원</strong> (부가세 포함)<br>
+          토스페이먼츠 금융 보안 결제망으로 안전하게 결제됩니다.
+        </p>
+
+        <button class="btn-primary" style="width:100%; padding:14px; margin-bottom:10px; font-weight:700; font-size:14px; background:linear-gradient(135deg, #6366f1, #8b5cf6);" onclick="location.href='${payUrl}'">
+          신용카드 / 간편결제 진행
+        </button>
+
+        <button class="btn-secondary" style="width:100%; padding:12px; font-size:13px; border:1px dashed rgba(255,255,255,0.2); background:transparent; color:var(--text-300);" onclick="Upgrade.completePayment()">
+          ⚡ 테스트 계정 즉시 활성화 (체험용)
+        </button>
       </div>
     `);
-
-    // Simulate PG payment delay (3 seconds)
-    setTimeout(() => {
-      this.completePayment();
-    }, 2500);
   },
 
   completePayment() {

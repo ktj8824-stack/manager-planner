@@ -1,10 +1,14 @@
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
 const ROOT_DIR = __dirname;
 const APP_PORT = 5503;
 const WEB_PORT = 5504;
+
+// 토스페이먼츠 시크릿 키 (상용화 시 환경변수 TOSS_SECRET_KEY로 주입)
+const TOSS_SECRET_KEY = process.env.TOSS_SECRET_KEY || 'test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6';
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=UTF-8',
@@ -23,9 +27,91 @@ const MIME_TYPES = {
   '.webp': 'image/webp'
 };
 
+// 💳 토스페이먼츠 최종 결제 승인 API 핸들러
+function handlePaymentConfirm(req, res) {
+  let bodyStr = '';
+  req.on('data', chunk => bodyStr += chunk);
+  req.on('end', () => {
+    try {
+      const { paymentKey, orderId, amount } = JSON.parse(bodyStr || '{}');
+      if (!paymentKey || !orderId || !amount) {
+        res.writeHead(400, {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        });
+        res.end(JSON.stringify({ error: 'paymentKey, orderId, amount가 모두 필요합니다.' }));
+        return;
+      }
+
+      console.log(`💳 [결제 승인 요청] 주문번호: ${orderId}, 금액: ${amount}원, 키: ${paymentKey}`);
+
+      const basicAuth = Buffer.from(TOSS_SECRET_KEY + ':').toString('base64');
+      const postData = JSON.stringify({ paymentKey, orderId, amount });
+
+      const tossReq = https.request('https://api.tosspayments.com/v1/payments/confirm', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${basicAuth}`,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData)
+        }
+      }, (tossRes) => {
+        let tossData = '';
+        tossRes.on('data', chunk => tossData += chunk);
+        tossRes.on('end', () => {
+          console.log(`✅ [토스 승인 응답] 상태코드: ${tossRes.statusCode}`);
+          res.writeHead(tossRes.statusCode, {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+          });
+          res.end(tossData);
+        });
+      });
+
+      tossReq.on('error', (err) => {
+        console.error('❌ 토스 승인 서버 통신 오류:', err);
+        res.writeHead(500, {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Access-Control-Allow-Origin': '*'
+        });
+        res.end(JSON.stringify({ error: '토스페이먼츠 승인 통신 실패', message: err.message }));
+      });
+
+      tossReq.write(postData);
+      tossReq.end();
+    } catch (e) {
+      res.writeHead(400, {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Access-Control-Allow-Origin': '*'
+      });
+      res.end(JSON.stringify({ error: '잘못된 JSON 요청 본문입니다.' }));
+    }
+  });
+}
+
 function createStaticServer(defaultPage, port, label) {
   const server = http.createServer((req, res) => {
+    // CORS Preflight 처리
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204, {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+      });
+      res.end();
+      return;
+    }
+
     let reqUrl = req.url.split('?')[0];
+
+    // 💳 토스 결제 승인 API 라우팅
+    if (reqUrl === '/api/payments/confirm' && req.method === 'POST') {
+      handlePaymentConfirm(req, res);
+      return;
+    }
+
     if (reqUrl === '/' || reqUrl === '') {
       reqUrl = '/' + defaultPage;
     }

@@ -43,6 +43,10 @@ const Login = {
               style="background:var(--accent); color:#fff; font-weight:800; font-size:16px; justify-content:center; padding:16px; border-radius:12px; margin-top:8px; border:none; box-shadow:0 4px 12px rgba(0,122,255,0.3); cursor:pointer;">
               로그인
             </button>
+            <button type="button" onclick="Login.demoLogin('ceo')" 
+              style="width:100%; margin-top:10px; padding:13px; border-radius:12px; border:1px dashed rgba(99,102,241,0.5); background:rgba(99,102,241,0.08); color:var(--accent); font-weight:800; font-size:13px; cursor:pointer; transition:all 0.2s;">
+              ⚡ 테스트 대표 계정 1초 둘러보기 (데모)
+            </button>
           </form>
           <p id="login-auth-error" role="alert" aria-live="polite" style="display:none;color:#ef4444;font-size:13px;margin-top:14px;"></p>
           <div style="font-size:12px; color:var(--text-400); text-align:center; margin-top:16px;">
@@ -177,7 +181,11 @@ const Login = {
     const foundMgr = managers.find(m => m.id === mgrId || (m.email && m.email.toLowerCase() === (user.email || '').toLowerCase()));
     
     let assigned = [];
-    if (foundMgr && Array.isArray(foundMgr.assignedArtists) && foundMgr.assignedArtists.length > 0) {
+    if (user.role === 'ceo' || user.role === 'hq_admin') {
+      // 본사 대표 및 총괄 관리자는 전사 소속 아티스트 전체 열람
+      const allArtists = (typeof window.hqStore !== 'undefined') ? window.hqStore.getArtists() : [];
+      assigned = allArtists.map(a => a.id);
+    } else if (foundMgr && Array.isArray(foundMgr.assignedArtists) && foundMgr.assignedArtists.length > 0) {
       assigned = foundMgr.assignedArtists;
     } else {
       // 본사 아티스트 목록에서 기본 배정 또는 전체 조회 가능하도록 세팅
@@ -200,5 +208,24 @@ const Login = {
     App.renderNav();
     App.initRealtimeSync();
     App.navigate('home');
+  },
+
+  demoLogin(type = 'ceo') {
+    const allArtists = (typeof window.hqStore !== 'undefined') ? window.hqStore.getArtists() : [];
+    const assigned = allArtists.map(a => a.id);
+    localStorage.setItem('bp_logged_in', 'true');
+    localStorage.setItem('bp_provider', 'demo');
+    localStorage.setItem('bp_manager_id', 'mgr_ceo');
+    localStorage.setItem('bp_manager_filter', 'ALL');
+    localStorage.setItem('bp_user_name', '공진문 대표');
+    localStorage.setItem('bp_user_email', 'ceo@kjm-ent.com');
+    localStorage.setItem('bp_user_role', 'ceo');
+    localStorage.setItem('bp_assigned_artists', JSON.stringify(assigned));
+    localStorage.setItem('bp_onboarded', 'true');
+    U.toast('✅ 공진문 대표님 테스트 모드로 진입했습니다.');
+    if (typeof App !== 'undefined') {
+      App.renderNav();
+      App.navigate('home');
+    }
   }
 };

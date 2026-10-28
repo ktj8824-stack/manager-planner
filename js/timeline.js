@@ -172,13 +172,21 @@ const Timeline = {
     const items = document.querySelectorAll('.tl-item');
     let foundNow = false;
 
-    // Extract times for all items first
+    // Extract times for all items first (자정/심야 교차 스케줄 방어)
+    let cumulativeDayOffset = 0;
+    let lastMin = -1;
     const itemData = Array.from(items).map(item => {
       const timeEl = item.querySelector('.tl-time');
       let timeTotal = 0;
       if (timeEl) {
-        const [h, m] = timeEl.innerText.trim().split(':').map(Number);
-        timeTotal = h * 60 + m;
+        const rawTime = timeEl.innerText.replace(/전일|익일/g, '').trim();
+        const [h, m] = rawTime.split(':').map(Number);
+        const min = (h || 0) * 60 + (m || 0);
+        if (lastMin !== -1 && min < lastMin && (lastMin - min > 360)) {
+          cumulativeDayOffset += 1440; // 24시간 오프셋 추가
+        }
+        timeTotal = min + cumulativeDayOffset;
+        lastMin = min;
       }
       return { item, time: timeTotal };
     });
@@ -311,16 +319,35 @@ const Timeline = {
     const destLng = s.lng || (s.course && s.course.lng) || 126.9780;
 
     let items = '';
-    steps.forEach((step) => {
+    let prevMinutes = -1;
+    let isNextDay = false;
+
+    steps.forEach((step, idx) => {
       const isDone = step.done;
       const doneClass = isDone ? 'done' : '';
       const checkMark = isDone ? ` <span style="color:var(--accent); font-weight:bold;">[${step.actualTime ? step.actualTime + ' ' : ''}완료]</span>` : '';
       
+      // 자정/심야 경계 감지 (전일/익일 뱃지)
+      let timeBadge = '';
+      if (step.time && step.time.includes(':')) {
+        const [h, m] = step.time.split(':').map(Number);
+        const currentMin = (h || 0) * 60 + (m || 0);
+        if (prevMinutes !== -1 && currentMin < prevMinutes && (prevMinutes - currentMin > 360)) {
+          isNextDay = true;
+        }
+        if (isNextDay) {
+          timeBadge = `<span style="font-size:10px; color:#6366f1; background:rgba(99,102,241,0.12); padding:1px 5px; border-radius:4px; margin-right:4px; font-weight:800;">익일</span>`;
+        } else if (idx === 0 && currentMin >= 21 * 60 && s.startTime && parseInt(s.startTime) <= 6) {
+          timeBadge = `<span style="font-size:10px; color:#f59e0b; background:rgba(245,158,11,0.12); padding:1px 5px; border-radius:4px; margin-right:4px; font-weight:800;">전일</span>`;
+        }
+        prevMinutes = currentMin;
+      }
+
       items += `
         <div class="tl-item ${doneClass}" data-time="${step.time}">
           <div class="tl-dot" style="${isDone ? 'background:var(--accent); border-color:var(--accent);' : ''}"></div>
           <div class="tl-card" style="${isDone ? 'opacity:0.65;' : ''}">
-            <div class="tl-time">${step.time || ''}</div>
+            <div class="tl-time">${timeBadge}${step.time || ''}</div>
             <div class="tl-event" style="display:flex; align-items:center; justify-space-between;">
               <span style="${isDone ? 'text-decoration:line-through;' : ''}">${step.label}${checkMark}</span>
             </div>

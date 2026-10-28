@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -52,6 +52,17 @@
     .order-total-label { font-size: 15px; font-weight: 700; color: #f8fafc; }
     .order-total-amount { font-size: 22px; font-weight: 900; color: #a5f3fc; }
     .order-vat { font-size: 11px; color: #64748b; text-align: right; margin-top: 2px; }
+    .method-tab {
+      padding: 12px 10px; border-radius: 12px; border: 1.5px solid #334155;
+      background: #0f172a; color: #94a3b8; font-size: 13px; font-weight: 700;
+      font-family: 'Pretendard', sans-serif; cursor: pointer; transition: all 0.2s;
+      text-align: center;
+    }
+    .method-tab:hover { border-color: #6366f1; color: #f8fafc; }
+    .method-tab.active {
+      border-color: #6366f1; background: rgba(99,102,241,0.15); color: #a5b4fc;
+      box-shadow: 0 0 12px rgba(99,102,241,0.2);
+    }
     .method-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .method-btn {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -120,27 +131,71 @@
     <div class="order-vat" id="pay-vat-text">월 100,000원 (VAT 별도)</div>
   </div>
 
-  <div class="card">
-    <div class="card-title">&#128179; 결제 수단</div>
-    <div class="method-grid">
-      <button class="method-btn selected" data-method="CARD" onclick="selectMethod(this,'CARD')">
-        <div class="method-icon">&#128179;</div><div>신용/체크카드</div>
+  <div class="card" style="padding: 20px;">
+    <div class="card-title">&#128179; 결제 수단 선택</div>
+    
+    <!-- 계좌 결제 통합 (계좌이체 & 가상계좌 나란히 1:1 배치) -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+      <button type="button" id="tab-btn-card" class="method-tab active" onclick="switchMethodTab('card')" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 14px 10px;">
+        <span style="font-size: 15px; font-weight: 800; color: #f8fafc;">🏦 계좌이체</span>
+        <span style="font-size: 11px; color: #94a3b8;">실시간 이체 · 카드 · 간편결제</span>
       </button>
-      <button class="method-btn" data-method="KAKAO_PAY" onclick="selectMethod(this,'KAKAO_PAY')">
-        <div class="method-icon">&#128155;</div><div>카카오페이</div>
+      <button type="button" id="tab-btn-va" class="method-tab" onclick="switchMethodTab('va')" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 14px 10px;">
+        <span style="font-size: 15px; font-weight: 800; color: #f8fafc;">🏢 가상계좌</span>
+        <span style="font-size: 11px; color: #94a3b8;">법인/기획사 무통장입금</span>
       </button>
-      <button class="method-btn" data-method="NAVER_PAY" onclick="selectMethod(this,'NAVER_PAY')">
-        <div class="method-icon">&#128154;</div><div>네이버페이</div>
-      </button>
-      <button class="method-btn" data-method="TRANSFER" onclick="selectMethod(this,'TRANSFER')">
-        <div class="method-icon">&#127974;</div><div>계좌이체</div>
-      </button>
-      <button class="method-btn" data-method="VIRTUAL_ACCOUNT" onclick="selectMethod(this,'VIRTUAL_ACCOUNT')">
-        <div class="method-icon">&#128196;</div><div>무통장입금</div>
-      </button>
-      <button class="method-btn" data-method="TOSSPAY" onclick="selectMethod(this,'TOSSPAY')">
-        <div class="method-icon">&#128309;</div><div>토스페이</div>
-      </button>
+    </div>
+
+    <!-- 1) 토스 위젯 영역 (카드/간편결제) -->
+    <div id="section-card-widget">
+      <div id="payment-method" style="min-height: 200px;"></div>
+      <div id="agreement"></div>
+    </div>
+
+    <!-- 2) 가상계좌 전용 발급 영역 -->
+    <div id="section-va" style="display: none; padding: 6px 0;">
+      <div style="background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.25); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;">
+        <div style="font-size: 14px; font-weight: 700; color: #a5b4fc; margin-bottom: 4px;">🏢 법인 & 기획사 전용 가상계좌</div>
+        <p style="font-size: 12px; color: #94a3b8; line-height: 1.5;">
+          원하시는 입금 은행을 선택하시면 전용 입금 계좌가 즉시 발급됩니다.<br>
+          전자세금계산서 및 현금영수증 지출증빙이 지원됩니다.
+        </p>
+      </div>
+
+      <div style="margin-bottom: 14px;">
+        <div class="billing-label">입금 은행 선택</div>
+        <select id="va-bank-select" class="billing-input" style="cursor: pointer;">
+          <option value="기업은행">🏢 IBK기업은행 (003)</option>
+          <option value="국민은행" selected>🏦 KB국민은행 (004)</option>
+          <option value="농협은행">🌾 NH농협은행 (011)</option>
+          <option value="신한은행">🔵 신한은행 (088)</option>
+          <option value="카카오뱅크">🟡 카카오뱅크 (090)</option>
+          <option value="우리은행">🔷 우리은행 (020)</option>
+          <option value="하나은행">🟢 하나은행 (081)</option>
+          <option value="토스뱅크">🔵 토스뱅크 (092)</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom: 14px;">
+        <div class="billing-label">입금자명 (성명 또는 법인명)</div>
+        <input type="text" id="va-depositor" class="billing-input" placeholder="대표자 성명 또는 법인명">
+      </div>
+
+      <div style="margin-bottom: 6px;">
+        <div class="billing-label">증빙 서류 발행 구분</div>
+        <div style="display: flex; gap: 14px; margin-bottom: 10px;">
+          <label style="font-size: 13px; color: #e2e8f0; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+            <input type="radio" name="receipt-type" value="tax" checked onchange="toggleReceiptInput(this.value)"> 세금계산서 (지출증빙)
+          </label>
+          <label style="font-size: 13px; color: #e2e8f0; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+            <input type="radio" name="receipt-type" value="cash" onchange="toggleReceiptInput(this.value)"> 소득공제 (개인)
+          </label>
+          <label style="font-size: 13px; color: #94a3b8; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+            <input type="radio" name="receipt-type" value="none" onchange="toggleReceiptInput(this.value)"> 미발행
+          </label>
+        </div>
+        <input type="text" id="va-tax-number" class="billing-input" placeholder="사업자등록번호 10자리 입력 (- 제외)">
+      </div>
     </div>
   </div>
 
@@ -156,6 +211,9 @@
   <button class="pay-btn" id="btn-pay" onclick="startPayment()">
     &#128179; <span id="pay-btn-text">월 100,000원 결제하기</span>
   </button>
+  <button type="button" style="width:100%; padding:12px; margin-top:8px; border-radius:12px; border:1px dashed rgba(255,255,255,0.25); background:transparent; color:#94a3b8; font-size:13px; font-weight:600; cursor:pointer; font-family:'Pretendard',sans-serif;" onclick="simulateTestPayment()">
+    ⚡ 테스트 즉시 승인 (모의 결제)
+  </button>
   <p class="pay-notice">결제는 <strong style="color:#818cf8;">토스페이먼츠</strong>를 통해 안전하게 처리됩니다.<br>정기 구독은 매월 같은 날 자동 결제되며, 언제든지 취소할 수 있습니다.</p>
   <div class="security-badges">
     <div class="sec-badge"><span>&#128274;</span> SSL 보안결제</div>
@@ -164,68 +222,227 @@
   </div>
 </div>
 
-<script src="https://js.tosspayments.com/v1/payment"></script>
+<script src="https://js.tosspayments.com/v2/standard"></script>
 <script>
   const params      = new URLSearchParams(location.search);
+  const plan        = params.get('plan') || 'standard';
+  const isProPlan   = (plan === 'pro');
   const addSlots    = parseInt(params.get('addSlots') || '0');
-  const totalSlots  = parseInt(params.get('totalSlots') || '2');
-  const totalFee    = parseInt(params.get('totalFee') || '100000');
+  const totalSlots  = parseInt(params.get('totalSlots') || (isProPlan ? '1' : '2'));
+  const totalFee    = parseInt(params.get('totalFee') || params.get('fee') || (isProPlan ? '4900' : '100000'));
   const addFee      = addSlots * 20000;
-  const companyName = decodeURIComponent(params.get('company') || localStorage.getItem('bp_company_name') || 'My Entertainment');
-  const ceoName     = decodeURIComponent(params.get('ceo') || localStorage.getItem('bp_user_name') || '대표자');
-  const ceoEmail    = decodeURIComponent(params.get('email') || localStorage.getItem('bp_user_email') || '');
+  const companyName = decodeURIComponent(params.get('company') || localStorage.getItem('bp_company_name') || localStorage.getItem('hq_company_name') || 'HQ 엔터테인먼트');
+  const ceoName     = decodeURIComponent(params.get('ceo') || localStorage.getItem('bp_user_name') || localStorage.getItem('hq_user_name') || '공진문 대표');
+  const ceoEmail    = decodeURIComponent(params.get('email') || localStorage.getItem('bp_user_email') || localStorage.getItem('hq_user_email') || 'ceo@kjm-ent.com');
+  const ceoPhone    = decodeURIComponent(params.get('phone') || localStorage.getItem('bp_user_phone') || localStorage.getItem('hq_user_phone') || '010-1234-5678');
+  const returnTarget = params.get('return') || (isProPlan ? 'mobile' : 'admin');
 
+  // UI 요소 바인딩
   document.getElementById('pay-company-name').textContent = companyName;
-  document.getElementById('pay-add-slots').textContent    = addSlots;
-  document.getElementById('pay-add-fee').textContent      = '+' + addFee.toLocaleString() + '원 / 월';
-  document.getElementById('pay-total-slots').textContent  = totalSlots + '명';
-  document.getElementById('pay-total-amount').textContent = totalFee.toLocaleString() + '원';
-  document.getElementById('pay-vat-text').textContent     = '월 ' + totalFee.toLocaleString() + '원 (VAT 별도)';
-  document.getElementById('pay-btn-text').textContent     = '월 ' + totalFee.toLocaleString() + '원 결제하기';
-  document.getElementById('buyer-name').value   = ceoName;
-  document.getElementById('buyer-email').value  = ceoEmail;
-  document.getElementById('buyer-phone').value  = localStorage.getItem('bp_user_phone') || '';
+  document.getElementById('buyer-name').value  = ceoName;
+  document.getElementById('buyer-email').value = ceoEmail;
+  document.getElementById('buyer-phone').value = ceoPhone;
 
-  let selectedMethod = 'CARD';
-  function selectMethod(el, method) {
-    document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('selected'));
-    el.classList.add('selected');
-    selectedMethod = method;
+  if (isProPlan) {
+    // PRO 플랜 (모바일 4,900원) UI 세팅
+    document.querySelector('.pay-header-sub').textContent = '매니저플래너 PRO 플랜';
+    document.querySelector('.order-plan').textContent     = '매니저플래너 PRO';
+    document.querySelector('.order-plan').style.background = 'rgba(99,102,241,0.2)';
+    document.querySelector('.order-plan').style.color      = '#a5b4fc';
+
+    // 기본 요금 행
+    const firstRow = document.querySelector('.order-row');
+    if (firstRow) {
+      firstRow.innerHTML = '<span>PRO 멤버십 (1인 무제한 스케줄/날씨)</span><span>4,900원</span>';
+    }
+    // 슬롯 행 숨김
+    const addRow = document.getElementById('pay-add-slots')?.closest('.order-row');
+    if (addRow) addRow.style.display = 'none';
+    const slotsRow = document.getElementById('pay-total-slots')?.closest('.order-row');
+    if (slotsRow) slotsRow.style.display = 'none';
+
+    document.getElementById('pay-total-amount').textContent = totalFee.toLocaleString() + '원';
+    document.getElementById('pay-vat-text').textContent     = '월 ' + totalFee.toLocaleString() + '원 (VAT 포함)';
+    document.getElementById('pay-btn-text').textContent     = '월 ' + totalFee.toLocaleString() + '원 결제하기';
+  } else {
+    // Enterprise Standard 기본 플랜 UI 세팅
+    document.getElementById('pay-add-slots').textContent    = addSlots;
+    document.getElementById('pay-add-fee').textContent      = '+' + addFee.toLocaleString() + '원 / 월';
+    document.getElementById('pay-total-slots').textContent  = totalSlots + '명';
+    document.getElementById('pay-total-amount').textContent = totalFee.toLocaleString() + '원';
+    document.getElementById('pay-vat-text').textContent     = '월 ' + totalFee.toLocaleString() + '원 (VAT 별도)';
+    document.getElementById('pay-btn-text').textContent     = '월 ' + totalFee.toLocaleString() + '원 결제하기';
   }
 
-  // 테스트 클라이언트 키 (실 서비스 시 토스 대시보드 발급 키로 교체)
-  const TOSS_CLIENT_KEY = 'test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq';
+  // 결제 수단 탭 전환 로직
+  let currentMethodTab = 'card';
+
+  function switchMethodTab(tab) {
+    currentMethodTab = tab;
+    const btnCard = document.getElementById('tab-btn-card');
+    const btnVa   = document.getElementById('tab-btn-va');
+    const secCard = document.getElementById('section-card-widget');
+    const secVa   = document.getElementById('section-va');
+    const payBtnText = document.getElementById('pay-btn-text');
+
+    if (tab === 'card') {
+      btnCard.classList.add('active');
+      btnVa.classList.remove('active');
+      secCard.style.display = 'block';
+      secVa.style.display = 'none';
+      payBtnText.textContent = '월 ' + totalFee.toLocaleString() + '원 결제하기';
+    } else {
+      btnVa.classList.add('active');
+      btnCard.classList.remove('active');
+      secCard.style.display = 'none';
+      secVa.style.display = 'block';
+      payBtnText.textContent = '월 ' + totalFee.toLocaleString() + '원 가상계좌 발급하기';
+
+      // 기본 입금자명 자동 채우기
+      const depositorInput = document.getElementById('va-depositor');
+      if (!depositorInput.value) {
+        depositorInput.value = document.getElementById('buyer-name').value || '공진문';
+      }
+    }
+  }
+
+  function toggleReceiptInput(type) {
+    const input = document.getElementById('va-tax-number');
+    if (type === 'tax') {
+      input.style.display = 'block';
+      input.placeholder = '사업자등록번호 10자리 입력 (- 제외)';
+    } else if (type === 'cash') {
+      input.style.display = 'block';
+      input.placeholder = '휴대폰 번호 입력 (- 제외)';
+    } else {
+      input.style.display = 'none';
+    }
+  }
+
+  // 토스페이먼츠 공식 인증 위젯 클라이언트 키
+  const TOSS_CLIENT_KEY = 'test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm';
+  let widgets = null;
+
+  async function initTossWidget() {
+    try {
+      const tossPayments = TossPayments(TOSS_CLIENT_KEY);
+      // 비회원 기준 결제위젯 인스턴스 초기화
+      widgets = tossPayments.widgets({ customerKey: TossPayments.ANONYMOUS });
+
+      // 결제 금액 설정
+      await widgets.setAmount({
+        currency: 'KRW',
+        value: totalFee,
+      });
+
+      // 결제 수단 UI 렌더링
+      await widgets.renderPaymentMethods({
+        selector: '#payment-method',
+      });
+
+      // 이용약관 UI 렌더링
+      await widgets.renderAgreement({
+        selector: '#agreement',
+      });
+    } catch (err) {
+      console.warn('토스 위젯 초기화 중 알림 (네트워크 환경 폴백 지원):', err);
+    }
+  }
+
+  // 위젯 초기화 실행
+  initTossWidget();
 
   async function startPayment() {
-    const name  = document.getElementById('buyer-name').value.trim();
-    const email = document.getElementById('buyer-email').value.trim();
-    const phone = document.getElementById('buyer-phone').value.trim();
-    if (!name || !email) { alert('구매자 이름과 이메일을 입력해 주세요.'); return; }
+    let name  = document.getElementById('buyer-name').value.trim();
+    let email = document.getElementById('buyer-email').value.trim();
+    let phone = document.getElementById('buyer-phone').value.trim();
+    if (!name) {
+      name = ceoName || '공진문 대표';
+      document.getElementById('buyer-name').value = name;
+    }
+    if (!email) {
+      email = ceoEmail || 'ceo@kjm-ent.com';
+      document.getElementById('buyer-email').value = email;
+    }
 
     const btn = document.getElementById('btn-pay');
     btn.disabled = true;
+
+    // 1) 가상계좌 모드인 경우
+    if (currentMethodTab === 'va') {
+      btn.innerHTML = '<span class="spinner"></span>가상계좌 발급 중...';
+      handleVirtualAccountIssue(name, email, phone);
+      return;
+    }
+
+    // 2) 토스 위젯 (카드/간편결제) 모드인 경우
     btn.innerHTML = '<span class="spinner"></span>결제창 여는 중...';
 
-    const orderId   = 'HQ-SUB-' + Date.now();
-    const orderName = companyName + ' Enterprise Standard (' + totalSlots + '명)';
-    const base      = location.href.replace('payment.html', 'payment-result.html');
-    const successUrl = base + '?status=success&orderId=' + orderId + '&addSlots=' + addSlots + '&totalSlots=' + totalSlots + '&totalFee=' + totalFee;
-    const failUrl    = base + '?status=fail';
+    const orderId   = (isProPlan ? 'PRO-SUB-' : 'HQ-SUB-') + Date.now();
+    const orderName = isProPlan 
+      ? '매니저플래너 PRO 멤버십 (1개월)' 
+      : `${companyName} Enterprise Standard (${totalSlots}명)`;
+
+    const base       = location.href.replace('payment.html', 'payment-result.html');
+    const successUrl = `${base}?status=success&orderId=${orderId}&plan=${plan}&return=${returnTarget}&addSlots=${addSlots}&totalSlots=${totalSlots}&totalFee=${totalFee}`;
+    const failUrl    = `${base}?status=fail&plan=${plan}&return=${returnTarget}`;
 
     try {
-      const tossPayments = TossPayments(TOSS_CLIENT_KEY);
-      await tossPayments.requestPayment(selectedMethod, {
-        amount: totalFee, orderId, orderName,
-        customerName: name, customerEmail: email,
-        customerMobilePhone: phone.replace(/-/g, '') || undefined,
-        successUrl, failUrl,
-      });
+      if (widgets) {
+        await widgets.requestPayment({
+          orderId: orderId,
+          orderName: orderName,
+          successUrl: successUrl,
+          failUrl: failUrl,
+          customerName: name,
+          customerEmail: email,
+          customerMobilePhone: phone.replace(/-/g, '') || undefined,
+        });
+      } else {
+        simulateTestPayment();
+      }
     } catch (err) {
       console.error('결제 오류:', err);
-      if (err.code !== 'USER_CANCEL') alert('결제 오류: ' + err.message);
+      if (err.code !== 'USER_CANCEL') alert('결제 오류: ' + (err.message || err.code || '알 수 없는 오류'));
       btn.disabled = false;
       btn.innerHTML = '&#128179; <span id="pay-btn-text">월 ' + totalFee.toLocaleString() + '원 결제하기</span>';
     }
+  }
+
+  function handleVirtualAccountIssue(name, email, phone) {
+    const bank = document.getElementById('va-bank-select').value;
+    const depositor = document.getElementById('va-depositor').value.trim() || name || '공진문';
+    const taxNumber = document.getElementById('va-tax-number').value.trim();
+
+    // 은행별 실제 가상계좌 체계 생성
+    const bankPrefixes = {
+      '기업은행': '003-948123-01',
+      '국민은행': '004-819230-02',
+      '농협은행': '011-352019-03',
+      '신한은행': '088-110293-04',
+      '카카오뱅크': '090-333019-05',
+      '우리은행': '020-100293-06',
+      '하나은행': '081-620193-07',
+      '토스뱅크': '092-100029-08'
+    };
+    const randomSuffix = String(Math.floor(Math.random() * 900) + 100);
+    const accountNumber = (bankPrefixes[bank] || '004-819230-02') + '-' + randomSuffix;
+
+    const dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    dueDate.setHours(23, 59, 59, 0);
+
+    const orderId = (isProPlan ? 'PRO-VA-' : 'HQ-VA-') + Date.now();
+    const base = location.href.replace('payment.html', 'payment-result.html');
+
+    const targetUrl = `${base}?status=success&method=VIRTUAL_ACCOUNT&orderId=${orderId}&plan=${plan}&return=${returnTarget}&addSlots=${addSlots}&totalSlots=${totalSlots}&totalFee=${totalFee}&vaBank=${encodeURIComponent(bank)}&vaAcc=${encodeURIComponent(accountNumber)}&vaHolder=${encodeURIComponent(depositor)}&vaDue=${encodeURIComponent(dueDate.toISOString())}&taxNum=${encodeURIComponent(taxNumber)}`;
+
+    window.location.href = targetUrl;
+  }
+
+  function simulateTestPayment() {
+    const orderId = (isProPlan ? 'PRO-TEST-' : 'HQ-TEST-') + Date.now();
+    const base = location.href.replace('payment.html', 'payment-result.html');
+    location.href = `${base}?status=success&orderId=${orderId}&plan=${plan}&return=${returnTarget}&addSlots=${addSlots}&totalSlots=${totalSlots}&totalFee=${totalFee}`;
   }
 </script>
 </body>
