@@ -347,9 +347,9 @@ const Timeline = {
         <div class="tl-item ${esc(doneClass)}" data-time="${esc(step.time)}">
           <div class="tl-dot" style="${isDone ? 'background:var(--accent); border-color:var(--accent);' : ''}"></div>
           <div class="tl-card" style="${isDone ? 'opacity:0.65;' : ''}">
-            <div class="tl-time">${esc(timeBadge)}${esc(step.time || '')}</div>
+            <div class="tl-time">${timeBadge}${esc(step.time || '')}</div>
             <div class="tl-event" style="display:flex; align-items:center; justify-space-between;">
-              <span style="${isDone ? 'text-decoration:line-through;' : ''}">${esc(step.label)}${esc(checkMark)}</span>
+              <span style="${isDone ? 'text-decoration:line-through;' : ''}">${esc(step.label)}${checkMark}</span>
             </div>
             ${!isDone && (step.label.includes('출발') || step.label.includes('도착')) ? `
               <div class="tl-nav-btns" style="margin-top:8px;">
@@ -404,9 +404,9 @@ const Timeline = {
     } else if (app === 'kakao') {
       U.toast(`🚙 카카오맵/내비로 길안내를 시작합니다: ${destName}`);
       if (startLat && startLng) {
-        window.location.href = `kakaomap://route?sp=${startLat},${startLng}&ep=${destLat},${destLng}&by=CAR`;
+        window.location.href = `kakaomap://route?sp=${startLat},${startLng}&ep=${Number(destLat) || 0},${Number(destLng) || 0}&by=CAR`;
       } else {
-        window.location.href = `https://map.kakao.com/link/to/${encodeURIComponent(destName)},${destLat},${destLng}`;
+        window.location.href = `https://map.kakao.com/link/to/${encodeURIComponent(destName)},${Number(destLat) || 0},${Number(destLng) || 0}`;
       }
     }
   },
