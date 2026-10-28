@@ -314,7 +314,7 @@ window.Admin = {
     const urlInput = document.getElementById('sys-supabase-url');
     const keyInput = document.getElementById('sys-supabase-key');
     if (urlInput) urlInput.value = cfg.url || 'https://gohxflsyhogyxantnlig.supabase.co';
-    if (keyInput) keyInput.value = cfg.anonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvaHhmbHN5aG9neXhhbnRubGlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4ODY5NDUsImV4cCI6MjEwNTQ2Mjk0NX0.imGAcwKc26zLXnXeYqNuqWmomMEyL2xz0wI5MpsK0a0';
+    if (keyInput) keyInput.value = cfg.anonKey || 'sb_publishable_4BiVB8PhD5kk1Dvtvf6Hkw_8YZL0Mwa';
 
     const badge = document.getElementById('system-supabase-badge');
     if (badge) {
@@ -1719,14 +1719,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const session = await window.SupabaseClient?.getCurrentSession();
       if (session && session.user) {
         let role = session.profile?.role;
-        // 이메일 또는 메타데이터에 ceo/admin이 포함된 경우 관리자 권한 보장
+        // 권한은 DB profiles.role만 신뢰합니다. 이메일/user_metadata로 권한을 추론하지 않습니다.
         const email = (session.user.email || '').toLowerCase();
-        if (!role || role === 'manager') {
-          if (email.includes('ceo') || email.includes('admin') || session.user.user_metadata?.role === 'ceo') {
-            role = 'ceo';
-            if (session.profile) session.profile.role = 'ceo';
-          }
-        }
         if (['ceo', 'hq_admin'].includes(role)) {
           localStorage.setItem('admin_bp_logged_in', 'true');
           localStorage.setItem('admin_bp_user_role', role);

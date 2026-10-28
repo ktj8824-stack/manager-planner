@@ -2042,7 +2042,7 @@
               <label
                 style="font-size:11.5px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">Supabase
                 Anon API Key</label>
-              <input type="password" id="sys-supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..."
+              <input type="password" id="sys-supabase-key" placeholder="sb_publishable_..."
                 style="width:100%; padding:9px 12px; border-radius:6px; border:1px solid #cbd5e1; font-size:12px; font-family:monospace; color:#0f172a; background:#f8fafc;">
             </div>
           </div>
@@ -2155,7 +2155,7 @@
       try {
         if (typeof supabase === 'undefined') return;
         const SUPABASE_URL = 'https://gohxflsyhogyxantnlig.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvaHhmbHN5aG9neXhhbnRubGlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4ODY5NDUsImV4cCI6MjEwNTQ2Mjk0NX0.imGAcwKc26zLXnXeYqNuqWmomMEyL2xz0wI5MpsK0a0';
+        const SUPABASE_KEY = 'sb_publishable_4BiVB8PhD5kk1Dvtvf6Hkw_8YZL0Mwa';
         const _client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const { data: sessionData } = await _client.auth.getSession();

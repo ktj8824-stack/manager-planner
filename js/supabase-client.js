@@ -14,11 +14,16 @@ const SupabaseClient = {
 
   // 기본 Supabase 연결 정보 (하드코딩)
   DEFAULT_URL: 'https://gohxflsyhogyxantnlig.supabase.co',
-  DEFAULT_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvaHhmbHN5aG9neXhhbnRubGlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4ODY5NDUsImV4cCI6MjEwNTQ2Mjk0NX0.imGAcwKc26zLXnXeYqNuqWmomMEyL2xz0wI5MpsK0a0',
+  DEFAULT_KEY: 'sb_publishable_4BiVB8PhD5kk1Dvtvf6Hkw_8YZL0Mwa',
 
   // 1. 초기화
   init() {
     const url = localStorage.getItem(this.STORAGE_KEY_URL) || this.DEFAULT_URL;
+    // 예전(legacy JWT) 키가 브라우저에 저장돼 있으면 폐기하고 기본(publishable) 키를 사용합니다.
+    const storedKey = localStorage.getItem(this.STORAGE_KEY_ANON_KEY);
+    if (storedKey && storedKey.startsWith('eyJ')) {
+      localStorage.removeItem(this.STORAGE_KEY_ANON_KEY);
+    }
     const key = localStorage.getItem(this.STORAGE_KEY_ANON_KEY) || this.DEFAULT_KEY;
 
     if (url && key && typeof supabase !== 'undefined') {
