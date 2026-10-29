@@ -650,7 +650,7 @@ class HQDataStore {
     const subKey = this.getUserStorageKey(HQ_STORAGE_KEYS.SUBSCRIPTION);
 
     // 🔒 테스트 스케줄 및 목업 데이터는 CEO 및 KJM 엔터 계정에 폭넓게 적용
-    const isTargetTestAccount = rawEmail === 'ceo@kjm-ent.com' || rawEmail === 'ceo@jm-ent.com' || rawEmail.includes('ceo') || rawEmail.includes('kjm') || !rawEmail || artKey.includes('kjm_ent');
+    const isTargetTestAccount = rawEmail === 'ceo@kjm-ent.com' || !rawEmail || artKey.includes('kjm_ent');   // 데모 데이터는 테스트 대표 계정에만
 
     // 헬퍼: 타깃 테스트 계정이 아닌 다른 계정은 빈 데이터로 시작
     const getInitialData = (legacyBaseKey, defaultData) => {

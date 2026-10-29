@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.8";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // Authorization comes from profiles, never JWT role claims or user_metadata.
 type JsonObject = Record<string, unknown>;
@@ -46,9 +46,22 @@ function phone(value: unknown): string | null {
   if (value === undefined || value === null || value === "") return null;
   return text(value, "phone", 40);
 }
+// 새 방식 비밀키(SUPABASE_SECRET_KEYS, JSON {"default":"sb_secret_..."})를 우선 사용하고,
+// 없을 때만 옛 SUPABASE_SERVICE_ROLE_KEY 를 씁니다. 키 값은 로그/응답에 절대 내보내지 않습니다.
+function secretKey(): string | undefined {
+  const raw = Deno.env.get("SUPABASE_SECRET_KEYS");
+  if (raw) {
+    try {
+      const keys = JSON.parse(raw) as Record<string, unknown>;
+      const picked = keys["default"] ?? Object.values(keys)[0];
+      if (typeof picked === "string" && picked) return picked;
+    } catch { /* 형식이 틀리면 옛 변수로 시도 */ }
+  }
+  return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? undefined;
+}
 function config() {
   const url = Deno.env.get("SUPABASE_URL");
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const serviceKey = secretKey();
   const configuredOrigins = Deno.env.get("MANAGE_USERS_ALLOWED_ORIGINS");
   if (!url || !serviceKey || !configuredOrigins) {
     throw new HttpError(500, "CONFIGURATION_ERROR", "Server configuration is incomplete.");

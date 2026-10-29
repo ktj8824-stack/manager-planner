@@ -8,7 +8,7 @@
 - 서버가 `public.profiles`에서 호출자의 `role`과 `company_id`를 조회합니다. `ceo`/`hq_admin`이면서 회사 UUID가 있어야 합니다. 변조된 프로필이 없도록 기존 보안 migration의 프로필 권한/회사 변경 방지 trigger와 RLS를 먼저 적용해야 합니다.
 - 생성 역할은 `manager`/`staff`만 허용합니다. 회사는 호출자 DB 프로필에서만 가져옵니다. 요청의 role/company_id 변경이나 추가 필드는 거부합니다.
 - 수정은 대상 UUID, 호출자 회사, 대상 `manager`/`staff` 역할을 조회하고 프로필 쓰기에도 같은 조건을 적용합니다. CEO/HQ, 다른 회사 사용자, 개인 사용자는 수정할 수 없습니다.
-- Auth 서비스 키는 `SUPABASE_SERVICE_ROLE_KEY` 환경변수에서만 읽습니다. 브라우저 코드, 공개 환경 파일, 응답, 로그에 넣지 마세요. 호출자의 JWT로 서비스 클라이언트의 전역 Authorization을 덮어쓰지 않습니다.
+- Auth 서비스 키는 새 방식 `SUPABASE_SECRET_KEYS`(JSON, `default` 키)를 우선 읽고, 없을 때만 옛 `SUPABASE_SERVICE_ROLE_KEY` 를 읽습니다. 브라우저 코드, 공개 환경 파일, 응답, 로그에 넣지 마세요. 호출자의 JWT로 서비스 클라이언트의 전역 Authorization을 덮어쓰지 않습니다.
 - CORS는 환경변수의 정확한 origin allowlist만 반영합니다. `*`, `null`, URL 경로, 끝의 `/`는 허용하지 않습니다. Origin 없는 서버 요청은 사용자 JWT 검증을 통과해야 합니다. CORS는 인증/권한 검사를 대신하지 않습니다.
 - 최대 JSON 본문 16 KiB, 비밀번호 8~128자(공백을 trim하지 않음), 이름 1~100자, 전화번호 최대 40자. 프로젝트의 더 엄격한 Auth 비밀번호 정책도 적용됩니다.
 
@@ -100,3 +100,18 @@ supabase functions deploy manage-users --project-ref <PROJECT_REF>
 - 이메일 생성/변경 시 승인된 확인 절차 전 로그인/소유권 제한이 실제 Auth 정책과 일치하는지 확인.
 
 이번 작업에는 원격 호출, 실제 계정 생성, 실제 배포, 환경 비밀값 설정 또는 통합 실행 테스트가 포함되지 않습니다.
+
+
+## Dashboard로 배포하기 (CLI 없이, 2026-10-29)
+
+옛 API 키(anon/service_role)를 끈 프로젝트용입니다.
+
+1. Supabase → **Edge Functions → Deploy a new function → Via Editor**. 이름은 정확히 `manage-users`.
+2. `index.ts` 내용 전체를 붙여넣고 **Deploy**. **Verify JWT 는 켠 상태(기본값) 유지**.
+3. **Edge Functions → Secrets** 에서 `MANAGE_USERS_ALLOWED_ORIGINS` 를 추가합니다.
+   값은 사이트 주소(경로 없이, 끝에 `/` 없이)를 쉼표로 구분. 예: `https://ktj8824-stack.github.io`
+   (`SUPABASE_URL`, `SUPABASE_SECRET_KEYS` 는 Supabase가 자동으로 넣어 줍니다. 이름이 `SUPABASE_` 로 시작하는 비밀값은 직접 만들 수 없습니다.)
+4. **Authentication → Sign In / Providers → Email** 에서 *Confirm email* 이 켜져 있으면 이 함수로 만든 계정은 로그인할 수 없습니다.
+   이 함수는 `email_confirm:false` 로 계정을 만들고 확인 메일을 보내지 않기 때문입니다.
+   외부 가입을 꺼 둔 상태(관리자만 계정 생성)라면 *Confirm email* 을 끄는 것이 가장 간단합니다.
+5. 관리자 화면 → 매니저 관리 → 새 매니저 추가로 시험하고, 만든 계정으로 로그인해 봅니다.

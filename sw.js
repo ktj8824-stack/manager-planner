@@ -1,7 +1,7 @@
 /* App-shell cache only. HQ admin pages/scripts, APIs and third-party requests are never intercepted. Shared admin-data.js is an app dependency. */
 const CACHE_PREFIX = 'managerplanner-app:' + encodeURIComponent(self.registration.scope) + ':';
-const CACHE_NAME = CACHE_PREFIX + 'v195-css24-js195';
-const LEGACY_CACHES = ["managerplanner-v103-cache", CACHE_PREFIX + 'v182-css24-js181', CACHE_PREFIX + 'v183-css24-js183', CACHE_PREFIX + 'v184-css24-js184', CACHE_PREFIX + 'v185-css24-js185', CACHE_PREFIX + 'v186-css24-js186', CACHE_PREFIX + 'v187-css24-js187', CACHE_PREFIX + 'v188-css24-js188', CACHE_PREFIX + 'v189-css24-js189', CACHE_PREFIX + 'v190-css24-js190', CACHE_PREFIX + 'v191-css24-js191', CACHE_PREFIX + 'v192-css24-js192', CACHE_PREFIX + 'v193-css24-js193', CACHE_PREFIX + 'v194-css24-js194'];
+const CACHE_NAME = CACHE_PREFIX + 'v196-css24-js196';
+const LEGACY_CACHES = ["managerplanner-v103-cache", CACHE_PREFIX + 'v182-css24-js181', CACHE_PREFIX + 'v183-css24-js183', CACHE_PREFIX + 'v184-css24-js184', CACHE_PREFIX + 'v185-css24-js185', CACHE_PREFIX + 'v186-css24-js186', CACHE_PREFIX + 'v187-css24-js187', CACHE_PREFIX + 'v188-css24-js188', CACHE_PREFIX + 'v189-css24-js189', CACHE_PREFIX + 'v190-css24-js190', CACHE_PREFIX + 'v191-css24-js191', CACHE_PREFIX + 'v192-css24-js192', CACHE_PREFIX + 'v193-css24-js193', CACHE_PREFIX + 'v194-css24-js194', CACHE_PREFIX + 'v195-css24-js195'];
 const SCOPE_URL = new URL(self.registration.scope);
 // Versioned and unversioned URLs share an explicit, current-version key.
 // Unknown versions bypass this worker instead of receiving a stale asset.
@@ -76,59 +76,59 @@ const ASSET_ENTRIES = [
   ],
   [
     "js/icons.js",
-    "195"
+    "196"
   ],
   [
     "js/admin-data.js",
-    "195"
+    "196"
   ],
   [
     "js/data.js",
-    "195"
+    "196"
   ],
   [
     "js/api.js",
-    "195"
+    "196"
   ],
   [
     "js/utils.js",
-    "195"
+    "196"
   ],
   [
     "js/home.js",
-    "195"
+    "196"
   ],
   [
     "js/timeline.js",
-    "195"
+    "196"
   ],
   [
     "js/register.js",
-    "195"
+    "196"
   ],
   [
     "js/login.js",
-    "195"
+    "196"
   ],
   [
     "js/onboarding.js",
-    "195"
+    "196"
   ],
   [
     "js/profile.js",
-    "195"
+    "196"
   ],
   [
     "js/upgrade.js",
-    "195"
+    "196"
   ],
   [
     "js/supabase-client.js",
-    "195"
+    "196"
   ],
   [
     "js/app.js",
-    "195"
+    "196"
   ]
 ];
 const ASSET_KEYS = new Map();

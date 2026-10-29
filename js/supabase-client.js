@@ -154,20 +154,11 @@ const SupabaseClient = {
       console.warn('profiles 조회 예외:', e);
     }
 
-    // DB profiles가 없거나 조회가 실패했을 때 user_metadata 폴백 (정상 인증된 사용자)
+    // 권한은 서버 profiles 표에 있는 값만 믿습니다.
+    // (user_metadata 나 이메일 글자로 권한을 추측하지 않습니다. 가입자가 직접 정할 수 있는 값이기 때문입니다.)
     if (!profileData) {
-      const meta = this.currentUser.user_metadata || {};
-      const fallbackRole = meta.role || (this.currentUser.email?.toLowerCase().includes('ceo') ? 'ceo' : 'manager');
-      const companyName = meta.company_name || localStorage.getItem('reg_company_name') || localStorage.getItem('admin_bp_company_name') || 'KJM 엔터테인먼트';
-      profileData = {
-        id: this.currentUser.id,
-        email: this.currentUser.email,
-        name: meta.name || this.currentUser.email?.split('@')[0] || '관리자',
-        role: fallbackRole,
-        phone: meta.phone || '',
-        company_name: companyName,
-        companies: { name: companyName }
-      };
+      localStorage.removeItem('bp_user_role');
+      throw new Error('계정 권한을 확인할 수 없습니다. 본사 관리자에게 문의해주세요.');
     }
 
     if (!profileData || !['ceo', 'hq_admin', 'manager', 'staff', 'indie_manager'].includes(profileData.role)) {
