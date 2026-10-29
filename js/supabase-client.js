@@ -76,7 +76,21 @@ const SupabaseClient = {
       throw new Error('본사 관리자 인증이 필요합니다.');
     }
     const { data, error } = await this.client.functions.invoke('manage-users', { body });
-    if (error) throw new Error('계정 관리 서버 요청에 실패했습니다. manage-users 함수 배포와 이메일 인증 설정을 확인해주세요.');
+    if (error) {
+      // 서버가 돌려준 실제 원인(상태 코드/메시지)을 화면에 보여준다
+      let detail = '';
+      try {
+        const res = error.context;
+        if (res && typeof res.json === 'function') {
+          const j = await res.clone().json();
+          detail = (j?.error?.message || (typeof j?.error === 'string' ? j.error : '') || j?.message || '') + (j?.error?.code ? ' [' + j.error.code + ']' : '');
+          detail = (res.status ? 'HTTP ' + res.status + ' ' : '') + detail;
+        } else if (res?.status) {
+          detail = 'HTTP ' + res.status;
+        }
+      } catch (e) { }
+      throw new Error('계정 관리 서버 요청에 실패했습니다.' + (detail ? ' (' + detail.trim() + ')' : ' (서버에 연결하지 못했습니다)'));
+    }
     if (!data || data.error) throw new Error(data?.error?.message || (typeof data?.error === 'string' ? data.error : '계정 관리 서버 응답이 올바르지 않습니다.'));
     return data;
   },
