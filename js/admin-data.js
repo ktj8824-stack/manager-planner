@@ -899,7 +899,7 @@ class HQDataStore {
         date: row.date, startTime: row.start_time ? row.start_time.substring(0, 5) : '10:00',
         endTime: row.end_time ? row.end_time.substring(0, 5) : '18:00',
         location: row.location || '', shopLocation: row.shop_location || '',
-        status: this._scheduleUiStatus(row.status), isSecret: !!row.is_secret,
+        status: (existing?.status && this._scheduleDbStatus(existing.status) === row.status) ? existing.status : this._scheduleUiStatus(row.status), isSecret: !!row.is_secret,
         secretLevel: row.secret_level || (row.is_secret ? 'confidential' : 'public'),
         notes: row.notes || '', timeline: row.timeline_items || [], statusLogs: row.status_logs || [],
         outfit: row.outfit || '', supplies: row.supplies || '', departure: row.departure_info || {}
@@ -1256,12 +1256,13 @@ class HQDataStore {
 
   _scheduleDbStatus(status) {
     const map = {
-      '예정': 'scheduled', '진행중': 'in_progress', '진행 중': 'in_progress', '완료': 'completed', '취소': 'cancelled',
+      '예정': 'scheduled', '확정': 'scheduled', '가예정': 'scheduled', '대기': 'scheduled',
+      '이동중': 'in_progress', '샵진행': 'in_progress', '도착': 'in_progress', '진행중': 'in_progress', '진행 중': 'in_progress',
+      '완료': 'completed', '취소': 'cancelled',
       scheduled: 'scheduled', in_progress: 'in_progress', completed: 'completed', cancelled: 'cancelled'
     };
-    if (!status) return 'scheduled';
-    if (!map[status]) throw new Error('지원하지 않는 일정 상태입니다.');
-    return map[status];
+    // 알 수 없는 상태는 오류로 막지 않고 '예정'으로 저장 (화면의 원래 표시는 기기에 그대로 유지)
+    return map[status] || 'scheduled';
   }
 
   _scheduleUiStatus(status) {
