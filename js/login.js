@@ -43,7 +43,7 @@ const Login = {
               style="background:var(--accent); color:#fff; font-weight:800; font-size:16px; justify-content:center; padding:16px; border-radius:12px; margin-top:8px; border:none; box-shadow:0 4px 12px rgba(0,122,255,0.3); cursor:pointer;">
               로그인
             </button>
-            <button type="button" onclick="Login.demoLogin('ceo')" 
+            <button type="button" id="demo-login-btn" ${Login.isDevHost() ? '' : 'hidden'} onclick="Login.demoLogin('ceo')" 
               style="width:100%; margin-top:10px; padding:13px; border-radius:12px; border:1px dashed rgba(99,102,241,0.5); background:rgba(99,102,241,0.08); color:var(--accent); font-weight:800; font-size:13px; cursor:pointer; transition:all 0.2s;">
               ⚡ 테스트 대표 계정 1초 둘러보기 (데모)
             </button>
@@ -210,7 +210,13 @@ const Login = {
     App.navigate('home');
   },
 
+  // 개발용 PC(localhost)에서만 데모 로그인을 허용
+  isDevHost() {
+    return ['localhost', '127.0.0.1', ''].includes(location.hostname) || location.protocol === 'file:';
+  },
+
   demoLogin(type = 'ceo') {
+    if (!this.isDevHost()) return;
     const allArtists = (typeof window.hqStore !== 'undefined') ? window.hqStore.getArtists() : [];
     const assigned = allArtists.map(a => a.id);
     localStorage.setItem('bp_logged_in', 'true');

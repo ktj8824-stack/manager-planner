@@ -247,6 +247,8 @@ const App = {
   ADFIT_UNIT_ID: 'DAN-XXXXXXXXXXXXXXXX',
 
   renderAdBanner() {
+    // 광고 번호가 임시값(DAN-XXXX...)이면 빈 검은 막대만 화면을 가리므로 만들지 않음
+    if (!this.ADFIT_UNIT_ID || /X{4,}/.test(this.ADFIT_UNIT_ID)) return;
     // 이미 광고 있으면 중복 생성 방지
     if (U.$('#adfit-banner-wrap')) return;
 
