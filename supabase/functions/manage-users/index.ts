@@ -152,7 +152,7 @@ async function createMember(db: SupabaseClient, caller: Caller, body: JsonObject
   if (currentCaller.company_id !== caller.company_id) throw new HttpError(403, "CALLER_CHANGED", "Caller company changed. Start a new request.");
   // createUser only: never search Auth by email, reuse a user, or reset its password.
   const { data, error } = await db.auth.admin.createUser({
-    email: memberEmail, password: memberPassword, email_confirm: false,
+    email: memberEmail, password: memberPassword, email_confirm: true,
     user_metadata: { name: memberName, phone: memberPhone },
   });
   if (error) throw authFailure(error);
@@ -199,7 +199,7 @@ async function updateMember(db: SupabaseClient, caller: Caller, body: JsonObject
   const target = await targetProfile(db, body.id, currentCaller);
   // An unchanged address must not alter its verification state.
   if (authPatch.email === target.email?.toLowerCase()) delete authPatch.email;
-  if (authPatch.email) authPatch.email_confirm = false;
+  if (authPatch.email) authPatch.email_confirm = true;
   let authChanged = false;
   if (Object.keys(authPatch).length) {
     const { data, error } = await db.auth.admin.updateUserById(target.id, authPatch);
