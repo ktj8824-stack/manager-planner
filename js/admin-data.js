@@ -610,6 +610,7 @@ function getInitialMockSchedules() {
 
 class HQDataStore {
   constructor() {
+    this.HQ_NOTICE_KEY = 'HQ_NOTIFICATIONS_V2';
     this.initStorage();
     this.broadcast = new BroadcastChannel('HQ_PLANNER_CHANNEL');
     this.syncFromSupabase().catch(() => { }); // failures are published via hq-store-change
@@ -835,6 +836,8 @@ class HQDataStore {
       if (remoteSchedules.status === 'fulfilled' && Array.isArray(remoteSchedules.value)) {
         this._mergeRemoteSchedules(scheduleKey, remoteSchedules.value, baseline);
       }
+      try { this._mergeRemoteAnnouncements(await window.SupabaseClient.getAnnouncements(50)); }
+      catch (e) { console.warn('공지 불러오기 실패:', e); }
       const failures = [remoteArtists, remoteManagers, remoteVehicles, remoteSchedules]
         .map((result, index) => ({ result, index }))
         .filter(({ result }) => result.status === 'rejected' || !Array.isArray(result.value))
@@ -866,6 +869,102 @@ class HQDataStore {
     for (const v of this.getVehicles()) {
       if (v && v.id && !haveV.has(v.id)) await sc.saveVehicle(v);
     }
+  }
+
+  getBroadcasts() {
+    try {
+      const raw = localStorage.getItem(this.HQ_NOTICE_KEY);
+      const list = raw ? JSON.parse(raw) : [];
+      // 최신순 정렬, 최대 30개
+      return list
+        .slice()
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 30)
+        .map(n => ({
+          id: n.id,
+          title: n.title || (n.isUrgent ? '🚨 긴급 공지' : '📢 본사 공지'),
+          content: n.content || '',
+          date: n.createdAt ? new Date(n.createdAt).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace('. ', '-').replace('.', '') : '',
+          urgent: n.isUrgent || false,
+          targetId: n.targetId || 'ALL'
+        }));
+    } catch (e) {
+      return [];
+    }
+  }
+
+  addBroadcast({ title = '', content, isUrgent = false, targetId = 'ALL' }) {
+    if (!content) return;
+    const notiData = {
+      id: 'noti_' + Date.now(),
+      title: title || (isUrgent ? '🚨 긴급 공지' : '📢 본사 공지'),
+      content,
+      isUrgent,
+      targetId,
+      createdAt: new Date().toISOString()
+    };
+    try {
+      const raw = localStorage.getItem(this.HQ_NOTICE_KEY);
+      const list = raw ? JSON.parse(raw) : [];
+      list.push(notiData);
+      // 최대 100개 유지
+      if (list.length > 100) list.splice(0, list.length - 100);
+      localStorage.setItem(this.HQ_NOTICE_KEY, JSON.stringify(list));
+    } catch (e) { }
+
+    // BroadcastChannel 실시간 전송
+    try {
+      if (this.broadcast) {
+        this.broadcast.postMessage({ type: 'NEW_HQ_MESSAGE', payload: notiData });
+      }
+    } catch (e) { }
+
+    this._pushBroadcastToServer(notiData);
+    return notiData;
+  }
+
+  // 공지를 서버(announcements)에 저장: 서버 규칙상 "받는 사람 1명당 1행"으로 저장한다 (전체 발송 = 매니저 수만큼)
+  async _pushBroadcastToServer(noti) {
+    const sc = window.SupabaseClient;
+    if (!sc || !sc.isConfigured || !sc.createAnnouncement) return;
+    const myRole = localStorage.getItem('admin_bp_user_role') || localStorage.getItem('bp_user_role') || '';
+    if (myRole !== 'ceo' && myRole !== 'hq_admin') return; // 서버 규칙상 본사만 공지 저장 가능
+    const isUuid = v => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v || '');
+    let ids = [];
+    if (noti.targetId && noti.targetId !== 'ALL') {
+      ids = isUuid(noti.targetId) ? [noti.targetId] : [];
+    } else {
+      ids = this.getManagers().filter(m => isUuid(m.id) && !['ceo', 'hq_admin'].includes(m.role)).map(m => m.id);
+    }
+    if (!ids.length) { this._reportServerError('공지 저장', new Error('서버 계정이 있는 받는 사람이 없습니다.')); return; }
+    for (const managerId of ids) {
+      try {
+        await sc.createAnnouncement({
+          title: noti.title, content: noti.content, is_urgent: noti.isUrgent,
+          target_role: 'all', target_manager_id: managerId, created_at: noti.createdAt
+        });
+      } catch (e) { this._reportServerError('공지 저장', e); return; }
+    }
+  }
+
+  // 서버 공지를 이 기기의 공지 목록에 합친다 (같은 제목·내용·시각은 하나로)
+  _mergeRemoteAnnouncements(rows) {
+    const key = n => [n.createdAt ? new Date(n.createdAt).getTime() : '', n.title || '', n.content || ''].join('|');
+    let list = [];
+    try { list = JSON.parse(localStorage.getItem(this.HQ_NOTICE_KEY) || '[]'); } catch (e) { list = []; }
+    const byKey = new Map(list.map(n => [key(n), n]));
+    const groups = new Map();
+    for (const r of rows || []) {
+      const n = { id: r.id, title: r.title, content: r.content, isUrgent: !!r.is_urgent, targetId: r.target_manager_id || 'ALL', createdAt: r.created_at };
+      const k = key(n);
+      if (byKey.has(k)) continue;
+      if (groups.has(k)) { groups.get(k).targetId = 'ALL'; continue; }
+      groups.set(k, n);
+    }
+    if (!groups.size) return;
+    list.push(...groups.values());
+    if (list.length > 100) list.splice(0, list.length - 100);
+    localStorage.setItem(this.HQ_NOTICE_KEY, JSON.stringify(list));
   }
 
   _reportServerError(what, e) {
@@ -1999,57 +2098,6 @@ window.AuthPersona = {
 
   login() {
     return { success: false, message: '로컬 계정 로그인은 지원하지 않습니다. Supabase 인증을 이용해주세요.' };
-  },
-
-  getBroadcasts() {
-    try {
-      const raw = localStorage.getItem(this.HQ_NOTICE_KEY);
-      const list = raw ? JSON.parse(raw) : [];
-      // 최신순 정렬, 최대 30개
-      return list
-        .slice()
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 30)
-        .map(n => ({
-          id: n.id,
-          title: n.title || (n.isUrgent ? '🚨 긴급 공지' : '📢 본사 공지'),
-          content: n.content || '',
-          date: n.createdAt ? new Date(n.createdAt).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace('. ', '-').replace('.', '') : '',
-          urgent: n.isUrgent || false,
-          targetId: n.targetId || 'ALL'
-        }));
-    } catch (e) {
-      return [];
-    }
-  },
-
-  addBroadcast({ title = '', content, isUrgent = false, targetId = 'ALL' }) {
-    if (!content) return;
-    const notiData = {
-      id: 'noti_' + Date.now(),
-      title: title || (isUrgent ? '🚨 긴급 공지' : '📢 본사 공지'),
-      content,
-      isUrgent,
-      targetId,
-      createdAt: new Date().toISOString()
-    };
-    try {
-      const raw = localStorage.getItem(this.HQ_NOTICE_KEY);
-      const list = raw ? JSON.parse(raw) : [];
-      list.push(notiData);
-      // 최대 100개 유지
-      if (list.length > 100) list.splice(0, list.length - 100);
-      localStorage.setItem(this.HQ_NOTICE_KEY, JSON.stringify(list));
-    } catch (e) { }
-
-    // BroadcastChannel 실시간 전송
-    try {
-      if (this.broadcast) {
-        this.broadcast.postMessage({ type: 'NEW_HQ_MESSAGE', payload: notiData });
-      }
-    } catch (e) { }
-
-    return notiData;
   },
 
   async logout(redirectUrl = 'index.html') {

@@ -481,28 +481,23 @@ const SupabaseClient = {
       return newNoti;
     }
 
-    try {
-      const { data, error } = await this.client
-        .from('announcements')
-        .insert([{
-          title: announcement.title || '본사 공지사항',
-          content: announcement.content,
-          is_urgent: !!announcement.is_urgent,
-          target_role: announcement.target_role || 'all',
-          sender_name: announcement.sender_name || '본사 관제팀'
-        }])
-        .select()
-        .single();
-
-      if (error) {
-        console.warn('Supabase createAnnouncement error:', error);
-        return null;
-      }
-      return data;
-    } catch (e) {
-      console.warn('createAnnouncement exception:', e);
-      return null;
-    }
+    const row = {
+      title: announcement.title || '본사 공지사항',
+      content: announcement.content,
+      is_urgent: !!announcement.is_urgent,
+      target_role: announcement.target_role || 'all',
+      target_manager_id: announcement.target_manager_id || null,
+      sender_name: announcement.sender_name || '본사 관제팀'
+    };
+    if (announcement.id) row.id = announcement.id;
+    if (announcement.created_at) row.created_at = announcement.created_at;
+    const { data, error } = await this.client
+      .from('announcements')
+      .insert([row])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
   },
 
   async getAnnouncements(limit = 20) {

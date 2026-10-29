@@ -447,8 +447,8 @@ const App = {
   openNoticeModal() {
     let notices = [];
     try {
-      if (window.AdminData && AdminData.getBroadcasts) {
-        notices = AdminData.getBroadcasts();
+      if (window.hqStore && window.hqStore.getBroadcasts) {
+        notices = window.hqStore.getBroadcasts();
       }
     } catch(e) {}
     

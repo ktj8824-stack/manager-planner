@@ -433,8 +433,8 @@ const Profile = {
     if (!loc || !desc) { U.toast('위치와 상세 내용을 입력해 주세요.'); return; }
     const userName = localStorage.getItem('bp_user_name') || '현장 매니저';
     try {
-      if (window.AdminData?.addBroadcast) {
-        AdminData.addBroadcast({ title:`🚨 [현장 긴급보고] ${type} (${userName})`, content:`위치: ${loc}\n내용: ${desc}`, isUrgent:true, targetId:'ALL' });
+      if (window.hqStore?.addBroadcast) {
+        window.hqStore.addBroadcast({ title:`🚨 [현장 긴급보고] ${type} (${userName})`, content:`위치: ${loc}\n내용: ${desc}`, isUrgent:true, targetId:'ALL' });
       }
     } catch(e) {}
     document.getElementById('emergency-report-modal').remove();
