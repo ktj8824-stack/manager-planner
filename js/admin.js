@@ -455,6 +455,15 @@ window.Admin = {
   currentPlaceFilter: 'ALL',
 
   // 담당 매니저별 현장 지원 현황을 엑셀에서 열리는 CSV로 내려받기
+  // 활동 유형에 따라 멤버 입력칸 조정 (솔로/배우/MC는 1명)
+  onArtistTypeChange(type) {
+    const solo = ['솔로가수', '배우', 'MC/방송인'].includes(type);
+    const members = document.getElementById('new-artist-members');
+    const listBox = document.getElementById('artist-member-list-group');
+    if (members && solo) members.value = 1;
+    if (listBox) listBox.style.display = solo ? 'none' : '';
+  },
+
   async exportExcel() {
     try {
       const schedules = await window.hqStore.getSchedules();
