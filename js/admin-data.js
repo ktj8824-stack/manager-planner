@@ -836,6 +836,8 @@ class HQDataStore {
       if (remoteSchedules.status === 'fulfilled' && Array.isArray(remoteSchedules.value)) {
         this._mergeRemoteSchedules(scheduleKey, remoteSchedules.value, baseline);
       }
+      try { await this._applyServerSlots(); }
+      catch (e) { console.warn('슬롯 정보 불러오기 실패:', e); }
       try { this._mergeRemoteAnnouncements(await window.SupabaseClient.getAnnouncements(50)); }
       catch (e) { console.warn('공지 불러오기 실패:', e); }
       const failures = [remoteArtists, remoteManagers, remoteVehicles, remoteSchedules]
@@ -965,6 +967,23 @@ class HQDataStore {
     list.push(...groups.values());
     if (list.length > 100) list.splice(0, list.length - 100);
     localStorage.setItem(this.HQ_NOTICE_KEY, JSON.stringify(list));
+  }
+
+  // 운영자가 서버(companies.extra_manager_slots)에 넣어 준 추가 슬롯을 반영 (앱에서는 수정 불가)
+  async _applyServerSlots() {
+    const sc = window.SupabaseClient;
+    if (!sc?.client) return;
+    const { data, error } = await sc.client.from('companies').select('extra_manager_slots').limit(1).maybeSingle();
+    if (error) throw error;
+    const serverExtra = Number(data?.extra_manager_slots) || 0;
+    const key = this.getUserStorageKey(HQ_STORAGE_KEYS.SUBSCRIPTION);
+    let sub = null;
+    try { sub = JSON.parse(localStorage.getItem(key)); } catch (e) { }
+    sub = sub || { ...DEFAULT_SUBSCRIPTION };
+    if ((sub.additionalSlots || 0) >= serverExtra) return;
+    sub.additionalSlots = serverExtra;
+    localStorage.setItem(key, JSON.stringify(sub));
+    this.notifyChange('SUBSCRIPTION_UPDATED');
   }
 
   _reportServerError(what, e) {
