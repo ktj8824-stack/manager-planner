@@ -124,7 +124,14 @@ const Login = {
       const result = await window.SupabaseClient.signIn(email, password);
       this.finishLogin('supabase', { ...result.profile, id: result.user.id, email: result.user.email });
     } catch (error) {
-      errorEl.textContent = '로그인하지 못했습니다. 이메일·비밀번호, 이메일 인증 및 계정 권한을 확인해주세요.';
+      const raw = String(error?.message || '');
+      let msg = '로그인하지 못했습니다. 이메일·비밀번호, 이메일 인증 및 계정 권한을 확인해주세요.';
+      if (/email not confirmed/i.test(raw)) msg = '이메일 인증이 완료되지 않은 계정입니다. 관리자에게 문의해주세요. (이메일 인증 설정)';
+      else if (/invalid login credentials/i.test(raw)) msg = '이메일 또는 비밀번호가 올바르지 않습니다.';
+      else if (/profile|프로필|권한/i.test(raw)) msg = '계정 권한 정보를 확인하지 못했습니다. 관리자에게 문의해주세요.';
+      else if (/rate limit|too many/i.test(raw)) msg = '시도 횟수가 많습니다. 잠시 후 다시 시도해주세요.';
+      console.warn('로그인 실패:', raw);
+      errorEl.textContent = msg;
       errorEl.style.display = 'block';
     } finally {
       button.disabled = false;
