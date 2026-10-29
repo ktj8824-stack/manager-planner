@@ -1271,7 +1271,7 @@ class HQDataStore {
   _schedulePayload(schedule) {
     return {
       title: schedule.title, category: schedule.category || 'broadcast', artist_id: schedule.artistId,
-      manager_id: schedule.managerId || null, vehicle_id: schedule.vehicleId || null,
+      manager_id: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(schedule.managerId || '') ? schedule.managerId : null, vehicle_id: schedule.vehicleId || null,
       date: schedule.date, start_time: schedule.startTime, end_time: schedule.endTime,
       location: schedule.location || '',
       shop_location: schedule.shop?.needed === false ? null : (schedule.shop?.name ? schedule.shop.name + ' (' + (schedule.shop.time || '') + ')' : schedule.shopLocation || null),
@@ -1411,7 +1411,7 @@ class HQDataStore {
         }
         synced++;
       } catch (error) {
-        failures.push({ id, code: error?.code || 'SCHEDULE_SYNC_ERROR' });
+        failures.push({ id, code: error?.code || 'SCHEDULE_SYNC_ERROR', message: error?.message || '' });
       }
     }
     const pending = Object.values(this._readScheduleOutbox(key)).filter(e => e.pending).length;
@@ -1419,6 +1419,7 @@ class HQDataStore {
     this.lastScheduleSyncResult = result;
     if (failures.length) {
       this.notifyChange('SCHEDULE_SYNC_FAILED', result);
+      this._reportServerError('스케줄 저장', new Error((failures[0].code || '') + ' ' + (failures[0].message || '')));
       const error = new Error('일정은 로컬에 저장되었지만 서버 동기화에 실패했습니다. 온라인 상태에서 다시 시도해 주세요.');
       error.localSaved = true;
       error.syncResult = result;
