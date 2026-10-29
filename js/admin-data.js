@@ -785,16 +785,11 @@ class HQDataStore {
   async syncFromSupabase() {
     if (typeof window.SupabaseClient === 'undefined' || !window.SupabaseClient.isConfigured) return;
 
-    // 🔒 ceo@kjm-ent.com 테스트/데모 계정의 데이터는 원격 DB의 영향 없이 영구 보존
-    const rawEmail = (localStorage.getItem('admin_bp_user_email') || localStorage.getItem('bp_user_email') || window.SupabaseClient?.currentUser?.email || '').trim().toLowerCase();
-    if (rawEmail === 'ceo@kjm-ent.com' || rawEmail === 'ceo@jm-ent.com') {
-      return { preserved: true, isDemoAccount: true };
-    }
-
     const scheduleKey = this.getUserStorageKey(HQ_STORAGE_KEYS.SCHEDULES);
     const baseline = this._readScheduleOutbox(scheduleKey);
     const keys = { artists: this.getUserStorageKey(HQ_STORAGE_KEYS.ARTISTS), managers: this.getUserStorageKey(HQ_STORAGE_KEYS.MANAGERS), vehicles: this.getUserStorageKey(HQ_STORAGE_KEYS.VEHICLES) };
     try {
+      await this._seedCatalogToServer();
       const [remoteArtists, remoteManagers, remoteVehicles, remoteSchedules] = await Promise.allSettled([
         window.SupabaseClient.getArtists(),
         window.SupabaseClient.getManagers(),
@@ -854,6 +849,27 @@ class HQDataStore {
       this.notifyChange('SUPABASE_SYNC_FAILED', { resources: error.resources || ['unknown'] });
       throw error;
     }
+  }
+
+  // 본사(대표/관리자)만: 서버에 없는 로컬 아티스트·차량을 한 번 올려준다 (서버가 비어 있어도 로컬 자료가 사라지지 않게)
+  async _seedCatalogToServer() {
+    const role = localStorage.getItem('admin_bp_user_role') || localStorage.getItem('bp_user_role') || 'manager';
+    if (role !== 'ceo' && role !== 'hq_admin') return;
+    const sc = window.SupabaseClient;
+    const [ra, rv] = await Promise.all([sc.getArtists(), sc.getVehicles()]);
+    const haveA = new Set(ra.map(a => a.id));
+    const haveV = new Set(rv.map(v => v.id));
+    for (const a of this.getArtists()) {
+      if (a && a.id && !haveA.has(a.id)) await sc.createArtist(a);
+    }
+    for (const v of this.getVehicles()) {
+      if (v && v.id && !haveV.has(v.id)) await sc.saveVehicle(v);
+    }
+  }
+
+  _reportServerError(what, e) {
+    console.warn('서버 저장 실패 (' + what + '):', e);
+    this.notifyChange('SERVER_WRITE_FAILED', { what, message: e?.message || String(e) });
   }
 
   _mergeRemoteSchedules(key, rows, baseline = null) {
@@ -938,7 +954,7 @@ class HQDataStore {
       try {
         await window.SupabaseClient.createArtist(artist);
       } catch (e) {
-        console.warn('Supabase addArtist error:', e);
+        this._reportServerError('아티스트 등록', e);
       }
     }
     return artist;
@@ -949,13 +965,13 @@ class HQDataStore {
     artists = artists.filter(a => a.id !== id);
     this.saveArtists(artists);
 
-    if (window.SupabaseClient && window.SupabaseClient.isConfigured && !id.startsWith('art_')) {
+    if (window.SupabaseClient && window.SupabaseClient.isConfigured) {
       try {
         if (window.SupabaseClient.deleteArtist) {
           await window.SupabaseClient.deleteArtist(id);
         }
       } catch (e) {
-        console.warn('Supabase deleteArtist error:', e);
+        this._reportServerError('아티스트 삭제', e);
       }
     }
     return true;
@@ -968,13 +984,13 @@ class HQDataStore {
       artists[idx] = { ...artists[idx], ...data };
       this.saveArtists(artists);
 
-      if (window.SupabaseClient && window.SupabaseClient.isConfigured && !id.startsWith('art_')) {
+      if (window.SupabaseClient && window.SupabaseClient.isConfigured) {
         try {
           if (window.SupabaseClient.updateArtist) {
-            await window.SupabaseClient.updateArtist(id, data);
+            await window.SupabaseClient.updateArtist(id, artists[idx]);
           }
         } catch (e) {
-          console.warn('Supabase updateArtist error:', e);
+          this._reportServerError('아티스트 수정', e);
         }
       }
       return artists[idx];
@@ -1145,6 +1161,10 @@ class HQDataStore {
       vehicles.push(vehicle);
     }
     this.saveVehicles(vehicles);
+    if (window.SupabaseClient && window.SupabaseClient.isConfigured) {
+      try { await window.SupabaseClient.saveVehicle(vehicle); }
+      catch (e) { this._reportServerError('차량 저장', e); }
+    }
     return vehicle;
   }
 
@@ -1152,6 +1172,10 @@ class HQDataStore {
     const vehicles = this.getVehicles();
     const newVehicles = vehicles.filter(v => v.id !== id);
     this.saveVehicles(newVehicles);
+    if (window.SupabaseClient && window.SupabaseClient.isConfigured) {
+      try { await window.SupabaseClient.deleteVehicle(id); }
+      catch (e) { this._reportServerError('차량 삭제', e); }
+    }
     return true;
   }
 
@@ -1311,12 +1335,6 @@ class HQDataStore {
 
   // Resolves { synced, pending, deferred }. Rejects on cloud errors; local edits remain queued.
   async flushPendingSchedules() {
-    // 🔒 ceo@kjm-ent.com 테스트/데모 계정은 로컬 완결형으로 작동
-    const rawEmail = (localStorage.getItem('admin_bp_user_email') || localStorage.getItem('bp_user_email') || window.SupabaseClient?.currentUser?.email || '').trim().toLowerCase();
-    if (rawEmail === 'ceo@kjm-ent.com' || rawEmail === 'ceo@jm-ent.com') {
-      return { synced: 0, pending: 0, deferred: true, isDemoAccount: true };
-    }
-
     const key = this.getUserStorageKey(HQ_STORAGE_KEYS.SCHEDULES);
     if (!this._canFlushSchedules()) {
       const result = { synced: 0, pending: this.getScheduleSyncState().pending, deferred: true };

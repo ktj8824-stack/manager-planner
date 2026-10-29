@@ -28,6 +28,7 @@ const App = {
     // 로컬 창 및 탭 간 커스텀 이벤트/스토리지 이벤트 즉시 수신
     window.addEventListener('hq-store-change', (event) => {
       const type = event.detail?.type;
+      if (type === 'SERVER_WRITE_FAILED') U.toast('서버에 저장하지 못했습니다. 기기에는 저장되어 있어요.');
       if (type === 'SCHEDULE_SYNC_FAILED' || type === 'SUPABASE_SYNC_FAILED') U.toast('기기에 저장되어 있습니다. 서버 동기화에 실패해 재시도가 필요합니다.');
       else if (type === 'SCHEDULE_SYNC_PENDING') U.toast('기기에 저장됨 · 서버 동기화 대기 중');
       this.refreshActiveScreens();

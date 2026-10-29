@@ -1523,6 +1523,22 @@ window.Admin = {
   }
 };
 
+// 서버 저장 실패 안내 (기기에는 저장됨)
+window.addEventListener('hq-store-change', (event) => {
+  if (event.detail?.type !== 'SERVER_WRITE_FAILED') return;
+  const d = event.detail.payload || {};
+  let box = document.getElementById('server-error-toast');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'server-error-toast';
+    box.style.cssText = 'position:fixed;right:20px;bottom:20px;z-index:99999;max-width:360px;padding:14px 16px;border-radius:10px;background:#7f1d1d;color:#fff;font-size:13px;line-height:1.5;box-shadow:0 8px 24px rgba(0,0,0,.35)';
+    document.body.appendChild(box);
+  }
+  box.textContent = '서버 저장 실패 (' + (d.what || '') + '): ' + (d.message || '') + ' — 이 기기에는 저장되어 있어요.';
+  clearTimeout(box._t);
+  box._t = setTimeout(() => box.remove(), 9000);
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   // App State
   const state = {

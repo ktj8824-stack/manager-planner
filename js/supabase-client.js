@@ -179,6 +179,37 @@ const SupabaseClient = {
 
   // ── 3. 소속 아티스트 API ──
 
+  // ── 클라이언트 객체 ↔ DB 행 변환 (화면 전용 필드는 data(JSONB)에 보관) ──
+  _artistToRow(a) {
+    const { id, name, type, members, color, emoji, status, care_info, ...rest } = a || {};
+    return {
+      id, name: name || '', type: type || '기타',
+      members: Number.isFinite(Number(members)) ? Number(members) : 1,
+      color: color || '#ec4899', emoji: emoji || '✨', status: status || '활동중',
+      care_info: care_info && typeof care_info === 'object' ? care_info : {},
+      data: rest
+    };
+  },
+
+  _rowToArtist(r) {
+    const { data, ...cols } = r || {};
+    return { ...(data || {}), ...cols };
+  },
+
+  _vehicleToRow(v) {
+    const { id, name, type, seats, status, ...rest } = v || {};
+    return {
+      id, name: name || '', type: type || '밴',
+      capacity: Number(seats) || 7, status: status || '운행가능', data: rest
+    };
+  },
+
+  _rowToVehicle(r) {
+    const { data, capacity, ...cols } = r || {};
+    return { ...(data || {}), ...cols, seats: capacity };
+  },
+
+
   async getArtists() {
     if (!this.isConfigured) {
       return JSON.parse(localStorage.getItem('HQ_ARTISTS_V1') || '[]');
@@ -188,7 +219,7 @@ const SupabaseClient = {
       .select('*')
       .order('name');
     if (error) throw error;
-    return data;
+    return (data || []).map(r => this._rowToArtist(r));
   },
 
   async createArtist(artist) {
@@ -200,11 +231,11 @@ const SupabaseClient = {
     }
     const { data, error } = await this.client
       .from('artists')
-      .insert([artist])
+      .upsert([this._artistToRow(artist)], { onConflict: 'id' })
       .select()
       .single();
     if (error) throw error;
-    return data;
+    return this._rowToArtist(data);
   },
 
   async updateArtistCareInfo(id, careInfo) {
@@ -242,15 +273,15 @@ const SupabaseClient = {
       return null;
     }
 
+    // 부분 수정도 전체 객체로 저장되도록 upsert 사용
     const { data, error } = await this.client
       .from('artists')
-      .update(artist)
-      .eq('id', id)
+      .upsert([this._artistToRow({ ...artist, id })], { onConflict: 'id' })
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return this._rowToArtist(data);
   },
 
   async deleteArtist(id) {
@@ -315,7 +346,25 @@ const SupabaseClient = {
       .select('*')
       .order('name');
     if (error) throw error;
-    return data;
+    return (data || []).map(r => this._rowToVehicle(r));
+  },
+
+  async saveVehicle(vehicle) {
+    if (!this.isConfigured) return vehicle;
+    const { data, error } = await this.client
+      .from('vehicles')
+      .upsert([this._vehicleToRow(vehicle)], { onConflict: 'id' })
+      .select()
+      .single();
+    if (error) throw error;
+    return this._rowToVehicle(data);
+  },
+
+  async deleteVehicle(id) {
+    if (!this.isConfigured) return true;
+    const { error } = await this.client.from('vehicles').delete().eq('id', id);
+    if (error) throw error;
+    return true;
   },
 
   // ── 6. 통합 스케줄 API ──
