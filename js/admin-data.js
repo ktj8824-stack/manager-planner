@@ -789,7 +789,8 @@ class HQDataStore {
     const baseline = this._readScheduleOutbox(scheduleKey);
     const keys = { artists: this.getUserStorageKey(HQ_STORAGE_KEYS.ARTISTS), managers: this.getUserStorageKey(HQ_STORAGE_KEYS.MANAGERS), vehicles: this.getUserStorageKey(HQ_STORAGE_KEYS.VEHICLES) };
     try {
-      await this._seedCatalogToServer();
+      try { await this._seedCatalogToServer(); }
+      catch (e) { this._reportServerError('아티스트·차량 서버 올리기', e); }
       const [remoteArtists, remoteManagers, remoteVehicles, remoteSchedules] = await Promise.allSettled([
         window.SupabaseClient.getArtists(),
         window.SupabaseClient.getManagers(),
