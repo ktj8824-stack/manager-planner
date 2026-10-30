@@ -605,6 +605,7 @@ const SupabaseClient = {
       .insert([{ room_id: roomId, body, image_path: imagePath, is_urgent: !!isUrgent }])
       .select().single();
     if (error) throw error;
+    if (data?.id) this.pushNotifyMessage(data.id);
     return data;
   },
 
@@ -627,6 +628,24 @@ const SupabaseClient = {
     const { error } = await this.client.from('chat_reads')
       .upsert({ room_id: roomId, user_id: this.currentUser.id, last_read_at: new Date().toISOString() }, { onConflict: 'room_id,user_id' });
     if (error) throw error;
+  },
+
+  // ── 푸시 알림 기기 등록 ──
+  async pushSave(sub) {
+    this._chatReady();
+    const j = sub.toJSON();
+    const row = { user_id: this.currentUser.id, endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth,
+      user_agent: (navigator.userAgent || '').slice(0, 200), updated_at: new Date().toISOString() };
+    const { error } = await this.client.from('push_subscriptions').upsert(row, { onConflict: 'endpoint' });
+    if (error) throw error;
+  },
+  async pushRemove(endpoint) {
+    this._chatReady();
+    await this.client.from('push_subscriptions').delete().eq('endpoint', endpoint);
+  },
+  // 방금 보낸 메시지를 상대방 기기로 푸시 (실패해도 대화에는 영향 없음)
+  pushNotifyMessage(messageId) {
+    try { this.client.functions.invoke('send-push', { body: { message_id: messageId } }).catch(() => { }); } catch (e) { }
   },
 
   // 상대방이 어디까지 읽었는지 (supabase_chat_upgrade.sql 필요. 없으면 빈 목록)

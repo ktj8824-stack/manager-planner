@@ -4,6 +4,7 @@
    서버: Supabase chat_rooms / chat_messages / chat_reads, 사진은 chat-images 저장소 */
 (function () {
   'use strict';
+  const PUSH_PUBLIC_KEY = 'BALCnXsE8MK70Vc-0xYyObh8onv97bjYQZ8VayLJmRgI4AmZsX6Py67Y9Mz3RjOWAdratDLAm23nzspDJWlLmCg'; // 공개 키 (비밀 아님)
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const ICON = {
     close: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
@@ -36,8 +37,22 @@
       }
       this.st.inited = true;
       this.sc().chatSubscribe((m) => this._incoming(m));
+      this._syncPush();
+      try {
+        navigator.serviceWorker?.addEventListener('message', (ev) => {
+          if (ev.data?.type === 'OPEN_CHAT') this._openFromPush(ev.data.roomId);
+          else if (ev.data?.type === 'PUSH_RESUBSCRIBE') this._syncPush();
+        });
+        const rid = new URLSearchParams(location.search).get('chat');
+        if (rid !== null) { history.replaceState(null, '', location.pathname); setTimeout(() => this._openFromPush(rid), 600); }
+      } catch (e) { }
       this.refreshList().catch(() => { });
       this.st.listTimer = setInterval(() => { if (!document.hidden) this.refreshList().catch(() => { }); }, 45000);
+    },
+
+    async _openFromPush(roomId) {
+      await this.open();
+      if (roomId) this.select({ id: roomId });
     },
 
     async refreshList() {
@@ -58,6 +73,7 @@
         <div class="chat-shell" role="dialog" aria-label="로디톡">
           <aside class="chat-list">
             <div class="chat-head"><h2>로디톡</h2><button class="chat-iconbtn" data-act="close" aria-label="닫기">${ICON.close}</button></div>
+            <div class="chat-pushbar" id="chat-pushbar" hidden></div>
             <div class="chat-search"><input id="chat-search" type="search" placeholder="대화·이름 검색" autocomplete="off"></div>
             <div class="chat-rooms" id="chat-rooms"></div>
           </aside>
@@ -83,6 +99,8 @@
         const act = e.target.closest('[data-act]')?.dataset.act;
         if (act === 'close') this.close();
         else if (act === 'back') { root.classList.remove('conv-open'); this.st.active = null; this._stopPoll(); this._renderList(); }
+        const push = e.target.closest('[data-push]')?.dataset.push;
+        if (push === 'on') this.enablePush(); else if (push === 'off') this.disablePush();
         const room = e.target.closest('[data-room]');
         if (room) this.select(room.dataset.room === 'virtual' ? { kind: 'direct', managerId: room.dataset.manager } : { id: room.dataset.room });
       });
@@ -400,9 +418,62 @@
         n.onclick = () => { window.focus(); this.open(room?.kind === 'direct' && this.isHq() ? { managerId: room.manager_id } : {}); n.close(); };
       } catch (e) { }
     },
-    _askNotifyPermission() {
-      try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch (e) { }
+    // ── 푸시 알림 (앱을 닫아도, 내비게이션 앱을 쓰는 중에도 도착) ──
+    pushSupported() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; },
+    _b64(key) {
+      const pad = '='.repeat((4 - key.length % 4) % 4);
+      const raw = atob((key + pad).replace(/-/g, '+').replace(/_/g, '/'));
+      return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
     },
+    async pushState() {   // 'unsupported' | 'denied' | 'off' | 'on'
+      if (!this.pushSupported()) return 'unsupported';
+      if (Notification.permission === 'denied') return 'denied';
+      if (Notification.permission !== 'granted') return 'off';
+      try { const reg = await navigator.serviceWorker.getRegistration(); return (reg && await reg.pushManager.getSubscription()) ? 'on' : 'off'; } catch (e) { return 'off'; }
+    },
+    // 알림 켜기: 사용자가 버튼을 눌렀을 때만 호출 (브라우저 규칙)
+    async enablePush() {
+      if (!this.pushSupported()) { this._toast('이 기기에서는 푸시 알림을 쓸 수 없습니다. 아이폰은 사파리에서 "홈 화면에 추가"한 앱에서만 가능합니다.'); return false; }
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') { this._toast('알림이 허용되지 않았습니다. 기기 설정에서 알림을 허용해 주세요.'); this._renderPushBar(); return false; }
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: this._b64(PUSH_PUBLIC_KEY) });
+        await this.sc().pushSave(sub);
+        this._toast('알림이 켜졌습니다. 앱을 닫아도 새 메시지를 알려 드립니다.');
+        this._renderPushBar();
+        return true;
+      } catch (e) { this._toast('알림을 켜지 못했습니다. ' + (e.message || '')); return false; }
+    },
+    async disablePush() {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration(); const sub = reg && await reg.pushManager.getSubscription();
+        if (sub) { await this.sc().pushRemove(sub.endpoint).catch(() => { }); await sub.unsubscribe(); }
+      } catch (e) { }
+      this._toast('알림을 껐습니다.'); this._renderPushBar();
+    },
+    // 이미 허용된 기기는 조용히 다시 등록해 둔다 (주소가 바뀐 경우 대비)
+    async _syncPush() {
+      try {
+        if (!this.pushSupported() || Notification.permission !== 'granted') return;
+        const reg = await navigator.serviceWorker.ready;
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: this._b64(PUSH_PUBLIC_KEY) });
+        await this.sc().pushSave(sub);
+      } catch (e) { /* 다음에 다시 */ }
+    },
+    async _renderPushBar() {
+      const bar = document.getElementById('chat-pushbar'); if (!bar) return;
+      if (this.isHq()) { bar.hidden = true; return; }   // 본사(PC 웹)는 화면 안 알림만 사용
+      const st = await this.pushState();
+      if (st === 'on') { bar.innerHTML = '<span>🔔 알림 켜짐</span><button data-push="off">끄기</button>'; }
+      else if (st === 'unsupported') { bar.innerHTML = '<span>🔕 이 기기는 푸시 알림 불가 (아이폰은 홈 화면에 추가한 앱에서만)</span>'; }
+      else if (st === 'denied') { bar.innerHTML = '<span>🔕 알림이 막혀 있습니다. 기기 설정에서 허용해 주세요.</span>'; }
+      else { bar.innerHTML = '<span>🔔 운전·내비 중에도 알림을 받으려면</span><button data-push="on">알림 켜기</button>'; }
+      bar.hidden = false;
+    },
+    _askNotifyPermission() { this._renderPushBar(); },
 
     // ── 작은 도우미 ──
     _shortTime(iso) {

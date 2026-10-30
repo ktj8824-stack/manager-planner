@@ -1,7 +1,7 @@
 /* App-shell cache only. HQ admin pages/scripts, APIs and third-party requests are never intercepted. Shared admin-data.js is an app dependency. */
 const CACHE_PREFIX = 'managerplanner-app:' + encodeURIComponent(self.registration.scope) + ':';
-const CACHE_NAME = CACHE_PREFIX + 'v213-css25-js213';
-const LEGACY_CACHES = ["managerplanner-v103-cache", CACHE_PREFIX + 'v182-css24-js181', CACHE_PREFIX + 'v183-css24-js183', CACHE_PREFIX + 'v184-css24-js184', CACHE_PREFIX + 'v185-css24-js185', CACHE_PREFIX + 'v186-css24-js186', CACHE_PREFIX + 'v187-css24-js187', CACHE_PREFIX + 'v188-css24-js188', CACHE_PREFIX + 'v189-css24-js189', CACHE_PREFIX + 'v190-css24-js190', CACHE_PREFIX + 'v191-css24-js191', CACHE_PREFIX + 'v192-css24-js192', CACHE_PREFIX + 'v193-css24-js193', CACHE_PREFIX + 'v194-css24-js194', CACHE_PREFIX + 'v195-css24-js195', CACHE_PREFIX + 'v196-css24-js196', CACHE_PREFIX + 'v197-css24-js197', CACHE_PREFIX + 'v198-css24-js198', CACHE_PREFIX + 'v199-css24-js199', CACHE_PREFIX + 'v200-css24-js200', CACHE_PREFIX + 'v201-css24-js201', CACHE_PREFIX + 'v202-css24-js202', CACHE_PREFIX + 'v203-css24-js203', CACHE_PREFIX + 'v204-css24-js204', CACHE_PREFIX + 'v205-css24-js205', CACHE_PREFIX + 'v206-css24-js206', CACHE_PREFIX + 'v207-css25-js207', CACHE_PREFIX + 'v208-css25-js208', CACHE_PREFIX + 'v209-css25-js209', CACHE_PREFIX + 'v210-css25-js210', CACHE_PREFIX + 'v211-css25-js211', CACHE_PREFIX + 'v212-css25-js212'];
+const CACHE_NAME = CACHE_PREFIX + 'v215-css25-js215';
+const LEGACY_CACHES = ["managerplanner-v103-cache", CACHE_PREFIX + 'v182-css24-js181', CACHE_PREFIX + 'v183-css24-js183', CACHE_PREFIX + 'v184-css24-js184', CACHE_PREFIX + 'v185-css24-js185', CACHE_PREFIX + 'v186-css24-js186', CACHE_PREFIX + 'v187-css24-js187', CACHE_PREFIX + 'v188-css24-js188', CACHE_PREFIX + 'v189-css24-js189', CACHE_PREFIX + 'v190-css24-js190', CACHE_PREFIX + 'v191-css24-js191', CACHE_PREFIX + 'v192-css24-js192', CACHE_PREFIX + 'v193-css24-js193', CACHE_PREFIX + 'v194-css24-js194', CACHE_PREFIX + 'v195-css24-js195', CACHE_PREFIX + 'v196-css24-js196', CACHE_PREFIX + 'v197-css24-js197', CACHE_PREFIX + 'v198-css24-js198', CACHE_PREFIX + 'v199-css24-js199', CACHE_PREFIX + 'v200-css24-js200', CACHE_PREFIX + 'v201-css24-js201', CACHE_PREFIX + 'v202-css24-js202', CACHE_PREFIX + 'v203-css24-js203', CACHE_PREFIX + 'v204-css24-js204', CACHE_PREFIX + 'v205-css24-js205', CACHE_PREFIX + 'v206-css24-js206', CACHE_PREFIX + 'v207-css25-js207', CACHE_PREFIX + 'v208-css25-js208', CACHE_PREFIX + 'v209-css25-js209', CACHE_PREFIX + 'v210-css25-js210', CACHE_PREFIX + 'v211-css25-js211', CACHE_PREFIX + 'v212-css25-js212', CACHE_PREFIX + 'v213-css25-js213', CACHE_PREFIX + 'v214-css25-js214'];
 const SCOPE_URL = new URL(self.registration.scope);
 // Versioned and unversioned URLs share an explicit, current-version key.
 // Unknown versions bypass this worker instead of receiving a stale asset.
@@ -72,11 +72,11 @@ const ASSET_ENTRIES = [
   ],
   [
     "css/chat.css",
-    "3"
+    "4"
   ],
   [
     "js/chat.js",
-    "213"
+    "215"
   ],
   [
     "css/upgrade.css",
@@ -84,59 +84,59 @@ const ASSET_ENTRIES = [
   ],
   [
     "js/icons.js",
-    "213"
+    "215"
   ],
   [
     "js/admin-data.js",
-    "213"
+    "215"
   ],
   [
     "js/data.js",
-    "213"
+    "215"
   ],
   [
     "js/api.js",
-    "213"
+    "215"
   ],
   [
     "js/utils.js",
-    "213"
+    "215"
   ],
   [
     "js/home.js",
-    "213"
+    "215"
   ],
   [
     "js/timeline.js",
-    "213"
+    "215"
   ],
   [
     "js/register.js",
-    "213"
+    "215"
   ],
   [
     "js/login.js",
-    "213"
+    "215"
   ],
   [
     "js/onboarding.js",
-    "213"
+    "215"
   ],
   [
     "js/profile.js",
-    "213"
+    "215"
   ],
   [
     "js/upgrade.js",
-    "213"
+    "215"
   ],
   [
     "js/supabase-client.js",
-    "213"
+    "215"
   ],
   [
     "js/app.js",
-    "213"
+    "215"
   ]
 ];
 const ASSET_KEYS = new Map();
@@ -230,4 +230,44 @@ self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
+});
+
+// ── 푸시 알림 (앱을 닫았거나 내비게이션 앱을 쓰는 중에도 도착) ──
+self.addEventListener('push', event => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch (_) { data = { title: '로디톡', body: event.data ? event.data.text() : '' }; }
+  const urgent = !!data.urgent;
+  event.waitUntil(self.registration.showNotification(data.title || '로디톡', {
+    body: data.body || '',
+    icon: new URL('icon-192.png', SCOPE_URL).href,
+    badge: new URL('icon-192.png', SCOPE_URL).href,
+    tag: data.tag || 'chat',
+    renotify: true,
+    requireInteraction: urgent,                       // 긴급은 확인할 때까지 남아 있음
+    vibrate: urgent ? [300, 120, 300, 120, 600] : [200, 100, 200],
+    data: { room_id: data.room_id || '' }
+  }));
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const roomId = (event.notification.data && event.notification.data.room_id) || '';
+  event.waitUntil((async () => {
+    const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const w of wins) {
+      if (w.url.startsWith(SCOPE_URL.href) && 'focus' in w) {
+        await w.focus();
+        w.postMessage({ type: 'OPEN_CHAT', roomId });
+        return;
+      }
+    }
+    await self.clients.openWindow(new URL('./?chat=' + encodeURIComponent(roomId), SCOPE_URL).href);
+  })());
+});
+
+// 기기 알림 주소가 바뀌었을 때(브라우저가 갱신) 앱이 다시 등록하도록 알림
+self.addEventListener('pushsubscriptionchange', event => {
+  event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(wins => {
+    wins.forEach(w => w.postMessage({ type: 'PUSH_RESUBSCRIBE' }));
+  }));
 });
