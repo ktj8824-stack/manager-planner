@@ -89,6 +89,7 @@ const SupabaseClient = {
           detail = 'HTTP ' + res.status;
         }
       } catch (e) { }
+      if (/SLOT_LIMIT/.test(detail)) throw new Error('매니저 슬롯이 모두 사용 중입니다. 슬롯을 추가한 뒤 등록해 주세요.');
       throw new Error('계정 관리 서버 요청에 실패했습니다.' + (detail ? ' (' + detail.trim() + ')' : ' (서버에 연결하지 못했습니다)'));
     }
     if (!data || data.error) throw new Error(data?.error?.message || (typeof data?.error === 'string' ? data.error : '계정 관리 서버 응답이 올바르지 않습니다.'));

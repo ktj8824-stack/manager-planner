@@ -11,6 +11,7 @@ class HttpError extends Error {
 const MEMBER_ROLES = ["manager", "staff"];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_BODY_BYTES = 16_384;
+const BASE_MANAGER_SLOTS = 2; // 기본 포함 인원 (앱의 baseSlots 와 같아야 함)
 
 function object(value: unknown): JsonObject {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -139,6 +140,19 @@ async function targetProfile(db: SupabaseClient, id: string, caller: Caller) {
   if (!data) throw new HttpError(404, "TARGET_NOT_FOUND", "A manager or staff member in your company was not found.");
   return data;
 }
+// 회사의 허용 인원 = 기본 2명 + 운영자가 companies.extra_manager_slots 에 넣어 준 추가 슬롯
+async function slotUsage(db: SupabaseClient, companyId: string) {
+  const { data: company, error: companyError } = await db.from("companies").select("extra_manager_slots").eq("id", companyId).maybeSingle();
+  if (companyError || !company) throw new HttpError(500, "SLOT_CHECK_FAILED", "Could not verify manager slots.");
+  const { count, error } = await db.from("profiles").select("id", { count: "exact", head: true })
+    .eq("company_id", companyId).in("role", MEMBER_ROLES);
+  if (error || count === null) throw new HttpError(500, "SLOT_CHECK_FAILED", "Could not verify manager slots.");
+  const extra = Math.max(0, Number(company.extra_manager_slots) || 0);
+  return { used: count, total: BASE_MANAGER_SLOTS + extra };
+}
+function slotFull(): HttpError {
+  return new HttpError(403, "SLOT_LIMIT", "매니저 슬롯이 모두 사용 중입니다. 슬롯을 추가한 뒤 등록해 주세요.");
+}
 async function createMember(db: SupabaseClient, caller: Caller, body: JsonObject, requestId: string) {
   onlyKeys(body, ["action", "email", "password", "name", "role", "phone"]);
   const memberEmail = email(body.email);
@@ -150,6 +164,8 @@ async function createMember(db: SupabaseClient, caller: Caller, body: JsonObject
   }
   const currentCaller = await callerProfile(db, caller.id);
   if (currentCaller.company_id !== caller.company_id) throw new HttpError(403, "CALLER_CHANGED", "Caller company changed. Start a new request.");
+  const before = await slotUsage(db, caller.company_id);
+  if (before.used >= before.total) throw slotFull();
   // createUser only: never search Auth by email, reuse a user, or reset its password.
   const { data, error } = await db.auth.admin.createUser({
     email: memberEmail, password: memberPassword, email_confirm: true,
@@ -169,6 +185,9 @@ async function createMember(db: SupabaseClient, caller: Caller, body: JsonObject
     if (profileError || !profile || profile.id !== created.id || profile.role !== body.role || profile.company_id !== caller.company_id) {
       throw new HttpError(500, "PROFILE_CREATE_FAILED", "Could not provision the company profile.");
     }
+    // 동시에 여러 명을 만들어 한도를 넘기는 경우를 막기 위해, 만든 뒤에 한 번 더 센다
+    const after = await slotUsage(db, caller.company_id);
+    if (after.used > after.total) throw slotFull();
   } catch (failure) {
     // Compensation is limited to the Auth account this request just created.
     try {
