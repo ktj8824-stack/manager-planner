@@ -50,7 +50,7 @@
     .btn-secondary:hover { border-color: #6366f1; color: #f8fafc; }
     .confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
   </style>
-<script src="js/icons.js?v=209"></script>
+<script src="js/icons.js?v=210"></script>
 </head>
 <body>
 <div id="test-banner" style="position:sticky;top:0;z-index:9999;background:#f59e0b;color:#1f1300;text-align:center;font:700 13px/1.4 Pretendard,sans-serif;padding:8px 12px;">🧪 테스트 결제 — 실제 결제되지 않습니다 (카드가 청구되지 않아요)</div>
@@ -230,7 +230,7 @@
     titleEl.style.color = '#a5f3fc';
 
     if (isProPlan) {
-      subEl.innerHTML = '매니저플래너 PRO 멤버십이 성공적으로 활성화되었습니다.<br>이제 모든 프리미엄 기능을 자유롭게 이용하실 수 있습니다.';
+      subEl.innerHTML = '로디플래너 PRO 멤버십이 성공적으로 활성화되었습니다.<br>이제 모든 프리미엄 기능을 자유롭게 이용하실 수 있습니다.';
       localStorage.setItem('bp_pro', 'true');
     } else {
       subEl.innerHTML = '구독이 성공적으로 활성화되었습니다.<br>이제 매니저 계정을 추가하여 협업할 수 있습니다.';
@@ -272,7 +272,7 @@
     launchConfetti();
 
     // 자동 이동 설정
-    const targetName = (isProPlan || returnTarget === 'mobile') ? '📱 매니저 플래너 앱으로 이동' : '관제 포털로 이동';
+    const targetName = (isProPlan || returnTarget === 'mobile') ? '📱 로디플래너 앱으로 이동' : '관제 포털로 이동';
     let count = 4;
     btnMain.textContent = `${targetName} (${count}초)`;
     const timer = setInterval(() => {

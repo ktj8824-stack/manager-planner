@@ -237,10 +237,10 @@ const App = {
         </button>
       </div>
       <div class="top-brand">
-        <span>🎬</span><span class="top-brand-text">매니저플래너</span>
+        <span>🎬</span><span class="top-brand-text">로디플래너</span>
       </div>
       <div class="top-nav-right" style="display:flex; align-items:center; gap:6px; padding-right:10px;">
-        <button id="notice-bell" class="notice-bell" onclick="App.openMessages()" aria-label="메시지">
+        <button id="notice-bell" class="notice-bell" onclick="App.openMessages()" aria-label="로디톡">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
           <span id="notice-badge" class="notice-badge" hidden>0</span>
         </button>

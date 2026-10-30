@@ -17,7 +17,7 @@ const Login = {
       <div class="login-container" style="max-width:420px; margin:0 auto; padding:40px 24px; min-height:100vh; display:flex; flex-direction:column; justify-content:center; background:var(--bg-app);">
         <div class="login-logo" style="text-align:center; margin-bottom:30px;">
           <img src="img/logo.jpg" alt="Logo" style="display:block; margin:0 auto 16px auto; width:80px; height:80px; border-radius:20px; box-shadow:0 8px 16px rgba(0,0,0,0.2);">
-          <h1 class="login-title" style="font-size:26px; font-weight:800; margin:16px 0 8px 0; letter-spacing:-0.5px; color:var(--text-100);">매니저플래너</h1>
+          <h1 class="login-title" style="font-size:26px; font-weight:800; margin:16px 0 8px 0; letter-spacing:-0.5px; color:var(--text-100);">로디플래너</h1>
           <p class="login-subtitle" style="font-size:14px; color:var(--text-400);">
             현장 매니저 및 스태프 전용 앱
           </p>

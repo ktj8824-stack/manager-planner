@@ -23,7 +23,7 @@ const Upgrade = {
           <div class="upg-crown">
             <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M2 19h20v2H2v-2zm19-11c-.55 0-1 .45-1 1v4l-3-2-2 3-3-4-3 4-2-3-3 2v-4c0-.55-.45-1-1-1s-1 .45-1 1v7h20V9c0-.55-.45-1-1-1zM7 6c.83 0 1.5-.67 1.5-1.5S7.83 3 7 3s-1.5.67-1.5 1.5S6.17 6 7 6zm10 0c.83 0 1.5-.67 1.5-1.5S17.83 3 17 3s-1.5.67-1.5 1.5S16.17 6 17 6zm-5-2c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>
           </div>
-          <h2 class="upg-title">매니저플래너 PRO</h2>
+          <h2 class="upg-title">로디플래너 PRO</h2>
           <p class="upg-subtitle">빈틈없는 아티스트 케어와 완벽한 동선 관리</p>
           <div class="upg-price-box">
             <div class="upg-price">₩4,900 <span>/ 월</span></div>
@@ -87,7 +87,7 @@ const Upgrade = {
     App.showModal('구독 결제 수단 선택', `
       <div style="padding:4px 0; text-align:center;">
         <div style="font-size:36px; margin-bottom:12px;">💳</div>
-        <h3 style="font-size:17px; font-weight:700; margin-bottom:6px; color:var(--text-100);">매니저플래너 PRO 구독</h3>
+        <h3 style="font-size:17px; font-weight:700; margin-bottom:6px; color:var(--text-100);">로디플래너 PRO 구독</h3>
         <p style="font-size:13px; color:var(--text-400); margin-bottom:20px; line-height:1.5;">
           월 <strong>4,900원</strong> (부가세 포함)<br>
           토스페이먼츠 금융 보안 결제망으로 안전하게 결제됩니다.
@@ -116,7 +116,7 @@ const Upgrade = {
           <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
         </div>
         <h3>결제 성공!</h3>
-        <p>이제 매니저플래너 PRO 회원이십니다.<br>모든 프리미엄 혜택을 누려보세요.</p>
+        <p>이제 로디플래너 PRO 회원이십니다.<br>모든 프리미엄 혜택을 누려보세요.</p>
         <button class="btn-primary" style="width:100%; margin-top:var(--sp-4);" onclick="App.closeModal(); App.navigate('profile');">확인</button>
       </div>
     `);

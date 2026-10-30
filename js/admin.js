@@ -2502,7 +2502,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="position:relative; z-index:2; margin-top:20px; background:rgba(15,23,42,0.85); border:1px solid #334155; padding:12px 16px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
               <span style="font-size:12px; color:#94a3b8; display:inline-flex; align-items:center; gap:6px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg>
-                본사 관제 센터: 현장 매니저플래너 앱과 실시간 2-way 데이터 동기화 활성화됨
+                본사 관제 센터: 현장 로디플래너 앱과 실시간 2-way 데이터 동기화 활성화됨
               </span>
               <span style="font-size:12px; font-weight:700; color:#38bdf8;">수도권 주요 방송국/샵 거점 관제 모드</span>
             </div>
@@ -4082,7 +4082,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el.btnDeleteSchedule) {
       el.btnDeleteSchedule.addEventListener('click', async () => {
         const schId = state.activeScheduleId || window.Admin.currentDetailScheduleId;
-        if (confirm('이 스케줄을 삭제하시겠습니까? 매니저플래너에서도 즉시 삭제됩니다.')) {
+        if (confirm('이 스케줄을 삭제하시겠습니까? 로디플래너에서도 즉시 삭제됩니다.')) {
           await window.hqStore.deleteSchedule(schId);
           el.modalScheduleDetail.classList.remove('active');
           await renderSidebar();

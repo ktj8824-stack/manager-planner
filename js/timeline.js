@@ -480,7 +480,7 @@ const Timeline = {
       const delay = getDelay(ev.time);
       if (delay > 0) {
         const timeoutId = setTimeout(() => {
-          new Notification('매니저플래너 타임라인', {
+          new Notification('로디플래너 타임라인', {
             body: ev.msg,
             icon: 'assets/icons/icon-192x192.png'
           });

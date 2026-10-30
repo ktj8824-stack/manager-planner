@@ -55,9 +55,9 @@
       const root = document.createElement('div');
       root.id = 'chat-root'; root.className = 'chat-root'; root.hidden = true;
       root.innerHTML = `
-        <div class="chat-shell" role="dialog" aria-label="대화">
+        <div class="chat-shell" role="dialog" aria-label="로디톡">
           <aside class="chat-list">
-            <div class="chat-head"><h2>대화</h2><button class="chat-iconbtn" data-act="close" aria-label="닫기">${ICON.close}</button></div>
+            <div class="chat-head"><h2>로디톡</h2><button class="chat-iconbtn" data-act="close" aria-label="닫기">${ICON.close}</button></div>
             <div class="chat-rooms" id="chat-rooms"></div>
           </aside>
           <section class="chat-conv">
