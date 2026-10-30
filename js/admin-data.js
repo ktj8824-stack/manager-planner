@@ -11,6 +11,10 @@ function esc(value) {
 // onclick="fn(${escJs(x)})" 처럼 속성 안의 JS 문자열 인자로 넣을 때 사용합니다.
 function escJs(value) { return esc(JSON.stringify(String(value ?? ''))); }
 
+// 예시(데모) 자료는 내 컴퓨터의 개발용 서버에서만 사용합니다. 실제 배포 주소에서는 절대 만들지 않습니다.
+const DEMO_ALLOWED = (typeof location !== 'undefined') &&
+  (['localhost', '127.0.0.1', ''].includes(location.hostname) || location.protocol === 'file:');
+
 const HQ_STORAGE_KEYS = {
   SCHEDULES: 'HQ_SCHEDULES_V8',
   ARTISTS: 'HQ_ARTISTS_V6',
@@ -612,6 +616,7 @@ class HQDataStore {
   constructor() {
     this.HQ_NOTICE_KEY = 'HQ_NOTIFICATIONS_V2';
     this.initStorage();
+    this._purgeLocalDemo();
     this.broadcast = new BroadcastChannel('HQ_PLANNER_CHANNEL');
     this.syncFromSupabase().catch(() => { }); // failures are published via hq-store-change
   }
@@ -651,7 +656,7 @@ class HQDataStore {
     const subKey = this.getUserStorageKey(HQ_STORAGE_KEYS.SUBSCRIPTION);
 
     // 🔒 테스트 스케줄 및 목업 데이터는 CEO 및 KJM 엔터 계정에 폭넓게 적용
-    const isTargetTestAccount = rawEmail === 'ceo@kjm-ent.com' || !rawEmail || artKey.includes('kjm_ent');   // 데모 데이터는 테스트 대표 계정에만
+    const isTargetTestAccount = DEMO_ALLOWED && (rawEmail === 'ceo@kjm-ent.com' || !rawEmail || artKey.includes('kjm_ent'));   // 데모 데이터는 테스트 대표 계정에만
 
     // 헬퍼: 타깃 테스트 계정이 아닌 다른 계정은 빈 데이터로 시작
     const getInitialData = (legacyBaseKey, defaultData) => {
@@ -719,7 +724,7 @@ class HQDataStore {
       const sub = JSON.parse(localStorage.getItem(this.getUserStorageKey(HQ_STORAGE_KEYS.SUBSCRIPTION))) || DEFAULT_SUBSCRIPTION;
       const managers = this.getManagers();
       // 매니저 수 실시간 계산 (총괄 hq_admin 제외 현장 매니저 수 카운트)
-      const activeManagerCount = managers.filter(m => m.role !== 'hq_admin').length;
+      const activeManagerCount = managers.filter(m => m.role !== 'hq_admin' && m.role !== 'ceo').length;
       const totalSlots = (sub.baseSlots || 2) + (sub.additionalSlots || 0);
       const monthlyFee = (sub.baseFee || 100000) + ((sub.additionalSlots || 0) * (sub.additionalSlotFee || 20000));
 
@@ -762,6 +767,7 @@ class HQDataStore {
 
   // 영업 / CEO 데모 데이터 전체 강제 리셋 및 세팅
   async seedDemoData() {
+    if (!DEMO_ALLOWED) return; // 실제 배포 주소에서는 예시 자료를 만들지 않음
     console.log('🌱 영업 및 프레젠테이션용 풀 데모 데이터를 세팅합니다...');
     this.saveArtists(DEFAULT_ARTISTS);
     this.saveManagers(DEFAULT_MANAGERS);
@@ -821,12 +827,8 @@ class HQDataStore {
           };
         });
 
-        const mergedManagers = [...mappedRemote];
-        currentLocal.forEach(loc => {
-          if (!mergedManagers.some(rem => rem.id === loc.id || (loc.email && rem.email === loc.email))) {
-            mergedManagers.push(loc);
-          }
-        });
+        // 서버 목록이 기준입니다 (이 기기에만 있던 예시/임시 매니저는 남기지 않음)
+        const mergedManagers = mappedRemote;
 
         localStorage.setItem(keys.managers, JSON.stringify(mergedManagers));
       }
@@ -865,11 +867,12 @@ class HQDataStore {
     const [ra, rv] = await Promise.all([sc.getArtists(), sc.getVehicles()]);
     const haveA = new Set(ra.map(a => a.id));
     const haveV = new Set(rv.map(v => v.id));
+    const demo = this._demoIds();
     for (const a of this.getArtists()) {
-      if (a && a.id && !haveA.has(a.id)) await sc.createArtist(a);
+      if (a && a.id && !haveA.has(a.id) && !demo.has(a.id)) await sc.createArtist(a);
     }
     for (const v of this.getVehicles()) {
-      if (v && v.id && !haveV.has(v.id)) await sc.saveVehicle(v);
+      if (v && v.id && !haveV.has(v.id) && !demo.has(v.id)) await sc.saveVehicle(v);
     }
   }
 
@@ -986,6 +989,39 @@ class HQDataStore {
     this.notifyChange('SUBSCRIPTION_UPDATED');
   }
 
+  // 예시 자료의 아이디 모음 (아티스트·매니저·차량·일정)
+  _demoIds() {
+    const ids = new Set();
+    [DEFAULT_ARTISTS, DEFAULT_MANAGERS, DEFAULT_VEHICLES].forEach(list => list.forEach(x => x?.id && ids.add(x.id)));
+    try { getInitialMockSchedules().forEach(x => x?.id && ids.add(x.id)); } catch (e) { }
+    return ids;
+  }
+
+  // 실제 배포 주소: 이 기기에 남아 있는 예시 자료를 한 번 정리한다 (서버에 있는 진짜 자료는 건드리지 않음)
+  _purgeLocalDemo() {
+    if (DEMO_ALLOWED) return;
+    const demo = this._demoIds();
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const prefixes = { HQ_ARTISTS: 'catalog', HQ_VEHICLES: 'catalog', HQ_MANAGERS: 'managers', HQ_SCHEDULES: 'schedules' };
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      const kind = key && Object.keys(prefixes).find(p => key.startsWith(p + '_') && !key.includes('OUTBOX'));
+      if (!kind) continue;
+      try {
+        const list = JSON.parse(localStorage.getItem(key));
+        if (!Array.isArray(list)) continue;
+        const type = prefixes[kind];
+        const kept = list.filter(x => {
+          if (!x || !x.id) return true;
+          if (type === 'managers') return uuid.test(x.id);
+          if (type === 'schedules') return !(demo.has(x.id) && !x.remoteId);
+          return !demo.has(x.id);
+        });
+        if (kept.length !== list.length) localStorage.setItem(key, JSON.stringify(kept));
+      } catch (e) { }
+    }
+  }
+
   _reportServerError(what, e) {
     console.warn('서버 저장 실패 (' + what + '):', e);
     this.notifyChange('SERVER_WRITE_FAILED', { what, message: e?.message || String(e) });
@@ -1044,9 +1080,9 @@ class HQDataStore {
       const rawEmail = (localStorage.getItem('bp_user_email') || '').trim().toLowerCase();
       const role = localStorage.getItem('bp_user_role') || 'manager';
       const isMasterOrManager = rawEmail === 'ceo@jm-ent.com' || rawEmail === 'ceo@star-ent.com' || rawEmail === 'demo@star-ent.com' || role === 'manager' || role === 'staff';
-      return isMasterOrManager ? DEFAULT_ARTISTS : [];
+      return (DEMO_ALLOWED && isMasterOrManager) ? DEFAULT_ARTISTS : [];
     } catch {
-      return DEFAULT_ARTISTS;
+      return DEMO_ALLOWED ? DEFAULT_ARTISTS : [];
     }
   }
 
@@ -1130,7 +1166,7 @@ class HQDataStore {
         const rawEmail = (localStorage.getItem('bp_user_email') || '').trim().toLowerCase();
         const role = localStorage.getItem('bp_user_role') || 'manager';
         const isMasterOrManager = rawEmail === 'ceo@jm-ent.com' || rawEmail === 'ceo@star-ent.com' || rawEmail === 'demo@star-ent.com' || role === 'manager' || role === 'staff';
-        if (isMasterOrManager) list = [...DEFAULT_MANAGERS];
+        if (DEMO_ALLOWED && isMasterOrManager) list = [...DEFAULT_MANAGERS];
       }
       let changed = false;
       list.forEach(m => {
@@ -1144,7 +1180,7 @@ class HQDataStore {
       }
       return list;
     } catch {
-      return DEFAULT_MANAGERS;
+      return DEMO_ALLOWED ? DEFAULT_MANAGERS : [];
     }
   }
 
@@ -1250,9 +1286,9 @@ class HQDataStore {
       const rawEmail = (localStorage.getItem('bp_user_email') || '').trim().toLowerCase();
       const role = localStorage.getItem('bp_user_role') || 'manager';
       const isMasterOrManager = rawEmail === 'ceo@jm-ent.com' || rawEmail === 'ceo@star-ent.com' || rawEmail === 'demo@star-ent.com' || role === 'manager' || role === 'staff';
-      return isMasterOrManager ? DEFAULT_VEHICLES : [];
+      return (DEMO_ALLOWED && isMasterOrManager) ? DEFAULT_VEHICLES : [];
     } catch {
-      return DEFAULT_VEHICLES;
+      return DEMO_ALLOWED ? DEFAULT_VEHICLES : [];
     }
   }
 
@@ -1311,6 +1347,7 @@ class HQDataStore {
   _readSchedules(key) {
     const raw = localStorage.getItem(key);
     if (raw === null || raw === '[]' || raw === 'null') {
+      if (!DEMO_ALLOWED) return [];
       const defaults = getInitialMockSchedules();
       this._writeSchedules(key, defaults);
       return defaults;
@@ -1318,14 +1355,15 @@ class HQDataStore {
     try {
       const list = JSON.parse(raw);
       if (!Array.isArray(list)) throw new Error('로컬 일정 저장 형식이 올바르지 않습니다.');
-      // 11월 스케줄이 누락된 구버전 데이터 자동 복구
-      if (list.length > 0 && !list.some(s => s.date && s.date.startsWith('2026-11'))) {
+      // 11월 스케줄이 누락된 구버전 데이터 자동 복구 (개발용 서버에서만)
+      if (DEMO_ALLOWED && list.length > 0 && !list.some(s => s.date && s.date.startsWith('2026-11'))) {
         const defaults = getInitialMockSchedules();
         this._writeSchedules(key, defaults);
         return defaults;
       }
       return list;
     } catch {
+      if (!DEMO_ALLOWED) return [];
       const defaults = getInitialMockSchedules();
       this._writeSchedules(key, defaults);
       return defaults;

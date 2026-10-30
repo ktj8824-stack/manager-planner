@@ -452,7 +452,8 @@ const App = {
       }
     } catch(e) {}
     
-    if (!notices || notices.length === 0) {
+    const isDevHost = ['localhost', '127.0.0.1', ''].includes(location.hostname) || location.protocol === 'file:';
+    if ((!notices || notices.length === 0) && isDevHost) {
       notices = [
         { id: 'n1', title: '📢 [전사 공지] 아티스트 해외 투어 스케줄 및 의전 동선 지침', content: '공항 출입국 및 현지 의전 차량 동선 사전 점검 필수입니다. 비상 연락망을 항시 유지해 주세요.', date: '2025-10-15', urgent: true },
         { id: 'n2', title: '🚗 [운영] 법인 차량 가을철 정기 점검 및 소모품 교체 안내', content: '지정 정비소(성수/강남) 방문 후 영수증 정산 등록 부탁드립니다.', date: '2025-10-12', urgent: false },
@@ -476,6 +477,7 @@ const App = {
           </div>
           
           <div style="display:flex; flex-direction:column; gap:12px; overflow-y:auto; max-height:65vh;">
+            ${(!notices || notices.length === 0) ? '<div style="text-align:center;padding:36px 12px;color:var(--text-400);font-size:14px;">등록된 공지가 없습니다.</div>' : ''}
             ${notices.map(n => `
               <div style="background:var(--bg-card); border:1px solid ${n.urgent ? 'rgba(239,68,68,0.35)' : 'var(--border-subtle)'}; border-radius:var(--r-lg); padding:14px; position:relative;">
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
