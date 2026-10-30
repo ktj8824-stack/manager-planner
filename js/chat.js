@@ -5,6 +5,11 @@
 (function () {
   'use strict';
   const PUSH_PUBLIC_KEY = 'BALCnXsE8MK70Vc-0xYyObh8onv97bjYQZ8VayLJmRgI4AmZsX6Py67Y9Mz3RjOWAdratDLAm23nzspDJWlLmCg'; // 공개 키 (비밀 아님)
+  // 한 번 눌러 바로 보내는 답장 (운전 중에도 쓰기 쉽게 큰 버튼)
+  const QUICK = {
+    manager: ['✅ 확인했습니다', '🚗 이동 중입니다', '📍 도착했습니다', '⏱ 10분 늦습니다', '📞 전화 부탁드립니다'],
+    hq: ['✅ 확인했습니다', '👍 수고하셨습니다', '📞 전화 드리겠습니다', '📍 현재 위치 알려 주세요']
+  };
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const ICON = {
     close: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
@@ -85,6 +90,7 @@
             </div>
             <div class="chat-msgs" id="chat-msgs"><div class="chat-placeholder">왼쪽에서 대화를 선택하세요.</div></div>
             <div class="chat-attach" id="chat-attach" hidden></div>
+            <div class="chat-quick" id="chat-quick" hidden></div>
             <div class="chat-composer" id="chat-composer" hidden>
               <label class="chat-iconbtn" title="사진" style="cursor:pointer">${ICON.image}<input type="file" id="chat-file" accept="image/*" hidden></label>
               <textarea id="chat-input" rows="1" placeholder="메시지 입력" maxlength="2000"></textarea>
@@ -111,6 +117,9 @@
         this.st.query = e.target.value.trim();
         clearTimeout(this.st.searchTimer);
         this.st.searchTimer = setTimeout(() => this._renderList(), 300);
+      });
+      root.querySelector('#chat-quick').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-quick]'); if (b) this.send(b.dataset.quick);
       });
       root.querySelector('#chat-send').addEventListener('click', () => this.send());
       root.querySelector('#chat-file').addEventListener('change', (e) => this._pickImage(e.target.files?.[0], e.target));
@@ -223,6 +232,9 @@
       const title = room.kind === 'all' ? '전체 공지방' : (this.isHq() ? (room.manager?.name || '매니저') : '본사 (대표)');
       root.querySelector('#chat-title').innerHTML = `${esc(title)}<small>${room.kind === 'all' ? '모든 매니저에게 전달됩니다' : '1:1 대화'}</small>`;
       root.querySelector('#chat-composer').hidden = false;
+      const quick = root.querySelector('#chat-quick');
+      quick.innerHTML = (this.isHq() ? QUICK.hq : QUICK.manager).map(t => `<button type="button" data-quick="${esc(t)}">${esc(t)}</button>`).join('');
+      quick.hidden = false;
       this._renderList();
       const box = root.querySelector('#chat-msgs'); box.innerHTML = '<div class="chat-placeholder">불러오는 중...</div>';
       try {
@@ -376,22 +388,26 @@
       });
     },
 
-    async send() {
+    async send(quickText) {
       const room = this.st.active; if (!room || this.st.sending) return;
-      const input = document.getElementById('chat-input'); const body = input.value.trim();
-      if (!body && !this.st.pending) return;
+      const input = document.getElementById('chat-input');
+      const isQuick = typeof quickText === 'string';
+      const body = isQuick ? quickText.trim() : input.value.trim();
+      if (!body && !(this.st.pending && !isQuick)) return;
       const urgent = this.isHq() && document.getElementById('chat-urgent')?.checked;
       const btn = document.getElementById('chat-send');
       this.st.sending = true; btn.disabled = true; btn.textContent = '보내는 중';
       try {
-        const m = await this.sc().chatSend(room.id, { body, imageBlob: this.st.pending, isUrgent: urgent });
-        input.value = ''; input.style.height = 'auto'; this._clearPending();
-        const ck = document.getElementById('chat-urgent'); if (ck) ck.checked = false;
+        const m = await this.sc().chatSend(room.id, { body, imageBlob: isQuick ? null : this.st.pending, isUrgent: isQuick ? false : urgent });
+        if (!isQuick) {
+          input.value = ''; input.style.height = 'auto'; this._clearPending();
+          const ck = document.getElementById('chat-urgent'); if (ck) ck.checked = false;
+        }
         if (!this.st.seen.has(m.id)) this._append([m]);
         room.last_message_at = m.created_at; room.last_message_preview = (m.body || '(사진)').slice(0, 80);
         this._renderList();
       } catch (e) { this._toast('보내지 못했습니다. ' + (e.message || '다시 시도해 주세요.')); }
-      finally { this.st.sending = false; btn.disabled = false; btn.textContent = '전송'; input.focus(); }
+      finally { this.st.sending = false; btn.disabled = false; btn.textContent = '전송'; if (!isQuick) input.focus(); }
     },
 
     // 공지/긴급보고를 대화로 보낸다 (기존 '긴급 공지 발송'과 현장 긴급보고가 이 함수를 씁니다)
