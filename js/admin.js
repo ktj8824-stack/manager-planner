@@ -405,7 +405,7 @@ window.Admin = {
         }
 
         alert('✅ 데이터 백업 복원이 완료되었습니다! 화면을 새로고침합니다.');
-        window.location.reload();
+        setTimeout(() => window.location.reload(), 1200);
       } catch (err) {
         alert('❌ 백업 파일 복원 실패: JSON 형식이 올바르지 않습니다.');
       }
@@ -4128,7 +4128,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const result = await window.SupabaseClient.signUp(email, pw, name, 'manager', phone);
           if (!result.user?.id) throw new Error('서버 계정 생성이 확인되지 않았습니다.');
           await window.hqStore.addManager({ id: result.user.id, name, email, phone, role: 'manager', assignedArtists: [] });
-          alert('매니저 계정이 생성되었습니다. 로그인 전 이메일 인증을 완료해야 합니다. 인증 메일 발송 설정은 관리자에게 확인해주세요.');
+          alert('✅ 매니저 계정이 생성되었습니다. 입력한 이메일과 비밀번호로 바로 로그인할 수 있습니다.');
         } catch (error) {
           alert(error.message || '계정 생성에 실패했습니다. 서버 설정을 확인해주세요.');
           return;
