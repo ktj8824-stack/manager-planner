@@ -13,7 +13,7 @@
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   const Chat = {
-    st: { open: false, rooms: [], unread: {}, active: null, msgs: [], seen: new Set(), poll: null, listTimer: null, sending: false, pending: null, hasOlder: false, inited: false },
+    st: { open: false, rooms: [], unread: {}, active: null, msgs: [], seen: new Set(), poll: null, listTimer: null, sending: false, pending: null, hasOlder: false, inited: false, reads: null, query: '', searchTimer: null },
     onUnreadChange: null,   // (총 안 읽은 수) => void
     onIncoming: null,       // (메시지, 방, 보낸사람) => void   (대화창이 닫혀 있거나 다른 방일 때)
 
@@ -58,6 +58,7 @@
         <div class="chat-shell" role="dialog" aria-label="로디톡">
           <aside class="chat-list">
             <div class="chat-head"><h2>로디톡</h2><button class="chat-iconbtn" data-act="close" aria-label="닫기">${ICON.close}</button></div>
+            <div class="chat-search"><input id="chat-search" type="search" placeholder="대화·이름 검색" autocomplete="off"></div>
             <div class="chat-rooms" id="chat-rooms"></div>
           </aside>
           <section class="chat-conv">
@@ -88,6 +89,11 @@
       const input = root.querySelector('#chat-input');
       input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && window.innerWidth > 760 && !e.isComposing) { e.preventDefault(); this.send(); } });
       input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 120) + 'px'; });
+      root.querySelector('#chat-search').addEventListener('input', (e) => {
+        this.st.query = e.target.value.trim();
+        clearTimeout(this.st.searchTimer);
+        this.st.searchTimer = setTimeout(() => this._renderList(), 300);
+      });
       root.querySelector('#chat-send').addEventListener('click', () => this.send());
       root.querySelector('#chat-file').addEventListener('change', (e) => this._pickImage(e.target.files?.[0], e.target));
       root.querySelector('#chat-msgs').addEventListener('click', (e) => {
@@ -104,7 +110,7 @@
         this._toast('대화는 로그인한 회사 계정에서 서버에 연결되어 있을 때 사용할 수 있습니다.');
         return;
       }
-      this.st.open = true; root.hidden = false;
+      this.st.open = true; root.hidden = false; this._askNotifyPermission();
       root.querySelector('#chat-urgent-wrap').hidden = !this.isHq();
       this._renderList();
       try {
@@ -152,8 +158,11 @@
 
     _renderList() {
       const el = document.getElementById('chat-rooms'); if (!el) return;
-      const items = this._items();
-      if (!items.length) { this._listMessage('아직 대화방이 없습니다.<br>본사가 대화를 시작하면 여기에 나타납니다.'); return; }
+      const q = this.st.query;
+      let items = this._items();
+      if (q) items = items.filter(it => it.name.toLowerCase().includes(q.toLowerCase()));
+      if (q && q.length >= 2) this._searchMessages(q);
+      if (!items.length) { if (q) { el.innerHTML = '<div class="chat-empty" id="chat-hits-note">검색 중...</div><div id="chat-hits"></div>'; } else this._listMessage('아직 대화방이 없습니다.<br>본사가 대화를 시작하면 여기에 나타납니다.'); return; }
       el.innerHTML = items.map(it => {
         const unread = it.room ? (this.st.unread[it.room.id] || 0) : 0;
         const active = this.st.active && it.room && this.st.active.id === it.room.id;
@@ -163,6 +172,23 @@
           <span class="chat-avatar${it.kind === 'all' ? ' all' : ''}">${esc(it.avatar)}</span>
           <span class="chat-room-main"><span class="chat-room-top"><span class="chat-room-name">${esc(it.name)}</span><span class="chat-room-time">${esc(time)}</span></span>
           <span class="chat-room-prev"><span>${esc(prev)}</span>${unread ? `<span class="chat-unread">${unread > 99 ? '99+' : unread}</span>` : ''}</span></span></button>`;
+      }).join('') + (q && q.length >= 2 ? '<div class="chat-hits-title">메시지 검색 결과</div><div id="chat-hits"><div class="chat-empty" id="chat-hits-note">검색 중...</div></div>' : '');
+    },
+
+    // 메시지 내용 검색 결과 (눌러서 그 대화방 열기)
+    async _searchMessages(q) {
+      const seq = this._searchSeq = (this._searchSeq || 0) + 1;
+      let hits = [];
+      try { hits = await this.sc().chatSearch(q); } catch (e) { hits = null; }
+      if (seq !== this._searchSeq || this.st.query !== q) return;
+      const box = document.getElementById('chat-hits'); if (!box) return;
+      if (hits === null) { box.innerHTML = '<div class="chat-empty">검색하지 못했습니다.</div>'; return; }
+      if (!hits.length) { box.innerHTML = '<div class="chat-empty">일치하는 메시지가 없습니다.</div>'; return; }
+      const names = new Map(this._items().filter(i => i.room).map(i => [i.room.id, i.name]));
+      const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
+      box.innerHTML = hits.map(h => {
+        const body = esc(h.body || '').slice(0, 160).replace(re, '<mark>$1</mark>');
+        return `<button class="chat-room chat-hit" data-room="${esc(h.room_id)}"><span class="chat-room-main"><span class="chat-room-top"><span class="chat-room-name">${esc(names.get(h.room_id) || '대화')}</span><span class="chat-room-time">${esc(this._shortTime(h.created_at))}</span></span><span class="chat-room-prev"><span>${esc(h.sender_name || '')}: ${body}</span></span></span></button>`;
       }).join('');
     },
 
@@ -174,7 +200,7 @@
         if (!room) room = await this.sc().chatEnsureRoom(target.kind, target.managerId || null);
         if (!this.st.rooms.some(r => r.id === room.id)) this.st.rooms.push(room);
       } catch (e) { this._toast('대화방을 열지 못했습니다. ' + (e.message || '')); return; }
-      this.st.active = room; this.st.msgs = []; this.st.seen = new Set();
+      this.st.active = room; this.st.msgs = []; this.st.seen = new Set(); this.st.reads = null;
       root.classList.add('conv-open');
       const title = room.kind === 'all' ? '전체 공지방' : (this.isHq() ? (room.manager?.name || '매니저') : '본사 (대표)');
       root.querySelector('#chat-title').innerHTML = `${esc(title)}<small>${room.kind === 'all' ? '모든 매니저에게 전달됩니다' : '1:1 대화'}</small>`;
@@ -186,6 +212,7 @@
         if (this.st.active?.id !== room.id) return;
         this.st.hasOlder = list.length >= 40;
         list.forEach(m => { this.st.msgs.push(m); this.st.seen.add(m.id); });
+        await this._loadReads();
         await this._renderMessages(true);
         this._markRead();
       } catch (e) { box.innerHTML = `<div class="chat-placeholder">메시지를 불러오지 못했습니다.<br>${esc(e.message || '')}</div>`; return; }
@@ -204,6 +231,26 @@
       box.scrollTop = box.scrollHeight - h;
     },
 
+    // 상대방이 읽은 시각 (바뀌었으면 true)
+    async _loadReads() {
+      const room = this.st.active; if (!room) return false;
+      let list = null;
+      try { list = await this.sc().chatReadStatus(room.id); } catch (e) { return false; }
+      if (this.st.active?.id !== room.id) return false;
+      const sig = JSON.stringify(list);
+      const changed = sig !== this.st.readsSig; this.st.readsSig = sig; this.st.reads = list;
+      return changed;
+    },
+
+    // 내가 보낸 메시지의 읽음 표시 문구
+    _readLabel(m) {
+      const reads = this.st.reads; if (!reads || !reads.length) return '';
+      const t = new Date(m.created_at).getTime();
+      const n = reads.filter(r => r.last_read_at && new Date(r.last_read_at).getTime() >= t).length;
+      if (this.st.active?.kind === 'all') return n ? `읽음 ${n}` : '';
+      return n ? '읽음' : '';
+    },
+
     _startPoll() {
       this._stopPoll();
       this.st.poll = setInterval(async () => {
@@ -211,7 +258,9 @@
         try {
           const last = this.st.msgs[this.st.msgs.length - 1];
           const list = await this.sc().chatMessagesAfter(room.id, last ? last.created_at : '1970-01-01T00:00:00Z');
-          this._append(list.filter(m => !this.st.seen.has(m.id)));
+          const fresh = list.filter(m => !this.st.seen.has(m.id));
+          const readsChanged = await this._loadReads();
+          if (fresh.length) this._append(fresh); else if (readsChanged) this._renderMessages(false, true);
         } catch (e) { /* 다음 주기에 다시 */ }
       }, 4000);
     },
@@ -233,6 +282,7 @@
       this._fireUnread();
       if (this.st.open) this._renderList();
       if (!room) this.refreshList().catch(() => { });
+      this._osNotify(m, room);
       try { if (this.onIncoming) this.onIncoming(m, room, m.sender_name); else this._toast((m.sender_name || '새 메시지') + ': ' + (m.body || '(사진)'), m.is_urgent); } catch (e) { }
     },
 
@@ -260,7 +310,8 @@
         const time = d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
         const body = m.body ? `<div class="chat-bubble${m.is_urgent ? ' urgent' : ''}">${m.is_urgent ? '<span class="chat-urgent-tag">긴급</span><br>' : ''}${esc(m.body)}</div>` : '';
         const img = m.image_path ? `<img class="chat-img" data-path="${esc(m.image_path)}" alt="사진" loading="lazy">` : '';
-        html += `<div class="chat-row${mine ? ' mine' : ''}">${mine ? `<span class="chat-time">${time}</span>` : ''}
+        const rl = mine ? this._readLabel(m) : '';
+        html += `<div class="chat-row${mine ? ' mine' : ''}">${mine ? `<span class="chat-time">${rl ? `<b class="chat-read">${esc(rl)}</b><br>` : ''}${time}</span>` : ''}
           <div class="chat-bubble-wrap">${showName ? `<div class="chat-sender">${esc(m.sender_name || '')}</div>` : ''}${img}${body}</div>${mine ? '' : `<span class="chat-time">${time}</span>`}</div>`;
       }
       box.innerHTML = html;
@@ -339,6 +390,18 @@
       const m = await this.sc().chatSend(room.id, { body: text, isUrgent });
       this.refreshList().catch(() => { });
       return { room, message: m };
+    },
+
+    // 화면이 가려져 있을 때 기기 알림 (허용했을 때만; 앱을 완전히 닫으면 오지 않습니다)
+    _osNotify(m, room) {
+      try {
+        if (!document.hidden || !('Notification' in window) || Notification.permission !== 'granted') return;
+        const n = new Notification((m.is_urgent ? '🚨 ' : '💬 ') + (m.sender_name || '로디톡'), { body: m.body || '(사진)', tag: 'chat-' + m.room_id, renotify: true });
+        n.onclick = () => { window.focus(); this.open(room?.kind === 'direct' && this.isHq() ? { managerId: room.manager_id } : {}); n.close(); };
+      } catch (e) { }
+    },
+    _askNotifyPermission() {
+      try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch (e) { }
     },
 
     // ── 작은 도우미 ──

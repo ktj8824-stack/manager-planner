@@ -629,6 +629,25 @@ const SupabaseClient = {
     if (error) throw error;
   },
 
+  // 상대방이 어디까지 읽었는지 (supabase_chat_upgrade.sql 필요. 없으면 빈 목록)
+  async chatReadStatus(roomId) {
+    this._chatReady();
+    const { data, error } = await this.client.rpc('chat_read_status', { p_room: roomId });
+    if (error) { if (/chat_read_status/.test(error.message || '')) return null; throw error; }
+    return data || [];
+  },
+
+  // 대화 내용 검색 (내가 볼 수 있는 방에서만)
+  async chatSearch(q, limit = 30) {
+    this._chatReady();
+    const safe = String(q || '').replace(/[%_\\]/g, ' ').trim().slice(0, 60);
+    if (safe.length < 2) return [];
+    const { data, error } = await this.client.from('chat_messages').select('id, room_id, sender_name, body, created_at')
+      .ilike('body', '%' + safe + '%').order('created_at', { ascending: false }).limit(limit);
+    if (error) throw error;
+    return data || [];
+  },
+
   async chatUnread() {
     this._chatReady();
     const { data, error } = await this.client.rpc('chat_unread_counts');
