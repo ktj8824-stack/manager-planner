@@ -88,6 +88,7 @@ const App = {
   },
 
   initRealtimeSync() {
+    this.startAutoSync();
     if (typeof window.SupabaseClient !== 'undefined') {
       window.SupabaseClient.subscribeAll({
         onScheduleChange: async (payload) => {
@@ -100,6 +101,7 @@ const App = {
         onAnnouncement: (noti) => {
           console.log('🚨 [App] 실시간 본사 공지 수신:', noti);
           this.showHqToast(noti);
+          if (window.hqStore) window.hqStore.syncFromSupabase().then(() => this.updateNoticeBadge()).catch(() => { });
         }
       });
     }
@@ -231,6 +233,10 @@ const App = {
         <span>🎬</span><span class="top-brand-text">매니저플래너</span>
       </div>
       <div class="top-nav-right" style="display:flex; align-items:center; gap:6px; padding-right:10px;">
+        <button id="notice-bell" class="notice-bell" onclick="App.openNoticeModal()" aria-label="공지함">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span id="notice-badge" class="notice-badge" hidden>0</span>
+        </button>
         <span class="top-user">
           <span class="top-user-icon" style="font-size:13px;">👤</span><span class="top-user-name">${esc((localStorage.getItem('bp_user_name') || '김태현').replace(/본부장|팀장|매니저/g, '').trim())}</span><span class="top-user-suffix">님</span>
         </span>
@@ -242,6 +248,7 @@ const App = {
     `;
     // Prepend to app instead of append so it's logically first
     U.$('#app').prepend(nav);
+    try { this.updateNoticeBadge(); } catch (e) { }
   },
 
   // 카카오 AdFit 광고 단위 ID (발급 후 교체)
@@ -399,6 +406,9 @@ const App = {
 
   showHqToast(noti) {
     if (!noti || !noti.content) return;
+    this._toasted = this._toasted || new Set();
+    if (noti.id) { if (this._toasted.has(noti.id)) return; this._toasted.add(noti.id); }
+    setTimeout(() => { try { this.updateNoticeBadge(); } catch (e) { } }, 0);
     const container = document.getElementById('hq-toast-container');
     if (!container) return;
 
@@ -444,6 +454,65 @@ const App = {
     }
   },
 
+  // ── 공지 읽음 표시 / 자동 갱신 ──
+  _myNoticeTarget() {
+    return localStorage.getItem('bp_user_id') || localStorage.getItem('bp_manager_id') || window.SupabaseClient?.currentUser?.id || '';
+  },
+
+  _myNotices() {
+    let list = [];
+    try { list = window.hqStore?.getBroadcasts?.() || []; } catch (e) { }
+    const me = this._myNoticeTarget();
+    return list.filter(n => !n.targetId || n.targetId === 'ALL' || !me || n.targetId === me);
+  },
+
+  _seenNotices() {
+    try { return new Set(JSON.parse(localStorage.getItem('bp_seen_notices') || '[]')); } catch (e) { return new Set(); }
+  },
+
+  updateNoticeBadge() {
+    const badge = document.getElementById('notice-badge');
+    if (!badge) return;
+    const seen = this._seenNotices();
+    const unread = this._myNotices().filter(n => !seen.has(n.id)).length;
+    badge.textContent = unread > 9 ? '9+' : String(unread);
+    badge.hidden = unread === 0;
+  },
+
+  markNoticesSeen() {
+    const seen = this._seenNotices();
+    this._myNotices().forEach(n => seen.add(n.id));
+    try { localStorage.setItem('bp_seen_notices', JSON.stringify([...seen].slice(-200))); } catch (e) { }
+    this.updateNoticeBadge();
+  },
+
+  // 서버에서 새 자료를 주기적으로 받아온다 (앱이 화면에 보일 때만, 45초마다)
+  startAutoSync() {
+    if (this._autoSyncStarted) return;
+    this._autoSyncStarted = true;
+    this._knownNotices = new Set(this._myNotices().map(n => n.id));
+    this._toasted = this._toasted || new Set();
+    const run = async () => {
+      if (document.hidden || this._autoSyncBusy || navigator.onLine === false) return;
+      if (!window.SupabaseClient?.currentUser) return;
+      this._autoSyncBusy = true;
+      try {
+        await window.hqStore.syncFromSupabase();
+        for (const n of this._myNotices()) {
+          if (this._knownNotices.has(n.id)) continue;
+          this._knownNotices.add(n.id);
+          if (!this._toasted.has(n.id)) this.showHqToast({ id: n.id, title: n.title, content: n.content, isUrgent: n.urgent, targetId: n.targetId });
+        }
+        this.refreshActiveScreens();
+        this.updateNoticeBadge();
+      } catch (e) { /* 실패해도 다음 주기에 다시 시도 */ }
+      finally { this._autoSyncBusy = false; }
+    };
+    this._autoSyncTimer = setInterval(run, 45000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) run(); });
+    this.updateNoticeBadge();
+  },
+
   openNoticeModal() {
     let notices = [];
     try {
@@ -461,6 +530,7 @@ const App = {
       ];
     }
 
+    this.markNoticesSeen();
     const html = `
       <div class="modal-bg center open" id="hq-notice-modal" onclick="if(event.target===this)this.remove()">
         <div class="modal-panel" style="max-height:85vh; padding: 20px 16px;">
