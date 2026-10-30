@@ -410,6 +410,11 @@ const Profile = {
           <div class="field">
             <label class="field-label">현재 위치 / 현장명 <span class="req">*</span></label>
             <input type="text" id="em-location" placeholder="예: 상암 MBC 지하주차장 B2" style="width:100%;padding:10px 12px;border-radius:var(--r-lg);background:var(--bg-card);border:1px solid var(--border-subtle);color:var(--text-100);font-size:14px;">
+            <button type="button" id="em-gps-btn" onclick="Profile.fillEmergencyGps()" class="btn btn-secondary" style="width:100%;margin-top:8px;min-height:44px;">📍 내 현재 위치 넣기 (지도 링크 첨부)</button>
+          </div>
+          <div class="field">
+            <label class="field-label">현장 사진 (선택)</label>
+            <input type="file" id="em-photo" accept="image/*" capture="environment" style="width:100%;font-size:13px;">
           </div>
           <div class="field">
             <label class="field-label">상세 상황 내용 <span class="req">*</span></label>
@@ -426,20 +431,45 @@ const Profile = {
     document.body.insertAdjacentHTML('beforeend', html);
   },
 
-  submitEmergencyReport() {
+  // 현재 위치(GPS)를 받아 입력칸에 채우고, 본사에는 지도 링크로 전달한다
+  fillEmergencyGps() {
+    const btn = document.getElementById('em-gps-btn');
+    if (!navigator.geolocation) { U.toast('이 기기에서는 위치를 가져올 수 없습니다. 위치를 직접 입력해 주세요.'); return; }
+    if (btn) { btn.disabled = true; btn.textContent = '위치 확인 중...'; }
+    navigator.geolocation.getCurrentPosition(pos => {
+      const lat = +pos.coords.latitude.toFixed(6), lng = +pos.coords.longitude.toFixed(6);
+      this._emGps = { lat, lng };
+      const input = document.getElementById('em-location');
+      if (input && !input.value.trim()) input.value = '현재 위치 (지도 링크 첨부됨)';
+      if (btn) { btn.disabled = false; btn.textContent = '✅ 현재 위치가 첨부되었습니다 (다시 누르면 갱신)'; }
+    }, () => {
+      if (btn) { btn.disabled = false; btn.textContent = '📍 내 현재 위치 넣기 (지도 링크 첨부)'; }
+      U.toast('위치를 가져오지 못했습니다. 기기의 위치 권한을 허용하거나 직접 입력해 주세요.');
+    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 15000 });
+  },
+
+  async submitEmergencyReport() {
     const type = document.getElementById('em-type').value;
     const loc  = document.getElementById('em-location').value.trim();
     const desc = document.getElementById('em-desc').value.trim();
     if (!loc || !desc) { U.toast('위치와 상세 내용을 입력해 주세요.'); return; }
+    if (!window.Chat || !window.Chat.available()) { U.toast('서버에 연결되어 있지 않아 보내지 못했습니다. 연결 후 다시 시도하거나 전화로 연락해 주세요.'); return; }
     const userName = localStorage.getItem('bp_user_name') || '현장 매니저';
+    const gps = this._emGps;
+    const map = gps ? `\n지도: https://map.kakao.com/link/map/긴급위치,${gps.lat},${gps.lng}` : '';
+    const photo = document.getElementById('em-photo')?.files?.[0] || null;
+    const btn = document.querySelector('#emergency-report-modal button[onclick^="Profile.submitEmergencyReport"]');
+    if (btn) { btn.disabled = true; btn.textContent = '전송 중...'; }
     try {
-      if (window.hqStore?.addBroadcast) {
-        const r = window.hqStore.addBroadcast({ title:`🚨 [현장 긴급보고] ${type} (${userName})`, content:`위치: ${loc}\n내용: ${desc}`, isUrgent:true, targetId:'ALL' });
-        if (r && r.catch) r.catch(err => U.toast('긴급 보고 전송 실패: ' + (err.message || '다시 시도해 주세요.')));
-      }
-    } catch(e) {}
+      await window.Chat.sendNotice({ targetId: 'ALL', title: `🚨 현장 긴급보고 · ${type} (${userName})`, content: `위치: ${loc}\n내용: ${desc}${map}`, isUrgent: true, imageFile: photo });
+    } catch (err) {
+      if (btn) { btn.disabled = false; btn.textContent = '본사 긴급 전송'; }
+      U.toast('긴급 보고 전송 실패: ' + (err.message || '다시 시도해 주세요.'));
+      return;
+    }
+    this._emGps = null;
     document.getElementById('emergency-report-modal').remove();
-    U.toast('🚨 본사 상황실로 긴급 보고가 성공적으로 전송되었습니다.');
+    U.toast('🚨 본사로 긴급 보고가 전송되었습니다.');
     U.haptic();
   },
 

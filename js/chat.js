@@ -16,6 +16,11 @@
     back: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
     image: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.6"/><path d="m21 15-4.5-4.5L6 21"/></svg>'
   };
+  // 글 안의 http(s) 주소를 눌러 열 수 있게 (이미 esc 처리된 글에만 사용)
+  const linkify = (escaped) => escaped.replace(/https?:\/\/[^\s<]+/g, (u) => {
+    const clean = u.replace(/[.,)!?]+$/, ''); const tail = u.slice(clean.length);
+    return `<a href="${clean}" target="_blank" rel="noopener noreferrer">${clean.includes('map.kakao.com') ? '📍 지도에서 보기' : clean}</a>${tail}`;
+  });
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   const Chat = {
@@ -338,7 +343,7 @@
         const showName = !mine && prevSender !== m.sender_id;
         prevSender = m.sender_id;
         const time = d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
-        const body = m.body ? `<div class="chat-bubble${m.is_urgent ? ' urgent' : ''}">${m.is_urgent ? '<span class="chat-urgent-tag">긴급</span><br>' : ''}${esc(m.body)}</div>` : '';
+        const body = m.body ? `<div class="chat-bubble${m.is_urgent ? ' urgent' : ''}">${m.is_urgent ? '<span class="chat-urgent-tag">긴급</span><br>' : ''}${linkify(esc(m.body))}</div>` : '';
         const img = m.image_path ? `<img class="chat-img" data-path="${esc(m.image_path)}" alt="사진" loading="lazy">` : '';
         const rl = mine ? this._readLabel(m) : '';
         html += `<div class="chat-row${mine ? ' mine' : ''}">${mine ? `<span class="chat-time">${rl ? `<b class="chat-read">${esc(rl)}</b><br>` : ''}${time}</span>` : ''}
@@ -411,7 +416,7 @@
     },
 
     // 공지/긴급보고를 대화로 보낸다 (기존 '긴급 공지 발송'과 현장 긴급보고가 이 함수를 씁니다)
-    async sendNotice({ targetId = 'ALL', title = '', content = '', isUrgent = false } = {}) {
+    async sendNotice({ targetId = 'ALL', title = '', content = '', isUrgent = false, imageFile = null } = {}) {
       if (!this.available()) throw new Error('서버에 연결되어 있어야 보낼 수 있습니다.');
       const text = ((title ? '[' + title + '] ' : '') + content).trim().slice(0, 2000);
       if (!text) throw new Error('내용이 비어 있습니다.');
@@ -422,6 +427,10 @@
         else throw new Error('서버 계정이 없는 매니저에게는 보낼 수 없습니다.');
       } else room = await this.sc().chatEnsureRoom('direct', this.me().id);
       const m = await this.sc().chatSend(room.id, { body: text, isUrgent });
+      if (imageFile) {   // 사진은 글 바로 다음 메시지로 (실패해도 글은 이미 전달됨)
+        try { await this.sc().chatSend(room.id, { body: '', imageBlob: await this._compress(imageFile), isUrgent }); }
+        catch (e) { this._toast('글은 전달됐지만 사진은 보내지 못했습니다. 대화창에서 다시 보내 주세요.'); }
+      }
       this.refreshList().catch(() => { });
       return { room, message: m };
     },
