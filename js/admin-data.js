@@ -900,6 +900,10 @@ class HQDataStore {
 
   addBroadcast({ title = '', content, isUrgent = false, targetId = 'ALL' }) {
     if (!content) return;
+    // 서버 연결 상태에서는 공지를 대화창(채팅방)으로 보낸다 (Promise 반환)
+    if (window.Chat && window.Chat.available()) {
+      return window.Chat.sendNotice({ targetId, title, content, isUrgent });
+    }
     const notiData = {
       id: 'noti_' + Date.now(),
       title: title || (isUrgent ? '🚨 긴급 공지' : '📢 본사 공지'),

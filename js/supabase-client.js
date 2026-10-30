@@ -534,6 +534,119 @@ const SupabaseClient = {
     }
   },
 
+  // ── 9. 대화창 (대표↔매니저 1:1 + 전체방, 사진 전송) ──
+
+  _chatReady() {
+    if (!this.isConfigured || !this.client || !this.currentUser?.id) throw new Error('서버에 연결되어 로그인해야 대화를 사용할 수 있습니다.');
+  },
+
+  async chatRooms() {
+    this._chatReady();
+    const { data, error } = await this.client.from('chat_rooms')
+      .select('*, manager:manager_id(id, name, email, role)')
+      .order('last_message_at', { ascending: false, nullsFirst: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  // 대화방 찾기, 없으면 만들기 (본사: 전체방/매니저별 1:1, 매니저: 내 1:1)
+  async chatEnsureRoom(kind, managerId = null) {
+    this._chatReady();
+    const find = async () => {
+      let q = this.client.from('chat_rooms').select('*, manager:manager_id(id, name, email, role)').eq('kind', kind);
+      q = kind === 'direct' ? q.eq('manager_id', managerId) : q.is('manager_id', null);
+      const { data, error } = await q.limit(1);
+      if (error) throw error;
+      return data?.[0] || null;
+    };
+    const found = await find();
+    if (found) return found;
+    const companyId = this.currentProfile?.company_id;
+    if (!companyId) throw new Error('회사 정보가 없는 계정은 대화를 사용할 수 없습니다.');
+    const row = { company_id: companyId, kind };
+    if (kind === 'direct') row.manager_id = managerId;
+    const { error } = await this.client.from('chat_rooms').insert([row]);
+    if (error && error.code !== '23505') throw error;
+    const created = await find();
+    if (!created) throw new Error('대화방을 만들지 못했습니다.');
+    return created;
+  },
+
+  async chatMessages(roomId, { before = null, limit = 40 } = {}) {
+    this._chatReady();
+    let q = this.client.from('chat_messages').select('*').eq('room_id', roomId)
+      .order('created_at', { ascending: false }).limit(limit);
+    if (before) q = q.lt('created_at', before);
+    const { data, error } = await q;
+    if (error) throw error;
+    return (data || []).reverse();
+  },
+
+  async chatMessagesAfter(roomId, after) {
+    this._chatReady();
+    const { data, error } = await this.client.from('chat_messages').select('*').eq('room_id', roomId)
+      .gt('created_at', after).order('created_at', { ascending: true }).limit(100);
+    if (error) throw error;
+    return data || [];
+  },
+
+  // 글/사진 보내기. imageBlob 은 화면에서 줄여 둔 jpeg
+  async chatSend(roomId, { body = '', imageBlob = null, isUrgent = false } = {}) {
+    this._chatReady();
+    let imagePath = null;
+    if (imageBlob) {
+      const id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+      imagePath = roomId + '/' + id + '.jpg';
+      const up = await this.client.storage.from('chat-images').upload(imagePath, imageBlob, { contentType: 'image/jpeg', upsert: false });
+      if (up.error) throw up.error;
+    }
+    const { data, error } = await this.client.from('chat_messages')
+      .insert([{ room_id: roomId, body, image_path: imagePath, is_urgent: !!isUrgent }])
+      .select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  async chatImageUrls(paths) {
+    this._chatReady();
+    this._chatUrlCache = this._chatUrlCache || new Map();
+    const need = [...new Set(paths)].filter(p => p && !(this._chatUrlCache.get(p)?.exp > Date.now()));
+    if (need.length) {
+      const { data, error } = await this.client.storage.from('chat-images').createSignedUrls(need, 3600);
+      if (error) throw error;
+      (data || []).forEach(item => { if (item.signedUrl) this._chatUrlCache.set(item.path, { url: item.signedUrl, exp: Date.now() + 3000 * 1000 }); });
+    }
+    const out = {};
+    paths.forEach(p => { out[p] = this._chatUrlCache.get(p)?.url || ''; });
+    return out;
+  },
+
+  async chatMarkRead(roomId) {
+    this._chatReady();
+    const { error } = await this.client.from('chat_reads')
+      .upsert({ room_id: roomId, user_id: this.currentUser.id, last_read_at: new Date().toISOString() }, { onConflict: 'room_id,user_id' });
+    if (error) throw error;
+  },
+
+  async chatUnread() {
+    this._chatReady();
+    const { data, error } = await this.client.rpc('chat_unread_counts');
+    if (error) throw error;
+    const map = {};
+    (data || []).forEach(r => { map[r.room_id] = Number(r.unread) || 0; });
+    return map;
+  },
+
+  chatSubscribe(onInsert) {
+    if (!this.isConfigured || !this.client) return null;
+    if (this._chatChannel) { try { this.client.removeChannel(this._chatChannel); } catch (e) { } }
+    this._chatChannel = this.client.channel('public:chat_messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' },
+        (payload) => { if (payload?.new && typeof onInsert === 'function') onInsert(payload.new); })
+      .subscribe();
+    return this._chatChannel;
+  },
+
   // ── 8. 실시간 동기화 (Realtime Subscriptions) ──
 
   subscribeToSchedules(onUpdate) {

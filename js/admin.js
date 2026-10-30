@@ -1786,6 +1786,12 @@ document.addEventListener('DOMContentLoaded', () => {
           localStorage.setItem('admin_bp_user_email', session.user.email || '');
           authorized = true;
           try {
+            if (window.Chat) {
+              window.Chat.onUnreadChange = (n) => { const b = document.getElementById('chat-badge'); if (b) { b.textContent = n > 99 ? '99+' : String(n); b.hidden = !n; } };
+              window.Chat.init();
+            }
+          } catch (chatErr) { console.warn('Chat init', chatErr); }
+          try {
             await window.hqStore.syncFromSupabase();
           } catch (syncErr) {
             console.warn('Supabase sync warning:', syncErr);
@@ -3399,7 +3405,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 메시지 발송 폼 제출
     const formSendMsg = document.getElementById('form-send-message');
     if (formSendMsg) {
-      formSendMsg.addEventListener('submit', (e) => {
+      formSendMsg.addEventListener('submit', async (e) => {
         e.preventDefault();
         const targetId   = document.getElementById('msg-target-manager').value;
         const targetName = document.getElementById('msg-target-manager').options[document.getElementById('msg-target-manager').selectedIndex].text;
@@ -3414,7 +3420,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // AdminData.addBroadcast()로 localStorage 저장 + BroadcastChannel 전송
         if (window.hqStore && typeof window.hqStore.addBroadcast === 'function') {
-          window.hqStore.addBroadcast({ title, content, isUrgent, targetId });
+          try {
+            const r = window.hqStore.addBroadcast({ title, content, isUrgent, targetId });
+            if (r && typeof r.then === 'function') {
+              await r;
+              Admin.closeSendMsgModal();
+              if (window.Chat) window.Chat.open(targetId && targetId !== 'ALL' ? { managerId: targetId } : { kind: 'all' });
+              return;
+            }
+          } catch (err) { alert('발송하지 못했습니다. ' + (err.message || '')); return; }
         } else {
           // fallback: 직접 저장
           const notiData = {

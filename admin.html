@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/calendar.css">
   <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/chat.css?v=2">
   <link rel="stylesheet" href="css/timeline.css">
   <style>
     /* ── 사용자 드롭다운 (헤더 화이트 테마 & 호버 인터랙션) ── */
@@ -245,7 +246,7 @@
       border-color: #6366f1;
     }
   </style>
-<script src="js/icons.js?v=208"></script>
+<script src="js/icons.js?v=209"></script>
 </head>
 
 <body>
@@ -392,6 +393,10 @@
                 d="M16.8 14.2 C15.4 13.8 14.2 14.3 14.2 15.4 C14.2 16.5 15.5 16.8 16.8 16.2 C17.2 15.6 17.2 14.8 16.8 14.2 Z" />
             </svg>
             차량 관리
+          </button>
+          <button id="btn-open-chat" class="btn-secondary" onclick="Chat.open()" style="position:relative; display:inline-flex; align-items:center; gap:6px; color:#2563eb; border-color:#bfdbfe; background:#eff6ff;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            메시지<span id="chat-badge" hidden style="background:#ef4444;color:#fff;border-radius:999px;font-size:11px;font-weight:800;padding:1px 6px;margin-left:2px;">0</span>
           </button>
           <button id="btn-open-send-message" class="btn-secondary" onclick="Admin.openSendMsgModal()"
             style="display:inline-flex; align-items:center; gap:6px; color:#ea580c; border-color:#fed7aa; background:#fff7ed;"
@@ -1715,11 +1720,12 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-client.js?v=208"></script>
-  <script src="js/api.js?v=208"></script>
-  <script src="js/admin-data.js?v=208"></script>
-  <script src="js/admin.js?v=208"></script>
-  <script src="js/timeline.js?v=208"></script>
+  <script src="js/supabase-client.js?v=209"></script>
+  <script src="js/chat.js?v=209"></script>
+  <script src="js/api.js?v=209"></script>
+  <script src="js/admin-data.js?v=209"></script>
+  <script src="js/admin.js?v=209"></script>
+  <script src="js/timeline.js?v=209"></script>
 
 
 

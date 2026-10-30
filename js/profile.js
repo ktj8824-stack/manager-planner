@@ -434,7 +434,8 @@ const Profile = {
     const userName = localStorage.getItem('bp_user_name') || '현장 매니저';
     try {
       if (window.hqStore?.addBroadcast) {
-        window.hqStore.addBroadcast({ title:`🚨 [현장 긴급보고] ${type} (${userName})`, content:`위치: ${loc}\n내용: ${desc}`, isUrgent:true, targetId:'ALL' });
+        const r = window.hqStore.addBroadcast({ title:`🚨 [현장 긴급보고] ${type} (${userName})`, content:`위치: ${loc}\n내용: ${desc}`, isUrgent:true, targetId:'ALL' });
+        if (r && r.catch) r.catch(err => U.toast('긴급 보고 전송 실패: ' + (err.message || '다시 시도해 주세요.')));
       }
     } catch(e) {}
     document.getElementById('emergency-report-modal').remove();

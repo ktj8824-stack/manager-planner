@@ -89,6 +89,13 @@ const App = {
 
   initRealtimeSync() {
     this.startAutoSync();
+    if (window.Chat) {
+      window.Chat.onUnreadChange = () => { try { this.updateNoticeBadge(); } catch (e) { } };
+      window.Chat.onIncoming = (m, room, name) => {
+        this.showHqToast({ id: 'chat_' + m.id, title: (m.is_urgent ? '🚨 ' : '💬 ') + (name || '본사'), content: m.body || '(사진)', isUrgent: !!m.is_urgent, targetId: 'ALL' });
+      };
+      window.Chat.init();
+    }
     if (typeof window.SupabaseClient !== 'undefined') {
       window.SupabaseClient.subscribeAll({
         onScheduleChange: async (payload) => {
@@ -233,7 +240,7 @@ const App = {
         <span>🎬</span><span class="top-brand-text">매니저플래너</span>
       </div>
       <div class="top-nav-right" style="display:flex; align-items:center; gap:6px; padding-right:10px;">
-        <button id="notice-bell" class="notice-bell" onclick="App.openNoticeModal()" aria-label="공지함">
+        <button id="notice-bell" class="notice-bell" onclick="App.openMessages()" aria-label="메시지">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
           <span id="notice-badge" class="notice-badge" hidden>0</span>
         </button>
@@ -473,8 +480,9 @@ const App = {
   updateNoticeBadge() {
     const badge = document.getElementById('notice-badge');
     if (!badge) return;
+    const chatOn = !!(window.Chat && window.Chat.available());
     const seen = this._seenNotices();
-    const unread = this._myNotices().filter(n => !seen.has(n.id)).length;
+    const unread = chatOn ? window.Chat.totalUnread() : this._myNotices().filter(n => !seen.has(n.id)).length;
     badge.textContent = unread > 9 ? '9+' : String(unread);
     badge.hidden = unread === 0;
   },
@@ -511,6 +519,12 @@ const App = {
     this._autoSyncTimer = setInterval(run, 45000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) run(); });
     this.updateNoticeBadge();
+  },
+
+  // 종 버튼: 서버 연결 시 대화창, 아니면 기존 공지함
+  openMessages() {
+    if (window.Chat && window.Chat.available()) window.Chat.open();
+    else this.openNoticeModal();
   },
 
   openNoticeModal() {
