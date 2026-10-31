@@ -51,15 +51,24 @@
     },
     speak(text, force) {
       try {
-        if (!this.speechSupported()) return;
+        if (!this.speechSupported()) { if (force) this._toast('이 브라우저는 음성 읽기를 지원하지 않습니다. 크롬이나 사파리로 열어 주세요.'); return; }
         if (!force && this.prefs().voice === 'off') return;
         const clean = String(text || '').replace(/https?:\/\/\S+/g, ' 링크 ').replace(/[\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, 160);
         if (!clean) return;
-        speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(clean); u.lang = 'ko-KR'; u.rate = 1.0; u.volume = 1;
-        const v = (speechSynthesis.getVoices() || []).find(x => /^ko/i.test(x.lang)); if (v) u.voice = v;
-        speechSynthesis.speak(u);
-      } catch (e) { }
+        const voices = speechSynthesis.getVoices() || [];
+        const ko = voices.find(x => /^ko/i.test(x.lang));
+        if (force && voices.length && !ko) this._toast('이 기기에 한국어 음성이 없는 것 같습니다. 기기 설정 → 접근성(또는 언어) → 텍스트 음성 변환에서 한국어 음성을 설치해 주세요.');
+        const run = () => {
+          const u = new SpeechSynthesisUtterance(clean); u.lang = 'ko-KR'; u.rate = 1.0; u.volume = 1;
+          if (ko) u.voice = ko;
+          u.onerror = (e) => { if (e && e.error && !['canceled', 'interrupted'].includes(e.error)) this._toast('음성을 재생하지 못했습니다 (' + e.error + '). 기기의 음성 출력(TTS) 설정과 미디어 볼륨을 확인해 주세요.'); };
+          if (force) u.onstart = () => this._toast('🔊 소리를 재생하고 있습니다. 들리지 않으면 미디어 볼륨과 무음 모드를 확인해 주세요.');
+          if (speechSynthesis.paused) speechSynthesis.resume();
+          speechSynthesis.speak(u);
+        };
+        // 재생 중인 것이 있으면 멈춘 뒤 잠깐 쉬었다가 재생 (바로 이어 부르면 일부 기기에서 소리가 안 남)
+        if (speechSynthesis.speaking || speechSynthesis.pending) { speechSynthesis.cancel(); setTimeout(run, 150); } else run();
+      } catch (e) { if (force) this._toast('음성 재생 중 오류가 났습니다: ' + (e.message || '')); }
     },
     _maybeSpeak(m) {
       const mode = this.prefs().voice;
@@ -198,7 +207,7 @@
         else if (act === 'settings-close') this._closeSettings();
         else if (act === 'settings-save') this._saveSettings();
         else if (act === 'settings-reset') this._resetQuick();
-        else if (act === 'voice-test') { this._unlockSpeech(); this.speak('긴급 메시지. 대표. 지금 바로 확인해 주세요.', true); }
+        else if (act === 'voice-test') { this._unlocked = true; this.speak('긴급 메시지. 대표. 지금 바로 확인해 주세요.', true); }
         else if (act === 'back') { root.classList.remove('conv-open'); this.st.active = null; this._stopPoll(); this._renderList(); }
         const push = e.target.closest('[data-push]')?.dataset.push;
         if (push === 'on') this.enablePush(); else if (push === 'off') this.disablePush();
