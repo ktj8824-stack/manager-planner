@@ -1970,54 +1970,98 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el.kpiActiveCount) el.kpiActiveCount.textContent = `${activeSchedules.length}건`;
     if (el.kpiShopCount) el.kpiShopCount.textContent = `${shopSchedules.length}건`;
     if (el.kpiArtistCount) el.kpiArtistCount.textContent = `${artists.length}팀`;
-    try { renderTodayBrief(todaySchedules, activeSchedules.length); } catch (e) { console.warn('오늘 현황 표시 실패', e); }
+    try { renderTodayBrief(todaySchedules, activeSchedules); } catch (e) { console.warn('오늘 현황 표시 실패', e); }
   }
 
   // ── 오늘 현황 요약: 완료/이동중/예정/지연 + 이동 중·지연된 매니저 목록 ──
-  function renderTodayBrief(todaySchedules, activeCount) {
+  const briefLists = { all: [], done: [], moving: [], late: [], active: [] };
+
+  function renderTodayBrief(todaySchedules, activeSchedules) {
     const box = document.getElementById('today-brief');
     if (!box) return;
+    activeSchedules = activeSchedules || [];
     const now = new Date();
     const nowMin = now.getHours() * 60 + now.getMinutes();
     const toMin = (hhmm) => { const m = /^(\d{1,2}):(\d{2})/.exec(String(hhmm || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; };
-    let done = 0, moving = 0, waiting = 0;
-    const movingRows = [], lateRows = [];
+    const lists = { all: todaySchedules.map(s => ({ s })), done: [], moving: [], late: [], active: activeSchedules.map(s => ({ s })) };
     todaySchedules.forEach(s => {
       const tl = Array.isArray(s.timeline) ? s.timeline : [];
       const allDone = s.status === '완료' || (tl.length > 0 && tl.every(t => t.done));
+      if (allDone) { lists.done.push({ s }); return; }
       const mv = tl.find(t => t.moving && !t.done);
-      const who = s.managerName || '담당 미지정';
-      const what = s.artistName || s.title || '';
-      if (allDone) { done++; return; }
-      if (mv) {
-        moving++;
-        movingRows.push({ who, what, step: mv.label || '이동', time: mv.time });
-      } else { waiting++; }
+      if (mv) lists.moving.push({ s, note: mv.label || '이동', time: mv.time });
       // 지연: 아직 안 끝난 첫 단계의 시간이 10분 넘게 지났는데 이동중/완료 표시가 없음
       const next = tl.find(t => !t.done);
       const nm = next ? toMin(next.time) : null;
-      if (next && !next.moving && nm !== null && nowMin - nm >= 10) {
-        lateRows.push({ who, what, step: next.label || '다음 단계', late: nowMin - nm });
-      }
+      if (next && !next.moving && nm !== null && nowMin - nm >= 10) lists.late.push({ s, note: `${next.label || '다음 단계'} 미확인`, late: nowMin - nm });
     });
+    lists.late.sort((x, y) => y.late - x.late);
+    Object.assign(briefLists, lists);
+
+    const ICON = {
+      all: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+      done: '<circle cx="12" cy="12" r="10"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/>',
+      moving: '<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>',
+      late: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+      active: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'
+    };
+    const TILES = [
+      ['all', '오늘 전체', 'tb-indigo'], ['done', '완료', 'tb-green'], ['moving', '이동중', 'tb-amber'],
+      ['late', '지연·미확인', 'tb-red'], ['active', '가동 차량/팀', 'tb-cyan']
+    ];
     const hh = String(now.getHours()).padStart(2, '0'), mm = String(now.getMinutes()).padStart(2, '0');
+    const tiles = TILES.map(([k, label, cls]) => `
+      <div class="tb-tile ${cls}${k === 'late' && lists.late.length ? ' alert' : ''}" data-k="${k}" tabindex="0">
+        <span class="tb-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg></span>
+        <span class="tb-txt"><b>${lists[k].length}</b><em>${label}</em></span>
+      </div>`).join('');
     const rows = [
-      ...lateRows.sort((a, b) => b.late - a.late).map(r => `<div class="tb-row late"><span class="tag">지연 ${r.late}분</span><span class="who">${esc(r.who)}</span><span>${esc(r.what)}</span><span class="sub">${esc(r.step)} 미확인</span></div>`),
-      ...movingRows.map(r => `<div class="tb-row moving"><span class="tag">이동중</span><span class="who">${esc(r.who)}</span><span>${esc(r.what)}</span><span class="sub">${esc(r.step)}</span></div>`)
+      ...lists.late.map(r => `<div class="tb-row late"><span class="tag">지연 ${r.late}분</span><span class="who">${esc(r.s.managerName || '담당 미지정')}</span><span>${esc(r.s.artistName || r.s.title || '')}</span><span class="sub">${esc(r.note)}</span></div>`),
+      ...lists.moving.map(r => `<div class="tb-row moving"><span class="tag">이동중</span><span class="who">${esc(r.s.managerName || '담당 미지정')}</span><span>${esc(r.s.artistName || r.s.title || '')}</span><span class="sub">${esc(r.note)}</span></div>`)
     ].join('');
     box.innerHTML = `
-      <div class="tb-head">
-        <div class="tb-title">오늘 현황</div>
-        <div class="tb-chips">
-          <span class="tb-chip">오늘 전체 <b>${todaySchedules.length}</b></span>
-          <span class="tb-chip">완료 <b class="ok">${done}</b></span>
-          <span class="tb-chip">이동중 <b class="mv">${moving}</b></span>
-          <span class="tb-chip">지연·미확인 <b class="${lateRows.length ? 'late' : ''}">${lateRows.length}</b></span>
-          <span class="tb-chip">가동 차량/팀 <b>${activeCount || 0}</b></span>
-        </div>
-        <div class="tb-time">${hh}:${mm} 기준</div>
-      </div>
-      <div class="tb-list">${rows || `<div class="tb-empty">${todaySchedules.length ? '지연되거나 이동 중인 일정이 없습니다.' : '오늘 등록된 일정이 없습니다.'}</div>`}</div>`;
+      <div class="tb-head"><div class="tb-title">오늘 현황</div><div class="tb-time">${hh}:${mm} 기준 · 칸에 마우스를 올리면 일정 목록이 보입니다</div></div>
+      <div class="tb-tiles">${tiles}</div>
+      ${rows ? `<div class="tb-list">${rows}</div>` : ''}`;
+    bindBriefHover(box);
+  }
+
+  function bindBriefHover(box) {
+    let pop = document.getElementById('tb-pop');
+    if (!pop) {
+      pop = document.createElement('div'); pop.id = 'tb-pop'; pop.className = 'tb-pop'; pop.style.display = 'none';
+      document.body.appendChild(pop);
+      pop.addEventListener('mouseenter', () => clearTimeout(pop._t));
+      pop.addEventListener('mouseleave', () => { pop._t = setTimeout(() => { pop.style.display = 'none'; }, 120); });
+      pop.addEventListener('click', (e) => {
+        const it = e.target.closest('[data-id]');
+        if (it) { pop.style.display = 'none'; Admin.openScheduleDetail(it.dataset.id); }
+      });
+      document.addEventListener('click', (e) => { if (!e.target.closest('.tb-tile') && !e.target.closest('#tb-pop')) pop.style.display = 'none'; });
+    }
+    const TITLE = { all: '오늘 전체 일정', done: '완료된 일정', moving: '이동 중인 일정', late: '지연·미확인 일정', active: '가동 중인 차량/팀' };
+    const show = (tile) => {
+      clearTimeout(pop._t);
+      const k = tile.dataset.k, list = briefLists[k] || [];
+      const items = list.map(({ s, note, late }) => `
+        <div class="tb-pop-item" data-id="${esc(s.id)}">
+          <div class="r1"><span class="tm">${esc(s.startTime || '--:--')}${s.endTime ? ' ~ ' + esc(s.endTime) : ''}</span>${late ? `<span class="lt">지연 ${late}분</span>` : ''}${note && !late ? `<span class="nt">${esc(note)}</span>` : ''}</div>
+          <div class="r2">${esc(s.artistName || '')} <span>${esc(s.title || '')}</span></div>
+          <div class="r3">${esc(s.managerName || '담당 미지정')}${s.vehicleName ? ' · ' + esc(s.vehicleName) : ''}${late && note ? ' · ' + esc(note) : ''}</div>
+        </div>`).join('');
+      pop.innerHTML = `<div class="tb-pop-h">${TITLE[k]} <b>${list.length}건</b></div>${items || '<div class="tb-pop-empty">해당하는 일정이 없습니다.</div>'}<div class="tb-pop-f">일정을 클릭하면 상세 정보가 열립니다.</div>`;
+      const r = tile.getBoundingClientRect();
+      pop.style.display = 'block';
+      const w = pop.offsetWidth;
+      pop.style.left = Math.max(10, Math.min(window.innerWidth - w - 10, r.left)) + 'px';
+      pop.style.top = (r.bottom + 8) + 'px';
+    };
+    box.querySelectorAll('.tb-tile').forEach(tile => {
+      tile.addEventListener('mouseenter', () => show(tile));
+      tile.addEventListener('focus', () => show(tile));
+      tile.addEventListener('click', () => show(tile));
+      tile.addEventListener('mouseleave', () => { pop._t = setTimeout(() => { pop.style.display = 'none'; }, 150); });
+    });
   }
   setInterval(() => { try { renderKPI(); } catch (e) {} }, 60000);
 
