@@ -2012,15 +2012,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const hh = String(now.getHours()).padStart(2, '0'), mm = String(now.getMinutes()).padStart(2, '0');
     const tiles = TILES.map(([k, label, cls]) => `
       <div class="tb-tile ${cls}${k === 'late' && lists.late.length ? ' alert' : ''}" data-k="${k}" tabindex="0">
-        <span class="tb-ico"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg></span>
-        <span class="tb-txt"><b>${lists[k].length}</b><em>${label}</em></span>
+        <span class="tb-txt"><em>${label}</em><b>${lists[k].length}</b></span>
+        <span class="tb-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg></span>
       </div>`).join('');
     const rows = [
       ...lists.late.map(r => `<div class="tb-row late"><span class="tag">지연 ${r.late}분</span><span class="who">${esc(r.s.managerName || '담당 미지정')}</span><span>${esc(r.s.artistName || r.s.title || '')}</span><span class="sub">${esc(r.note)}</span></div>`),
       ...lists.moving.map(r => `<div class="tb-row moving"><span class="tag">이동중</span><span class="who">${esc(r.s.managerName || '담당 미지정')}</span><span>${esc(r.s.artistName || r.s.title || '')}</span><span class="sub">${esc(r.note)}</span></div>`)
     ].join('');
     box.innerHTML = `
-      <div class="tb-head"><div class="tb-title">오늘 현황</div><div class="tb-time">${hh}:${mm} 기준 · 칸에 마우스를 올리면 일정 목록이 보입니다</div></div>
+      <div class="tb-head"><div class="tb-title">오늘 현황</div><div class="tb-time"><span class="tb-live"></span>${hh}:${mm} 기준 · 항목에 마우스를 올려 보세요</div></div>
       <div class="tb-tiles">${tiles}</div>
       ${rows ? `<div class="tb-list">${rows}</div>` : ''}`;
     bindBriefHover(box);

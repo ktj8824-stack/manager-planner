@@ -780,26 +780,26 @@ const Home = {
           <div style="flex:1; margin-left:8px; background:#fff; border-radius:14px; padding:12px 14px; box-shadow:0 2px 10px rgba(0,0,0,0.03); border:1px solid rgba(0,0,0,0.04); ${esc(cardBorder)} position:relative;">
              
              <!-- 카드 1행: 좌측 카테고리 뱃지 & 우측 [이동중] [완료] 버튼 (같은 라인에 배치) -->
-             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px;">
-                <div style="display:flex; align-items:center; gap:6px;">
-                  <span style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:7px; font-size:12px; font-weight:700; letter-spacing:-0.2px; ${esc(badgeStyle)}">
+             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:8px; gap:6px 8px;">
+                <div style="display:flex; align-items:center; flex-wrap:wrap; gap:6px; min-width:0;">
+                  <span style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:7px; font-size:12px; font-weight:700; letter-spacing:-0.2px; white-space:nowrap; ${esc(badgeStyle)}">
                     ${getLineIcon(iconType)}
                     <span>${esc(tag)}</span>
                   </span>
                   ${isDone && ev.doneAt ? `
-                    <span style="display:inline-flex; align-items:center; gap:3px; background:#ecfdf5; color:#059669; font-size:12px; font-weight:700; padding:2px 6px; border-radius:5px; border:1px solid rgba(16,185,129,0.3);">
+                    <span style="display:inline-flex; align-items:center; gap:3px; white-space:nowrap; background:#ecfdf5; color:#059669; font-size:12px; font-weight:700; padding:2px 6px; border-radius:5px; border:1px solid rgba(16,185,129,0.3);">
                       ${esc(ev.doneAt)} 완료
                     </span>
                   ` : ''}
                 </div>
                 
                 ${isHQ && ev.hqScheduleId ? `
-                  <div style="display:flex; align-items:center; gap:5px;">
+                  <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
                     ${isDriveStep ? `
                       <!-- 이동중 버튼 (더 진하고 뚜렷하게) -->
                       <button type="button"
                         onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '이동중')"
-                        style="padding:4px 10px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.15s;
+                        style="white-space:nowrap; padding:4px 10px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.15s;
                                ${isMoving
                                   ? 'border:2px solid #f59e0b; background:#fef3c7; color:#b45309; box-shadow:0 0 0 2px rgba(245,158,11,0.2);'
                                   : 'border:1.5px solid #94a3b8; background:#ffffff; color:#334155; box-shadow:0 1px 2px rgba(0,0,0,0.04);'
@@ -810,7 +810,7 @@ const Home = {
                     <!-- 완료 버튼 (더 진하고 뚜렷하게) -->
                     <button type="button"
                       onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '완료')"
-                      style="padding:4px 10px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.15s;
+                      style="white-space:nowrap; padding:4px 10px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.15s;
                              ${isDone
                                 ? 'border:2px solid #10b981; background:#d1fae5; color:#047857; box-shadow:0 0 0 2px rgba(16,185,129,0.2);'
                                 : 'border:1.5px solid #94a3b8; background:#ffffff; color:#334155; box-shadow:0 1px 2px rgba(0,0,0,0.04);'

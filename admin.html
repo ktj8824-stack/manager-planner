@@ -238,19 +238,24 @@
 
 
     /* 오늘 현황 요약 */
-    .today-brief { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:10px 14px; margin:0 0 12px; }
+    .today-brief { background:#fff; border:1px solid #eef0f4; border-radius:16px; padding:12px 14px 14px; margin:0 0 12px; box-shadow:0 1px 2px rgba(16,24,40,.04); }
     .tb-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
-    .tb-title { font-size:15px; font-weight:700; color:#0f172a; }
-    .tb-tiles { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:4px; }
-    .tb-tile { --c:#4f46e5; --bg:#eef2ff; display:flex; align-items:center; gap:10px; padding:6px 12px; border-radius:10px; background:#fff; border:1px solid #e2e8f0; border-left:4px solid var(--c); cursor:pointer; transition:transform .15s, box-shadow .15s, background .15s; outline:none; }
-    .tb-tile:hover, .tb-tile:focus { transform:translateY(-2px); box-shadow:0 6px 16px rgba(15,23,42,.08); background:var(--bg); }
-    .tb-ico { flex:0 0 32px; width:32px; height:32px; border-radius:9px; background:var(--bg); color:var(--c); display:flex; align-items:center; justify-content:center; }
-    .tb-tile:hover .tb-ico, .tb-tile:focus .tb-ico { background:#fff; }
-    .tb-txt { display:flex; flex-direction:column; min-width:0; }
-    .tb-txt b { font-size:20px; font-weight:700; color:#0f172a; line-height:1.1; }
-    .tb-txt em { font-style:normal; font-size:12px; line-height:1.2; color:#64748b; white-space:nowrap; }
-    .tb-indigo { --c:#4f46e5; --bg:#eef2ff; } .tb-green { --c:#059669; --bg:#ecfdf5; } .tb-amber { --c:#d97706; --bg:#fffbeb; } .tb-red { --c:#dc2626; --bg:#fef2f2; } .tb-cyan { --c:#0891b2; --bg:#ecfeff; }
+    .tb-title { font-size:14px; font-weight:600; color:#111827; letter-spacing:-.01em; }
+    .tb-tiles { display:grid; grid-template-columns:repeat(5,1fr); border:1px solid #eef0f4; border-radius:14px; background:#fafbfc; overflow:hidden; }
+    .tb-tile { --c:#4f46e5; --bg:#eef2ff; position:relative; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 18px; background:transparent; border:0; cursor:pointer; transition:background .18s; outline:none; }
+    .tb-tile + .tb-tile::before { content:''; position:absolute; left:0; top:22%; bottom:22%; width:1px; background:#e8eaf0; }
+    .tb-tile:hover, .tb-tile:focus { background:#fff; }
+    .tb-tile::after { content:''; position:absolute; left:18px; right:18px; bottom:0; height:2px; border-radius:2px; background:var(--c); transform:scaleX(0); transform-origin:left; transition:transform .22s ease; }
+    .tb-tile:hover::after, .tb-tile:focus::after { transform:scaleX(1); }
+    .tb-ico { flex:0 0 34px; width:34px; height:34px; border-radius:50%; background:var(--bg); color:var(--c); display:flex; align-items:center; justify-content:center; }
+    .tb-txt { display:flex; flex-direction:column; min-width:0; gap:1px; }
+    .tb-txt em { font-style:normal; font-size:12px; font-weight:500; color:#8a94a6; white-space:nowrap; letter-spacing:-.01em; }
+    .tb-txt b { font-size:24px; font-weight:600; color:#111827; line-height:1.1; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+    .tb-indigo { --c:#4f46e5; --bg:#eef2ff; } .tb-green { --c:#059669; --bg:#e7f8f0; } .tb-amber { --c:#d97706; --bg:#fff4dd; } .tb-red { --c:#dc2626; --bg:#fdecec; } .tb-cyan { --c:#0891b2; --bg:#e3f6fa; }
     .tb-tile.alert .tb-txt b { color:#dc2626; }
+    .tb-tile.alert .tb-ico { box-shadow:0 0 0 0 rgba(220,38,38,.35); animation:tbPulse 2s infinite; }
+    @keyframes tbPulse { 0%{box-shadow:0 0 0 0 rgba(220,38,38,.35);} 70%{box-shadow:0 0 0 8px rgba(220,38,38,0);} 100%{box-shadow:0 0 0 0 rgba(220,38,38,0);} }
+    .tb-live { display:inline-block; width:6px; height:6px; border-radius:50%; background:#22c55e; margin-right:6px; vertical-align:middle; }
     .tb-list { margin-top:8px; }
     .tb-pop { position:fixed; z-index:9999; width:360px; max-height:420px; overflow:auto; background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 12px 32px rgba(15,23,42,.18); padding:10px; }
     .tb-pop-h { font-size:13.5px; font-weight:700; color:#0f172a; padding:4px 6px 8px; border-bottom:1px solid #e2e8f0; margin-bottom:8px; } .tb-pop-h b { color:#4f46e5; margin-left:6px; }
@@ -262,7 +267,7 @@
     .tb-pop-item .r3 { font-size:12.5px; color:#64748b; }
     .tb-pop-empty { padding:14px 6px; font-size:13px; color:#94a3b8; text-align:center; }
     .tb-pop-f { font-size:12px; color:#94a3b8; text-align:center; padding-top:4px; }
-    @media (max-width:900px){ .tb-tiles { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:900px){ .tb-tiles { grid-template-columns:repeat(2,1fr); } .tb-tile + .tb-tile::before { display:none; } }
     .tb-time { font-size:12.5px; color:#94a3b8; }
     .tb-nums { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:12px; }
     .tb-num { background:#f8fafc; border-radius:10px; padding:10px 12px; }
@@ -289,7 +294,7 @@
       border-color: #6366f1;
     }
   </style>
-<script src="js/icons.js?v=232"></script>
+<script src="js/icons.js?v=233"></script>
 </head>
 
 <body>
@@ -1691,14 +1696,14 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/notify.js?v=232"></script>
-  <script src="js/supabase-client.js?v=232"></script>
-  <script src="js/chat.js?v=232"></script>
-  <script src="js/schedule-notify.js?v=232"></script>
-  <script src="js/api.js?v=232"></script>
-  <script src="js/admin-data.js?v=232"></script>
-  <script src="js/admin.js?v=232"></script>
-  <script src="js/timeline.js?v=232"></script>
+  <script src="js/notify.js?v=233"></script>
+  <script src="js/supabase-client.js?v=233"></script>
+  <script src="js/chat.js?v=233"></script>
+  <script src="js/schedule-notify.js?v=233"></script>
+  <script src="js/api.js?v=233"></script>
+  <script src="js/admin-data.js?v=233"></script>
+  <script src="js/admin.js?v=233"></script>
+  <script src="js/timeline.js?v=233"></script>
 
 
 
