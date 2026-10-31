@@ -314,13 +314,14 @@
   position: static;
   flex: 1 1 auto;
   min-width: 0;
-  justify-content: center;
+  justify-content: flex-start;
+  padding-left: 6px;
   overflow: hidden;
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 15px;
-  font-weight: 800;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: 700;
   color: #ffffff;
   letter-spacing: -0.4px;
   white-space: nowrap;
@@ -334,7 +335,7 @@
   gap: 4px;
   min-width: 0;
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   color: #f8fafc;
   white-space: nowrap;
 }
@@ -342,12 +343,6 @@
   max-width: 72px;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-@media (max-width: 480px) {
-  .top-brand-text { display: none; }
-  .top-user-icon, .top-user-suffix { display: none; }
-  .top-user-name { max-width: 110px; }
-  .top-brand { font-size: 20px; }
 }
 
 .top-nav-left,
@@ -361,6 +356,7 @@
 }
 
 .top-nav-item {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -390,8 +386,11 @@
 
 .top-nav-item.active {
   color: #ffffff;
-  font-weight: 800;
+  font-weight: 700;
 }
+.top-nav-sos { color: #fca5a5; }
+.top-nav-sos .top-sos-ico { font-size: 19px; line-height: 19px; height: 19px; display: flex; align-items: center; }
+.top-nav-item .notice-badge { top: 0; right: 0; }
 
 .top-nav-item.active svg {
   color: var(--primary-400);
@@ -850,7 +849,7 @@
 .notice-bell:active { transform: scale(.94); }
 .notice-badge {
   position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px; padding: 0 4px;
-  border-radius: 9px; background: #ef4444; color: #fff; font-size: 12px; font-weight: 800;
+  border-radius: 9px; background: #ef4444; color: #fff; font-size: 12px; font-weight: 700;
   line-height: 17px; text-align: center; box-sizing: border-box;
 }
 .notice-badge[hidden] { display: none; }

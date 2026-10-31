@@ -39,7 +39,7 @@
   background: var(--accent-dim);
   color: var(--accent);
   font-size: 12px;
-  font-weight: var(--fw-extrabold);
+  font-weight: var(--fw-bold);
   padding: 3px 8px;
   border-radius: var(--r-full);
   margin-right: var(--sp-3);
@@ -105,7 +105,7 @@
 }
 .dash-welcome h2 {
   font-size: 1.25rem;
-  font-weight: var(--fw-extrabold);
+  font-weight: var(--fw-bold);
   letter-spacing: var(--ls-tight);
 }
 .dash-welcome h2 span {

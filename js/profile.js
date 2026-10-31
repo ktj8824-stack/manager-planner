@@ -79,9 +79,9 @@ const Profile = {
 
           <div style="display:flex;align-items:center;gap:14px;position:relative;">
             <!-- 아바타 -->
-            <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;flex-shrink:0;letter-spacing:-1px;">${esc(initials)}</div>
+            <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:-1px;">${esc(initials)}</div>
             <div style="flex:1;min-width:0;">
-              <div style="font-size:17px;font-weight:800;color:#fff;letter-spacing:-0.4px;margin-bottom:3px;">${esc(userName)}</div>
+              <div style="font-size:17px;font-weight:700;color:#fff;letter-spacing:-0.4px;margin-bottom:3px;">${esc(userName)}</div>
               <div style="font-size:12.5px;color:rgba(255,255,255,0.55);margin-bottom:2px;">${esc(userEmail)}</div>
               <div style="font-size:12px;color:rgba(255,255,255,0.4);">${esc(userCompany)} · ${esc(userDept)}</div>
             </div>
@@ -139,7 +139,7 @@ const Profile = {
               <div style="flex:1;">
                 <div style="font-size:14px;font-weight:700;color:var(--text-100);">스케줄 변동 푸시 알림</div>
               </div>
-              <span style="background:rgba(79,70,229,0.15);color:#818cf8;border:1px solid rgba(99,102,241,0.3);font-size:12px;font-weight:800;padding:3px 10px;border-radius:var(--r-full);">ON</span>
+              <span style="background:rgba(79,70,229,0.15);color:#818cf8;border:1px solid rgba(99,102,241,0.3);font-size:12px;font-weight:700;padding:3px 10px;border-radius:var(--r-full);">ON</span>
             </div>
 
 
@@ -318,7 +318,7 @@ const Profile = {
       <div class="modal-bg open" id="artist-select-modal" onclick="if(event.target===this)this.remove()">
         <div class="modal-panel" style="padding:20px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:10px;">
-            <div style="font-size:16px;font-weight:800;color:var(--text-100);">🎤 담당 아티스트 설정</div>
+            <div style="font-size:16px;font-weight:700;color:var(--text-100);">🎤 담당 아티스트 설정</div>
             <button onclick="document.getElementById('artist-select-modal').remove()" style="background:none;border:none;color:var(--text-400);font-size:20px;cursor:pointer;">✕</button>
           </div>
           <p style="font-size:13px;color:var(--text-400);margin-bottom:14px;">현재 배정되어 스케줄을 관리할 아티스트를 선택해 주세요.</p>
@@ -363,7 +363,7 @@ const Profile = {
       <div class="modal-bg open" id="emergency-contact-modal" onclick="if(event.target===this)this.remove()">
         <div class="modal-panel" style="padding:20px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:10px;">
-            <div style="font-size:16px;font-weight:800;color:var(--text-100);">🛡️ 사내 비상 연락망</div>
+            <div style="font-size:16px;font-weight:700;color:var(--text-100);">🛡️ 사내 비상 연락망</div>
             <button onclick="document.getElementById('emergency-contact-modal').remove()" style="background:none;border:none;color:var(--text-400);font-size:20px;cursor:pointer;">✕</button>
           </div>
           <div style="display:flex;flex-direction:column;gap:10px;">
@@ -394,7 +394,7 @@ const Profile = {
       <div class="modal-bg open" id="emergency-report-modal" onclick="if(event.target===this)this.remove()">
         <div class="modal-panel" style="padding:20px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:10px;">
-            <div style="font-size:16px;font-weight:800;color:#f87171;">⚡ 현장 긴급 상황 보고</div>
+            <div style="font-size:16px;font-weight:700;color:#f87171;">⚡ 현장 긴급 상황 보고</div>
             <button onclick="document.getElementById('emergency-report-modal').remove()" style="background:none;border:none;color:var(--text-400);font-size:20px;cursor:pointer;">✕</button>
           </div>
           <p style="font-size:13px;color:var(--text-400);margin-bottom:12px;">작성 즉시 본사 HQ 마스터 관제 포털에 긴급 경보로 전송됩니다.</p>

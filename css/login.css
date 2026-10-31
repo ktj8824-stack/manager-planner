@@ -24,7 +24,7 @@
 }
 .login-title {
   font-size: var(--fs-3xl);
-  font-weight: var(--fw-extrabold);
+  font-weight: var(--fw-bold);
   color: var(--text-100);
   letter-spacing: var(--ls-tight);
 }
@@ -94,7 +94,7 @@
 }
 .ob-title {
   font-size: var(--fs-2xl);
-  font-weight: var(--fw-extrabold);
+  font-weight: var(--fw-bold);
   color: var(--text-100);
   margin-bottom: var(--sp-2);
 }

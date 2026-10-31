@@ -17,14 +17,14 @@ const Login = {
       <div class="login-container" style="max-width:420px; margin:0 auto; padding:40px 24px; min-height:100vh; display:flex; flex-direction:column; justify-content:center; background:var(--bg-app);">
         <div class="login-logo" style="text-align:center; margin-bottom:30px;">
           <img src="img/logo.jpg" alt="Logo" style="display:block; margin:0 auto 16px auto; width:80px; height:80px; border-radius:20px; box-shadow:0 8px 16px rgba(0,0,0,0.2);">
-          <h1 class="login-title" style="font-size:26px; font-weight:800; margin:16px 0 8px 0; letter-spacing:-0.5px; color:var(--text-100);">로디플래너</h1>
+          <h1 class="login-title" style="font-size:26px; font-weight:700; margin:16px 0 8px 0; letter-spacing:-0.5px; color:var(--text-100);">로디플래너</h1>
           <p class="login-subtitle" style="font-size:14px; color:var(--text-400);">
             현장 매니저 및 스태프 전용 앱
           </p>
         </div>
 
         <div style="display:flex; margin-bottom:24px; border-radius:12px; background:var(--bg-card); padding:4px; box-shadow:var(--shadow-sm); border:1px solid var(--border-default);">
-          <button onclick="Login.setTab('b2b')" id="tab-b2b" style="flex:1; padding:12px 6px; white-space:nowrap; font-weight:800; font-size:14px; border-radius:10px; border:none; background:var(--accent); color:#fff; cursor:pointer; transition:all 0.2s;">소속 매니저 로그인</button>
+          <button onclick="Login.setTab('b2b')" id="tab-b2b" style="flex:1; padding:12px 6px; white-space:nowrap; font-weight:700; font-size:14px; border-radius:10px; border:none; background:var(--accent); color:#fff; cursor:pointer; transition:all 0.2s;">소속 매니저 로그인</button>
           <button onclick="Login.setTab('b2c')" id="tab-b2c" style="flex:1; padding:12px 6px; white-space:nowrap; font-weight:700; font-size:14px; border-radius:10px; border:none; background:transparent; color:var(--text-400); cursor:pointer; transition:all 0.2s;">개인 매니저 시작</button>
         </div>
 
@@ -40,11 +40,11 @@ const Login = {
               onfocus="this.style.background='var(--bg-input-focus)'; this.style.borderColor='var(--accent)';" 
               onblur="this.style.background='var(--bg-input)'; this.style.borderColor='transparent';" />
             <button type="submit" class="btn-social" 
-              style="background:var(--accent); color:#fff; font-weight:800; font-size:16px; justify-content:center; padding:16px; border-radius:12px; margin-top:8px; border:none; box-shadow:0 4px 12px rgba(0,122,255,0.3); cursor:pointer;">
+              style="background:var(--accent); color:#fff; font-weight:700; font-size:16px; justify-content:center; padding:16px; border-radius:12px; margin-top:8px; border:none; box-shadow:0 4px 12px rgba(0,122,255,0.3); cursor:pointer;">
               로그인
             </button>
             <button type="button" id="demo-login-btn" ${Login.isDevHost() ? '' : 'hidden'} onclick="Login.demoLogin('ceo')" 
-              style="width:100%; margin-top:10px; padding:13px; border-radius:12px; border:1px dashed rgba(99,102,241,0.5); background:rgba(99,102,241,0.08); color:var(--accent); font-weight:800; font-size:14px; cursor:pointer; transition:all 0.2s;">
+              style="width:100%; margin-top:10px; padding:13px; border-radius:12px; border:1px dashed rgba(99,102,241,0.5); background:rgba(99,102,241,0.08); color:var(--accent); font-weight:700; font-size:14px; cursor:pointer; transition:all 0.2s;">
               ⚡ 테스트 대표 계정 1초 둘러보기 (데모)
             </button>
           </form>
@@ -62,7 +62,7 @@ const Login = {
           
           <div id="google_btn_wrapper" style="display:flex; justify-content:center; margin-bottom:12px;"></div>
           
-          <button class="btn-social btn-kakao" onclick="Login.doKakaoLogin()" style="background:#FEE500; color:#000000; border-radius:12px; padding:16px; font-weight:800; font-size:15px; justify-content:center; border:none; width:100%; display:flex; align-items:center; gap:8px;">
+          <button class="btn-social btn-kakao" onclick="Login.doKakaoLogin()" style="background:#FEE500; color:#000000; border-radius:12px; padding:16px; font-weight:700; font-size:15px; justify-content:center; border:none; width:100%; display:flex; align-items:center; gap:8px;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="#000000">
               <path d="M12 3C6.48 3 2 6.47 2 10.75c0 2.76 1.84 5.17 4.67 6.49-.15.54-.53 1.96-.6 2.27-.08.35.12.35.3.23.14-.09 1.94-1.32 2.75-1.89.92.26 1.88.4 2.88.4 5.52 0 10-3.47 10-7.75S17.52 3 12 3z"/>
             </svg>

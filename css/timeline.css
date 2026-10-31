@@ -14,7 +14,7 @@
   display:inline-flex;align-items:center;gap:var(--sp-2);
   padding:4px var(--sp-3);background:var(--gold-dim);
   border:1px solid rgba(200,169,81,0.25);border-radius:var(--r-full);
-  font-size:var(--fs-xs);font-weight:var(--fw-extrabold);color:var(--gold-400);
+  font-size:var(--fs-xs);font-weight:var(--fw-bold);color:var(--gold-400);
   margin-bottom:var(--sp-3);animation:glow 3s ease-in-out infinite;
 }
 .tl-course {
