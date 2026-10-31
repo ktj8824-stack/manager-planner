@@ -4054,7 +4054,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         await window.hqStore.saveSchedule(schData);
-        if (window.ScheduleNotify) window.ScheduleNotify.afterSave(prevSch, schData);   // 담당 매니저에게 자동 알림 (기다리지 않음)
+        if (window.ScheduleNotify) window.ScheduleNotify.afterSave(prevSch, schData).then(m => { if (m) setTimeout(() => alert(m), 1200); }).catch(() => { });   // 담당 매니저에게 자동 알림 (기다리지 않음)
       } catch (err) {
         console.warn('saveSchedule warning (로컬 저장 유지):', err);
         if (!err.localSaved) {
@@ -4091,7 +4091,7 @@ document.addEventListener('DOMContentLoaded', () => {
           let delSch = null;
           try { delSch = (await window.hqStore.getSchedules()).find(x => x.id === schId) || null; if (delSch) delSch = JSON.parse(JSON.stringify(delSch)); } catch (e) { }
           await window.hqStore.deleteSchedule(schId);
-          if (window.ScheduleNotify) window.ScheduleNotify.afterDelete(delSch);
+          if (window.ScheduleNotify) window.ScheduleNotify.afterDelete(delSch).then(m => { if (m) alert(m); }).catch(() => { });
           el.modalScheduleDetail.classList.remove('active');
           await renderSidebar();
           await renderKPI();

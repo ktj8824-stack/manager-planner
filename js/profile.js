@@ -162,6 +162,7 @@ const Profile = {
 
         <!-- ── 고객지원 / 앱 정보 ── -->
         ${Profile._section('고객지원 / 앱 정보', 'normal', [
+          { icon: '🚨',        label: '긴급 지원 / 현장 긴급보고', sub: '본사 연락처 · 긴급 보고(위치·사진)', badge: ProfileIcons.chevron, action: 'App.openEmergencyModal()' },
           { icon: ProfileIcons.info,        label: '앱 버전 정보',             sub: '', badge: '<span style="font-size:11.5px;color:var(--text-400);">v1.0.0 (최신)</span>', action: 'Profile.showVersion()' },
           { icon: ProfileIcons.file,        label: '이용약관 및 개인정보처리방침', sub: '', badge: ProfileIcons.chevron, action: "window.open('./terms.html', '_blank', 'noopener')" },
           { icon: ProfileIcons.headphones,  label: '고객센터 문의하기',        sub: '', badge: ProfileIcons.chevron, action: "U.toast('고객센터 문의 폼이 열립니다.')" },

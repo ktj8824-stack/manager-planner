@@ -240,6 +240,7 @@ const App = {
         <span>🎬</span><span class="top-brand-text">로디플래너</span>
       </div>
       <div class="top-nav-right" style="display:flex; align-items:center; gap:6px; padding-right:10px;">
+        <button class="notice-bell" onclick="App.openEmergencyModal()" aria-label="긴급 지원" style="color:#ef4444;font-size:17px;">🚨</button>
         <button id="notice-bell" class="notice-bell" onclick="App.openMessages()" aria-label="로디톡">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
           <span id="notice-badge" class="notice-badge" hidden>0</span>
@@ -599,30 +600,9 @@ const App = {
           </div>
 
           <div style="display:flex;flex-direction:column;gap:10px;">
-            <!-- 본사 직통 -->
-            <div onclick="if(confirm('🚨 [본사 24H 종합상황실]\\n02-555-8282 번호로 즉시 연결하시겠습니까?')){window.location.href='tel:025558282'}"
-              style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;">
-              <div style="width:40px;height:40px;border-radius:50%;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.54 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.29 6.29l1.28-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              </div>
-              <div style="flex:1;">
-                <div style="font-size:14px;font-weight:800;color:#f87171;">본사 24H 종합상황실 직통</div>
-                <div style="font-size:11.5px;color:var(--text-400);margin-top:2px;">긴급 상황 및 동선 변경 관제 · 02-555-8282</div>
-              </div>
-              <span style="background:rgba(239,68,68,0.15);color:#ef4444;font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px;white-space:nowrap;">HOTLINE</span>
-            </div>
-
-            <!-- 비상 연락망 -->
-            <div onclick="if(typeof Profile!=='undefined'){document.getElementById('hq-emergency-modal').remove();Profile.openEmergencyContacts();}"
-              style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;">
-              <div style="width:40px;height:40px;border-radius:50%;background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-400)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              </div>
-              <div style="flex:1;">
-                <div style="font-size:14px;font-weight:700;color:var(--text-100);">사내 비상 연락망</div>
-                <div style="font-size:11.5px;color:var(--text-400);margin-top:2px;">경호팀 · 의전차량팀 · 홍보실 비상망</div>
-              </div>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-400)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <!-- 본사 연락처 (우리 회사 본사 계정에 등록된 실제 전화번호) -->
+            <div id="em-hq-contacts" style="display:flex;flex-direction:column;gap:10px;">
+              <div style="font-size:12px;color:var(--text-400);padding:6px 4px;">본사 연락처를 불러오는 중...</div>
             </div>
 
             <!-- 긴급 보고 -->
@@ -646,6 +626,27 @@ const App = {
     const old = document.getElementById('hq-emergency-modal');
     if (old) old.remove();
     document.body.insertAdjacentHTML('beforeend', html);
+    this._loadEmergencyContacts();
+  },
+
+  // 우리 회사 본사 계정(대표/관리자)에 등록된 실제 전화번호를 보여준다 (샘플 번호는 쓰지 않음)
+  async _loadEmergencyContacts() {
+    const box = document.getElementById('em-hq-contacts'); if (!box) return;
+    const note = (t) => { box.innerHTML = `<div style="font-size:12.5px;line-height:1.55;color:var(--text-400);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:14px;padding:12px 14px;">${esc(t)}</div>`; };
+    try {
+      const sc = window.SupabaseClient;
+      if (!sc?.client || !sc.currentUser) { note('서버에 연결되면 본사 연락처가 표시됩니다. 아래 "긴급 보고"로 먼저 알릴 수 있습니다.'); return; }
+      const { data, error } = await sc.client.from('profiles').select('name, phone, role').in('role', ['ceo', 'hq_admin']);
+      if (error) throw error;
+      const rows = (data || []).filter(p => p.phone && String(p.phone).replace(/[^0-9+]/g, '').length >= 8);
+      if (!rows.length) { note('본사 연락처가 아직 등록되지 않았습니다. 본사 관리자에게 프로필에 전화번호를 등록해 달라고 요청하세요. 지금은 아래 "긴급 보고"로 알릴 수 있습니다.'); return; }
+      box.innerHTML = rows.map(p => {
+        const tel = String(p.phone).replace(/[^0-9+]/g, '');
+        return `<a href="tel:${esc(tel)}" style="text-decoration:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+          <div style="flex:1;"><div style="font-size:14px;font-weight:800;color:#f87171;">📞 ${esc(p.name || '본사')} ${p.role === 'ceo' ? '(대표)' : '(관리자)'}</div>
+          <div style="font-size:12px;color:var(--text-400);margin-top:2px;">${esc(p.phone)} · 누르면 전화 연결</div></div></a>`;
+      }).join('');
+    } catch (e) { note('본사 연락처를 불러오지 못했습니다. 아래 "긴급 보고"를 이용해 주세요.'); }
   }
 };
 
