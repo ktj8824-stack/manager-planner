@@ -1113,7 +1113,19 @@ window.Admin = {
   },
 
   async deleteArtist(id, name) {
-    if (confirm(`'${name || '해당'}' 아티스트를 정말 삭제하시겠습니까?\n\n소속 스케줄 및 매니저 배정에 영향을 줄 수 있습니다.`)) {
+    // 삭제하면 이 아티스트의 스케줄도 함께 사라지므로, 몇 건인지 보여 주고 이름을 직접 입력해야 지워집니다.
+    let mine = [];
+    try { mine = (await window.hqStore.getSchedules()).filter(s => s.artistId === id || (Array.isArray(s.artistIds) && s.artistIds.includes(id) && s.artistId !== 'ALL')); } catch (e) {}
+    const label = name || '해당 아티스트';
+    let ok = false;
+    if (mine.length > 0) {
+      const typed = prompt(`⚠️ '${label}' 아티스트를 삭제하면 등록된 스케줄 ${mine.length}건도 함께 영구 삭제되며 되돌릴 수 없습니다.\n\n정말 삭제하려면 아티스트 이름 "${label}"을(를) 아래에 똑같이 입력하세요.`);
+      ok = typed !== null && typed.trim() === String(label).trim();
+      if (typed !== null && !ok) { alert('이름이 일치하지 않아 삭제하지 않았습니다.'); return; }
+    } else {
+      ok = confirm(`'${label}' 아티스트를 삭제하시겠습니까?\n등록된 스케줄은 없습니다.`);
+    }
+    if (ok) {
       await window.hqStore.deleteArtist(id);
       await this.renderArtistManagementList();
       const selectPop = document.querySelector('#form-artist');
