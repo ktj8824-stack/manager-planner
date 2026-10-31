@@ -12,6 +12,7 @@
   };
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const ICON = {
+    gear: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
     close: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
     back: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
     image: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.6"/><path d="m21 15-4.5-4.5L6 21"/></svg>'
@@ -27,6 +28,89 @@
     st: { open: false, rooms: [], unread: {}, active: null, msgs: [], seen: new Set(), poll: null, listTimer: null, sending: false, pending: null, hasOlder: false, inited: false, reads: null, query: '', searchTimer: null },
     onUnreadChange: null,   // (총 안 읽은 수) => void
     onIncoming: null,       // (메시지, 방, 보낸사람) => void   (대화창이 닫혀 있거나 다른 방일 때)
+
+    // ── 이 기기 설정 (음성 읽기, 퀵 답장 문구). 서버가 아니라 이 폰/PC에만 저장됩니다 ──
+    prefs() {
+      if (this._prefs) return this._prefs;
+      let p = {};
+      try { p = JSON.parse(localStorage.getItem('chat_prefs_v1') || '{}') || {}; } catch (e) { p = {}; }
+      this._prefs = { voice: ['off', 'urgent', 'all'].includes(p.voice) ? p.voice : 'urgent', quick: p.quick && typeof p.quick === 'object' ? p.quick : {} };
+      return this._prefs;
+    },
+    _savePrefs() { try { localStorage.setItem('chat_prefs_v1', JSON.stringify(this._prefs)); } catch (e) { } },
+    quickList() {
+      const key = this.isHq() ? 'hq' : 'manager';
+      const mine = (this.prefs().quick[key] || []).map(t => String(t || '').trim()).filter(Boolean).slice(0, 8);
+      return mine.length ? mine : QUICK[key];
+    },
+
+    // ── 음성 읽기 (앱/화면이 열려 있는 동안 새 메시지를 소리로 읽어 줍니다) ──
+    speechSupported() { return 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window; },
+    _unlockSpeech() {   // 폰은 사용자가 화면을 한 번 만진 뒤에야 소리를 허용한다
+      try { if (!this.speechSupported() || this._unlocked) return; this._unlocked = true; const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) { }
+    },
+    speak(text, force) {
+      try {
+        if (!this.speechSupported()) return;
+        if (!force && this.prefs().voice === 'off') return;
+        const clean = String(text || '').replace(/https?:\/\/\S+/g, ' 링크 ').replace(/[\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, 160);
+        if (!clean) return;
+        speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(clean); u.lang = 'ko-KR'; u.rate = 1.0; u.volume = 1;
+        const v = (speechSynthesis.getVoices() || []).find(x => /^ko/i.test(x.lang)); if (v) u.voice = v;
+        speechSynthesis.speak(u);
+      } catch (e) { }
+    },
+    _maybeSpeak(m) {
+      const mode = this.prefs().voice;
+      if (mode === 'off' || !m || (mode === 'urgent' && !m.is_urgent)) return;
+      this.speak((m.is_urgent ? '긴급 메시지. ' : '새 메시지. ') + (m.sender_name ? m.sender_name + '. ' : '') + (m.body || '사진을 보냈습니다'));
+    },
+
+    // ── 설정 화면 ──
+    openSettings() {
+      this._build(); const root = document.getElementById('chat-root'); if (!root) return;
+      this._closeSettings();
+      const p = this.prefs(); const q = this.quickList();
+      const rows = Array.from({ length: 8 }, (_, i) => `<input type="text" class="chat-q-in" maxlength="30" placeholder="(비워 두면 사용 안 함)" value="${esc(q[i] || '')}">`).join('');
+      const voiceOpt = (v, label) => `<label class="chat-opt"><input type="radio" name="chat-voice" value="${v}" ${p.voice === v ? 'checked' : ''}> ${label}</label>`;
+      const box = document.createElement('div'); box.className = 'chat-settings'; box.id = 'chat-settings';
+      box.innerHTML = `<div class="chat-settings-card" role="dialog" aria-label="로디톡 설정">
+        <div class="chat-head"><h2>설정</h2><button class="chat-iconbtn" data-act="settings-close" aria-label="닫기">${ICON.close}</button></div>
+        <div class="chat-settings-body">
+          <h3>🔊 새 메시지 음성 읽기</h3>
+          <p class="chat-hint">앱이 열려 있는 동안 메시지가 오면 소리로 읽어 줍니다.${this.speechSupported() ? '' : ' <b>이 기기는 음성을 지원하지 않습니다.</b>'}<br>앱을 완전히 닫은 상태에서는 알림 소리/진동만 울립니다.</p>
+          ${voiceOpt('urgent', '긴급 메시지만 읽기 (추천)')}${voiceOpt('all', '모든 메시지 읽기')}${voiceOpt('off', '읽지 않기')}
+          <button type="button" class="chat-btn2" data-act="voice-test">소리 들어보기</button>
+          <h3>⚡ 퀵 답장 문구 (이 기기에서만 적용)</h3>
+          <p class="chat-hint">최대 8개, 한 개당 30자까지. 운전 중 한 번에 보낼 문구를 짧게 적어 두세요.</p>
+          ${rows}
+          <button type="button" class="chat-btn2" data-act="settings-reset">기본 문구로 되돌리기</button>
+        </div>
+        <div class="chat-settings-foot"><button class="chat-send" data-act="settings-save">저장</button></div></div>`;
+      root.appendChild(box);
+    },
+    _closeSettings() { document.getElementById('chat-settings')?.remove(); },
+    _resetQuick() {
+      const q = this.isHq() ? QUICK.hq : QUICK.manager;
+      document.querySelectorAll('#chat-settings .chat-q-in').forEach((el, i) => { el.value = q[i] || ''; });
+    },
+    _saveSettings() {
+      const p = this.prefs();
+      const v = document.querySelector('#chat-settings input[name="chat-voice"]:checked')?.value;
+      if (['off', 'urgent', 'all'].includes(v)) p.voice = v;
+      const list = [...document.querySelectorAll('#chat-settings .chat-q-in')].map(el => el.value.trim()).filter(Boolean);
+      const key = this.isHq() ? 'hq' : 'manager';
+      const def = key === 'hq' ? QUICK.hq : QUICK.manager;
+      p.quick[key] = (list.length === def.length && list.every((t, i) => t === def[i])) ? [] : list;   // 기본과 같으면 저장 안 함
+      this._savePrefs(); this._closeSettings(); this._refreshQuick();
+      this._toast('설정을 저장했습니다.');
+    },
+    _refreshQuick() {
+      const quick = document.getElementById('chat-quick'); if (!quick) return;
+      quick.innerHTML = this.quickList().map(t => `<button type="button" data-quick="${esc(t)}">${esc(t)}</button>`).join('')
+        + '<button type="button" class="chat-quick-edit" data-act="settings" aria-label="문구·음성 설정">⚙ 설정</button>';
+    },
 
     sc() { return window.SupabaseClient; },
     me() {
@@ -48,6 +132,7 @@
       this.st.inited = true;
       this.sc().chatSubscribe((m) => this._incoming(m));
       this._syncPush();
+      ['pointerdown', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, () => this._unlockSpeech(), { once: true, passive: true }));
       try {
         navigator.serviceWorker?.addEventListener('message', (ev) => {
           if (ev.data?.type === 'OPEN_CHAT') this._openFromPush(ev.data.roomId);
@@ -82,7 +167,7 @@
       root.innerHTML = `
         <div class="chat-shell" role="dialog" aria-label="로디톡">
           <aside class="chat-list">
-            <div class="chat-head"><h2>로디톡</h2><button class="chat-iconbtn" data-act="close" aria-label="닫기">${ICON.close}</button></div>
+            <div class="chat-head"><h2>로디톡</h2><span style="display:flex;gap:2px"><button class="chat-iconbtn" data-act="settings" aria-label="설정">${ICON.gear}</button><button class="chat-iconbtn" data-act="close" aria-label="닫기">${ICON.close}</button></span></div>
             <div class="chat-pushbar" id="chat-pushbar" hidden></div>
             <div class="chat-search"><input id="chat-search" type="search" placeholder="대화·이름 검색" autocomplete="off"></div>
             <div class="chat-rooms" id="chat-rooms"></div>
@@ -109,6 +194,11 @@
         if (e.target === root && window.innerWidth > 760) return this.close();
         const act = e.target.closest('[data-act]')?.dataset.act;
         if (act === 'close') this.close();
+        else if (act === 'settings') this.openSettings();
+        else if (act === 'settings-close') this._closeSettings();
+        else if (act === 'settings-save') this._saveSettings();
+        else if (act === 'settings-reset') this._resetQuick();
+        else if (act === 'voice-test') { this._unlockSpeech(); this.speak('긴급 메시지. 대표. 지금 바로 확인해 주세요.', true); }
         else if (act === 'back') { root.classList.remove('conv-open'); this.st.active = null; this._stopPoll(); this._renderList(); }
         const push = e.target.closest('[data-push]')?.dataset.push;
         if (push === 'on') this.enablePush(); else if (push === 'off') this.disablePush();
@@ -238,7 +328,7 @@
       root.querySelector('#chat-title').innerHTML = `${esc(title)}<small>${room.kind === 'all' ? '모든 매니저에게 전달됩니다' : '1:1 대화'}</small>`;
       root.querySelector('#chat-composer').hidden = false;
       const quick = root.querySelector('#chat-quick');
-      quick.innerHTML = (this.isHq() ? QUICK.hq : QUICK.manager).map(t => `<button type="button" data-quick="${esc(t)}">${esc(t)}</button>`).join('');
+      this._refreshQuick();
       quick.hidden = false;
       this._renderList();
       const box = root.querySelector('#chat-msgs'); box.innerHTML = '<div class="chat-placeholder">불러오는 중...</div>';
@@ -295,6 +385,7 @@
           const list = await this.sc().chatMessagesAfter(room.id, last ? last.created_at : '1970-01-01T00:00:00Z');
           const fresh = list.filter(m => !this.st.seen.has(m.id));
           const readsChanged = await this._loadReads();
+          fresh.filter(m => m.sender_id !== this.me().id).forEach(m => this._maybeSpeak(m));
           if (fresh.length) this._append(fresh); else if (readsChanged) this._renderMessages(false, true);
         } catch (e) { /* 다음 주기에 다시 */ }
       }, 4000);
@@ -310,6 +401,7 @@
     // 실시간으로 들어온 메시지
     _incoming(m) {
       if (!m || m.sender_id === this.me().id) return;
+      this._maybeSpeak(m);
       const room = this.st.rooms.find(r => r.id === m.room_id);
       if (this.st.open && this.st.active?.id === m.room_id) { if (!this.st.seen.has(m.id)) this._append([m]); return; }
       this.st.unread[m.room_id] = (this.st.unread[m.room_id] || 0) + 1;
