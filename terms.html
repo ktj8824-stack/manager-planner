@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>이용약관 | 로디플래너</title>
+  <meta name="description" content="로디플래너 서비스 이용약관"/>
+  <link rel="icon" href="icon.svg"/>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0a0f;
+      color: #e5e5ea;
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .header {
+      background: rgba(15,15,25,0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header a {
+      color: #30d158;
+      text-decoration: none;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+    }
+    .header a:hover { color: #4ade80; }
+    .header-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+    .hero {
+      text-align: center;
+      margin-bottom: 48px;
+      padding: 40px 24px;
+      background: linear-gradient(135deg, rgba(48,209,88,0.1) 0%, rgba(10,132,255,0.1) 100%);
+      border: 1px solid rgba(48,209,88,0.2);
+      border-radius: 20px;
+    }
+    .hero-icon { font-size: 48px; margin-bottom: 16px; display: block; }
+    .hero h1 { font-size: 28px; font-weight: 800; color: #ffffff; margin-bottom: 8px; }
+    .hero p { font-size: 14px; color: #8e8e93; }
+    .section {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 20px;
+      transition: border-color 0.2s;
+    }
+    .section:hover { border-color: rgba(48,209,88,0.3); }
+    .section-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #30d158, #0a84ff);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+    .section h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+    }
+    .section p { font-size: 14px; color: #aeaeb2; margin-bottom: 12px; }
+    .section p:last-child { margin-bottom: 0; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+    thead { background: rgba(48,209,88,0.1); }
+    th { padding: 10px 14px; text-align: left; color: #30d158; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    td { padding: 10px 14px; color: #aeaeb2; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    ul { padding-left: 0; list-style: none; }
+    ul li { font-size: 14px; color: #aeaeb2; padding: 6px 0 6px 20px; position: relative; }
+    ul li::before { content: '•'; color: #30d158; position: absolute; left: 4px; }
+    .highlight {
+      background: rgba(10,132,255,0.1);
+      border: 1px solid rgba(10,132,255,0.25);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 13px;
+      color: #5ac8fa;
+      margin-top: 12px;
+    }
+    .contact-box {
+      background: linear-gradient(135deg, rgba(48,209,88,0.08), rgba(10,132,255,0.08));
+      border: 1px solid rgba(48,209,88,0.25);
+      border-radius: 16px;
+      padding: 28px;
+      text-align: center;
+      margin-top: 32px;
+    }
+    .contact-box h3 { font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 12px; }
+    .contact-box p { font-size: 14px; color: #aeaeb2; margin-bottom: 6px; }
+    .contact-box a { color: #30d158; text-decoration: none; }
+    .footer { text-align: center; padding: 32px 24px; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 48px; }
+    .footer p { font-size: 12px; color: #636366; }
+    .footer a { color: #30d158; text-decoration: none; }
+  </style>
+<script src="js/icons.js?v=220"></script>
+</head>
+<body>
+
+  <header class="header">
+    <a href="index.html">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 5l-7 7 7 7"/>
+      </svg>
+      홈으로
+    </a>
+    <span class="header-title">이용약관</span>
+  </header>
+
+  <div class="container">
+
+    <div class="hero">
+      <span class="hero-icon">📄</span>
+      <h1>이용약관</h1>
+      <p>로디플래너 서비스 이용에 관한 약관입니다.<br/>시행일: 2026년 10월 31일</p>
+    </div>
+
+    <div class="section">
+      <h2><span class="section-num">1</span>목적 및 용어</h2>
+      <p>이 약관은 로디플래너 운영팀(이하 "운영자")이 제공하는 연예인 스케줄·동선 관리 서비스(웹 관제 포털과 모바일 앱, 이하 "서비스")의 이용 조건과 절차, 운영자와 이용자의 권리·의무를 정합니다.</p>
+      <ul>
+        <li>"회사"란 서비스를 도입해 이용하는 기획사 등 사업자를 말합니다.</li>
+        <li>"본사 관리자"란 회사를 대표해 계정, 스케줄, 아티스트, 차량 등을 관리하는 대표 또는 총괄 관리자를 말합니다.</li>
+        <li>"매니저"란 본사 관리자가 만든 계정으로 앱을 사용하는 현장 담당자를 말합니다.</li>
+        <li>"슬롯"이란 한 회사가 동시에 사용할 수 있는 매니저(스태프 포함) 계정의 수를 말합니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2><span class="section-num">2</span>약관의 효력 및 변경</h2>
+      <ul>
+        <li>이 약관은 서비스 화면에 게시하거나 이용자에게 알림으로써 효력이 생깁니다.</li>
+        <li>운영자는 관련 법령을 어기지 않는 범위에서 약관을 바꿀 수 있으며, 바꾸는 경우 시행일 7일 전(이용자에게 불리한 변경은 30일 전)까지 서비스 화면 또는 알림으로 알립니다.</li>
+        <li>변경된 약관에 동의하지 않으면 이용을 중단하고 해지할 수 있습니다. 시행일 이후에도 계속 이용하면 변경에 동의한 것으로 봅니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2><span class="section-num">3</span>계정 및 이용 계약</h2>
+      <ul>
+        <li>회사는 본사 관리자를 통해 서비스 이용을 신청하며, 운영자가 승인하거나 계정이 만들어진 때 이용 계약이 성립합니다.</li>
+        <li>매니저 계정은 본사 관리자가 만들고 관리합니다. 회사는 매니저 계정의 생성·삭제와 구성원 관리에 책임을 집니다.</li>
+        <li>이용자는 아이디(이메일)와 비밀번호를 스스로 안전하게 관리해야 하며, 타인에게 알려 주거나 빌려 주어서는 안 됩니다. 계정 도용을 알게 되면 즉시 본사 관리자 또는 운영자에게 알려야 합니다.</li>
+        <li>이용자 본인의 관리 소홀로 생긴 손해에 대해 운영자는 고의 또는 중대한 과실이 없는 한 책임지지 않습니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2><span class="section-num">4</span>서비스의 내용 및 변경</h2>
+      <ul>
+        <li>운영자는 스케줄·동선 관리, 아티스트·차량·매니저 배정, 로디톡(메시지), 알림, 현장 긴급보고 등의 기능을 제공합니다.</li>
+        <li>운영자는 기능 개선, 점검, 장애 대응, 외부 서비스(서버, 지도, 알림 등)의 사정으로 서비스의 전부 또는 일부를 바꾸거나 일시 중단할 수 있으며, 미리 알릴 수 있는 경우에는 사전에 알립니다.</li>
+        <li>교통·소요 시간 등 서비스가 보여 주는 예상 정보는 참고용이며 실제와 다를 수 있습니다. 이동과 일정에 관한 최종 판단과 책임은 이용자에게 있습니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2><span class="section-num">5</span>이용 요금, 슬롯, 결제</h2>
+      <ul>
+        <li>서비스의 요금, 기본 포함 슬롯 수, 추가 슬롯 요금은 결제 화면 또는 별도 안내에 표시된 내용을 따릅니다.</li>
+        <li>슬롯이 모두 사용 중이면 새 매니저 계정을 만들 수 없으며, 추가 슬롯을 구매하거나 기존 계정을 정리해야 합니다.</li>
+        <li>요금 변경은 약관 변경 절차에 따라 사전에 알립니다. 이미 결제한 기간의 요금은 바뀌지 않습니다.</li>
+        <li>결제는 운영자가 정한 결제 수단으로 하며, 결제 정보는 결제 대행사가 처리합니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2><span class="section-num">6</span>청약철회, 해지, 환불</h2>
+      <ul>
+        <li>회사는 언제든지 해지를 요청할 수 있으며, 해지 후에는 계정과 데이터에 접근할 수 없게 됩니다.</li>
+        <li>유료 결제의 청약철회와 환불은 「전자상거래 등에서의 소비자보호에 관한 법률」 등 관련 법령이 정한 바에 따릅니다.</li>
+        <li>환불 방법과 기준은 결제 시 안내하며, 구체적인 문의는 아래 문의처로 연락해 주세요.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2><span class="section-num">7</span>이용자의 의무와 금지 행위</h2>
+      <p>이용자는 다음 행위를 해서는 안 됩니다.</p>
+      <ul>
+        <li>타인의 계정이나 정보를 도용하거나, 허위 정보를 입력하는 행위</li>
+        <li>권한 없이 다른 회사의 데이터에 접근하려 하거나 서비스의 보안 장치를 우회·공격하는 행위</li>
+        <li>서비스를 해킹, 자동화 수집(크롤링), 역설계하거나 정상적 운영을 방해하는 행위</li>
+        <li>법령 또는 공서양속에 어긋나는 내용, 타인의 권리(초상권, 개인정보 등)를 침해하는 글·사진을 올리는 행위</li>
+        <li>서비스를 업무 목적과 무관하게 이용하거나 운영자의 사전 동의 없이 영리 목적으로 재판매하는 행위</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2><span class="section-num">8</span>회사의 책임과 데이터</h2>
+      <ul>
+        <li>회사는 서비스에 입력하는 아티스트, 스케줄, 매니저, 연락처, 사진, 위치 등의 정보가 적법하게 수집·이용되도록 책임집니다. 특히 소속 매니저·스태프·아티스트 등 개인정보 정보주체에게 필요한 고지와 동의를 받을 책임은 회사에 있습니다.</li>
+        <li>회사가 서비스에 입력한 데이터의 권리는 회사에 있으며, 운영자는 서비스 제공과 법령상 의무 이행에 필요한 범위에서만 이를 처리합니다.</li>
+        <li>개인정보의 처리에 관한 자세한 내용은 <a href="privacy.html" style="color:#30d158;">개인정보처리방침</a>을 따릅니다.</li>
+        <li>이용 계약이 끝나면 운영자는 지체 없이 회사의 데이터를 삭제합니다. 다만 법령에 따라 보관이 필요한 정보는 해당 기간 동안 보관합니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2><span class="section-num">9</span>운영자의 면책</h2>
+      <ul>
+        <li>천재지변, 통신·서버·외부 서비스(지도, 푸시 알림, 호스팅 등)의 장애 등 운영자가 통제할 수 없는 사유로 서비스를 제공하지 못한 경우 운영자는 책임을 지지 않습니다.</li>
+        <li>푸시 알림, 음성 읽기 등은 이용자의 기기 설정, 네트워크 상태, 운영체제 정책에 따라 도착하지 않거나 늦을 수 있습니다. 긴급 상황의 연락은 전화 등 다른 수단을 함께 사용해야 합니다.</li>
+        <li>운영자는 이용자 사이 또는 이용자와 제3자 사이에 서비스를 통해 생긴 분쟁에 개입하지 않으며 이에 대한 책임을 지지 않습니다.</li>
+        <li>운영자의 고의 또는 중대한 과실로 인한 손해에는 이 조항이 적용되지 않습니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2><span class="section-num">10</span>이용 제한 및 계약 해지</h2>
+      <ul>
+        <li>이용자가 약관이나 법령을 어기면 운영자는 사전 안내 후 서비스 이용을 제한하거나 계약을 해지할 수 있습니다. 긴급한 경우에는 먼저 제한하고 나중에 알릴 수 있습니다.</li>
+        <li>이용자는 제한이나 해지에 이의가 있으면 문의처로 의견을 낼 수 있으며, 운영자는 타당하다고 판단하면 즉시 조치를 풀어 줍니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2><span class="section-num">11</span>준거법 및 분쟁 해결</h2>
+      <ul>
+        <li>이 약관과 서비스 이용에 관한 분쟁에는 대한민국 법을 적용합니다.</li>
+        <li>분쟁이 생기면 먼저 협의로 해결하며, 해결되지 않을 때에는 민사소송법에 따른 관할 법원에 소를 제기할 수 있습니다.</li>
+      </ul>
+    </div>
+
+    <div class="contact-box">
+      <h3>📮 문의처</h3>
+      <p><strong style="color:#fff;">로디플래너 운영팀</strong></p>
+      <p>서비스명: 로디플래너 (RoadiePlanner)</p>
+      <p>웹사이트: <a href="#">managerplanner.kr</a></p>
+      <p>이메일: <a href="mailto:support@managerplanner.kr">support@managerplanner.kr</a></p>
+    </div>
+
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 로디플래너. All rights reserved. &nbsp;|&nbsp; <a href="privacy.html">개인정보처리방침</a> &nbsp;|&nbsp; <a href="index.html">홈으로</a></p>
+  </footer>
+
+</body>
+</html>

@@ -197,7 +197,7 @@ copyDir(path.join(ROOT, 'img'), path.join(DIST_APP, 'img'));
 copyDir(path.join(ROOT, 'icons'), path.join(DIST_APP, 'icons'));
 copyDir(path.join(ROOT, 'js'), path.join(DIST_APP, 'js'));
 
-for (const f of ['icon.svg', 'icon-192.png', 'icon-512.png', 'privacy.html']) {
+for (const f of ['icon.svg', 'icon-192.png', 'icon-512.png', 'privacy.html', 'terms.html']) {
   copyFile(path.join(ROOT, f), path.join(DIST_APP, f));
   copyFile(path.join(ROOT, f), path.join(DIST_WEB, f));
 }
