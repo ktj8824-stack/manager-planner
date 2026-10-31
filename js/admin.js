@@ -2012,7 +2012,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const hh = String(now.getHours()).padStart(2, '0'), mm = String(now.getMinutes()).padStart(2, '0');
     const tiles = TILES.map(([k, label, cls]) => `
       <div class="tb-tile ${cls}${k === 'late' && lists.late.length ? ' alert' : ''}" data-k="${k}" tabindex="0">
-        <span class="tb-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg></span>
+        <span class="tb-ico"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg></span>
         <span class="tb-txt"><b>${lists[k].length}</b><em>${label}</em></span>
       </div>`).join('');
     const rows = [

@@ -238,20 +238,20 @@
 
 
     /* 오늘 현황 요약 */
-    .today-brief { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:12px 16px; margin:0 0 16px; }
-    .tb-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+    .today-brief { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:10px 14px; margin:0 0 12px; }
+    .tb-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
     .tb-title { font-size:15px; font-weight:700; color:#0f172a; }
     .tb-tiles { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:4px; }
-    .tb-tile { --c:#4f46e5; --bg:#eef2ff; display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px; background:#fff; border:1px solid #e2e8f0; border-left:4px solid var(--c); cursor:pointer; transition:transform .15s, box-shadow .15s, background .15s; outline:none; }
+    .tb-tile { --c:#4f46e5; --bg:#eef2ff; display:flex; align-items:center; gap:10px; padding:6px 12px; border-radius:10px; background:#fff; border:1px solid #e2e8f0; border-left:4px solid var(--c); cursor:pointer; transition:transform .15s, box-shadow .15s, background .15s; outline:none; }
     .tb-tile:hover, .tb-tile:focus { transform:translateY(-2px); box-shadow:0 6px 16px rgba(15,23,42,.08); background:var(--bg); }
-    .tb-ico { flex:0 0 40px; width:40px; height:40px; border-radius:12px; background:var(--bg); color:var(--c); display:flex; align-items:center; justify-content:center; }
+    .tb-ico { flex:0 0 32px; width:32px; height:32px; border-radius:9px; background:var(--bg); color:var(--c); display:flex; align-items:center; justify-content:center; }
     .tb-tile:hover .tb-ico, .tb-tile:focus .tb-ico { background:#fff; }
     .tb-txt { display:flex; flex-direction:column; min-width:0; }
-    .tb-txt b { font-size:24px; font-weight:700; color:#0f172a; line-height:1.15; }
-    .tb-txt em { font-style:normal; font-size:12.5px; color:#64748b; white-space:nowrap; }
+    .tb-txt b { font-size:20px; font-weight:700; color:#0f172a; line-height:1.1; }
+    .tb-txt em { font-style:normal; font-size:12px; line-height:1.2; color:#64748b; white-space:nowrap; }
     .tb-indigo { --c:#4f46e5; --bg:#eef2ff; } .tb-green { --c:#059669; --bg:#ecfdf5; } .tb-amber { --c:#d97706; --bg:#fffbeb; } .tb-red { --c:#dc2626; --bg:#fef2f2; } .tb-cyan { --c:#0891b2; --bg:#ecfeff; }
     .tb-tile.alert .tb-txt b { color:#dc2626; }
-    .tb-list { margin-top:12px; }
+    .tb-list { margin-top:8px; }
     .tb-pop { position:fixed; z-index:9999; width:360px; max-height:420px; overflow:auto; background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 12px 32px rgba(15,23,42,.18); padding:10px; }
     .tb-pop-h { font-size:13.5px; font-weight:700; color:#0f172a; padding:4px 6px 8px; border-bottom:1px solid #e2e8f0; margin-bottom:8px; } .tb-pop-h b { color:#4f46e5; margin-left:6px; }
     .tb-pop-item { padding:8px 10px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:6px; cursor:pointer; background:#f8fafc; }
@@ -270,7 +270,7 @@
     .tb-num span { font-size:12.5px; color:#64748b; }
     .tb-num.moving b { color:#d97706; } .tb-num.done b { color:#059669; } .tb-num.late b { color:#dc2626; }
     .tb-list { display:flex; flex-direction:column; gap:6px; }
-    .tb-row { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px; background:#f8fafc; font-size:13.5px; color:#1e293b; }
+    .tb-row { display:flex; align-items:center; gap:10px; padding:6px 12px; border-radius:8px; background:#f8fafc; font-size:13px; color:#1e293b; }
     .tb-row .tag { flex:0 0 auto; font-size:12px; font-weight:700; padding:2px 8px; border-radius:999px; }
     .tb-row.late { background:#fef2f2; } .tb-row.late .tag { background:#fee2e2; color:#dc2626; }
     .tb-row.moving .tag { background:#fef3c7; color:#b45309; }
@@ -289,7 +289,7 @@
       border-color: #6366f1;
     }
   </style>
-<script src="js/icons.js?v=231"></script>
+<script src="js/icons.js?v=232"></script>
 </head>
 
 <body>
@@ -1691,14 +1691,14 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/notify.js?v=231"></script>
-  <script src="js/supabase-client.js?v=231"></script>
-  <script src="js/chat.js?v=231"></script>
-  <script src="js/schedule-notify.js?v=231"></script>
-  <script src="js/api.js?v=231"></script>
-  <script src="js/admin-data.js?v=231"></script>
-  <script src="js/admin.js?v=231"></script>
-  <script src="js/timeline.js?v=231"></script>
+  <script src="js/notify.js?v=232"></script>
+  <script src="js/supabase-client.js?v=232"></script>
+  <script src="js/chat.js?v=232"></script>
+  <script src="js/schedule-notify.js?v=232"></script>
+  <script src="js/api.js?v=232"></script>
+  <script src="js/admin-data.js?v=232"></script>
+  <script src="js/admin.js?v=232"></script>
+  <script src="js/timeline.js?v=232"></script>
 
 
 
