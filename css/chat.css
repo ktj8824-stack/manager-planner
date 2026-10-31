@@ -1,13 +1,13 @@
 /* 대화창 (웹 관리자·매니저 앱 공용) — 이 파일의 색은 호스트 화면과 독립적으로 동작합니다 */
 .chat-root {
   --c-bg: #ffffff; --c-panel: #f5f6f8; --c-line: rgba(15, 23, 42, .10); --c-text: #0f172a; --c-sub: #64748b;
-  --c-mine: #2563eb; --c-mine-text: #fff; --c-other: #eceef2; --c-accent: #2563eb; --c-danger: #dc2626;
+  --c-mine: #4f46e5; --c-mine-text: #fff; --c-other: #eceef2; --c-accent: #4f46e5; --c-danger: #dc2626;
   position: fixed; inset: 0; z-index: 99990; display: flex; align-items: center; justify-content: center;
   background: rgba(15, 23, 42, .45); font-family: Pretendard, -apple-system, 'Segoe UI', 'Noto Sans KR', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 @media (prefers-color-scheme: dark) {
-  .chat-root { --c-bg: #111827; --c-panel: #0b1220; --c-line: rgba(255, 255, 255, .10); --c-text: #f1f5f9; --c-sub: #94a3b8; --c-other: #1f2937; --c-mine: #3b82f6; }
+  .chat-root { --c-bg: #111827; --c-panel: #0b1220; --c-line: rgba(255, 255, 255, .10); --c-text: #f1f5f9; --c-sub: #94a3b8; --c-other: #1f2937; --c-mine: #6366f1; }
 }
 .chat-root[hidden] { display: none; }
 .chat-shell {
@@ -121,4 +121,4 @@
   border: revert; background: revert; accent-color: var(--c-accent); cursor: pointer;
 }
 .chat-opt { border: 1px solid var(--c-line); border-radius: 12px; padding: 0 12px; margin-bottom: 6px; cursor: pointer; background: var(--c-panel); }
-.chat-opt:has(input:checked) { border-color: var(--c-accent); background: rgba(37, 99, 235, .10); font-weight: 700; }
+.chat-opt:has(input:checked) { border-color: var(--c-accent); background: rgba(79, 70, 229, .10); font-weight: 700; }

@@ -36,9 +36,9 @@
   --text-400: #8e8e93;
   --text-500: #aeaeb2;
 
-  --accent: var(--ios-blue);
-  --accent-dim: rgba(0, 122, 255, 0.1);
-  --accent-glow: rgba(0, 122, 255, 0.05);
+  --accent: #4f46e5; /* 로디플래너 대표색(인디고) */
+  --accent-dim: rgba(79, 70, 229, 0.1);
+  --accent-glow: rgba(79, 70, 229, 0.05);
   --gold: var(--ios-red); /* Map old gold points to iOS red */
   --gold-dim: rgba(255, 59, 48, 0.1);
   --danger: var(--ios-red);
@@ -46,7 +46,7 @@
   --border-subtle: rgba(60, 60, 67, 0.08); /* Minimalist thin border */
   --border-default: rgba(60, 60, 67, 0.18);
   --border-strong: rgba(60, 60, 67, 0.29);
-  --border-accent: rgba(0, 122, 255, 0.3);
+  --border-accent: rgba(79, 70, 229, 0.3);
 
   /* ── Shadows & Glows ── */
   --shadow-xs: 0 1px 2px rgba(0,0,0,0.02);

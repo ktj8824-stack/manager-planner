@@ -336,7 +336,7 @@ const Timeline = {
           isNextDay = true;
         }
         if (isNextDay) {
-          timeBadge = `<span style="font-size:12px; color:#6366f1; background:rgba(99,102,241,0.12); padding:1px 5px; border-radius:4px; margin-right:4px; font-weight:800;">익일</span>`;
+          timeBadge = `<span style="font-size:12px; color:#4f46e5; background:rgba(79,70,229,0.12); padding:1px 5px; border-radius:4px; margin-right:4px; font-weight:800;">익일</span>`;
         } else if (idx === 0 && currentMin >= 21 * 60 && s.startTime && parseInt(s.startTime) <= 6) {
           timeBadge = `<span style="font-size:12px; color:#f59e0b; background:rgba(245,158,11,0.12); padding:1px 5px; border-radius:4px; margin-right:4px; font-weight:800;">전일</span>`;
         }

@@ -197,7 +197,7 @@ const Home = {
       let dot = hasSched ? `<div style="width:5px; height:5px; background:${isSelected?'#fff':'#4f46e5'}; border-radius:50%; margin-left:auto;"></div>` : '';
       
       html += `
-        <div class="${esc(cls)}" onclick="Home.selectDate(${y},${m},${d})" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 4px; cursor:pointer; border-radius:12px; margin-bottom:4px; transition:all 0.15s; ${isSelected ? 'background:#1e293b; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.12);' : isToday ? 'background:rgba(99,102,241,0.08);' : ''}">
+        <div class="${esc(cls)}" onclick="Home.selectDate(${y},${m},${d})" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 4px; cursor:pointer; border-radius:12px; margin-bottom:4px; transition:all 0.15s; ${isSelected ? 'background:#1e293b; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.12);' : isToday ? 'background:rgba(79,70,229,0.08);' : ''}">
           <div style="font-size:14px; font-weight:800; ${esc(isSelected ? 'color:rgba(255,255,255,0.8);' : dayColor)}">${esc(dayName)}</div>
           <div style="font-size:17px; font-weight:900; width:26px; text-align:center; letter-spacing:-0.5px; ${isSelected ? 'color:#fff;' : 'color:#0f172a;'}">${esc(d)}</div>
           <div style="width:4px; height:4px; display:flex; align-items:center; justify-content:center;">${dot}</div>
@@ -237,7 +237,7 @@ const Home = {
       let dot = hasSched ? `<div style="width:5px; height:5px; background:${isSelected?'#fff':'#4f46e5'}; border-radius:50%; margin-left:auto;"></div>` : '';
       
       html += `
-        <div class="${esc(cls)}" onclick="Home.selectDate(${nextY},${nextM},${d})" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 4px; cursor:pointer; border-radius:12px; margin-bottom:4px; transition:all 0.15s; ${isSelected ? 'background:#1e293b; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.12);' : isToday ? 'background:rgba(99,102,241,0.08);' : ''}">
+        <div class="${esc(cls)}" onclick="Home.selectDate(${nextY},${nextM},${d})" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 4px; cursor:pointer; border-radius:12px; margin-bottom:4px; transition:all 0.15s; ${isSelected ? 'background:#1e293b; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.12);' : isToday ? 'background:rgba(79,70,229,0.08);' : ''}">
           <div style="font-size:14px; font-weight:800; ${esc(isSelected ? 'color:rgba(255,255,255,0.8);' : dayColor)}">${esc(dayName)}</div>
           <div style="font-size:17px; font-weight:900; width:26px; text-align:center; letter-spacing:-0.5px; ${isSelected ? 'color:#fff;' : 'color:#0f172a;'}">${esc(d)}</div>
           <div style="width:4px; height:4px; display:flex; align-items:center; justify-content:center;">${dot}</div>
@@ -377,7 +377,7 @@ const Home = {
       <div style="margin-bottom:10px; padding:2px 2px;">
         <div style="font-size:14px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:5px;">
           <span style="color:#4f46e5; flex-shrink:0;">★</span>
-          <span style="color:#4338ca; flex-shrink:0;">담당:</span>
+          <span style="color:#4f46e5; flex-shrink:0;">담당:</span>
           <span style="color:#1e293b;">${esc(artistSummary)}</span>
         </div>
       </div>
@@ -397,8 +397,8 @@ const Home = {
 
     if (events.length === 0 && rawSchedules.length === 0) {
       html += `
-        <div class="tl-empty" onclick="Home.openScheduleRegisterModal()" style="border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-400); cursor:pointer; font-size:14px; font-weight:600; border:2px dashed rgba(99,102,241,0.3); min-height:280px; background:rgba(255,255,255,0.7); text-align:center; padding:20px;">
-           <span style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:14px; background:rgba(99,102,241,0.1); color:#6366f1; margin-bottom:12px;">
+        <div class="tl-empty" onclick="Home.openScheduleRegisterModal()" style="border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-400); cursor:pointer; font-size:14px; font-weight:600; border:2px dashed rgba(79,70,229,0.3); min-height:280px; background:rgba(255,255,255,0.7); text-align:center; padding:20px;">
+           <span style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:14px; background:rgba(79,70,229,0.1); color:#4f46e5; margin-bottom:12px;">
              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
            </span>
            <span style="font-size:16px; font-weight:800; color:var(--text-100); margin-bottom:4px;">등록된 스케줄이 없습니다.</span>
@@ -478,7 +478,7 @@ const Home = {
         : (activeSched.location || activeSched.course?.name || '장소 미정');
 
       const cardBg = isSecret ? (canViewSecret ? 'linear-gradient(135deg, #ffffff, #faf5ff)' : '#f8fafc') : '#ffffff';
-      const cardBorderColor = isExpanded ? (isSecret ? '#9333ea' : '#6366f1') : (isSecret ? '#d8b4fe' : '#cbd5e1');
+      const cardBorderColor = isExpanded ? (isSecret ? '#9333ea' : '#4f46e5') : (isSecret ? '#d8b4fe' : '#cbd5e1');
       const cardBorderLeft = isSecret ? 'border-left:4px solid #9333ea;' : 'border-left:4px solid #4f46e5;';
 
       const allArtists = (typeof window.hqStore !== 'undefined') ? window.hqStore.getArtists() : [];
@@ -507,7 +507,7 @@ const Home = {
                     ${getArtistTypeIcon(artObj, 11)}
                     <span>${esc(activeSched.artistName || '아티스트')}</span>
                   </span>
-                  ${isHQ ? '<span style="background:rgba(99,102,241,0.1); color:#4f46e5; font-size:12px; font-weight:800; padding:1px 6px; border-radius:4px; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="12" y1="22" x2="12" y2="22.01"/></svg>HQ연동</span>' : ''}
+                  ${isHQ ? '<span style="background:rgba(79,70,229,0.1); color:#4f46e5; font-size:12px; font-weight:800; padding:1px 6px; border-radius:4px; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="12" y1="22" x2="12" y2="22.01"/></svg>HQ연동</span>' : ''}
                   ${isSecret ? '<span style="background:#f3e8ff; color:#9333ea; font-size:12px; font-weight:800; padding:1px 6px; border-radius:4px; border:1px solid #d8b4fe; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Secret</span>' : ''}
                 </div>
               </div>
@@ -538,7 +538,7 @@ const Home = {
                       <span>본 일정은 비공개 보안 스케줄로, 담당 배정자 및 경영진 외에는 열람이 제한됩니다.</span>
                     </div>
                   ` : `
-                    <div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <strong>매니저:</strong> ${esc(activeSched.managerName || '미지정')}</div>
+                    <div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <strong>매니저:</strong> ${esc(activeSched.managerName || '미지정')}</div>
                     ${!isStaff ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg> <strong>배차:</strong> ${esc(activeSched.vehicleName || '미지정')}</div>` : ''}
                     ${activeSched.shop && activeSched.shop.needed ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2"><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg> <strong>샵:</strong> ${esc(activeSched.shop.name)} (${esc(activeSched.shop.durationMin || 90)}분)</div>` : ''}
                     ${departureText ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> <strong>픽업:</strong> ${esc(departureText)}</div>` : ''}
@@ -608,7 +608,7 @@ const Home = {
     });
 
     html += `
-      <div onclick="Home.openScheduleRegisterModal()" style="text-align:center; padding:13px; background:#ffffff; border:2px dashed #6366f1; border-radius:12px; color:#4f46e5; font-size:14px; font-weight:800; cursor:pointer; margin-top:16px; box-shadow:0 2px 6px rgba(99,102,241,0.06); display:flex; align-items:center; justify-content:center; gap:6px;">
+      <div onclick="Home.openScheduleRegisterModal()" style="text-align:center; padding:13px; background:#ffffff; border:2px dashed #4f46e5; border-radius:12px; color:#4f46e5; font-size:14px; font-weight:800; cursor:pointer; margin-top:16px; box-shadow:0 2px 6px rgba(79,70,229,0.06); display:flex; align-items:center; justify-content:center; gap:6px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         스케줄 등록
       </div>
@@ -679,8 +679,8 @@ const Home = {
       // 이동중: 단계별 개별 상태 (ev.moving) 사용 — 전체 스케줄 상태 아님
       const isMoving = (ev.moving === true) && !isDone;
 
-      let dotBg = isDone ? '#10b981' : isMoving ? '#f59e0b' : '#6366f1';
-      let cardBorder = isDone ? 'border-left: 4px solid #10b981;' : isMoving ? 'border-left: 4px solid #f59e0b;' : 'border-left: 4px solid #6366f1;';
+      let dotBg = isDone ? '#10b981' : isMoving ? '#f59e0b' : '#4f46e5';
+      let cardBorder = isDone ? 'border-left: 4px solid #10b981;' : isMoving ? 'border-left: 4px solid #f59e0b;' : 'border-left: 4px solid #4f46e5;';
 
       // 운전/이동 단계 여부 판별 (체류/스타일링/메인 행사 단계에서는 네비 버튼 숨김)
       const titleText = (ev.title || '');
@@ -1203,7 +1203,7 @@ const Home = {
             <button type="button" onclick="App.closeModal();" style="flex:1; padding:14px 0; border:1px solid #cbd5e1; background:#ffffff; color:#475569; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer;">
               취소
             </button>
-            <button type="submit" style="flex:2; padding:14px 0; border:none; background:linear-gradient(135deg, #4f46e5, #6366f1); color:#ffffff; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(79,70,229,0.3);">
+            <button type="submit" style="flex:2; padding:14px 0; border:none; background:linear-gradient(135deg, #4f46e5, #4f46e5); color:#ffffff; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(79,70,229,0.3);">
               스케줄 등록 완료
             </button>
           </div>

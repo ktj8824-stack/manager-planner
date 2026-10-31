@@ -441,7 +441,7 @@ const App = {
       <div style="flex:1; min-width:0;">
         <div style="font-weight:800; font-size:14px; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
           <span>${noti.isUrgent ? '본사 긴급 공지' : '본사 알림'}</span>
-          <span style="font-size:12px; font-weight:700; padding:1px 6px; border-radius:10px; ${noti.isUrgent ? 'background:#ef4444; color:#fff;' : 'background:#3b82f6; color:#fff;'}">${noti.isUrgent ? 'URGENT' : 'NOTICE'}</span>
+          <span style="font-size:12px; font-weight:700; padding:1px 6px; border-radius:10px; ${noti.isUrgent ? 'background:#ef4444; color:#fff;' : 'background:#4f46e5; color:#fff;'}">${noti.isUrgent ? 'URGENT' : 'NOTICE'}</span>
         </div>
         <div style="line-height:1.45; font-size:14px; color:#f1f5f9; word-break:break-word;">${safeContent}</div>
         <div style="font-size:12px; color:#94a3b8; margin-top:6px;">${esc(timeStr)}</div>
