@@ -213,7 +213,7 @@ const Register = {
                   <span class="fi-icon" style="position:absolute; left:14px; top:50%; transform:translateY(-50%);">🔍</span>
                 </div>
                 <div class="search-drop" id="r-results" style="display:none; position:absolute; width:100%; background:#fff; border:1px solid #e2e8f0; border-radius:12px; margin-top:4px; z-index:10; box-shadow:0 4px 12px rgba(0,0,0,0.1); max-height:200px; overflow-y:auto;"></div>
-                <div id="r-hint" style="font-size:13px; color:var(--text-400); margin-top:8px;"></div>
+                <div id="r-hint" style="font-size:14px; color:var(--text-400); margin-top:8px;"></div>
               </div>
             </div>
 
@@ -247,11 +247,11 @@ const Register = {
               ${this.shopNeeded ? `
                 <div style="background:#f8fafc; padding:16px; border-radius:12px; border:1px solid #e2e8f0; margin-top:12px;">
                   <div style="margin-bottom:12px;">
-                    <label style="font-size:12px; color:#64748b; font-weight:600; display:block; margin-bottom:6px;">샵 이름</label>
+                    <label style="font-size:13px; color:#64748b; font-weight:600; display:block; margin-bottom:6px;">샵 이름</label>
                     <input type="text" id="r-shop-name" value="${this.shopName}" onchange="Register.shopName=this.value" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; outline:none;"/>
                   </div>
                   <div>
-                    <label style="font-size:12px; color:#64748b; font-weight:600; display:block; margin-bottom:6px;">샵 도착 시간</label>
+                    <label style="font-size:13px; color:#64748b; font-weight:600; display:block; margin-bottom:6px;">샵 도착 시간</label>
                     <button class="picker-btn" onclick="Register.openTimePicker('shop')" style="width:100%; display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; font-weight:600; background:#fff; color:#1e293b;">
                       <span class="picker-val ${this.shopTimeH === null ? 'is-empty' : ''}" id="r-shop-time">${esc(shopTimeStr)}</span>
                       <span class="picker-ico">🕒</span>
@@ -274,13 +274,13 @@ const Register = {
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                 <label class="field-label" style="margin:0; display:flex; align-items:center; gap:6px; color:${this.isSecret ? '#dc2626' : '#1e293b'};">
                   <span>🔒 비공개 스케줄 (Secret Mode)</span>
-                  ${this.isSecret ? '<span style="font-size:11px; background:#fee2e2; color:#dc2626; padding:2px 6px; border-radius:4px; font-weight:700;">극비 보안</span>' : ''}
+                  ${this.isSecret ? '<span style="font-size:12px; background:#fee2e2; color:#dc2626; padding:2px 6px; border-radius:4px; font-weight:700;">극비 보안</span>' : ''}
                 </label>
                 <div class="toggle-switch ${this.isSecret ? 'on' : ''}" onclick="Register.toggleSecret()" style="width:44px; height:24px; background:${this.isSecret ? '#ef4444' : '#cbd5e1'}; border-radius:12px; position:relative; cursor:pointer; transition:all 0.2s;">
                   <div style="width:20px; height:20px; background:#fff; border-radius:50%; position:absolute; top:2px; left:${this.isSecret ? '22px' : '2px'}; transition:all 0.2s; box-shadow:0 2px 4px rgba(0,0,0,0.1);"></div>
                 </div>
               </div>
-              <div style="font-size:12px; color:#64748b; line-height:1.4;">
+              <div style="font-size:13px; color:#64748b; line-height:1.4;">
                 ${this.isSecret 
                   ? '🔒 활성화됨: 대표이사(CEO) 및 총괄 관리자, 지정된 배정 매니저만 세부 내용을 볼 수 있습니다. (외부 스태프 및 타 매니저에게 마스킹/숨김 처리)' 
                   : '일반 공개 스케줄: 전담 매니저 및 현장 스태프가 열람할 수 있습니다.'}
@@ -308,7 +308,7 @@ const Register = {
         .search-item:last-child { border-bottom: none; }
         .search-item:active { background: #f8fafc; }
         .search-item-name { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
-        .search-item-addr { font-size: 13px; color: #64748b; }
+        .search-item-addr { font-size: 14px; color: #64748b; }
         .search-drop.show { display: block !important; }
         
         .pills { display: flex; flex-wrap: wrap; gap: 8px; }

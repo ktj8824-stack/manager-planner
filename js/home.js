@@ -113,7 +113,7 @@ const Home = {
           
           <!-- Header -->
           <div style="padding: 16px 8px 12px; flex-shrink:0; border-bottom:1px solid rgba(0,0,0,0.06); text-align:center;">
-            <div id="mini-cal-year" style="font-size:11.5px; font-weight:700; color:#94a3b8; margin-bottom:2px;">${this.calYear}년</div>
+            <div id="mini-cal-year" style="font-size:12.5px; font-weight:700; color:#94a3b8; margin-bottom:2px;">${this.calYear}년</div>
             <div id="mini-cal-title" style="font-size:20px; font-weight:900; color:#0f172a; line-height:1.2; margin-bottom:8px;">${this.calMonth+1}월</div>
             <div style="display:flex; justify-content:center; gap:8px;">
               <button onclick="Home.prevMonth()" style="background:transparent; border:none; padding:4px 8px; color:#64748b; font-size:14px; font-weight:800; cursor:pointer;">&lt;</button>
@@ -128,8 +128,8 @@ const Home = {
           
           <!-- Footer -->
           <div style="padding:10px 6px; flex-shrink:0; border-top:1px solid rgba(0,0,0,0.05); display:flex; flex-direction:column; gap:6px;">
-             <a href="${typeof U !== 'undefined' && U.getHQPortalUrl ? U.getHQPortalUrl() : 'admin.html'}" target="_blank" style="display:inline-flex; align-items:center; justify-content:center; gap:5px; width:100%; padding:8px 0; border-radius:8px; background:linear-gradient(135deg, #4f46e5, #7c3aed); color:#fff; font-weight:800; font-size:11px; text-align:center; text-decoration:none; box-shadow:0 2px 8px rgba(79,70,229,0.3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="12" y1="22" x2="12" y2="22.01"/><line x1="8" y1="6" x2="8" y2="6.01"/><line x1="16" y1="6" x2="16" y2="6.01"/><line x1="8" y1="10" x2="8" y2="10.01"/><line x1="16" y1="10" x2="16" y2="10.01"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="16" y1="14" x2="16" y2="14.01"/></svg> 본사</a>
-             <button onclick="App.navigate('profile')" style="width:100%; padding:8px 0; border-radius:8px; background:var(--bg-input); font-weight:700; font-size:11px; color:var(--text-200); text-align:center; border:none; cursor:pointer;">내 정보</button>
+             <a href="${typeof U !== 'undefined' && U.getHQPortalUrl ? U.getHQPortalUrl() : 'admin.html'}" target="_blank" style="display:inline-flex; align-items:center; justify-content:center; gap:5px; width:100%; padding:8px 0; border-radius:8px; background:linear-gradient(135deg, #4f46e5, #7c3aed); color:#fff; font-weight:800; font-size:12px; text-align:center; text-decoration:none; box-shadow:0 2px 8px rgba(79,70,229,0.3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="12" y1="22" x2="12" y2="22.01"/><line x1="8" y1="6" x2="8" y2="6.01"/><line x1="16" y1="6" x2="16" y2="6.01"/><line x1="8" y1="10" x2="8" y2="10.01"/><line x1="16" y1="10" x2="16" y2="10.01"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="16" y1="14" x2="16" y2="14.01"/></svg> 본사</a>
+             <button onclick="App.navigate('profile')" style="width:100%; padding:8px 0; border-radius:8px; background:var(--bg-input); font-weight:700; font-size:12px; color:var(--text-200); text-align:center; border:none; cursor:pointer;">내 정보</button>
           </div>
         </div>
 
@@ -198,7 +198,7 @@ const Home = {
       
       html += `
         <div class="${esc(cls)}" onclick="Home.selectDate(${y},${m},${d})" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 4px; cursor:pointer; border-radius:12px; margin-bottom:4px; transition:all 0.15s; ${isSelected ? 'background:#1e293b; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.12);' : isToday ? 'background:rgba(99,102,241,0.08);' : ''}">
-          <div style="font-size:13px; font-weight:800; ${esc(isSelected ? 'color:rgba(255,255,255,0.8);' : dayColor)}">${esc(dayName)}</div>
+          <div style="font-size:14px; font-weight:800; ${esc(isSelected ? 'color:rgba(255,255,255,0.8);' : dayColor)}">${esc(dayName)}</div>
           <div style="font-size:17px; font-weight:900; width:26px; text-align:center; letter-spacing:-0.5px; ${isSelected ? 'color:#fff;' : 'color:#0f172a;'}">${esc(d)}</div>
           <div style="width:4px; height:4px; display:flex; align-items:center; justify-content:center;">${dot}</div>
         </div>
@@ -214,7 +214,7 @@ const Home = {
     // 월 구분 라벨 (깔끔한 미니 캡슐 뱃지)
     html += `
       <div style="display:flex; align-items:center; justify-content:center; padding:12px 0 8px; margin:4px 0;">
-        <span style="background:#eef2ff; color:#4f46e5; font-size:11px; font-weight:800; padding:2px 10px; border-radius:12px; border:1px solid #e0e7ff; letter-spacing:0.5px; box-shadow:0 1px 2px rgba(0,0,0,0.02);">
+        <span style="background:#eef2ff; color:#4f46e5; font-size:12px; font-weight:800; padding:2px 10px; border-radius:12px; border:1px solid #e0e7ff; letter-spacing:0.5px; box-shadow:0 1px 2px rgba(0,0,0,0.02);">
           ${esc(nextM + 1)}월
         </span>
       </div>
@@ -238,7 +238,7 @@ const Home = {
       
       html += `
         <div class="${esc(cls)}" onclick="Home.selectDate(${nextY},${nextM},${d})" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 4px; cursor:pointer; border-radius:12px; margin-bottom:4px; transition:all 0.15s; ${isSelected ? 'background:#1e293b; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.12);' : isToday ? 'background:rgba(99,102,241,0.08);' : ''}">
-          <div style="font-size:13px; font-weight:800; ${esc(isSelected ? 'color:rgba(255,255,255,0.8);' : dayColor)}">${esc(dayName)}</div>
+          <div style="font-size:14px; font-weight:800; ${esc(isSelected ? 'color:rgba(255,255,255,0.8);' : dayColor)}">${esc(dayName)}</div>
           <div style="font-size:17px; font-weight:900; width:26px; text-align:center; letter-spacing:-0.5px; ${isSelected ? 'color:#fff;' : 'color:#0f172a;'}">${esc(d)}</div>
           <div style="width:4px; height:4px; display:flex; align-items:center; justify-content:center;">${dot}</div>
         </div>
@@ -375,7 +375,7 @@ const Home = {
     let html = `
       <!-- 상단: 담당 아티스트 안내 -->
       <div style="margin-bottom:10px; padding:2px 2px;">
-        <div style="font-size:13.5px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:5px;">
+        <div style="font-size:14px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:5px;">
           <span style="color:#4f46e5; flex-shrink:0;">★</span>
           <span style="color:#4338ca; flex-shrink:0;">담당:</span>
           <span style="color:#1e293b;">${esc(artistSummary)}</span>
@@ -390,7 +390,7 @@ const Home = {
         </div>
         <div onclick="Home.setTab('timeline')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:12px 0; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; transition:all 0.2s; ${this.currentTab === 'timeline' ? 'background:#ffffff; color:#4f46e5; box-shadow:0 2px 8px rgba(0,0,0,0.06);' : 'color:#64748b; background:transparent;'}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-          매니저 동선 타임라인
+          동선 타임라인
         </div>
       </div>
     `;
@@ -402,7 +402,7 @@ const Home = {
              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
            </span>
            <span style="font-size:16px; font-weight:800; color:var(--text-100); margin-bottom:4px;">등록된 스케줄이 없습니다.</span>
-           <span style="color:#4f46e5; font-size:13px; font-weight:800; display:inline-flex; align-items:center; gap:4px; margin-top:4px;">+ 새 스케줄 등록하기</span>
+           <span style="color:#4f46e5; font-size:14px; font-weight:800; display:inline-flex; align-items:center; gap:4px; margin-top:4px;">+ 새 스케줄 등록하기</span>
         </div>
       `;
       return html;
@@ -487,7 +487,7 @@ const Home = {
       return `
         <div style="margin-bottom:12px; position:relative;">
           <!-- 시작 시간 텍스트 -->
-          <div style="font-size:12px; font-weight:800; color:${isSecret ? '#9333ea' : '#4f46e5'}; margin-bottom:6px;">
+          <div style="font-size:13px; font-weight:800; color:${isSecret ? '#9333ea' : '#4f46e5'}; margin-bottom:6px;">
             ${esc(hourLabel)}
           </div>
 
@@ -498,21 +498,21 @@ const Home = {
             <!-- 상단: 시간 & 아티스트 태그 & 상세보기 -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
               <div style="display:flex; flex-direction:column; gap:4px;">
-                <div style="font-size:11px; font-weight:800; color:${isSecret ? '#9333ea' : '#4f46e5'}; display:flex; align-items:center; gap:4px;">
+                <div style="font-size:12px; font-weight:800; color:${isSecret ? '#9333ea' : '#4f46e5'}; display:flex; align-items:center; gap:4px;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   <span>${esc(startTime)} ~ ${esc(endTime)}</span>
                 </div>
                 <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
-                  <span style="background:${esc(artObj.color || '#1e293b')}; color:#fff; font-size:11px; font-weight:800; padding:2px 7px; border-radius:5px; display:inline-flex; align-items:center; gap:4px;">
+                  <span style="background:${esc(artObj.color || '#1e293b')}; color:#fff; font-size:12px; font-weight:800; padding:2px 7px; border-radius:5px; display:inline-flex; align-items:center; gap:4px;">
                     ${getArtistTypeIcon(artObj, 11)}
                     <span>${esc(activeSched.artistName || '아티스트')}</span>
                   </span>
-                  ${isHQ ? '<span style="background:rgba(99,102,241,0.1); color:#4f46e5; font-size:10px; font-weight:800; padding:1px 6px; border-radius:4px; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="12" y1="22" x2="12" y2="22.01"/></svg>HQ연동</span>' : ''}
-                  ${isSecret ? '<span style="background:#f3e8ff; color:#9333ea; font-size:10px; font-weight:800; padding:1px 6px; border-radius:4px; border:1px solid #d8b4fe; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Secret</span>' : ''}
+                  ${isHQ ? '<span style="background:rgba(99,102,241,0.1); color:#4f46e5; font-size:12px; font-weight:800; padding:1px 6px; border-radius:4px; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="12" y1="22" x2="12" y2="22.01"/></svg>HQ연동</span>' : ''}
+                  ${isSecret ? '<span style="background:#f3e8ff; color:#9333ea; font-size:12px; font-weight:800; padding:1px 6px; border-radius:4px; border:1px solid #d8b4fe; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Secret</span>' : ''}
                 </div>
               </div>
 
-              <div style="font-size:10px; font-weight:700; color:${isExpanded ? (isSecret ? '#9333ea' : '#4f46e5') : '#94a3b8'}; text-align:right; line-height:1; white-space:nowrap; flex-shrink:0; padding-top:2px;">
+              <div style="font-size:12px; font-weight:700; color:${isExpanded ? (isSecret ? '#9333ea' : '#4f46e5') : '#94a3b8'}; text-align:right; line-height:1; white-space:nowrap; flex-shrink:0; padding-top:2px;">
                 ${isExpanded ? '상세접기 ▲' : '상세보기 ▼'}
               </div>
             </div>
@@ -523,7 +523,7 @@ const Home = {
             </div>
             
             <!-- 장소 -->
-            <div style="font-size:11px; color:#64748b; font-weight:600; line-height:1.3; word-break:keep-all; display:flex; align-items:center; gap:4px;">
+            <div style="font-size:12px; color:#64748b; font-weight:600; line-height:1.3; word-break:keep-all; display:flex; align-items:center; gap:4px;">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               <span>${esc(displayLocation)}</span>
             </div>
@@ -531,7 +531,7 @@ const Home = {
             <!-- 클릭 시 제자리 확장 상세 정보 -->
             ${isExpanded ? `
               <div style="margin-top:12px; padding-top:12px; border-top:1px dashed ${isSecret ? '#e9d5ff' : '#e2e8f0'}; animation:fadeIn 0.2s ease-in-out;">
-                <div style="background:${isSecret ? '#faf5ff' : '#f8fafc'}; border-radius:8px; padding:10px 12px; font-size:11px; color:var(--text-200); display:flex; flex-direction:column; gap:6px; border:1px solid ${isSecret ? '#f3e8ff' : '#f1f5f9'};">
+                <div style="background:${isSecret ? '#faf5ff' : '#f8fafc'}; border-radius:8px; padding:10px 12px; font-size:12px; color:var(--text-200); display:flex; flex-direction:column; gap:6px; border:1px solid ${isSecret ? '#f3e8ff' : '#f1f5f9'};">
                   ${(isSecret && !canViewSecret) ? `
                     <div style="color:#dc2626; font-weight:700; display:flex; align-items:center; gap:4px;">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -588,7 +588,7 @@ const Home = {
         if (!isCovered) {
           html += `
             <div style="margin-bottom:8px; position:relative;">
-              <div style="font-size:11px; font-weight:700; color:#94a3b8; margin-bottom:4px;">
+              <div style="font-size:12px; font-weight:700; color:#94a3b8; margin-bottom:4px;">
                 ${esc(hourStr)}
               </div>
               <div style="border-bottom:1px solid #f1f5f9; margin-bottom:6px;"></div>
@@ -608,7 +608,7 @@ const Home = {
     });
 
     html += `
-      <div onclick="Home.openScheduleRegisterModal()" style="text-align:center; padding:13px; background:#ffffff; border:2px dashed #6366f1; border-radius:12px; color:#4f46e5; font-size:13.5px; font-weight:800; cursor:pointer; margin-top:16px; box-shadow:0 2px 6px rgba(99,102,241,0.06); display:flex; align-items:center; justify-content:center; gap:6px;">
+      <div onclick="Home.openScheduleRegisterModal()" style="text-align:center; padding:13px; background:#ffffff; border:2px dashed #6366f1; border-radius:12px; color:#4f46e5; font-size:14px; font-weight:800; cursor:pointer; margin-top:16px; box-shadow:0 2px 6px rgba(99,102,241,0.06); display:flex; align-items:center; justify-content:center; gap:6px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         스케줄 등록
       </div>
@@ -635,16 +635,16 @@ const Home = {
         <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
           <!-- 좌측: 1행 아티스트 / 2행 배차 차량 -->
           <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:0;">
-            <div style="font-size:13.5px; font-weight:800; color:#1e293b; display:flex; align-items:center; gap:4px; line-height:1.3;">
+            <div style="font-size:14px; font-weight:800; color:#1e293b; display:flex; align-items:center; gap:4px; line-height:1.3;">
               <span style="flex-shrink:0;">✨</span> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(topArtist)}</span>
             </div>
-            <div style="font-size:12px; font-weight:700; color:#475569; display:flex; align-items:center; gap:4px; line-height:1.3;">
+            <div style="font-size:13px; font-weight:700; color:#475569; display:flex; align-items:center; gap:4px; line-height:1.3;">
               <span style="flex-shrink:0;">🚗</span> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(topVehicle)}</span>
             </div>
           </div>
 
           <!-- 우측: [+ 스케줄 / 추가] 버튼 (슬림 패딩 & 대칭 높이) -->
-          <button onclick="Home.openScheduleRegisterModal()" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; background:#4f46e5; color:#ffffff; padding:6px 11px; border-radius:9px; font-size:11.5px; font-weight:800; border:none; cursor:pointer; box-shadow:0 2px 6px rgba(79,70,229,0.25); flex-shrink:0; line-height:1.2;">
+          <button onclick="Home.openScheduleRegisterModal()" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; background:#4f46e5; color:#ffffff; padding:6px 11px; border-radius:9px; font-size:12.5px; font-weight:800; border:none; cursor:pointer; box-shadow:0 2px 6px rgba(79,70,229,0.25); flex-shrink:0; line-height:1.2;">
             <span style="display:flex; align-items:center; gap:3px;">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               스케줄
@@ -654,7 +654,7 @@ const Home = {
         </div>
 
         <!-- 2행: 실시간 관제 안내 -->
-        <div style="margin-top:7px; padding-top:7px; border-top:1px dashed #f1f5f9; font-size:11.5px; color:#64748b; display:flex; align-items:center; gap:5px;">
+        <div style="margin-top:7px; padding-top:7px; border-top:1px dashed #f1f5f9; font-size:12.5px; color:#64748b; display:flex; align-items:center; gap:5px;">
           <span style="color:#10b981; font-weight:800;">✓</span>
           <span>이동중 또는 완료 선택 시 본사 시스템에 실시간 반영</span>
         </div>
@@ -771,7 +771,7 @@ const Home = {
             </div>
             
             <!-- 시간 (O 아래에 배치 - 크기 및 선명도 확대) -->
-            <div style="margin-top:6px; font-size:13.5px; font-weight:900; color:${isDone ? '#10b981' : isMoving ? '#d97706' : '#0f172a'}; text-align:center; white-space:nowrap; background:#ffffff; padding:2px 4px; border-radius:6px; border:1.5px solid ${isDone ? '#10b981' : isMoving ? '#f59e0b' : '#cbd5e1'}; z-index:2; letter-spacing:-0.3px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+            <div style="margin-top:6px; font-size:14px; font-weight:900; color:${isDone ? '#10b981' : isMoving ? '#d97706' : '#0f172a'}; text-align:center; white-space:nowrap; background:#ffffff; padding:2px 4px; border-radius:6px; border:1.5px solid ${isDone ? '#10b981' : isMoving ? '#f59e0b' : '#cbd5e1'}; z-index:2; letter-spacing:-0.3px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
               ${esc(ev.time)}
             </div>
           </div>
@@ -782,12 +782,12 @@ const Home = {
              <!-- 카드 1행: 좌측 카테고리 뱃지 & 우측 [이동중] [완료] 버튼 (같은 라인에 배치) -->
              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px;">
                 <div style="display:flex; align-items:center; gap:6px;">
-                  <span style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:7px; font-size:11px; font-weight:800; letter-spacing:-0.2px; ${esc(badgeStyle)}">
+                  <span style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:7px; font-size:12px; font-weight:800; letter-spacing:-0.2px; ${esc(badgeStyle)}">
                     ${getLineIcon(iconType)}
                     <span>${esc(tag)}</span>
                   </span>
                   ${isDone && ev.doneAt ? `
-                    <span style="display:inline-flex; align-items:center; gap:3px; background:#ecfdf5; color:#059669; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px; border:1px solid rgba(16,185,129,0.3);">
+                    <span style="display:inline-flex; align-items:center; gap:3px; background:#ecfdf5; color:#059669; font-size:12px; font-weight:700; padding:2px 6px; border-radius:5px; border:1px solid rgba(16,185,129,0.3);">
                       ${esc(ev.doneAt)} 완료
                     </span>
                   ` : ''}
@@ -799,7 +799,7 @@ const Home = {
                       <!-- 이동중 버튼 (더 진하고 뚜렷하게) -->
                       <button type="button"
                         onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '이동중')"
-                        style="padding:4px 10px; border-radius:6px; font-size:12px; font-weight:800; cursor:pointer; transition:all 0.15s;
+                        style="padding:4px 10px; border-radius:6px; font-size:13px; font-weight:800; cursor:pointer; transition:all 0.15s;
                                ${isMoving
                                   ? 'border:2px solid #f59e0b; background:#fef3c7; color:#b45309; box-shadow:0 0 0 2px rgba(245,158,11,0.2);'
                                   : 'border:1.5px solid #94a3b8; background:#ffffff; color:#334155; box-shadow:0 1px 2px rgba(0,0,0,0.04);'
@@ -810,7 +810,7 @@ const Home = {
                     <!-- 완료 버튼 (더 진하고 뚜렷하게) -->
                     <button type="button"
                       onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '완료')"
-                      style="padding:4px 10px; border-radius:6px; font-size:12px; font-weight:800; cursor:pointer; transition:all 0.15s;
+                      style="padding:4px 10px; border-radius:6px; font-size:13px; font-weight:800; cursor:pointer; transition:all 0.15s;
                              ${isDone
                                 ? 'border:2px solid #10b981; background:#d1fae5; color:#047857; box-shadow:0 0 0 2px rgba(16,185,129,0.2);'
                                 : 'border:1.5px solid #94a3b8; background:#ffffff; color:#334155; box-shadow:0 1px 2px rgba(0,0,0,0.04);'
@@ -845,7 +845,7 @@ const Home = {
                  }
                }
                return `
-                 <div style="font-size:12px; line-height:1.45; margin-top:4px; ${isDriveStep ? 'background:#f8fafc; border:1px solid #e2e8f0; padding:6px 10px; border-radius:8px; color:#334155; font-weight:600;' : 'color:var(--text-400);'}">
+                 <div style="font-size:13px; line-height:1.45; margin-top:4px; ${isDriveStep ? 'background:#f8fafc; border:1px solid #e2e8f0; padding:6px 10px; border-radius:8px; color:#334155; font-weight:600;' : 'color:var(--text-400);'}">
                    ${isDriveStep ? '<span style="color:#4f46e5; font-weight:800; margin-right:4px;">⏱️ 동선 역산 :</span>' : ''}${esc(cleanDesc)}
                  </div>
                `;
@@ -855,11 +855,11 @@ const Home = {
               ${isDriveStep ? `
                 <div style="margin-top:10px; padding-top:8px; border-top:1px dashed rgba(0,0,0,0.06); display:flex; justify-content:flex-end; align-items:center;">
                   <div style="display:flex; align-items:center; gap:6px; margin-left:auto; flex:1; max-width:180px; justify-content:flex-end;">
-                    <button type="button" onclick="U.openNavigation('${destinationTarget.replace(/'/g, "\\'")}', '', 'tmap')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:4px; padding:6px 0; border-radius:6px; background:#000000; color:#ffffff; font-size:11px; font-weight:800; border:none; cursor:pointer;" title="티맵 길안내">
+                    <button type="button" onclick="U.openNavigation('${destinationTarget.replace(/'/g, "\\'")}', '', 'tmap')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:4px; padding:6px 0; border-radius:6px; background:#000000; color:#ffffff; font-size:12px; font-weight:800; border:none; cursor:pointer;" title="티맵 길안내">
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="#ffffff" style="margin-top:-1px"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16zM11.99 1.5L2.5 9l9.49 7.5L21.5 9l-9.51-7.5z"/></svg>
                       TMAP
                     </button>
-                    <button type="button" onclick="U.openNavigation('${destinationTarget.replace(/'/g, "\\'")}', '', 'kakao')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:4px; padding:6px 0; border-radius:6px; background:#fee500; color:#191919; font-size:11px; font-weight:800; border:none; cursor:pointer;" title="카카오내비 길안내">
+                    <button type="button" onclick="U.openNavigation('${destinationTarget.replace(/'/g, "\\'")}', '', 'kakao')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:4px; padding:6px 0; border-radius:6px; background:#fee500; color:#191919; font-size:12px; font-weight:800; border:none; cursor:pointer;" title="카카오내비 길안내">
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="#191919" style="margin-top:-1px"><path d="M12 3c-5.523 0-10 3.553-10 7.938 0 2.825 1.83 5.303 4.606 6.744l-1.01 3.7c-.053.195.166.353.332.227l4.316-2.82c.575.08 1.162.124 1.756.124 5.523 0 10-3.553 10-7.938C22 6.553 17.523 3 12 3z"/></svg>
                       카카오내비
                     </button>
@@ -1019,15 +1019,15 @@ const Home = {
     const html = `
       <div style="padding:16px 0;">
         <div class="field" style="margin-bottom:16px;">
-           <label class="field-label" style="font-size:13px; color:var(--text-400); display:block; margin-bottom:6px;">메모/일정 제목</label>
+           <label class="field-label" style="font-size:14px; color:var(--text-400); display:block; margin-bottom:6px;">메모/일정 제목</label>
            <input type="text" id="cs-title" placeholder="예: 현장 간식 구매, 의상 픽업" style="width:100%; padding:12px; border:1px solid var(--border-default); border-radius:8px; background:var(--bg-input); font-size:15px;" />
         </div>
         <div class="field" style="margin-bottom:16px;">
-           <label class="field-label" style="font-size:13px; color:var(--text-400); display:block; margin-bottom:6px;">시간 (HH:MM)</label>
+           <label class="field-label" style="font-size:14px; color:var(--text-400); display:block; margin-bottom:6px;">시간 (HH:MM)</label>
            <input type="time" id="cs-time" value="12:00" style="width:100%; padding:12px; border:1px solid var(--border-default); border-radius:8px; background:var(--bg-input); font-size:15px;" />
         </div>
         <div class="field" style="margin-bottom:16px;">
-           <label class="field-label" style="font-size:13px; color:var(--text-400); display:block; margin-bottom:6px;">예상 소요 시간 (분)</label>
+           <label class="field-label" style="font-size:14px; color:var(--text-400); display:block; margin-bottom:6px;">예상 소요 시간 (분)</label>
            <input type="number" id="cs-dur" value="30" style="width:100%; padding:12px; border:1px solid var(--border-default); border-radius:8px; background:var(--bg-input); font-size:15px;" />
         </div>
         <button class="btn btn-primary" onclick="Home.saveCustomSchedule(${y}, ${m}, ${d})" style="width:100%; padding:14px; margin-top:16px; border-radius:8px; font-weight:bold;">일정 저장하기</button>
@@ -1080,27 +1080,27 @@ const Home = {
           
           <!-- 1. 스케줄 기본 정보 -->
           <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
-            <div style="font-size:13px; font-weight:800; color:#4f46e5; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+            <div style="font-size:14px; font-weight:800; color:#4f46e5; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
               기본 스케줄 정보
             </div>
 
             <div style="margin-bottom:12px;">
-              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">스케줄명 (일정 / 방송 / 행사명) <span style="color:#ef4444;">*</span></label>
+              <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">스케줄명 (일정 / 방송 / 행사명) <span style="color:#ef4444;">*</span></label>
               <input type="text" id="m-sch-title" required placeholder="예: 뮤직뱅크 사전녹화, 브랜드 팝업 행사" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;" />
             </div>
 
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
               <div>
-                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">담당 아티스트 <span style="color:#ef4444;">*</span></label>
-                <select id="m-sch-artist" required style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; background:#fff; box-sizing:border-box;">
+                <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">담당 아티스트 <span style="color:#ef4444;">*</span></label>
+                <select id="m-sch-artist" required style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;">
                   <option value="ALL">전체 아티스트 (전원)</option>
                   ${artistOptions}
                 </select>
               </div>
               <div>
-                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">스케줄 분류 <span style="color:#ef4444;">*</span></label>
-                <select id="m-sch-category" required style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; background:#fff; box-sizing:border-box;">
+                <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">스케줄 분류 <span style="color:#ef4444;">*</span></label>
+                <select id="m-sch-category" required style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;">
                   <option value="music_show">음악방송 / 생방송</option>
                   <option value="broadcast">예능 / 라디오 / 인터뷰</option>
                   <option value="shooting">화보 / 촬영 / 광고</option>
@@ -1114,17 +1114,17 @@ const Home = {
             </div>
 
             <div style="margin-bottom:12px;">
-              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">스케줄 일자 <span style="color:#ef4444;">*</span></label>
+              <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">스케줄 일자 <span style="color:#ef4444;">*</span></label>
               <input type="date" id="m-sch-date" value="${esc(defaultDate)}" required style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-weight:700; background:#fff; box-sizing:border-box;" />
             </div>
 
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
               <div>
-                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">시작 시간 <span style="color:#ef4444;">*</span></label>
+                <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">시작 시간 <span style="color:#ef4444;">*</span></label>
                 <input type="time" id="m-sch-start" value="10:00" required style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-weight:700; background:#fff; box-sizing:border-box;" />
               </div>
               <div>
-                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">종료 시간 <span style="color:#ef4444;">*</span></label>
+                <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">종료 시간 <span style="color:#ef4444;">*</span></label>
                 <input type="time" id="m-sch-end" value="18:00" required style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-weight:700; background:#fff; box-sizing:border-box;" />
               </div>
             </div>
@@ -1132,18 +1132,18 @@ const Home = {
 
           <!-- 2. 장소 정보 -->
           <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
-            <div style="font-size:13px; font-weight:800; color:#2563eb; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+            <div style="font-size:14px; font-weight:800; color:#2563eb; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               현장 장소 및 이동
             </div>
 
             <div style="margin-bottom:10px;">
-              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">행사장 / 촬영 위치 <span style="color:#ef4444;">*</span></label>
+              <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">행사장 / 촬영 위치 <span style="color:#ef4444;">*</span></label>
               <input type="text" id="m-sch-loc" required placeholder="예: 상암 SBS 프리즘타워, 성수 에스팩토리" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;" />
             </div>
 
             <div>
-              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">상세 도로명 주소 (네비 연동용)</label>
+              <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">상세 도로명 주소 (네비 연동용)</label>
               <input type="text" id="m-sch-addr" placeholder="예: 서울 마포구 상암산로 82" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;" />
             </div>
           </div>
@@ -1151,39 +1151,39 @@ const Home = {
           <!-- 3. 헤어/메이크업(샵) 경유 -->
           <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-              <div style="font-size:13px; font-weight:800; color:#ec4899; display:flex; align-items:center; gap:6px;">
+              <div style="font-size:14px; font-weight:800; color:#ec4899; display:flex; align-items:center; gap:6px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg>
                 헤어 / 메이크업(샵) 경유
               </div>
-              <label style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:800; cursor:pointer;">
+              <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:800; cursor:pointer;">
                 <input type="checkbox" id="m-sch-shop-needed" onchange="document.getElementById('m-sch-shop-fields').style.display = this.checked ? 'block' : 'none';" style="width:16px; height:16px; accent-color:#ec4899; cursor:pointer;" />
                 <span>경유함</span>
               </label>
             </div>
 
             <div id="m-sch-shop-fields" style="display:none; padding-top:6px;">
-              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">샵 이름 및 주소</label>
+              <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">샵 이름 및 주소</label>
               <input type="text" id="m-sch-shop-name" value="순수 청담본점" placeholder="예: 순수 청담본점, 알루(ALUU) 본점" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;" />
             </div>
           </div>
 
           <!-- 4. 배차 및 매니저 지정 -->
           <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
-            <div style="font-size:13px; font-weight:800; color:#0f172a; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+            <div style="font-size:14px; font-weight:800; color:#0f172a; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg>
               차량 배차 & 담당 매니저
             </div>
 
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
               <div>
-                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">배차 차량</label>
-                <select id="m-sch-veh" style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; background:#fff; box-sizing:border-box;">
+                <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">배차 차량</label>
+                <select id="m-sch-veh" style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;">
                   ${vehicleOptions}
                 </select>
               </div>
               <div>
-                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">담당 매니저</label>
-                <select id="m-sch-mgr" style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; background:#fff; box-sizing:border-box;">
+                <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">담당 매니저</label>
+                <select id="m-sch-mgr" style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;">
                   ${managerOptions}
                 </select>
               </div>
@@ -1191,7 +1191,7 @@ const Home = {
 
             <!-- 비공개 토글 -->
             <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1; display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:12px; font-weight:800; color:#64748b; display:flex; align-items:center; gap:4px;">
+              <span style="font-size:13px; font-weight:800; color:#64748b; display:flex; align-items:center; gap:4px;">
                 <span>🔒</span> 비공개 보안 스케줄
               </span>
               <input type="checkbox" id="m-sch-secret" style="width:16px; height:16px; accent-color:#9333ea; cursor:pointer;" />

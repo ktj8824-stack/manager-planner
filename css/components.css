@@ -366,7 +366,7 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.6);
   background: none;
@@ -850,7 +850,7 @@
 .notice-bell:active { transform: scale(.94); }
 .notice-badge {
   position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px; padding: 0 4px;
-  border-radius: 9px; background: #ef4444; color: #fff; font-size: 10px; font-weight: 800;
+  border-radius: 9px; background: #ef4444; color: #fff; font-size: 12px; font-weight: 800;
   line-height: 17px; text-align: center; box-sizing: border-box;
 }
 .notice-badge[hidden] { display: none; }

@@ -336,9 +336,9 @@ const Timeline = {
           isNextDay = true;
         }
         if (isNextDay) {
-          timeBadge = `<span style="font-size:10px; color:#6366f1; background:rgba(99,102,241,0.12); padding:1px 5px; border-radius:4px; margin-right:4px; font-weight:800;">익일</span>`;
+          timeBadge = `<span style="font-size:12px; color:#6366f1; background:rgba(99,102,241,0.12); padding:1px 5px; border-radius:4px; margin-right:4px; font-weight:800;">익일</span>`;
         } else if (idx === 0 && currentMin >= 21 * 60 && s.startTime && parseInt(s.startTime) <= 6) {
-          timeBadge = `<span style="font-size:10px; color:#f59e0b; background:rgba(245,158,11,0.12); padding:1px 5px; border-radius:4px; margin-right:4px; font-weight:800;">전일</span>`;
+          timeBadge = `<span style="font-size:12px; color:#f59e0b; background:rgba(245,158,11,0.12); padding:1px 5px; border-radius:4px; margin-right:4px; font-weight:800;">전일</span>`;
         }
         prevMinutes = currentMin;
       }
@@ -696,23 +696,23 @@ const Timeline = {
     const content = `
       <div style="display:flex; flex-direction:column; gap:16px;">
         <div style="background:var(--bg-input); padding:16px; border-radius:12px; border:1px solid var(--border-subtle);">
-          <label style="display:block; font-size:13px; color:var(--text-400); margin-bottom:6px; font-weight:600;">🚫 알러지 / 주의사항</label>
+          <label style="display:block; font-size:14px; color:var(--text-400); margin-bottom:6px; font-weight:600;">🚫 알러지 / 주의사항</label>
           <input type="text" id="mob-care-allergies" value="${esc(care.allergies || '')}" style="width:100%; padding:10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--text-100); font-size:15px;" placeholder="예) 복숭아, 갑각류">
         </div>
         <div style="background:var(--bg-input); padding:16px; border-radius:12px; border:1px solid var(--border-subtle);">
-          <label style="display:block; font-size:13px; color:var(--text-400); margin-bottom:6px; font-weight:600;">☕ 선호 식음료</label>
+          <label style="display:block; font-size:14px; color:var(--text-400); margin-bottom:6px; font-weight:600;">☕ 선호 식음료</label>
           <input type="text" id="mob-care-beverages" value="${esc(care.beverages || '')}" style="width:100%; padding:10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--text-100); font-size:15px;" placeholder="예) 아이스 아메리카노">
         </div>
         <div style="background:var(--bg-input); padding:16px; border-radius:12px; border:1px solid var(--border-subtle);">
-          <label style="display:block; font-size:13px; color:var(--text-400); margin-bottom:6px; font-weight:600;">🚙 차량 세팅</label>
+          <label style="display:block; font-size:14px; color:var(--text-400); margin-bottom:6px; font-weight:600;">🚙 차량 세팅</label>
           <input type="text" id="mob-care-vehicle" value="${esc(care.vehicle_pref || '')}" style="width:100%; padding:10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--text-100); font-size:15px;" placeholder="예) 조수석 선호, 에어컨 약하게">
         </div>
         <div style="background:var(--bg-input); padding:16px; border-radius:12px; border:1px solid var(--border-subtle);">
-          <label style="display:block; font-size:13px; color:var(--text-400); margin-bottom:6px; font-weight:600;">💊 비상 약품 / 메모</label>
+          <label style="display:block; font-size:14px; color:var(--text-400); margin-bottom:6px; font-weight:600;">💊 비상 약품 / 메모</label>
           <input type="text" id="mob-care-emergency" value="${esc(care.emergency || '')}" style="width:100%; padding:10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--text-100); font-size:15px;" placeholder="비상 메모 입력">
         </div>
         <div style="background:var(--bg-input); padding:16px; border-radius:12px; border:1px solid var(--border-subtle);">
-          <label style="display:block; font-size:13px; color:var(--text-400); margin-bottom:6px; font-weight:600;">📞 스태프 연락처</label>
+          <label style="display:block; font-size:14px; color:var(--text-400); margin-bottom:6px; font-weight:600;">📞 스태프 연락처</label>
           <input type="text" id="mob-care-contacts" value="${esc(care.contacts || '')}" style="width:100%; padding:10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--text-100); font-size:15px;" placeholder="헤어: 010-...">
         </div>
         <button class="btn btn-primary" style="margin-top:8px; padding:16px; font-size:16px; border-radius:12px;" onclick="Timeline.saveCareInfo(${escJs(artist.id)})">💾 현장 변경사항 업데이트</button>

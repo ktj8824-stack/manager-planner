@@ -88,7 +88,7 @@ const Upgrade = {
       <div style="padding:4px 0; text-align:center;">
         <div style="font-size:36px; margin-bottom:12px;">💳</div>
         <h3 style="font-size:17px; font-weight:700; margin-bottom:6px; color:var(--text-100);">로디플래너 PRO 구독</h3>
-        <p style="font-size:13px; color:var(--text-400); margin-bottom:20px; line-height:1.5;">
+        <p style="font-size:14px; color:var(--text-400); margin-bottom:20px; line-height:1.5;">
           월 <strong>4,900원</strong> (부가세 포함)<br>
           토스페이먼츠 금융 보안 결제망으로 안전하게 결제됩니다.
         </p>
@@ -97,7 +97,7 @@ const Upgrade = {
           신용카드 / 간편결제 진행
         </button>
 
-        <button class="btn-secondary" style="width:100%; padding:12px; font-size:13px; border:1px dashed rgba(255,255,255,0.2); background:transparent; color:var(--text-300);" onclick="Upgrade.completePayment()">
+        <button class="btn-secondary" style="width:100%; padding:12px; font-size:14px; border:1px dashed rgba(255,255,255,0.2); background:transparent; color:var(--text-300);" onclick="Upgrade.completePayment()">
           ⚡ 테스트 계정 즉시 활성화 (체험용)
         </button>
       </div>

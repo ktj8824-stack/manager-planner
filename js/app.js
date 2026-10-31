@@ -246,12 +246,9 @@ const App = {
           <span id="notice-badge" class="notice-badge" hidden>0</span>
         </button>
         <span class="top-user">
-          <span class="top-user-icon" style="font-size:13px;">👤</span><span class="top-user-name">${esc((localStorage.getItem('bp_user_name') || '김태현').replace(/본부장|팀장|매니저/g, '').trim())}</span><span class="top-user-suffix">님</span>
+          <span class="top-user-icon" style="font-size:14px;">👤</span><span class="top-user-name">${esc((localStorage.getItem('bp_user_name') || '김태현').replace(/본부장|팀장|매니저/g, '').trim())}</span><span class="top-user-suffix">님</span>
         </span>
-        <button onclick="if(typeof Home !== 'undefined' && Home.logout) Home.logout(); else if(typeof App !== 'undefined' && App.logout) App.logout();" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca; padding:3px 6px; border-radius:6px; font-size:10px; font-weight:900; line-height:1.15; cursor:pointer; text-align:center; transition:all 0.15s; white-space:nowrap; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-          <span>로그</span>
-          <span>아웃</span>
-        </button>
+        <button onclick="if(typeof Home !== 'undefined' && Home.logout) Home.logout(); else if(typeof App !== 'undefined' && App.logout) App.logout();" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca; padding:6px 9px; border-radius:8px; font-size:13px; font-weight:800; line-height:1.2; cursor:pointer; text-align:center; transition:all 0.15s; white-space:nowrap;">로그아웃</button>
       </div>
     `;
     // Prepend to app instead of append so it's logically first
@@ -442,12 +439,12 @@ const App = {
     toast.innerHTML = `
       <div style="font-size:22px; flex-shrink:0;">${noti.isUrgent ? '🚨' : '📢'}</div>
       <div style="flex:1; min-width:0;">
-        <div style="font-weight:800; font-size:13.5px; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+        <div style="font-weight:800; font-size:14px; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
           <span>${noti.isUrgent ? '본사 긴급 공지' : '본사 알림'}</span>
-          <span style="font-size:10.5px; font-weight:700; padding:1px 6px; border-radius:10px; ${noti.isUrgent ? 'background:#ef4444; color:#fff;' : 'background:#3b82f6; color:#fff;'}">${noti.isUrgent ? 'URGENT' : 'NOTICE'}</span>
+          <span style="font-size:12px; font-weight:700; padding:1px 6px; border-radius:10px; ${noti.isUrgent ? 'background:#ef4444; color:#fff;' : 'background:#3b82f6; color:#fff;'}">${noti.isUrgent ? 'URGENT' : 'NOTICE'}</span>
         </div>
-        <div style="line-height:1.45; font-size:13px; color:#f1f5f9; word-break:break-word;">${safeContent}</div>
-        <div style="font-size:11px; color:#94a3b8; margin-top:6px;">${esc(timeStr)}</div>
+        <div style="line-height:1.45; font-size:14px; color:#f1f5f9; word-break:break-word;">${safeContent}</div>
+        <div style="font-size:12px; color:#94a3b8; margin-top:6px;">${esc(timeStr)}</div>
       </div>
       <button style="background:transparent; border:none; color:#94a3b8; font-size:16px; cursor:pointer; padding:2px 4px; line-height:1;" onclick="this.parentElement.remove()" title="닫기">✕</button>
     `;
@@ -566,11 +563,11 @@ const App = {
             ${notices.map(n => `
               <div style="background:var(--bg-card); border:1px solid ${n.urgent ? 'rgba(239,68,68,0.35)' : 'var(--border-subtle)'}; border-radius:var(--r-lg); padding:14px; position:relative;">
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-                  <span style="font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; ${n.urgent ? 'background:#ef4444; color:#fff;' : 'background:var(--primary-500); color:#fff;'}">${n.urgent ? '긴급 공지' : '본사 공지'}</span>
-                  <span style="font-size:11px; color:var(--text-400);">${esc(n.date || '최신')}</span>
+                  <span style="font-size:12px; font-weight:800; padding:2px 8px; border-radius:6px; ${n.urgent ? 'background:#ef4444; color:#fff;' : 'background:var(--primary-500); color:#fff;'}">${n.urgent ? '긴급 공지' : '본사 공지'}</span>
+                  <span style="font-size:12px; color:var(--text-400);">${esc(n.date || '최신')}</span>
                 </div>
                 <div style="font-size:14px; font-weight:700; color:var(--text-100); margin-bottom:6px;">${esc(n.title)}</div>
-                <div style="font-size:12.5px; color:var(--text-300); line-height:1.5;">${esc(n.content)}</div>
+                <div style="font-size:13px; color:var(--text-300); line-height:1.5;">${esc(n.content)}</div>
               </div>
             `).join('')}
           </div>
@@ -602,7 +599,7 @@ const App = {
           <div style="display:flex;flex-direction:column;gap:10px;">
             <!-- 본사 연락처 (우리 회사 본사 계정에 등록된 실제 전화번호) -->
             <div id="em-hq-contacts" style="display:flex;flex-direction:column;gap:10px;">
-              <div style="font-size:12px;color:var(--text-400);padding:6px 4px;">본사 연락처를 불러오는 중...</div>
+              <div style="font-size:13px;color:var(--text-400);padding:6px 4px;">본사 연락처를 불러오는 중...</div>
             </div>
 
             <!-- 긴급 보고 -->
@@ -613,9 +610,9 @@ const App = {
               </div>
               <div style="flex:1;">
                 <div style="font-size:14px;font-weight:700;color:var(--text-100);">현장 돌발상황 / 사고 긴급 보고</div>
-                <div style="font-size:11.5px;color:var(--text-400);margin-top:2px;">본사 관제 포털로 실시간 긴급 푸시 전송</div>
+                <div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">본사 관제 포털로 실시간 긴급 푸시 전송</div>
               </div>
-              <span style="background:rgba(245,158,11,0.12);color:#f59e0b;font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px;white-space:nowrap;">보고서</span>
+              <span style="background:rgba(245,158,11,0.12);color:#f59e0b;font-size:12px;font-weight:800;padding:3px 9px;border-radius:6px;white-space:nowrap;">보고서</span>
             </div>
           </div>
 
@@ -632,7 +629,7 @@ const App = {
   // 우리 회사 본사 계정(대표/관리자)에 등록된 실제 전화번호를 보여준다 (샘플 번호는 쓰지 않음)
   async _loadEmergencyContacts() {
     const box = document.getElementById('em-hq-contacts'); if (!box) return;
-    const note = (t) => { box.innerHTML = `<div style="font-size:12.5px;line-height:1.55;color:var(--text-400);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:14px;padding:12px 14px;">${esc(t)}</div>`; };
+    const note = (t) => { box.innerHTML = `<div style="font-size:13px;line-height:1.55;color:var(--text-400);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:14px;padding:12px 14px;">${esc(t)}</div>`; };
     try {
       const sc = window.SupabaseClient;
       if (!sc?.client || !sc.currentUser) { note('서버에 연결되면 본사 연락처가 표시됩니다. 아래 "긴급 보고"로 먼저 알릴 수 있습니다.'); return; }
@@ -644,7 +641,7 @@ const App = {
         const tel = String(p.phone).replace(/[^0-9+]/g, '');
         return `<a href="tel:${esc(tel)}" style="text-decoration:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
           <div style="flex:1;"><div style="font-size:14px;font-weight:800;color:#f87171;">📞 ${esc(p.name || '본사')} ${p.role === 'ceo' ? '(대표)' : '(관리자)'}</div>
-          <div style="font-size:12px;color:var(--text-400);margin-top:2px;">${esc(p.phone)} · 누르면 전화 연결</div></div></a>`;
+          <div style="font-size:13px;color:var(--text-400);margin-top:2px;">${esc(p.phone)} · 누르면 전화 연결</div></div></a>`;
       }).join('');
     } catch (e) { note('본사 연락처를 불러오지 못했습니다. 아래 "긴급 보고"를 이용해 주세요.'); }
   }

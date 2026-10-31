@@ -24,7 +24,7 @@ const Login = {
         </div>
 
         <div style="display:flex; margin-bottom:24px; border-radius:12px; background:var(--bg-card); padding:4px; box-shadow:var(--shadow-sm); border:1px solid var(--border-default);">
-          <button onclick="Login.setTab('b2b')" id="tab-b2b" style="flex:1; padding:12px 6px; white-space:nowrap; font-weight:800; font-size:13px; border-radius:10px; border:none; background:var(--accent); color:#fff; cursor:pointer; transition:all 0.2s;">소속 매니저 로그인</button>
+          <button onclick="Login.setTab('b2b')" id="tab-b2b" style="flex:1; padding:12px 6px; white-space:nowrap; font-weight:800; font-size:14px; border-radius:10px; border:none; background:var(--accent); color:#fff; cursor:pointer; transition:all 0.2s;">소속 매니저 로그인</button>
           <button onclick="Login.setTab('b2c')" id="tab-b2c" style="flex:1; padding:12px 6px; white-space:nowrap; font-weight:700; font-size:14px; border-radius:10px; border:none; background:transparent; color:var(--text-400); cursor:pointer; transition:all 0.2s;">개인 매니저 시작</button>
         </div>
 
@@ -44,12 +44,12 @@ const Login = {
               로그인
             </button>
             <button type="button" id="demo-login-btn" ${Login.isDevHost() ? '' : 'hidden'} onclick="Login.demoLogin('ceo')" 
-              style="width:100%; margin-top:10px; padding:13px; border-radius:12px; border:1px dashed rgba(99,102,241,0.5); background:rgba(99,102,241,0.08); color:var(--accent); font-weight:800; font-size:13px; cursor:pointer; transition:all 0.2s;">
+              style="width:100%; margin-top:10px; padding:13px; border-radius:12px; border:1px dashed rgba(99,102,241,0.5); background:rgba(99,102,241,0.08); color:var(--accent); font-weight:800; font-size:14px; cursor:pointer; transition:all 0.2s;">
               ⚡ 테스트 대표 계정 1초 둘러보기 (데모)
             </button>
           </form>
-          <p id="login-auth-error" role="alert" aria-live="polite" style="display:none;color:#ef4444;font-size:13px;margin-top:14px;"></p>
-          <div style="font-size:12px; color:var(--text-400); text-align:center; margin-top:16px;">
+          <p id="login-auth-error" role="alert" aria-live="polite" style="display:none;color:#ef4444;font-size:14px;margin-top:14px;"></p>
+          <div style="font-size:13px; color:var(--text-400); text-align:center; margin-top:16px;">
             ※ 본사에서 발급받은 계정으로 로그인해주세요.
           </div>
         </div>
@@ -71,7 +71,7 @@ const Login = {
         </div>
 
         <div style="text-align:center; margin-top:auto;">
-          <a href="${typeof U !== 'undefined' && U.getHQLoginUrl ? U.getHQLoginUrl() : 'admin-login.html'}" style="font-size:13px; color:var(--text-400); text-decoration:underline; font-weight:600;">
+          <a href="${typeof U !== 'undefined' && U.getHQLoginUrl ? U.getHQLoginUrl() : 'admin-login.html'}" style="font-size:14px; color:var(--text-400); text-decoration:underline; font-weight:600;">
             🏢 본사 총괄 관리 포털(HQ) 접속
           </a>
         </div>

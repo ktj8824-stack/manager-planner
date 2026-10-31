@@ -69,7 +69,7 @@
 .tl-section { padding:var(--sp-4) var(--sp-5); }
 .tl-head { display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-5); }
 .tl-title { font-size:var(--fs-md);font-weight:var(--fw-bold);display:flex;align-items:center;gap:var(--sp-2); }
-.tl-sub { font-size:13px;color:var(--text-400); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing: -0.3px; }
+.tl-sub { font-size:14px;color:var(--text-400); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing: -0.3px; }
 
 .tl-list { position:relative;padding-left:30px; }
 .tl-list::before {
