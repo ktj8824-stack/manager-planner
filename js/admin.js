@@ -4048,8 +4048,13 @@ document.addEventListener('DOMContentLoaded', () => {
         schData.timeline = await window.hqStore.generateSmartTimelineAsync(schData);
       }
 
+      // 알림용: 저장 전의 일정 (새 일정이면 없음)
+      let prevSch = null;
+      try { prevSch = (await window.hqStore.getSchedules()).find(x => x.id === schData.id) || null; if (prevSch) prevSch = JSON.parse(JSON.stringify(prevSch)); } catch (e) { }
+
       try {
         await window.hqStore.saveSchedule(schData);
+        if (window.ScheduleNotify) window.ScheduleNotify.afterSave(prevSch, schData);   // 담당 매니저에게 자동 알림 (기다리지 않음)
       } catch (err) {
         console.warn('saveSchedule warning (로컬 저장 유지):', err);
         if (!err.localSaved) {
@@ -4083,7 +4088,10 @@ document.addEventListener('DOMContentLoaded', () => {
       el.btnDeleteSchedule.addEventListener('click', async () => {
         const schId = state.activeScheduleId || window.Admin.currentDetailScheduleId;
         if (confirm('이 스케줄을 삭제하시겠습니까? 로디플래너에서도 즉시 삭제됩니다.')) {
+          let delSch = null;
+          try { delSch = (await window.hqStore.getSchedules()).find(x => x.id === schId) || null; if (delSch) delSch = JSON.parse(JSON.stringify(delSch)); } catch (e) { }
           await window.hqStore.deleteSchedule(schId);
+          if (window.ScheduleNotify) window.ScheduleNotify.afterDelete(delSch);
           el.modalScheduleDetail.classList.remove('active');
           await renderSidebar();
           await renderKPI();
