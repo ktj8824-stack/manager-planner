@@ -1966,15 +1966,15 @@ document.addEventListener('DOMContentLoaded', () => {
     kpiDataCache.shop = shopSchedules;
     kpiDataCache.artist = artists;
 
-    el.kpiTodayCount.textContent = `${todaySchedules.length}건`;
-    el.kpiActiveCount.textContent = `${activeSchedules.length}건`;
-    el.kpiShopCount.textContent = `${shopSchedules.length}건`;
-    el.kpiArtistCount.textContent = `${artists.length}팀`;
-    try { renderTodayBrief(todaySchedules); } catch (e) { console.warn('오늘 현황 표시 실패', e); }
+    if (el.kpiTodayCount) el.kpiTodayCount.textContent = `${todaySchedules.length}건`;
+    if (el.kpiActiveCount) el.kpiActiveCount.textContent = `${activeSchedules.length}건`;
+    if (el.kpiShopCount) el.kpiShopCount.textContent = `${shopSchedules.length}건`;
+    if (el.kpiArtistCount) el.kpiArtistCount.textContent = `${artists.length}팀`;
+    try { renderTodayBrief(todaySchedules, activeSchedules.length); } catch (e) { console.warn('오늘 현황 표시 실패', e); }
   }
 
   // ── 오늘 현황 요약: 완료/이동중/예정/지연 + 이동 중·지연된 매니저 목록 ──
-  function renderTodayBrief(todaySchedules) {
+  function renderTodayBrief(todaySchedules, activeCount) {
     const box = document.getElementById('today-brief');
     if (!box) return;
     const now = new Date();
@@ -2006,7 +2006,17 @@ document.addEventListener('DOMContentLoaded', () => {
       ...movingRows.map(r => `<div class="tb-row moving"><span class="tag">이동중</span><span class="who">${esc(r.who)}</span><span>${esc(r.what)}</span><span class="sub">${esc(r.step)}</span></div>`)
     ].join('');
     box.innerHTML = `
-      <div class="tb-head"><div class="tb-title">오늘 현황 <span class="tb-sum">완료 ${done} · 이동중 ${moving} · 지연 <b class="${lateRows.length ? 'late' : ''}">${lateRows.length}</b></span></div><div class="tb-time">${hh}:${mm} 기준 · 1분마다 갱신</div></div>
+      <div class="tb-head">
+        <div class="tb-title">오늘 현황</div>
+        <div class="tb-chips">
+          <span class="tb-chip">오늘 전체 <b>${todaySchedules.length}</b></span>
+          <span class="tb-chip">완료 <b class="ok">${done}</b></span>
+          <span class="tb-chip">이동중 <b class="mv">${moving}</b></span>
+          <span class="tb-chip">지연·미확인 <b class="${lateRows.length ? 'late' : ''}">${lateRows.length}</b></span>
+          <span class="tb-chip">가동 차량/팀 <b>${activeCount || 0}</b></span>
+        </div>
+        <div class="tb-time">${hh}:${mm} 기준</div>
+      </div>
       <div class="tb-list">${rows || `<div class="tb-empty">${todaySchedules.length ? '지연되거나 이동 중인 일정이 없습니다.' : '오늘 등록된 일정이 없습니다.'}</div>`}</div>`;
   }
   setInterval(() => { try { renderKPI(); } catch (e) {} }, 60000);
