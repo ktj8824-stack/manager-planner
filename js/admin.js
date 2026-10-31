@@ -2006,13 +2006,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ...movingRows.map(r => `<div class="tb-row moving"><span class="tag">이동중</span><span class="who">${esc(r.who)}</span><span>${esc(r.what)}</span><span class="sub">${esc(r.step)}</span></div>`)
     ].join('');
     box.innerHTML = `
-      <div class="tb-head"><div class="tb-title">오늘 현황</div><div class="tb-time">${hh}:${mm} 기준 · 1분마다 갱신</div></div>
-      <div class="tb-nums">
-        <div class="tb-num"><b>${todaySchedules.length}</b><span>오늘 전체</span></div>
-        <div class="tb-num done"><b>${done}</b><span>완료</span></div>
-        <div class="tb-num moving"><b>${moving}</b><span>이동중</span></div>
-        <div class="tb-num late"><b>${lateRows.length}</b><span>지연·미확인</span></div>
-      </div>
+      <div class="tb-head"><div class="tb-title">오늘 현황 <span class="tb-sum">완료 ${done} · 이동중 ${moving} · 지연 <b class="${lateRows.length ? 'late' : ''}">${lateRows.length}</b></span></div><div class="tb-time">${hh}:${mm} 기준 · 1분마다 갱신</div></div>
       <div class="tb-list">${rows || `<div class="tb-empty">${todaySchedules.length ? '지연되거나 이동 중인 일정이 없습니다.' : '오늘 등록된 일정이 없습니다.'}</div>`}</div>`;
   }
   setInterval(() => { try { renderKPI(); } catch (e) {} }, 60000);
