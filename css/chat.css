@@ -114,3 +114,11 @@
 .chat-settings-foot { padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--c-line); display: flex; justify-content: flex-end; }
 
 .chat-quick .chat-quick-edit { background: transparent; border-style: dashed; color: var(--c-sub); font-weight: 600; }
+
+/* 앱의 전역 입력창 스타일(appearance:none)이 라디오·체크박스를 보이지 않게 만들므로 복원 */
+.chat-root input[type="radio"], .chat-root input[type="checkbox"] {
+  -webkit-appearance: auto; appearance: auto; width: 22px; height: 22px; flex: 0 0 22px; margin: 0;
+  border: revert; background: revert; accent-color: var(--c-accent); cursor: pointer;
+}
+.chat-opt { border: 1px solid var(--c-line); border-radius: 12px; padding: 0 12px; margin-bottom: 6px; cursor: pointer; background: var(--c-panel); }
+.chat-opt:has(input:checked) { border-color: var(--c-accent); background: rgba(37, 99, 235, .10); font-weight: 700; }
