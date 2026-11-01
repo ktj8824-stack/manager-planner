@@ -227,7 +227,7 @@ const App = {
     nav.id = 'top-header';
     nav.innerHTML = `
       <div class="top-brand">
-        <span class="top-brand-icon">🎬</span><span class="top-brand-text">로디플래너</span>
+        <span class="top-brand-icon">🎬</span><span class="top-brand-text">로드플래너</span>
       </div>
       <div class="top-nav-right">
         <button class="top-nav-item active" data-s="home" onclick="App.navigate('home')">
@@ -242,9 +242,9 @@ const App = {
           <span class="top-sos-ico">🚨</span>
           <span class="nav-label">긴급</span>
         </button>
-        <button id="notice-bell" class="top-nav-item" onclick="App.openMessages()" aria-label="로디톡">
+        <button id="notice-bell" class="top-nav-item" onclick="App.openMessages()" aria-label="로드톡">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          <span class="nav-label">로디톡</span>
+          <span class="nav-label">로드톡</span>
           <span id="notice-badge" class="notice-badge" hidden>0</span>
         </button>
       </div>

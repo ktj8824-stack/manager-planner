@@ -923,7 +923,7 @@ const Home = {
     return html;
   },
 
-  // 지금 할 일 카드의 [도착]: 단계 완료 + 본사에 도착 보고(로디톡 → 본사 푸시)
+  // 지금 할 일 카드의 [도착]: 단계 완료 + 본사에 도착 보고(로드톡 → 본사 푸시)
   async arriveStep(hqId, stepIdx, name) {
     this.setHQRouteStatus(hqId, stepIdx, '완료');
     try {

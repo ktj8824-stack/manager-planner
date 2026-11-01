@@ -84,7 +84,7 @@
       const rows = Array.from({ length: 8 }, (_, i) => `<input type="text" class="chat-q-in" maxlength="30" placeholder="(비워 두면 사용 안 함)" value="${esc(q[i] || '')}">`).join('');
       const voiceOpt = (v, label) => `<label class="chat-opt"><input type="radio" name="chat-voice" value="${v}" ${p.voice === v ? 'checked' : ''}> ${label}</label>`;
       const box = document.createElement('div'); box.className = 'chat-settings'; box.id = 'chat-settings';
-      box.innerHTML = `<div class="chat-settings-card" role="dialog" aria-label="로디톡 설정">
+      box.innerHTML = `<div class="chat-settings-card" role="dialog" aria-label="로드톡 설정">
         <div class="chat-head"><h2>설정</h2><button class="chat-iconbtn" data-act="settings-close" aria-label="닫기">${ICON.close}</button></div>
         <div class="chat-settings-body">
           <h3>🔊 새 메시지 음성 읽기</h3>
@@ -174,9 +174,9 @@
       const root = document.createElement('div');
       root.id = 'chat-root'; root.className = 'chat-root'; root.hidden = true;
       root.innerHTML = `
-        <div class="chat-shell" role="dialog" aria-label="로디톡">
+        <div class="chat-shell" role="dialog" aria-label="로드톡">
           <aside class="chat-list">
-            <div class="chat-head"><h2>로디톡</h2><span style="display:flex;gap:2px"><button class="chat-iconbtn" data-act="settings" aria-label="설정">${ICON.gear}</button><button class="chat-iconbtn" data-act="close" aria-label="닫기">${ICON.close}</button></span></div>
+            <div class="chat-head"><h2>로드톡</h2><span style="display:flex;gap:2px"><button class="chat-iconbtn" data-act="settings" aria-label="설정">${ICON.gear}</button><button class="chat-iconbtn" data-act="close" aria-label="닫기">${ICON.close}</button></span></div>
             <div class="chat-pushbar" id="chat-pushbar" hidden></div>
             <div class="chat-search"><input id="chat-search" type="search" placeholder="대화·이름 검색" autocomplete="off"></div>
             <div class="chat-rooms" id="chat-rooms"></div>
@@ -540,7 +540,7 @@
     _osNotify(m, room) {
       try {
         if (!document.hidden || !('Notification' in window) || Notification.permission !== 'granted') return;
-        const n = new Notification((m.is_urgent ? '🚨 ' : '💬 ') + (m.sender_name || '로디톡'), { body: m.body || '(사진)', tag: 'chat-' + m.room_id, renotify: true });
+        const n = new Notification((m.is_urgent ? '🚨 ' : '💬 ') + (m.sender_name || '로드톡'), { body: m.body || '(사진)', tag: 'chat-' + m.room_id, renotify: true });
         n.onclick = () => { window.focus(); this.open(room?.kind === 'direct' && this.isHq() ? { managerId: room.manager_id } : {}); n.close(); };
       } catch (e) { }
     },

@@ -6,9 +6,9 @@ self.addEventListener('message', () => { /* 앱용 메시지(SET_OPEN_PATH 등)�
 
 self.addEventListener('push', event => {
   let data = {};
-  try { data = event.data ? event.data.json() : {}; } catch (_) { data = { title: '로디톡', body: event.data ? event.data.text() : '' }; }
+  try { data = event.data ? event.data.json() : {}; } catch (_) { data = { title: '로드톡', body: event.data ? event.data.text() : '' }; }
   const urgent = !!data.urgent;
-  event.waitUntil(self.registration.showNotification(data.title || '로디톡', {
+  event.waitUntil(self.registration.showNotification(data.title || '로드톡', {
     body: data.body || '',
     icon: new URL('icon-192.png', SCOPE_URL).href,
     badge: new URL('icon-192.png', SCOPE_URL).href,

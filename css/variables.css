@@ -36,7 +36,7 @@
   --text-400: #8e8e93;
   --text-500: #aeaeb2;
 
-  --accent: #4f46e5; /* 로디플래너 대표색(인디고) */
+  --accent: #4f46e5; /* 로드플래너 대표색(인디고) */
   --accent-dim: rgba(79, 70, 229, 0.1);
   --accent-glow: rgba(79, 70, 229, 0.05);
   --gold: var(--ios-red); /* Map old gold points to iOS red */

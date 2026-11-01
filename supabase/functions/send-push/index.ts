@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
 
-// 로디톡 메시지를 보낸 직후 호출되어, 받는 사람들의 기기로 푸시 알림을 보낸다.
+// 로드톡 메시지를 보낸 직후 호출되어, 받는 사람들의 기기로 푸시 알림을 보낸다.
 // 보낸 사람 본인이 방금 보낸 메시지에 대해서만 동작한다 (토큰으로 확인).
 type Json = Record<string, unknown>;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -75,7 +75,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     webpush.setVapidDetails(subject, pub, priv);
     const text = (msg.body ? String(msg.body) : "(사진)").slice(0, 120);
     const payload = JSON.stringify({
-      title: (msg.is_urgent ? "🚨 긴급 · " : "💬 ") + (msg.sender_name || "로디톡"),
+      title: (msg.is_urgent ? "🚨 긴급 · " : "💬 ") + (msg.sender_name || "로드톡"),
       body: text, room_id: msg.room_id, urgent: !!msg.is_urgent, tag: "chat-" + msg.room_id,
     });
     let sent = 0, failed = 0;
