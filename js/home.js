@@ -671,6 +671,53 @@ const Home = {
       return true;
     });
 
+    // ── 지금 할 일 카드: 이동중인 단계가 있으면 그것, 없으면 아직 안 끝난 첫 단계를 크게 보여 준다 ──
+    try {
+      const pending = uniqueEvents.filter(e => !e.done);
+      const nowEv = pending.find(e => e.moving === true) || pending[0];
+      if (uniqueEvents.length && !nowEv) {
+        html += `<div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:16px; padding:16px; margin-bottom:14px; text-align:center; font-size:15px; font-weight:700; color:#047857;">오늘 일정이 모두 끝났습니다. 수고하셨습니다.</div>`;
+      } else if (nowEv) {
+        const raw = String(nowEv.title || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim();
+        const bm = raw.match(/^\[([^\]]+)\]\s*(.*)$/);
+        const tag = bm ? bm[1] : '다음 일정';
+        const name = (bm ? bm[2] : raw) || raw;
+        const tt = raw;
+        let dest = '';
+        if (tt.includes('숙소 픽업') || tt.includes('픽업 및 출발')) dest = nowEv.shopAddress || nowEv.shopName || '';
+        else if (tt.includes('복귀') || tt.includes('철수')) dest = nowEv.departureAddress || nowEv.departurePlace || '';
+        else dest = nowEv.locationAddress || nowEv.location || '';
+        const isDrive = tt.includes('출발') || tt.includes('이동') || tt.includes('픽업') || tt.includes('철수') || nowEv.moving === true;
+        const canAct = nowEv.isHQ && nowEv.hqScheduleId;
+        let contact = null;
+        try {
+          const sch = window.hqStore?.getSchedules().find(s => s.id === nowEv.hqScheduleId);
+          const ph = sch && (sch.contactPhone || sch.contact?.phone);
+          if (ph) contact = { name: sch.contactName || sch.contact?.name || '현장 담당자', phone: String(ph) };
+        } catch (e) { }
+        const B = 'min-height:48px; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; border:0;';
+        const idx = nowEv.timelineIdx;
+        html += `
+          <div style="background:linear-gradient(135deg,#4f46e5,#6d5dfc); color:#fff; border-radius:18px; padding:16px; margin-bottom:14px; box-shadow:0 8px 20px rgba(79,70,229,.25);">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px;">
+              <span style="font-size:12.5px; font-weight:700; opacity:.9;">지금 할 일 · ${esc(tag)}</span>
+              <span style="font-size:13px; font-weight:700; background:rgba(255,255,255,.18); padding:3px 10px; border-radius:999px;">${esc(nowEv.time || '')}</span>
+            </div>
+            <div style="font-size:20px; font-weight:700; line-height:1.3; margin-bottom:4px;">${esc(name)}</div>
+            ${dest ? `<div style="font-size:13.5px; opacity:.9; margin-bottom:12px;">${esc(dest)}</div>` : '<div style="height:10px;"></div>'}
+            ${dest ? `<div style="display:flex; gap:8px; margin-bottom:8px;">
+              <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'tmap')" style="${B} flex:1; background:#000; color:#fff;">TMAP 길안내</button>
+              <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'kakao')" style="${B} flex:1; background:#fee500; color:#191919;">카카오내비</button>
+            </div>` : ''}
+            ${canAct ? `<div style="display:flex; gap:8px;">
+              ${isDrive ? `<button type="button" onclick="Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '이동중')" style="${B} flex:1; background:${nowEv.moving ? '#fef3c7' : 'rgba(255,255,255,.95)'}; color:${nowEv.moving ? '#b45309' : '#4f46e5'};">${nowEv.moving ? '이동중 (누르면 해제)' : '출발'}</button>` : ''}
+              <button type="button" onclick="Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '완료')" style="${B} flex:1; background:#10b981; color:#fff;">${isDrive ? '도착' : '완료'}</button>
+            </div>` : ''}
+            ${contact ? `<a href="tel:${esc(contact.phone.replace(/[^0-9+]/g, ''))}" style="${B} margin-top:8px; background:rgba(255,255,255,.16); color:#fff; text-decoration:none; font-size:14px; min-height:42px;">${esc(contact.name)} 전화 ${esc(contact.phone)}</a>` : ''}
+          </div>`;
+      }
+    } catch (e) { console.warn('지금 할 일 카드 오류', e); }
+
     uniqueEvents.forEach((ev, idx) => {
       const isLast = idx === uniqueEvents.length - 1;
       const isDone = ev.done || false;
