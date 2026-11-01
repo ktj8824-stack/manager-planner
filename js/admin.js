@@ -3101,17 +3101,17 @@ document.addEventListener('DOMContentLoaded', () => {
       ${sch.statusLogs && sch.statusLogs.length > 0 ? `
         <div style="margin-top:16px; border-top:1px solid #cbd5e1; padding-top:14px;">
           <h4 style="font-size:14px; color:#0f172a; margin-bottom:8px; display:flex; align-items:center; gap:6px; font-weight:800;">
-            <span>⏱️ 현장 실시간 타임스탬프 이력</span>
+            <span>⏱️ 변경·진행 이력 (본사 수정 + 현장 기록)</span>
             <span style="font-size:11px; color:#64748b; font-weight:normal;">(총 ${esc(sch.statusLogs.length)}회 기록)</span>
           </h4>
-          <div style="display:flex; flex-direction:column; gap:6px; max-height:140px; overflow-y:auto;">
+          <div style="display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto;">
             ${sch.statusLogs.map(log => `
               <div style="display:flex; justify-content:space-between; align-items:center; background:#e2e8f0; padding:6px 10px; border-radius:6px; font-size:12px; border:1px solid #cbd5e1; border-left:3px solid #6366f1;">
                 <div style="color:#0f172a; font-weight:600;">
                   ${esc(log.label)}
                 </div>
                 <div style="font-size:11px; color:#64748b; font-family:monospace;">
-                  ${esc(log.time)} (${esc(log.managerName || '현장매니저')})
+                  ${esc(log.date && log.date !== fmtDate(new Date()) ? log.date.slice(5).replace('-', '/') + ' ' : '')}${esc(log.time)} (${esc(log.managerName || '현장매니저')})
                 </div>
               </div>
             `).join('')}
@@ -4167,7 +4167,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         await window.hqStore.saveSchedule(schData);
-        if (window.ScheduleNotify) window.ScheduleNotify.afterSave(prevSch, schData).then(m => { if (m) setTimeout(() => alert(m), 1200); }).catch(() => { });   // 담당 매니저에게 자동 알림 (기다리지 않음)
+        if (window.ScheduleNotify) window.ScheduleNotify.afterSave(prevSch, schData).then(m => { if (m) setTimeout(() => alert(m), 1200); }).catch(() => { });   // 담당 매니저에게 자동 알림
+        // 변경 이력: 본사에서 누가 무엇을 바꿨는지 일정에 기록
+        try {
+          const who = (localStorage.getItem('admin_bp_user_name') || localStorage.getItem('bp_user_name') || '본사') + ' (본사)';
+          const changes = prevSch && window.ScheduleNotify?.historyDiff ? window.ScheduleNotify.historyDiff(prevSch, schData) : null;
+          if (!prevSch) await window.hqStore.addStatusLog(schData.id, { label: '[일정 등록] 본사에서 새 일정을 등록했습니다', managerName: who });
+          else if (changes && changes.length) await window.hqStore.addStatusLog(schData.id, { label: '[일정 수정] ' + changes.join(' · '), managerName: who });
+        } catch (e) { console.warn('변경 이력 기록 실패', e); }   // (알림은 기다리지 않음)
       } catch (err) {
         console.warn('saveSchedule warning (로컬 저장 유지):', err);
         if (!err.localSaved) {

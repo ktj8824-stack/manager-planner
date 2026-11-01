@@ -24,12 +24,19 @@
     return !isNaN(t) && diff > -3600e3 && diff <= hours * 3600e3;
   }
   function norm(v) { return String(v ?? '').trim(); }
+  // 실제로 바뀐 것만 잡는다: 차량은 ID로 비교(이름 표기 차이 무시), 비어 있는 상태값은 '변경 없음'으로 본다
+  function same(k, prev, next) {
+    if (k === 'vehicleName' && (prev?.vehicleId || next?.vehicleId)) return norm(prev?.vehicleId) === norm(next?.vehicleId);
+    if (k === 'managerName' && (prev?.managerId || next?.managerId)) return norm(prev?.managerId) === norm(next?.managerId);
+    if (k === 'status' && !norm(next?.[k])) return true;
+    return norm(prev?.[k]) === norm(next?.[k]);
+  }
 
   // 이전/이후 비교 → ['시작: 14:00 → 15:00', ...]
   function diff(prev, next) {
     const out = [];
     for (const [k, label] of FIELDS) {
-      if (norm(prev[k]) !== norm(next[k])) out.push(`• ${label}: ${norm(prev[k]) || '없음'} → ${norm(next[k]) || '없음'}`);
+      if (!same(k, prev, next)) out.push(`• ${label}: ${norm(prev[k]) || '없음'} → ${norm(next[k]) || '없음'}`);
     }
     return out;
   }
@@ -86,6 +93,14 @@
         return note(await send(sch.managerId, '❌ 일정 삭제 · ' + (sch.isSecret ? '비공개' : head(sch)), body, startsWithin(sch, 3)));
       } catch (e) { console.warn('일정 알림 오류', e); return '⚠️ 담당 매니저 알림을 보내지 못했습니다: ' + (e.message || '오류'); }
     }
+  };
+  // 변경 이력용 비교 (알림 항목 + 담당 매니저)
+  ScheduleNotify.historyDiff = function (prev, next) {
+    const out = [];
+    for (const [k, label] of FIELDS.concat([['managerName', '담당 매니저'], ['notes', '메모']])) {
+      if (!same(k, prev, next)) out.push(k === 'notes' ? '메모 변경' : `${label} ${norm(prev?.[k]) || '없음'}→${norm(next?.[k]) || '없음'}`);
+    }
+    return out;
   };
   window.ScheduleNotify = ScheduleNotify;
 })();
