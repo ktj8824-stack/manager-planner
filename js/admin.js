@@ -1997,6 +1997,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     lists.late.sort((x, y) => y.late - x.late);
     Object.assign(briefLists, lists);
+    notifyNewLate(lists.late);
 
     const ICON = {
       all: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
@@ -2024,6 +2025,23 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="tb-tiles">${tiles}</div>
       ${rows ? `<div class="tb-list">${rows}</div>` : ''}`;
     bindBriefHover(box);
+  }
+
+  // 지연이 새로 생기면 한 번만 알린다 (창이 뒤에 있으면 PC 알림, 앞에 있으면 화면 알림)
+  const lateAlerted = new Set();
+  let lateFirstRun = true;
+  function notifyNewLate(late) {
+    const fresh = late.filter(r => !lateAlerted.has(r.s.id + '|' + r.note));
+    fresh.forEach(r => lateAlerted.add(r.s.id + '|' + r.note));
+    if (lateFirstRun) { lateFirstRun = false; return; }   // 처음 열었을 때 이미 있던 지연은 패널로만 표시
+    if (!fresh.length) return;
+    const r = fresh[0];
+    const msg = `⏰ 지연 ${r.late}분 · ${r.s.managerName || '담당 미지정'} · ${r.s.artistName || r.s.title || ''} (${r.note})` + (fresh.length > 1 ? ` 외 ${fresh.length - 1}건` : '');
+    try {
+      if (document.hidden && 'Notification' in window && Notification.permission === 'granted' && navigator.serviceWorker) {
+        navigator.serviceWorker.getRegistration().then(reg => reg ? reg.showNotification('로디플래너 지연 알림', { body: msg, tag: 'late', renotify: true }) : new Notification('로디플래너 지연 알림', { body: msg }));
+      } else alert(msg);
+    } catch (e) { }
   }
 
   function bindBriefHover(box) {

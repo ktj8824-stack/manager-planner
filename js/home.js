@@ -711,7 +711,7 @@ const Home = {
             </div>` : ''}
             ${canAct ? `<div style="display:flex; gap:8px;">
               ${isDrive ? `<button type="button" onclick="Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '이동중')" style="${B} flex:1; background:${nowEv.moving ? '#fef3c7' : 'rgba(255,255,255,.95)'}; color:${nowEv.moving ? '#b45309' : '#4f46e5'};">${nowEv.moving ? '이동중 (누르면 해제)' : '출발'}</button>` : ''}
-              <button type="button" onclick="Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '완료')" style="${B} flex:1; background:#10b981; color:#fff;">${isDrive ? '도착' : '완료'}</button>
+              <button type="button" onclick="${isDrive ? `Home.arriveStep(${escJs(nowEv.hqScheduleId)}, ${idx}, ${escJs(name)})` : `Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '완료')`}" style="${B} flex:1; background:#10b981; color:#fff;">${isDrive ? '도착' : '완료'}</button>
             </div>` : ''}
             ${contact ? `<a href="tel:${esc(contact.phone.replace(/[^0-9+]/g, ''))}" style="${B} margin-top:8px; background:rgba(255,255,255,.16); color:#fff; text-decoration:none; font-size:14px; min-height:42px;">${esc(contact.name)} 전화 ${esc(contact.phone)}</a>` : ''}
           </div>`;
@@ -921,6 +921,20 @@ const Home = {
 
     html += '</div>';
     return html;
+  },
+
+  // 지금 할 일 카드의 [도착]: 단계 완료 + 본사에 도착 보고(로디톡 → 본사 푸시)
+  async arriveStep(hqId, stepIdx, name) {
+    this.setHQRouteStatus(hqId, stepIdx, '완료');
+    try {
+      if (!window.Chat || !window.Chat.available() || window.Chat.isHq()) return;
+      const now = new Date();
+      const hm = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      let artist = '';
+      try { artist = (window.hqStore.getSchedules().find(s => s.id === hqId) || {}).artistName || ''; } catch (e) { }
+      await window.Chat.sendNotice({ title: '도착 보고', content: `${name}${artist ? ' · ' + artist : ''} (${hm} 도착)` });
+      U.toast('📍 본사에 도착 보고를 보냈습니다.');
+    } catch (e) { U.toast('도착은 기록됐지만 본사 알림은 보내지 못했습니다.'); }
   },
 
   // 동선 타임라인에서 [이동중] 또는 [완료] 선택 시 본사 포털과 실시간 연동 및 타임스탬프 기록

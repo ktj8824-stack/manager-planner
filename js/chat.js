@@ -546,6 +546,15 @@
     },
     // ── 푸시 알림 (앱을 닫아도, 내비게이션 앱을 쓰는 중에도 도착) ──
     pushSupported() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; },
+    // 본사 화면(admin)은 서비스워커를 따로 등록하지 않으므로, 필요할 때 등록한다
+    async _swReg() {
+      let reg = await navigator.serviceWorker.getRegistration();
+      if (!reg) reg = await navigator.serviceWorker.register(document.querySelector('meta[name="push-sw"]')?.content || './sw.js');
+      await navigator.serviceWorker.ready;
+      // 알림을 눌렀을 때 열 화면을 서비스워커에 알려 둔다 (본사는 관리자 화면, 매니저는 앱)
+      try { (reg.active || navigator.serviceWorker.controller)?.postMessage({ type: 'SET_OPEN_PATH', path: this.isHq() ? 'admin.html' : './' }); } catch (e) { }
+      return reg;
+    },
     _b64(key) {
       const pad = '='.repeat((4 - key.length % 4) % 4);
       const raw = atob((key + pad).replace(/-/g, '+').replace(/_/g, '/'));
@@ -563,11 +572,11 @@
       const perm = await Notification.requestPermission();
       if (perm !== 'granted') { this._toast('알림이 허용되지 않았습니다. 기기 설정에서 알림을 허용해 주세요.'); this._renderPushBar(); return false; }
       try {
-        const reg = await navigator.serviceWorker.ready;
+        const reg = await this._swReg();
         let sub = await reg.pushManager.getSubscription();
         if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: this._b64(PUSH_PUBLIC_KEY) });
         await this.sc().pushSave(sub);
-        this._toast('알림이 켜졌습니다. 앱을 닫아도 새 메시지를 알려 드립니다.');
+        this._toast(this.isHq() ? '알림이 켜졌습니다. 이 창을 닫아도 매니저 메시지와 긴급 보고를 알려 드립니다.' : '알림이 켜졌습니다. 앱을 닫아도 새 메시지를 알려 드립니다.');
         this._renderPushBar();
         return true;
       } catch (e) { this._toast('알림을 켜지 못했습니다. ' + (e.message || '')); return false; }
@@ -583,7 +592,7 @@
     async _syncPush() {
       try {
         if (!this.pushSupported() || Notification.permission !== 'granted') return;
-        const reg = await navigator.serviceWorker.ready;
+        const reg = await this._swReg();
         let sub = await reg.pushManager.getSubscription();
         if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: this._b64(PUSH_PUBLIC_KEY) });
         await this.sc().pushSave(sub);
@@ -591,12 +600,12 @@
     },
     async _renderPushBar() {
       const bar = document.getElementById('chat-pushbar'); if (!bar) return;
-      if (this.isHq()) { bar.hidden = true; return; }   // 본사(PC 웹)는 화면 안 알림만 사용
+      const hq = this.isHq();
       const st = await this.pushState();
       if (st === 'on') { bar.innerHTML = '<span>🔔 알림 켜짐</span><button data-push="off">끄기</button>'; }
       else if (st === 'unsupported') { bar.innerHTML = '<span>🔕 이 기기는 푸시 알림 불가 (아이폰은 홈 화면에 추가한 앱에서만)</span>'; }
       else if (st === 'denied') { bar.innerHTML = '<span>🔕 알림이 막혀 있습니다. 기기 설정에서 허용해 주세요.</span>'; }
-      else { bar.innerHTML = '<span>🔔 운전·내비 중에도 알림을 받으려면</span><button data-push="on">알림 켜기</button>'; }
+      else { bar.innerHTML = hq ? '<span>🔔 매니저 메시지·긴급 보고·도착 보고를 PC 알림으로 받기</span><button data-push="on">알림 켜기</button>' : '<span>🔔 운전·내비 중에도 알림을 받으려면</span><button data-push="on">알림 켜기</button>'; }
       bar.hidden = false;
     },
     _askNotifyPermission() { this._renderPushBar(); },

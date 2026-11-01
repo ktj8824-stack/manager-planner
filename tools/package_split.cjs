@@ -161,6 +161,7 @@ cleanDirExceptGit(DIST_APP);
 console.log('📦 1. dist_web (웹 관리자 관제 포털) 패키징 시작...');
 copyFile(path.join(ROOT, 'admin.html'), path.join(DIST_WEB, 'index.html')); // admin.html -> index.html
 copyFile(path.join(ROOT, 'admin-login.html'), path.join(DIST_WEB, 'admin-login.html'));
+copyFile(path.join(ROOT, 'push-sw.js'), path.join(DIST_WEB, 'push-sw.js')); // 본사 PC 알림 전용
 // 테스트 결제 페이지 (배포본에도 포함)
 for (const f of ['payment.html', 'payment-result.html']) copyFile(path.join(ROOT, f), path.join(DIST_WEB, f));
 
