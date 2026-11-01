@@ -307,62 +307,90 @@ const U = {
     }
   },
 
-  /* ── 🚗 Navigation Integration (Tmap & KakaoNavi) ── */
-  openNavigation(destName, destAddr, forcedNavi = null) {
+  /* ── 🚗 Navigation Integration (Tmap & KakaoNavi) ──
+   * - 목적지 이름/주소를 카카오 로컬 검색으로 좌표로 바꾼 뒤, 좌표로 '경로 안내'를 연다 (이름 검색보다 정확).
+   * - 안드로이드: intent 주소 → 앱이 없으면 플레이스토어로 이동.
+   * - 아이폰: 앱 주소 → 앱이 안 열리면 카카오맵 웹 길찾기(또는 앱스토어)로 이동.
+   * - 카카오내비는 공개 앱 주소가 없어, JavaScript 키(KakaoAPI.JS_KEY)가 설정되면 카카오 SDK로 바로 내비를 열고,
+   *   없으면 카카오맵 앱의 자동차 길찾기로 연다.
+   */
+  _navCache: {},
+  async _resolveDest(destName, destAddr) {
+    const q = String(destAddr || destName || '').trim();
+    if (!q) return null;
+    if (this._navCache[q]) return this._navCache[q];
+    if (typeof KakaoAPI === 'undefined' || !KakaoAPI.searchPlace) return null;
+    try {
+      const docs = await Promise.race([KakaoAPI.searchPlace(q), new Promise(r => setTimeout(() => r(null), 2500))]);
+      const d = Array.isArray(docs) && docs[0];
+      if (!d || !d.x || !d.y) return null;
+      const pt = { name: destName || d.place_name || q, lat: String(d.y), lng: String(d.x) };
+      this._navCache[q] = pt;
+      return pt;
+    } catch (e) { return null; }
+  },
+  // 앱 주소를 열고, 앱이 열리지 않으면(화면이 그대로면) 대체 주소로 이동
+  _go(url) { window.location.href = url; },
+  _launchApp(appUrl, fallbackUrl) {
+    let left = false;
+    const mark = () => { left = true; };
+    document.addEventListener('visibilitychange', mark, { once: true });
+    window.addEventListener('pagehide', mark, { once: true });
+    this._go(appUrl);
+    if (fallbackUrl) setTimeout(() => { if (!left && !document.hidden) this._go(fallbackUrl); }, 1800);
+  },
+
+  async openNavigation(destName, destAddr, forcedNavi = null) {
     if (!destName && !destAddr) {
       this.toast('목적지 정보가 없습니다.');
       return;
     }
-
-    const query = destName || destAddr;
+    const label = destName || destAddr;
     const pref = forcedNavi || localStorage.getItem('bp_preferred_navi') || 'choice';
-
     if (pref === 'choice' && !forcedNavi) {
       this.showNaviChoiceModal(destName, destAddr);
       return;
     }
 
-    const encodedQuery = encodeURIComponent(query);
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const ua = navigator.userAgent;
+    const isAndroid = /Android/i.test(ua);
+    const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isMobile = isAndroid || isIOS;
+    const enc = encodeURIComponent;
+
+    const pt = await this._resolveDest(destName, destAddr);
+    const name = (pt && pt.name) || label;
+    const webRoute = pt ? `https://map.kakao.com/link/to/${enc(name)},${pt.lat},${pt.lng}` : `https://map.kakao.com/link/search/${enc(label)}`;
+    if (!pt) this.toast('정확한 위치를 찾지 못해 이름으로 검색합니다.');
 
     if (pref === 'tmap') {
-      // 🌟 Tmap Execution
-      if (isMobile) {
-        // Tmap App Deep Link
-        const tmapAppUrl = `tmap://search?name=${encodedQuery}`;
-        const fallbackWebUrl = `https://map.kakao.com/link/search/${encodedQuery}`;
-        
-        const start = Date.now();
-        window.location.href = tmapAppUrl;
-        
-        setTimeout(() => {
-          if (Date.now() - start < 1800) {
-            window.open(fallbackWebUrl, '_blank');
-          }
-        }, 1200);
-      } else {
-        // Desktop Web Search
-        window.open(`https://map.kakao.com/link/search/${encodedQuery}`, '_blank');
+      if (!isMobile) {
+        window.open(webRoute, '_blank');
+        this.toast('PC에서는 티맵 앱을 열 수 없어 카카오맵 웹 길찾기로 엽니다.');
+        return;
       }
-      this.toast(`🚗 티맵으로 [${query}] 길안내를 시작합니다.`);
+      const path = pt ? `route?rGoName=${enc(name)}&rGoX=${pt.lng}&rGoY=${pt.lat}` : `search?name=${enc(label)}`;
+      if (isAndroid) this._go(`intent://${path}#Intent;scheme=tmap;package=com.skt.tmap.ku;end`);
+      else this._launchApp(`tmap://${path}`, 'https://apps.apple.com/kr/app/id431589174');
+      this.toast(`🚗 티맵으로 [${name}] 길안내를 엽니다.`);
     } else if (pref === 'kakao') {
-      // 🟡 KakaoNavi Execution
-      if (isMobile) {
-        const kakaoAppUrl = `kakaonavi://search?q=${encodedQuery}`;
-        const fallbackWebUrl = `https://map.kakao.com/link/search/${encodedQuery}`;
-        
-        const start = Date.now();
-        window.location.href = kakaoAppUrl;
-        
-        setTimeout(() => {
-          if (Date.now() - start < 1800) {
-            window.open(fallbackWebUrl, '_blank');
-          }
-        }, 1200);
-      } else {
-        window.open(`https://map.kakao.com/link/search/${encodedQuery}`, '_blank');
+      // 카카오내비 SDK가 준비돼 있으면 내비로 바로 (JavaScript 키 + 도메인 등록 필요)
+      if (isMobile && pt && window.Kakao && window.Kakao.Navi && window.Kakao.isInitialized && window.Kakao.isInitialized()) {
+        try {
+          window.Kakao.Navi.start({ name, x: Number(pt.lng), y: Number(pt.lat), coordType: 'wgs84' });
+          this.toast(`🟡 카카오내비로 [${name}] 길안내를 엽니다.`);
+          return;
+        } catch (e) { /* 아래 카카오맵으로 */ }
       }
-      this.toast(`🟡 카카오내비로 [${query}] 길안내를 시작합니다.`);
+      if (!isMobile) {
+        window.open(webRoute, '_blank');
+        this.toast('PC에서는 카카오맵 웹 길찾기로 엽니다.');
+        return;
+      }
+      const path = pt ? `route?ep=${pt.lat},${pt.lng}&by=CAR` : `search?q=${enc(label)}`;
+      if (isAndroid) this._go(`intent://${path}#Intent;scheme=kakaomap;package=net.daum.android.map;S.browser_fallback_url=${enc(webRoute)};end`);
+      else this._launchApp(`kakaomap://${path}`, webRoute);
+      this.toast(`🟡 카카오맵 길찾기로 [${name}] 경로를 엽니다.`);
     }
   },
 

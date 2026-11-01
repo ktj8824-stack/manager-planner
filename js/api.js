@@ -6,6 +6,8 @@
 const KakaoAPI = {
   // 카카오 REST API 키
   REST_API_KEY: '0584e867024205fde01e6e0bee9f05f4',
+  // 카카오내비 바로 실행용 JavaScript 키 (카카오 개발자 콘솔 > 앱 키 > JavaScript 키, 사이트 도메인 등록 필요). 비어 있으면 카카오맵 길찾기로 연다.
+  JS_KEY: '',
 
   /**
    * 카카오 로컬 API 장소/주소 검색 (키워드 및 도로명/지번)
@@ -213,3 +215,16 @@ const TmapAPI = {
     }
   }
 };
+
+
+// 카카오내비 SDK: JavaScript 키가 있을 때만 미리 불러 둔다 (버튼을 눌렀을 때 바로 열리도록)
+(function () {
+  try {
+    if (typeof window === 'undefined' || !KakaoAPI.JS_KEY || window.Kakao) return;
+    const s = document.createElement('script');
+    s.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js';
+    s.crossOrigin = 'anonymous';
+    s.onload = () => { try { if (!window.Kakao.isInitialized()) window.Kakao.init(KakaoAPI.JS_KEY); } catch (e) { } };
+    document.head.appendChild(s);
+  } catch (e) { }
+})();
