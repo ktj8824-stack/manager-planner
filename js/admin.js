@@ -3453,6 +3453,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (el.formContactPhone) el.formContactPhone.value = editSch.contactPhone || editSch.contact?.phone || '';
       if (el.formNotes) el.formNotes.value = editSch.notes || '';
 
+      // 선택 항목이 채워져 있으면 접힌 칸을 펼쳐서 보여 준다
+      try {
+        const shopMore = document.getElementById('sch-more-shop'), extraMore = document.getElementById('sch-more-extra');
+        if (shopMore) shopMore.open = !!hasShop;
+        if (extraMore) extraMore.open = !!(editSch.outfit || editSch.contactName || editSch.contact?.name || editSch.contactPhone || editSch.contact?.phone || editSch.notes);
+      } catch (e) { }
+
       // 상태 / 보안
       if (el.formStatus) el.formStatus.value = editSch.status || '확정';
       if (el.formIsSecret) el.formIsSecret.checked = editSch.isSecret || false;
@@ -3464,6 +3471,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       el.scheduleFormTitle.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> 신규 스케줄 등록`;
       el.formSchId.value = '';
+      try { document.getElementById('sch-more-shop').open = false; document.getElementById('sch-more-extra').open = false; } catch (e) { }
       const baseDate = dateStr || fmtDate(state.currentDate);
       el.formDate.value = baseDate;
       el.formStartTime.value = '10:00';
@@ -4185,6 +4193,26 @@ document.addEventListener('DOMContentLoaded', () => {
           el.modalScheduleDetail.classList.remove('active');
           openScheduleFormModal(null, sch);
         }
+      });
+    }
+
+    // 이 일정 복사: 내용은 그대로, 날짜는 다음 날로 새 일정 입력창을 연다 (저장하기 전까지 아무것도 만들어지지 않음)
+    const btnCopy = document.getElementById('btn-copy-schedule');
+    if (btnCopy) {
+      btnCopy.addEventListener('click', async () => {
+        const schId = state.activeScheduleId || window.Admin.currentDetailScheduleId;
+        const sch = (await window.hqStore.getSchedules()).find(s => s.id === schId);
+        if (!sch) return;
+        const copy = JSON.parse(JSON.stringify(sch));
+        copy.id = '';
+        const d = new Date((copy.date || fmtDate(new Date())) + 'T00:00:00');
+        d.setDate(d.getDate() + 1);
+        copy.date = fmtDate(d);
+        copy.status = '확정';
+        el.modalScheduleDetail.classList.remove('active');
+        openScheduleFormModal(null, copy);
+        el.formSchId.value = '';
+        el.scheduleFormTitle.textContent = '일정 복사 (새 일정으로 저장됩니다)';
       });
     }
 

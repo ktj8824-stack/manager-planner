@@ -237,6 +237,15 @@
     }
 
 
+    /* 일정 등록 창: 선택 입력칸 접기 */
+    .sch-more { border:1px solid #e2e8f0; border-radius:12px; background:#fff; }
+    .sch-more > summary { list-style:none; cursor:pointer; padding:12px 14px; font-size:13.5px; font-weight:700; color:#1f2937; display:flex; align-items:center; gap:8px; }
+    .sch-more > summary::-webkit-details-marker { display:none; }
+    .sch-more > summary::before { content:'▸'; color:#6b7280; transition:transform .15s; }
+    .sch-more[open] > summary::before { transform:rotate(90deg); }
+    .sch-more > summary span { font-weight:500; font-size:12px; color:#9ca3af; }
+    .sch-more[open] > summary { border-bottom:1px solid #eef0f4; }
+    .sch-more > div { margin:12px; }
     /* 오늘 현황 요약 */
     .today-brief { background:#fff; border:1px solid #eef0f4; border-radius:16px; padding:12px 14px 14px; margin:0 0 12px; box-shadow:0 1px 2px rgba(16,24,40,.04); }
     .tb-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
@@ -294,7 +303,7 @@
       border-color: #6366f1;
     }
   </style>
-<script src="js/icons.js?v=234"></script>
+<script src="js/icons.js?v=235"></script>
 </head>
 
 <body>
@@ -715,6 +724,7 @@
             </div>
           </div>
 
+          <details class="sch-more" id="sch-more-shop"><summary>헤어·메이크업 샵 정보 <span>(선택 · 필요할 때만 펼치세요)</span></summary>
           <!-- 2. 헤어/메이크업(샵) 정보 -->
           <div
             style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px;">
@@ -774,6 +784,7 @@
             </div>
           </div>
 
+          </details>
           <!-- 3. 이동 및 매니저/차량 배차 -->
           <div
             style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px;">
@@ -818,6 +829,7 @@
             </div>
           </div>
 
+          <details class="sch-more" id="sch-more-extra"><summary>의상·준비물·메모·현장 연락처 <span>(선택)</span></summary>
           <!-- 4. 의상 / 준비물 / 메모 & 현장 연락처 -->
           <div
             style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px;">
@@ -854,6 +866,7 @@
             </div>
           </div>
 
+          </details>
           <!-- 5. 보안 및 진행 상태 -->
           <div
             style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px; display: flex; justify-content: space-between; align-items: center;">
@@ -1696,14 +1709,14 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/notify.js?v=234"></script>
-  <script src="js/supabase-client.js?v=234"></script>
-  <script src="js/chat.js?v=234"></script>
-  <script src="js/schedule-notify.js?v=234"></script>
-  <script src="js/api.js?v=234"></script>
-  <script src="js/admin-data.js?v=234"></script>
-  <script src="js/admin.js?v=234"></script>
-  <script src="js/timeline.js?v=234"></script>
+  <script src="js/notify.js?v=235"></script>
+  <script src="js/supabase-client.js?v=235"></script>
+  <script src="js/chat.js?v=235"></script>
+  <script src="js/schedule-notify.js?v=235"></script>
+  <script src="js/api.js?v=235"></script>
+  <script src="js/admin-data.js?v=235"></script>
+  <script src="js/admin.js?v=235"></script>
+  <script src="js/timeline.js?v=235"></script>
 
 
 
@@ -1742,6 +1755,11 @@
           스케줄 삭제
         </button>
         <div style="display:flex; gap:8px;">
+          <button type="button" id="btn-copy-schedule"
+            style="padding:8px 16px; border-radius:8px; border:1px solid #c7d2fe; background:#eef2ff; color:#4f46e5; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            이 일정 복사
+          </button>
           <button type="button" id="btn-edit-schedule" class="btn-primary"
             style="padding:8px 16px; border-radius:8px; border:none; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:12px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(99,102,241,0.3);">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
