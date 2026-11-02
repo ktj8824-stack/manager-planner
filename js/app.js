@@ -221,7 +221,21 @@ const App = {
     window.scrollTo(0,0);
   },
 
+  // 화면 틀(#app, .split-view, 문서)이 옆/위로 밀리면 바로 원위치 (아이폰 앱 안 웹화면에서 잘림 방지)
+  _lockFrame() {
+    if (this._frameLocked) return;
+    this._frameLocked = true;
+    const reset = (el) => { if (el && (el.scrollLeft || el.scrollTop)) { el.scrollLeft = 0; el.scrollTop = 0; } };
+    document.addEventListener('scroll', (e) => {
+      const el = e.target;
+      if (el === document || el === document.documentElement) { if (window.scrollX) window.scrollTo(0, window.scrollY); return; }
+      if (el && (el.id === 'app' || (el.classList && el.classList.contains('split-view')))) reset(el);
+    }, true);
+    window.addEventListener('resize', () => { reset(document.getElementById('app')); reset(document.querySelector('.split-view')); });
+  },
+
   renderNav() {
+    try { this._lockFrame(); } catch (e) { }
     U.$('#top-header')?.remove();
     const nav = U.el('header','top-header');
     nav.id = 'top-header';

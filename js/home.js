@@ -147,6 +147,16 @@ const Home = {
     }, 80);
   },
 
+  // 타임라인 영역(오른쪽 칸)만 스크롤한다. scrollIntoView는 앱 전체 틀까지 밀어서 화면이 잘리는 문제가 있었음
+  _scrollToStep(el) {
+    try {
+      const box = el.closest('.split-right') || document.querySelector('.split-right');
+      if (!box) return;
+      const top = el.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - 8;
+      box.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    } catch (e) { }
+  },
+
   centerSelectedDate() {
     const grid = U.$('#mini-cal-grid');
     if (!grid) return;
@@ -319,7 +329,7 @@ const Home = {
 
         if (targetIdx !== -1) {
           const el = document.getElementById(`route-step-${sch.id}-${targetIdx}`);
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          if (el) Home._scrollToStep(el);
         }
       }, 150);
     }
@@ -1018,7 +1028,7 @@ const Home = {
 
       if (targetIdx !== -1) {
         const el = document.getElementById(`route-step-${hqId}-${targetIdx}`);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (el) Home._scrollToStep(el);
       }
     }, 120);
   },

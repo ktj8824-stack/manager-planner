@@ -53,6 +53,7 @@ img { max-width: 100%; display: block; }
   min-height: 100dvh;
   background: var(--bg-elevated);
   overflow: hidden;
+  overflow: clip;   /* 코드나 입력창 포커스로 틀이 밀리지 않게 (지원 브라우저) */
 }
 
 /* Desktop frame */
@@ -140,3 +141,5 @@ img { max-width: 100%; display: block; }
 
 
 .hq-toast { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); color: #f8fafc; font-size: 14px; display: flex; align-items: flex-start; gap: 10px; animation: toastSlideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; pointer-events: auto; } @keyframes toastSlideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } } .hq-toast.urgent { border-color: #ef4444; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.2); }
+/* 홈 화면 좌우 분할 틀도 밀리지 않게 */
+.split-view { overflow: clip !important; }
