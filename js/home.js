@@ -610,43 +610,13 @@ const Home = {
     this.currentEvents = events;
     let html = '<div style="padding: 8px 4px 40px;">';
     
-    // 상단 요약용 아티스트 및 배차 차량 정보 추출
-    const rawArtist = (events || []).find(e => e.artistName)?.artistName || '루나스';
-    const topArtist = rawArtist.replace(/\s*\([^)]*\)/g, '').trim() || '루나스';
-    const topVehicle = (events || []).find(e => e.vehicleName)?.vehicleName || 
-                       localStorage.getItem('bp_user_vehicle') || 
-                       '카니발 하이리무진 1호차 (12가 3456)';
-    
+    // 아티스트/차량 요약 칸은 스케줄표와 겹쳐서 없애고, [+ 스케줄 추가]만 '지금 할 일' 카드 바로 위에 둔다
     html += `
-      <!-- 탭 아래: 아티스트/배차 정보 + 우측 스케줄 추가 버튼 + 실시간 안내 -->
-      <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px 14px; margin-bottom:14px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
-        <!-- 1행: 좌측 2단(아티스트 / 차량) & 우측 [+ 스케줄 추가] 버튼 -->
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-          <!-- 좌측: 1행 아티스트 / 2행 배차 차량 -->
-          <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:0;">
-            <div style="font-size:14px; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:4px; line-height:1.3;">
-              <span style="flex-shrink:0;">✨</span> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(topArtist)}</span>
-            </div>
-            <div style="font-size:13px; font-weight:700; color:#475569; display:flex; align-items:center; gap:4px; line-height:1.3;">
-              <span style="flex-shrink:0;">🚗</span> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(topVehicle)}</span>
-            </div>
-          </div>
-
-          <!-- 우측: [+ 스케줄 / 추가] 버튼 (슬림 패딩 & 대칭 높이) -->
-          <button onclick="Home.openScheduleRegisterModal()" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; background:#4f46e5; color:#ffffff; padding:6px 11px; border-radius:9px; font-size:12.5px; font-weight:700; border:none; cursor:pointer; box-shadow:0 2px 6px rgba(79,70,229,0.25); flex-shrink:0; line-height:1.2;">
-            <span style="display:flex; align-items:center; gap:3px;">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              스케줄
-            </span>
-            <span>추가</span>
-          </button>
-        </div>
-
-        <!-- 2행: 실시간 관제 안내 -->
-        <div style="margin-top:7px; padding-top:7px; border-top:1px dashed #f1f5f9; font-size:12.5px; color:#64748b; display:flex; align-items:center; gap:5px;">
-          <span style="color:#10b981; font-weight:700;">✓</span>
-          <span>이동중 또는 완료 선택 시 본사 시스템에 실시간 반영</span>
-        </div>
+      <div style="display:flex; justify-content:flex-end; margin:0 0 8px;">
+        <button type="button" onclick="Home.openScheduleRegisterModal()" style="display:inline-flex; align-items:center; gap:5px; background:#eef2ff; color:#4f46e5; border:1px solid #c7d2fe; padding:7px 12px; border-radius:999px; font-size:13px; font-weight:700; cursor:pointer;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          스케줄 추가
+        </button>
       </div>
     `;
 
@@ -684,25 +654,25 @@ const Home = {
           const ph = sch && (sch.contactPhone || sch.contact?.phone);
           if (ph) contact = { name: sch.contactName || sch.contact?.name || '현장 담당자', phone: String(ph) };
         } catch (e) { }
-        const B = 'min-height:48px; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; border:0;';
+        const B = 'min-height:40px; border-radius:10px; font-size:14.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; border:0;';
         const idx = nowEv.timelineIdx;
         html += `
-          <div style="background:linear-gradient(135deg,#4f46e5,#6d5dfc); color:#fff; border-radius:18px; padding:16px; margin-bottom:14px; box-shadow:0 8px 20px rgba(79,70,229,.25);">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px;">
-              <span style="font-size:12.5px; font-weight:700; opacity:.9;">지금 할 일 · ${esc(tag)}</span>
-              <span style="font-size:13px; font-weight:700; background:rgba(255,255,255,.18); padding:3px 10px; border-radius:999px;">${esc(nowEv.time || '')}</span>
+          <div style="background:linear-gradient(135deg,#4f46e5,#6d5dfc); color:#fff; border-radius:16px; padding:12px 13px; margin-bottom:12px; box-shadow:0 6px 16px rgba(79,70,229,.22);">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px;">
+              <span style="font-size:12px; font-weight:700; opacity:.9;">지금 할 일 · ${esc(tag)}</span>
+              <span style="font-size:12.5px; font-weight:700; background:rgba(255,255,255,.18); padding:2px 9px; border-radius:999px;">${esc(nowEv.time || '')}</span>
             </div>
-            <div style="font-size:20px; font-weight:700; line-height:1.3; margin-bottom:4px;">${esc(name)}</div>
-            ${dest ? `<div style="font-size:13.5px; opacity:.9; margin-bottom:12px;">${esc(dest)}</div>` : '<div style="height:10px;"></div>'}
-            ${dest ? `<div style="display:flex; gap:8px; margin-bottom:8px;">
-              <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'tmap')" style="${B} flex:1; background:#000; color:#fff;">TMAP 길안내</button>
+            <div style="font-size:17px; font-weight:700; line-height:1.3; margin-bottom:2px;">${esc(name)}</div>
+            ${dest ? `<div style="font-size:12.5px; opacity:.9; margin-bottom:9px;">${esc(dest)}</div>` : '<div style="height:8px;"></div>'}
+            ${dest ? `<div style="display:flex; gap:6px; margin-bottom:6px;">
+              <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'tmap')" style="${B} flex:1; background:#000; color:#fff;">TMAP</button>
               <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'kakao')" style="${B} flex:1; background:#fee500; color:#191919;">카카오내비</button>
             </div>` : ''}
-            ${canAct ? `<div style="display:flex; gap:8px;">
-              ${isDrive ? `<button type="button" onclick="Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '이동중')" style="${B} flex:1; background:${nowEv.moving ? '#fef3c7' : 'rgba(255,255,255,.95)'}; color:${nowEv.moving ? '#b45309' : '#4f46e5'};">${nowEv.moving ? '이동중 (누르면 해제)' : '출발'}</button>` : ''}
+            ${canAct ? `<div style="display:flex; gap:6px;">
+              ${isDrive ? `<button type="button" onclick="Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '이동중')" style="${B} flex:1; background:${nowEv.moving ? '#fef3c7' : 'rgba(255,255,255,.95)'}; color:${nowEv.moving ? '#b45309' : '#4f46e5'};">${nowEv.moving ? '이동중' : '출발'}</button>` : ''}
               <button type="button" onclick="${isDrive ? `Home.arriveStep(${escJs(nowEv.hqScheduleId)}, ${idx}, ${escJs(name)})` : `Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '완료')`}" style="${B} flex:1; background:#10b981; color:#fff;">${isDrive ? '도착' : '완료'}</button>
             </div>` : ''}
-            ${contact ? `<a href="tel:${esc(contact.phone.replace(/[^0-9+]/g, ''))}" style="${B} margin-top:8px; background:rgba(255,255,255,.16); color:#fff; text-decoration:none; font-size:14px; min-height:42px;">${esc(contact.name)} 전화 ${esc(contact.phone)}</a>` : ''}
+            ${contact ? `<a href="tel:${esc(contact.phone.replace(/[^0-9+]/g, ''))}" style="${B} margin-top:6px; background:rgba(255,255,255,.16); color:#fff; text-decoration:none; font-size:13px; min-height:36px;">${esc(contact.name)} 전화 ${esc(contact.phone)}</a>` : ''}
           </div>`;
       }
     } catch (e) { console.warn('지금 할 일 카드 오류', e); }
