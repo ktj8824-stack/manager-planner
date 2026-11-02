@@ -310,29 +310,8 @@ const Home = {
     this.currentTab = tabName;
     this.render();
 
-    // 매니저 동선 타임라인 탭으로 전환 시 → 다음 일정 단계를 맨 위로 자동 스크롤
-    if (tabName === 'timeline') {
-      setTimeout(() => {
-        const y = this.selectedDate.getFullYear();
-        const m = this.selectedDate.getMonth();
-        const d = this.selectedDate.getDate();
-        const hqScheds = State.getHQSchedulesForDate(y, m, d);
-        if (!hqScheds || hqScheds.length === 0) return;
-
-        const sch = hqScheds[0];
-        if (!sch.timeline) return;
-
-        let targetIdx = sch.timeline.findIndex(t => t.moving === true);
-        if (targetIdx === -1) {
-          targetIdx = sch.timeline.findIndex(t => !t.done);
-        }
-
-        if (targetIdx !== -1) {
-          const el = document.getElementById(`route-step-${sch.id}-${targetIdx}`);
-          if (el) Home._scrollToStep(el);
-        }
-      }, 150);
-    }
+    // 탭을 바꿀 때는 자동 스크롤하지 않고 맨 위에서 시작 (완료를 눌렀을 때만 다음 단계로 이동)
+    setTimeout(() => { const box = document.querySelector('.split-right'); if (box) box.scrollTop = 0; }, 0);
   },
 
   setManager(mgrId) {
@@ -1013,23 +992,16 @@ const Home = {
 
     this.updateRightTimeline();
 
-    // 상태 변경 후 → 항상 다음 진행해야 할 단계를 맨 위로 스크롤
+    // [완료]를 눌렀을 때만 → 다음에 할 단계(아직 안 끝난 첫 단계)를 맨 위로 올림. [이동중]은 화면을 그대로 둠
+    if (targetStatus !== '완료') return;
     setTimeout(() => {
       const updatedSch = window.hqStore.getSchedules().find(s => s.id === hqId);
       if (!updatedSch?.timeline) return;
-
-      // 우선순위 1: 현재 이동중(moving=true)인 단계
-      let targetIdx = updatedSch.timeline.findIndex(t => t.moving === true);
-
-      // 우선순위 2: 이동중 없으면 → 첫 번째 미완료 단계
-      if (targetIdx === -1) {
-        targetIdx = updatedSch.timeline.findIndex(t => !t.done);
-      }
-
-      if (targetIdx !== -1) {
-        const el = document.getElementById(`route-step-${hqId}-${targetIdx}`);
-        if (el) Home._scrollToStep(el);
-      }
+      let targetIdx = updatedSch.timeline.findIndex((t, i) => i > stepIdx && !t.done);
+      if (targetIdx === -1) targetIdx = updatedSch.timeline.findIndex(t => !t.done);
+      if (targetIdx === -1) return;   // 모두 끝났으면 그대로
+      const el = document.getElementById(`route-step-${hqId}-${targetIdx}`);
+      if (el) Home._scrollToStep(el);
     }, 120);
   },
 
