@@ -654,25 +654,25 @@ const Home = {
         const B = 'min-height:40px; border-radius:10px; font-size:14.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; border:0;';
         const idx = nowEv.timelineIdx;
         html += `
-          <div style="background:linear-gradient(135deg,#4f46e5,#6d5dfc); color:#fff; border-radius:16px; padding:12px 13px; margin-bottom:12px; box-shadow:0 6px 16px rgba(79,70,229,.22);">
+          <div style="background:#fff; color:#111827; border:1.5px solid #c7d2fe; border-radius:16px; padding:12px 13px; margin-bottom:12px; box-shadow:0 4px 14px rgba(79,70,229,.10);">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px;">
-              <span style="font-size:12px; font-weight:700; opacity:.9; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">지금 할 일 · ${esc(tag)}</span>
+              <span style="font-size:12px; font-weight:700; color:#4f46e5; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">지금 할 일 · ${esc(tag)}</span>
               <span style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-                <span style="font-size:12.5px; font-weight:700; background:rgba(255,255,255,.18); padding:4px 9px; border-radius:8px;">${esc(nowEv.time || '')}</span>
-                <button type="button" onclick="Home.openScheduleRegisterModal()" style="font-size:12.5px; font-weight:800; background:#fff; color:#4f46e5; border:0; padding:4px 9px; border-radius:8px; cursor:pointer; white-space:nowrap;">+ 스케줄 추가</button>
+                <span style="font-size:12.5px; font-weight:700; background:#eef2ff; color:#4338ca; padding:4px 9px; border-radius:8px;">${esc(nowEv.time || '')}</span>
+                <button type="button" onclick="Home.openScheduleRegisterModal()" style="font-size:12.5px; font-weight:800; background:#4f46e5; color:#fff; border:0; padding:4px 9px; border-radius:8px; cursor:pointer; white-space:nowrap;">+ 스케줄 추가</button>
               </span>
             </div>
             <div style="font-size:17px; font-weight:700; line-height:1.3; margin-bottom:2px;">${esc(name)}</div>
-            ${dest ? `<div style="font-size:12.5px; opacity:.9; margin-bottom:9px;">${esc(dest)}</div>` : '<div style="height:8px;"></div>'}
+            ${dest ? `<div style="font-size:12.5px; color:#6b7280; margin-bottom:9px;">${esc(dest)}</div>` : '<div style="height:8px;"></div>'}
             ${dest ? `<div style="display:flex; gap:6px; margin-bottom:6px;">
-              <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'tmap')" style="${B} flex:1; background:#000; color:#fff;">TMAP</button>
-              <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'kakao')" style="${B} flex:1; background:#fee500; color:#191919;">카카오내비</button>
+              <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'tmap')" style="${B} flex:1; background:#f8fafc; border:1px solid #e2e8f0; color:#111827;"><span style="width:10px;height:10px;border-radius:3px;background:#111;display:inline-block"></span>TMAP</button>
+              <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'kakao')" style="${B} flex:1; background:#f8fafc; border:1px solid #e2e8f0; color:#111827;"><span style="width:10px;height:10px;border-radius:3px;background:#fee500;border:1px solid #e5cf00;display:inline-block"></span>카카오내비</button>
             </div>` : ''}
             ${canAct ? `<div style="display:flex; gap:6px;">
-              ${isDrive ? `<button type="button" onclick="Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '이동중')" style="${B} flex:1; background:${nowEv.moving ? '#fef3c7' : 'rgba(255,255,255,.95)'}; color:${nowEv.moving ? '#b45309' : '#4f46e5'};">${nowEv.moving ? '이동중' : '출발'}</button>` : ''}
-              <button type="button" onclick="${isDrive ? `Home.arriveStep(${escJs(nowEv.hqScheduleId)}, ${idx}, ${escJs(name)})` : `Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '완료')`}" style="${B} flex:1; background:#10b981; color:#fff;">${isDrive ? '도착' : '완료'}</button>
+              ${isDrive ? `<button type="button" onclick="Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '이동중')" style="${B} flex:1; background:#fff; border:1.5px solid ${nowEv.moving ? '#f59e0b' : '#c7d2fe'}; color:${nowEv.moving ? '#b45309' : '#4f46e5'};">${nowEv.moving ? '● 이동중' : '출발'}</button>` : ''}
+              <button type="button" onclick="${isDrive ? `Home.arriveStep(${escJs(nowEv.hqScheduleId)}, ${idx}, ${escJs(name)})` : `Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '완료')`}" style="${B} flex:1; background:#4f46e5; color:#fff;">${isDrive ? '도착' : '완료'}</button>
             </div>` : ''}
-            ${contact ? `<a href="tel:${esc(contact.phone.replace(/[^0-9+]/g, ''))}" style="${B} margin-top:6px; background:rgba(255,255,255,.16); color:#fff; text-decoration:none; font-size:13px; min-height:36px;">${esc(contact.name)} 전화 ${esc(contact.phone)}</a>` : ''}
+            ${contact ? `<a href="tel:${esc(contact.phone.replace(/[^0-9+]/g, ''))}" style="${B} margin-top:6px; background:#f8fafc; border:1px solid #e2e8f0; color:#334155; text-decoration:none; font-size:13px; min-height:36px;">${esc(contact.name)} 전화 ${esc(contact.phone)}</a>` : ''}
           </div>`;
       }
     } catch (e) { console.warn('지금 할 일 카드 오류', e); }
@@ -807,8 +807,8 @@ const Home = {
                         onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '이동중')"
                         style="white-space:nowrap; padding:4px 10px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.15s;
                                ${isMoving
-                                  ? 'border:2px solid #f59e0b; background:#fef3c7; color:#b45309; box-shadow:0 0 0 2px rgba(245,158,11,0.2);'
-                                  : 'border:1.5px solid #94a3b8; background:#ffffff; color:#334155; box-shadow:0 1px 2px rgba(0,0,0,0.04);'
+                                  ? 'border:1.5px solid #f59e0b; background:#fff; color:#b45309;'
+                                  : 'border:1px solid #cbd5e1; background:#ffffff; color:#475569;'
                                }">
                         이동중
                       </button>
@@ -818,8 +818,8 @@ const Home = {
                       onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '완료')"
                       style="white-space:nowrap; padding:4px 10px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.15s;
                              ${isDone
-                                ? 'border:2px solid #10b981; background:#d1fae5; color:#047857; box-shadow:0 0 0 2px rgba(16,185,129,0.2);'
-                                : 'border:1.5px solid #94a3b8; background:#ffffff; color:#334155; box-shadow:0 1px 2px rgba(0,0,0,0.04);'
+                                ? 'border:1.5px solid #4f46e5; background:#eef2ff; color:#4338ca;'
+                                : 'border:1px solid #cbd5e1; background:#ffffff; color:#475569;'
                              }">
                       완료
                     </button>
@@ -861,12 +861,12 @@ const Home = {
               ${isDriveStep ? `
                 <div style="margin-top:10px; padding-top:8px; border-top:1px dashed rgba(0,0,0,0.06); display:flex; justify-content:flex-end; align-items:center;">
                   <div style="display:flex; align-items:center; gap:6px; margin-left:auto; flex:1; max-width:180px; justify-content:flex-end;">
-                    <button type="button" onclick="U.openNavigation('${destinationTarget.replace(/'/g, "\\'")}', '', 'tmap')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:4px; padding:6px 0; border-radius:6px; background:#000000; color:#ffffff; font-size:12px; font-weight:700; border:none; cursor:pointer;" title="티맵 길안내">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="#ffffff" style="margin-top:-1px"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16zM11.99 1.5L2.5 9l9.49 7.5L21.5 9l-9.51-7.5z"/></svg>
+                    <button type="button" onclick="U.openNavigation('${destinationTarget.replace(/'/g, "\\'")}', '', 'tmap')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:4px; padding:6px 0; border-radius:6px; background:#f8fafc; color:#111827; font-size:12px; font-weight:700; border:1px solid #e2e8f0; cursor:pointer;" title="티맵 길안내">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="#111111" style="margin-top:-1px"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16zM11.99 1.5L2.5 9l9.49 7.5L21.5 9l-9.51-7.5z"/></svg>
                       TMAP
                     </button>
-                    <button type="button" onclick="U.openNavigation('${destinationTarget.replace(/'/g, "\\'")}', '', 'kakao')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:4px; padding:6px 0; border-radius:6px; background:#fee500; color:#191919; font-size:12px; font-weight:700; border:none; cursor:pointer;" title="카카오내비 길안내">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="#191919" style="margin-top:-1px"><path d="M12 3c-5.523 0-10 3.553-10 7.938 0 2.825 1.83 5.303 4.606 6.744l-1.01 3.7c-.053.195.166.353.332.227l4.316-2.82c.575.08 1.162.124 1.756.124 5.523 0 10-3.553 10-7.938C22 6.553 17.523 3 12 3z"/></svg>
+                    <button type="button" onclick="U.openNavigation('${destinationTarget.replace(/'/g, "\\'")}', '', 'kakao')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:4px; padding:6px 0; border-radius:6px; background:#f8fafc; color:#111827; font-size:12px; font-weight:700; border:1px solid #e2e8f0; cursor:pointer;" title="카카오내비 길안내">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="#e5c100" style="margin-top:-1px"><path d="M12 3c-5.523 0-10 3.553-10 7.938 0 2.825 1.83 5.303 4.606 6.744l-1.01 3.7c-.053.195.166.353.332.227l4.316-2.82c.575.08 1.162.124 1.756.124 5.523 0 10-3.553 10-7.938C22 6.553 17.523 3 12 3z"/></svg>
                       카카오내비
                     </button>
                   </div>
