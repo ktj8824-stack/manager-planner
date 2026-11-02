@@ -1051,7 +1051,7 @@ class HQDataStore {
       merged.push({
         ...(existing || {}), id, remoteId: row.id, syncStatus: 'synced',
         title: row.title, category: row.category || 'broadcast',
-        artistId: row.artist_id, artistName: row.artists?.name || this.getArtistName(row.artist_id),
+        artistId: row.artist_id || 'ALL', artistName: row.artists?.name || (row.artist_id ? this.getArtistName(row.artist_id) : '전원'),
         managerId: row.manager_id, managerName: row.profiles?.name || this.getManagerName(row.manager_id),
         vehicleId: row.vehicle_id, vehicleName: row.vehicles?.name || this.getVehicleName(row.vehicle_id),
         date: row.date, startTime: row.start_time ? row.start_time.substring(0, 5) : '10:00',
@@ -1431,7 +1431,9 @@ class HQDataStore {
 
   _schedulePayload(schedule) {
     return {
-      title: schedule.title, category: schedule.category || 'broadcast', artist_id: schedule.artistId,
+      title: schedule.title, category: schedule.category || 'broadcast',
+      // '전체 아티스트(전원)' 일정은 서버에 아티스트를 비워서 저장 (없는 아티스트 ID로 저장하면 거절됨)
+      artist_id: (!schedule.artistId || ['ALL', 'all'].includes(schedule.artistId)) ? null : schedule.artistId,
       manager_id: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(schedule.managerId || '') ? schedule.managerId : null, vehicle_id: schedule.vehicleId || null,
       date: schedule.date, start_time: schedule.startTime, end_time: schedule.endTime,
       location: schedule.location || '',
