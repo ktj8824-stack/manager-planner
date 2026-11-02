@@ -610,15 +610,11 @@ const Home = {
     this.currentEvents = events;
     let html = '<div style="padding: 8px 4px 40px;">';
     
-    // 아티스트/차량 요약 칸은 스케줄표와 겹쳐서 없애고, [+ 스케줄 추가]만 '지금 할 일' 카드 바로 위에 둔다
-    html += `
+    // 아티스트/차량 요약 칸은 스케줄표와 겹쳐서 없앰. [+ 스케줄 추가]는 '지금 할 일' 카드 오른쪽 위(시계 옆)에 둔다
+    const addRow = `
       <div style="display:flex; justify-content:flex-end; margin:0 0 8px;">
-        <button type="button" onclick="Home.openScheduleRegisterModal()" style="display:inline-flex; align-items:center; gap:5px; background:#eef2ff; color:#4f46e5; border:1px solid #c7d2fe; padding:7px 12px; border-radius:999px; font-size:13px; font-weight:700; cursor:pointer;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          스케줄 추가
-        </button>
-      </div>
-    `;
+        <button type="button" onclick="Home.openScheduleRegisterModal()" style="display:inline-flex; align-items:center; gap:5px; background:#4f46e5; color:#fff; border:0; padding:8px 12px; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer;">+ 스케줄 추가</button>
+      </div>`;
 
     // 타임라인 동일 시간 및 동일 라벨 단계 중복 제거 (Deduplication)
     const seenEvents = new Set();
@@ -634,6 +630,7 @@ const Home = {
     try {
       const pending = uniqueEvents.filter(e => !e.done);
       const nowEv = pending.find(e => e.moving === true) || pending[0];
+      if (!nowEv) html += addRow;
       if (uniqueEvents.length && !nowEv) {
         html += `<div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:16px; padding:16px; margin-bottom:14px; text-align:center; font-size:15px; font-weight:700; color:#047857;">오늘 일정이 모두 끝났습니다. 수고하셨습니다.</div>`;
       } else if (nowEv) {
@@ -659,8 +656,11 @@ const Home = {
         html += `
           <div style="background:linear-gradient(135deg,#4f46e5,#6d5dfc); color:#fff; border-radius:16px; padding:12px 13px; margin-bottom:12px; box-shadow:0 6px 16px rgba(79,70,229,.22);">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px;">
-              <span style="font-size:12px; font-weight:700; opacity:.9;">지금 할 일 · ${esc(tag)}</span>
-              <span style="font-size:12.5px; font-weight:700; background:rgba(255,255,255,.18); padding:2px 9px; border-radius:999px;">${esc(nowEv.time || '')}</span>
+              <span style="font-size:12px; font-weight:700; opacity:.9; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">지금 할 일 · ${esc(tag)}</span>
+              <span style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                <span style="font-size:12.5px; font-weight:700; background:rgba(255,255,255,.18); padding:4px 9px; border-radius:8px;">${esc(nowEv.time || '')}</span>
+                <button type="button" onclick="Home.openScheduleRegisterModal()" style="font-size:12.5px; font-weight:800; background:#fff; color:#4f46e5; border:0; padding:4px 9px; border-radius:8px; cursor:pointer; white-space:nowrap;">+ 스케줄 추가</button>
+              </span>
             </div>
             <div style="font-size:17px; font-weight:700; line-height:1.3; margin-bottom:2px;">${esc(name)}</div>
             ${dest ? `<div style="font-size:12.5px; opacity:.9; margin-bottom:9px;">${esc(dest)}</div>` : '<div style="height:8px;"></div>'}
