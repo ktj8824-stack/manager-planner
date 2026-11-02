@@ -82,6 +82,18 @@ function checkLinks(dir, label) {
       if (rel && !fs.existsSync(path.join(dir, rel))) problems.push(`${label}/${name} — 없는 파일 링크: ${rel}`);
     }
   }
+  // 스크립트로 이동하는 페이지 검사 (location.href = 'x.html', location.replace('x.html') 등)
+  const NAV_RE = /location\.(?:href\s*=|replace\(|assign\()\s*['"]([^'"?#]+\.html)/g;
+  for (const file of walk(dir, new Set(['.git', 'node_modules']))) {
+    if (!/\.(html|js)$/.test(file)) continue;
+    const src = fs.readFileSync(file, 'utf8');
+    for (const m of src.matchAll(NAV_RE)) {
+      const rel = m[1].replace(/^\.\//, '');
+      if (!/^https?:/.test(rel) && !fs.existsSync(path.join(dir, rel))) {
+        problems.push(`${label}/${path.relative(dir, file).replace(/\\/g, '/')} — 없는 페이지로 이동: ${rel}`);
+      }
+    }
+  }
   const sw = path.join(dir, 'sw.js');
   if (fs.existsSync(sw)) {
     const src = fs.readFileSync(sw, 'utf8');
@@ -197,6 +209,20 @@ copyDir(path.join(ROOT, 'css'), path.join(DIST_APP, 'css'));
 copyDir(path.join(ROOT, 'img'), path.join(DIST_APP, 'img'));
 copyDir(path.join(ROOT, 'icons'), path.join(DIST_APP, 'icons'));
 copyDir(path.join(ROOT, 'js'), path.join(DIST_APP, 'js'));
+// 관리자 화면 코드는 앱에서 쓰지 않으므로 뺍니다 (앱에는 admin-login.html이 없음)
+fs.rmSync(path.join(DIST_APP, 'js', 'admin.js'), { force: true });
+
+// 앱에는 관제 포털(admin.html)이 없으므로 결제 후에는 앱의 프로필 화면으로 돌아갑니다
+{
+  const p = path.join(DIST_APP, 'payment-result.html');
+  if (fs.existsSync(p)) {
+    const html = fs.readFileSync(p, 'utf8')
+      .replace(/(['"])admin\.html\1/g, '$1index.html#profile$1')
+      .replace(/관제 포털로 돌아가기/g, '플래너 앱으로 돌아가기')
+      .replace(/관제 포털로 이동/g, '플래너 앱으로 이동');
+    fs.writeFileSync(p, html, 'utf8');
+  }
+}
 
 for (const f of ['icon.svg', 'icon-192.png', 'icon-512.png', 'privacy.html', 'terms.html']) {
   copyFile(path.join(ROOT, f), path.join(DIST_APP, f));
