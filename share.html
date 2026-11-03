@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#1e1b4b">
+  <title>로드플래너 · 일정 공유</title>
+  <link rel="icon" href="icon-192.png">
+  <style>
+    :root { --ink:#111827; --sub:#6b7280; --line:#e5e7eb; --acc:#4f46e5; --bg:#f2f2f7; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,'Pretendard Variable','Pretendard','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+    header { background:#1e1b4b; color:#fff; padding:calc(14px + env(safe-area-inset-top)) 18px 14px; display:flex; align-items:center; justify-content:space-between; }
+    header b { font-size:18px; letter-spacing:-.03em; } header b i { font-style:normal; color:#a5b4fc; }
+    header span { font-size:12px; opacity:.75; }
+    main { max-width:520px; margin:0 auto; padding:16px 16px calc(28px + env(safe-area-inset-bottom)); }
+    .card { background:#fff; border:1px solid var(--line); border-radius:18px; padding:18px; margin-bottom:12px; }
+    .tag { display:inline-block; font-size:12.5px; font-weight:800; color:var(--acc); background:#eef2ff; padding:3px 9px; border-radius:7px; }
+    h1 { font-size:22px; font-weight:800; letter-spacing:-.03em; margin:10px 0 4px; line-height:1.3; }
+    .when { font-size:16px; font-weight:700; color:#334155; }
+    .row { display:flex; gap:10px; align-items:flex-start; padding:10px 0; border-top:1px solid #f1f5f9; font-size:15px; }
+    .row:first-of-type { border-top:0; }
+    .row .k { flex:0 0 92px; white-space:nowrap; color:var(--sub); font-size:13.5px; font-weight:700; padding-top:1px; }
+    .row .v { flex:1; font-weight:600; line-height:1.45; word-break:keep-all; }
+    .btns { display:flex; gap:8px; margin-top:12px; }
+    .btn { flex:1; height:46px; border-radius:12px; border:1px solid var(--line); background:#f8fafc; color:var(--ink); font-size:15px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:6px; text-decoration:none; }
+    .btn.pri { background:var(--acc); color:#fff; border-color:var(--acc); }
+    .dot { width:10px; height:10px; border-radius:3px; display:inline-block; }
+    .tl { list-style:none; }
+    .tl li { display:flex; gap:12px; padding:9px 0; border-top:1px solid #f1f5f9; }
+    .tl li:first-child { border-top:0; }
+    .tl .t { flex:0 0 52px; font-weight:800; color:#334155; font-variant-numeric:tabular-nums; }
+    .tl .l { flex:1; font-size:14.5px; line-height:1.4; }
+    .tl .l small { display:block; font-size:12px; font-weight:800; color:var(--acc); }
+    .tl li.done .l, .tl li.done .t { color:#9ca3af; } .tl li.done .l { text-decoration:line-through; }
+    .sec { font-size:14px; font-weight:800; color:var(--sub); margin:2px 0 6px; }
+    .note { font-size:12.5px; color:var(--sub); text-align:center; line-height:1.6; margin-top:8px; }
+    .msg { text-align:center; padding:60px 20px; color:var(--sub); font-size:15px; line-height:1.7; }
+    .msg b { display:block; color:var(--ink); font-size:19px; margin-bottom:6px; }
+  </style>
+</head>
+<body>
+  <header><b>Road<i>Planner</i></b><span>일정 공유</span></header>
+  <main id="root"><div class="msg">일정을 불러오는 중…</div></main>
+  <script>
+  (function () {
+    'use strict';
+    var URL_ = 'https://gohxflsyhogyxantnlig.supabase.co/rest/v1/rpc/get_shared_schedule';
+    var KEY = 'sb_publishable_4BiVB8PhD5kk1Dvtvf6Hkw_8YZL0Mwa';   // 공개용 키 (링크 조회 함수만 부를 수 있음)
+    var DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+    var root = document.getElementById('root');
+    var token = (new URLSearchParams(location.search).get('t') || '').trim();
+    function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function show(title, body) { root.innerHTML = '<div class="msg"><b>' + esc(title) + '</b>' + esc(body) + '</div>'; }
+    if (!/^[0-9a-f]{64}$/.test(token)) { show('링크가 올바르지 않아요', '받으신 링크 전체를 다시 눌러 주세요.'); return; }
+
+    var mobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    function nav(place) {
+      var q = encodeURIComponent(place);
+      var kakao = 'https://map.kakao.com/link/search/' + q;
+      var tmap = mobile ? 'tmap://search?name=' + q : kakao;
+      return '<div class="btns"><a class="btn" href="' + esc(tmap) + '"><span class="dot" style="background:#111"></span>TMAP</a>' +
+        '<a class="btn" href="' + esc(kakao) + '" target="_blank" rel="noopener"><span class="dot" style="background:#fee500;border:1px solid #e5cf00"></span>카카오맵</a></div>';
+    }
+    function cleanPlace(s) { return String(s || '').replace(/\s*\(\s*\)\s*$/, '').trim(); }
+
+    function render(d) {
+      if (!d) { show('볼 수 없는 일정이에요', '링크가 끊겼거나 비공개로 바뀐 일정입니다. 담당 매니저에게 확인해 주세요.'); return; }
+      if (d.expired) { show('공유 기간이 끝났어요', '이 링크는 일정 다음 날까지만 열립니다.'); return; }
+      var dt = new Date(d.date + 'T00:00:00');
+      var dateTxt = isNaN(dt) ? d.date : (dt.getMonth() + 1) + '월 ' + dt.getDate() + '일 (' + DAYS[dt.getDay()] + ')';
+      var loc = cleanPlace(d.location), shop = cleanPlace(d.shop), dep = cleanPlace(d.departure);
+      var h = '<div class="card">' + (d.artist ? '<span class="tag">' + esc(d.artist) + '</span>' : '') +
+        '<h1>' + esc(d.title) + '</h1><div class="when">' + esc(dateTxt) + ' · ' + esc(d.start_time) + (d.end_time ? ' ~ ' + esc(d.end_time) : '') + '</div></div>';
+      h += '<div class="card">';
+      if (loc) h += '<div class="row"><div class="k">장소</div><div class="v">' + esc(loc) + '</div></div>';
+      if (shop) h += '<div class="row"><div class="k">헤어·메이크업</div><div class="v">' + esc(shop) + '</div></div>';
+      if (dep) h += '<div class="row"><div class="k">출발·픽업</div><div class="v">' + esc(dep) + '</div></div>';
+      if (loc) h += nav(loc);
+      h += '</div>';
+      var tl = Array.isArray(d.timeline) ? d.timeline.filter(function (t) { return t && t.time; }) : [];
+      if (tl.length) {
+        h += '<div class="card"><div class="sec">동선</div><ul class="tl">' + tl.map(function (t) {
+          var m = String(t.label || '').match(/^\[([^\]]+)\]\s*(.*)$/);
+          return '<li class="' + (t.done ? 'done' : '') + '"><div class="t">' + esc(t.time) + '</div><div class="l">' + (m ? '<small>' + esc(m[1]) + '</small>' + esc(m[2]) : esc(t.label)) + '</div></li>';
+        }).join('') + '</ul></div>';
+      }
+      if (d.manager_name || d.manager_phone) {
+        var tel = String(d.manager_phone || '').replace(/[^0-9+]/g, '');
+        h += '<div class="card"><div class="row"><div class="k">담당</div><div class="v">' + esc(d.manager_name || '담당 매니저') + '</div></div>' +
+          (tel ? '<div class="btns"><a class="btn pri" href="tel:' + esc(tel) + '">담당 매니저에게 전화</a></div>' : '') + '</div>';
+      }
+      var exp = new Date(d.expires_at), up = new Date(d.updated_at);
+      h += '<div class="note">일정이 바뀌면 이 화면에도 바로 반영됩니다' + (isNaN(up) ? '' : ' · ' + (up.getMonth() + 1) + '/' + up.getDate() + ' ' + String(up.getHours()).padStart(2, '0') + ':' + String(up.getMinutes()).padStart(2, '0') + ' 기준') +
+        '<br>' + (isNaN(exp) ? '' : (exp.getMonth() + 1) + '월 ' + exp.getDate() + '일 0시까지 열리는 링크입니다. 다른 사람에게 전달하지 말아 주세요.') + '</div>';
+      root.innerHTML = h;
+    }
+
+    function load() {
+      fetch(URL_, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: KEY }, body: JSON.stringify({ p_token: token }) })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(render)
+        .catch(function () { if (!root.querySelector('.card')) show('일정을 불러오지 못했어요', '인터넷 연결을 확인하고 새로고침해 주세요.'); });
+    }
+    load();
+    setInterval(function () { if (!document.hidden) load(); }, 60000);
+  })();
+  </script>
+</body>
+</html>

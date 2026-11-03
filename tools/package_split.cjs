@@ -224,7 +224,7 @@ fs.rmSync(path.join(DIST_APP, 'js', 'admin.js'), { force: true });
   }
 }
 
-for (const f of ['icon.svg', 'icon-192.png', 'icon-512.png', 'privacy.html', 'terms.html']) {
+for (const f of ['icon.svg', 'icon-192.png', 'icon-512.png', 'privacy.html', 'terms.html', 'share.html']) {
   copyFile(path.join(ROOT, f), path.join(DIST_APP, f));
   copyFile(path.join(ROOT, f), path.join(DIST_WEB, f));
 }

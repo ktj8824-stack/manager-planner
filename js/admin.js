@@ -4221,6 +4221,15 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // 외부 협력자용 공유 링크 (앱 설치 없이 일정 하나만 보기)
+    const btnShare = document.getElementById('btn-share-schedule');
+    if (btnShare) {
+      btnShare.addEventListener('click', () => {
+        const schId = state.activeScheduleId || window.Admin.currentDetailScheduleId;
+        if (window.ScheduleShare) window.ScheduleShare.open(schId);
+      });
+    }
+
     // 이 일정 복사: 내용은 그대로, 날짜는 다음 날로 새 일정 입력창을 연다 (저장하기 전까지 아무것도 만들어지지 않음)
     const btnCopy = document.getElementById('btn-copy-schedule');
     if (btnCopy) {

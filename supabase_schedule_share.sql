@@ -1,0 +1,3 @@
+-- 2026-11-03 적용 완료 (Claude가 Supabase 메인 프로젝트에 직접 적용, 마이그레이션 이름: schedule_share_links)
+-- 일정 공유 링크: schedule_shares 표 + create_schedule_share / revoke_schedule_shares / get_shared_schedule 함수
+-- 전체 SQL은 Supabase 대시보드 > Database > Migrations 에서 확인할 수 있습니다.
