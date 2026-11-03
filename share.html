@@ -61,8 +61,8 @@
       var q = encodeURIComponent(place);
       var kakao = 'https://map.kakao.com/link/search/' + q;
       var tmap = mobile ? 'tmap://search?name=' + q : kakao;
-      return '<div class="btns"><a class="btn" href="' + esc(tmap) + '"><span class="dot" style="background:#111"></span>TMAP</a>' +
-        '<a class="btn" href="' + esc(kakao) + '" target="_blank" rel="noopener"><span class="dot" style="background:#fee500;border:1px solid #e5cf00"></span>카카오맵</a></div>';
+      return '<div class="btns"><a class="btn" data-go="' + esc(tmap) + '"><span class="dot" style="background:#111"></span>TMAP</a>' +
+        '<a class="btn" data-go="' + esc(kakao) + '" target="_blank" rel="noopener"><span class="dot" style="background:#fee500;border:1px solid #e5cf00"></span>카카오맵</a></div>';
     }
     function cleanPlace(s) { return String(s || '').replace(/\s*\(\s*\)\s*$/, '').trim(); }
 
@@ -96,6 +96,7 @@
       h += '<div class="note">일정이 바뀌면 이 화면에도 바로 반영됩니다' + (isNaN(up) ? '' : ' · ' + (up.getMonth() + 1) + '/' + up.getDate() + ' ' + String(up.getHours()).padStart(2, '0') + ':' + String(up.getMinutes()).padStart(2, '0') + ' 기준') +
         '<br>' + (isNaN(exp) ? '' : (exp.getMonth() + 1) + '월 ' + exp.getDate() + '일 0시까지 열리는 링크입니다. 다른 사람에게 전달하지 말아 주세요.') + '</div>';
       root.innerHTML = h;
+      root.querySelectorAll('a[data-go]').forEach(function (a) { a.setAttribute('href', a.getAttribute('data-go')); });
     }
 
     function load() {

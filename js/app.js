@@ -3,7 +3,7 @@
    ========================================= */
 
 const App = {
-  screens: ['home','register','timeline','login','onboarding','profile','upgrade'],
+  screens: ['home','register','timeline','login','onboarding','profile','upgrade','market'],
 
   async init() {
     if (!State.loadSchedules()) {
@@ -191,6 +191,7 @@ const App = {
         case 'onboarding': Onboarding.init(); break;
         case 'profile': Profile.render(); break;
         case 'upgrade': Upgrade.init(); break;
+        case 'market': Market.init(); break;
       }
     }
     this.updateNav(name === 'timeline' ? 'home' : name);
@@ -247,6 +248,10 @@ const App = {
         <button class="top-nav-item active" data-s="home" onclick="App.navigate('home')">
           <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="1.8" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
           <span class="nav-label">홈</span>
+        </button>
+        <button class="top-nav-item" data-s="market" onclick="App.navigate('market')">
+          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+          <span class="nav-label">마켓</span>
         </button>
         <button class="top-nav-item" data-s="profile" onclick="App.navigate('profile')">
           <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="1.8" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
