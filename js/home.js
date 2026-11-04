@@ -385,6 +385,16 @@ const Home = {
     `;
 
     // 본사가 바꾼 일정 중 아직 '확인했습니다'를 안 누른 것 (오늘 이후 전체)
+    // 대표·본사 계정으로 매니저 앱에 들어와 있으면 알려 주고, 바로 계정을 바꿀 수 있게
+    try {
+      const role = localStorage.getItem('bp_user_role');
+      if ((role === 'ceo' || role === 'hq_admin') && window.SupabaseClient?.currentUser?.id) {
+        html += `<div style="display:flex; align-items:center; gap:10px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:12px; padding:10px 12px; margin:0 0 12px;">
+          <span style="flex:1; font-size:13.5px; font-weight:700; color:#3730a3; line-height:1.4;">${esc(localStorage.getItem('bp_user_name') || '대표')} (${role === 'ceo' ? '대표' : '본사'}) 계정으로 보는 중</span>
+          <button type="button" onclick="Profile.switchAccount()" style="flex-shrink:0; border:0; background:#4f46e5; color:#fff; font-size:13.5px; font-weight:800; padding:8px 12px; border-radius:9px; cursor:pointer;">매니저로 로그인</button>
+        </div>`;
+      }
+    } catch (e) { }
     html += this.renderAckCards();
 
     if (events.length === 0 && rawSchedules.length === 0) {
