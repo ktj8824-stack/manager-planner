@@ -3001,6 +3001,7 @@ document.addEventListener('DOMContentLoaded', () => {
               📍 ${esc(sch.locationAddress)}
             </div>
           ` : ''}
+          ${sch.location ? `<div data-venue="${esc(sch.locationAddress || sch.location)}" style="padding-left:23px;"></div>` : ''}
         </div>
         <div style="background:#e2e8f0; padding:10px 12px; border-radius:8px; border:1px solid #cbd5e1; display:flex; align-items:center; gap:8px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -4280,7 +4281,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return sameKind ? { ...st, done: !!o.done, doneAt: o.doneAt || null, moving: !!o.moving } : st;
           });
           const changes = merged.map((st, i) => (old[i] && old[i].time !== st.time) ? `${String(st.label || '').replace(/^\[([^\]]+)\].*$/, '$1')} ${old[i].time}→${st.time}` : null).filter(Boolean);
-          const notes = merged.filter(st => /예측|기준|추정/.test(st.desc || '')).map(st => '· ' + String(st.label || '').replace(/^\[([^\]]+)\].*$/, '$1') + ': ' + (String(st.desc).match(/이동 약 \d+분/) || [''])[0] + ' (' + (String(st.desc).match(/· ([^)]+)\)$/) || ['', ''])[1] + ')');
+          const notes = merged.filter(st => /예측|기준|추정/.test(st.desc || '')).map(st => '· ' + String(st.label || '').replace(/^\[([^\]]+)\].*$/, '$1') + ': ' + (String(st.desc).match(/이동 약 \d+분/) || [''])[0] + ' (' + (String(st.desc).match(/· ([^·]+?)\)\s*$/) || ['', ''])[1] + ')');
           if (!changes.length) { alert('✅ 그날 교통 예측으로 다시 계산해 봤는데 바뀐 시간이 없습니다.\n\n' + notes.join('\n')); return; }
           if (!confirm('그날 교통 예측으로 다시 계산한 결과입니다.\n\n' + changes.join('\n') + '\n\n' + notes.join('\n') + '\n\n이대로 바꿀까요? (담당 매니저에게 확인 요청이 갑니다)')) return;
           await window.hqStore.updateSchedule(schId, { timeline: merged });

@@ -1,0 +1,3 @@
+-- 2026-11-04 적용됨: 현장 메모 (장소별 주차·출입구·대기실 정보 공유) — 전체 SQL은 Supabase 마이그레이션 venue_notes 참고
+-- venue_notes(id, company_id, place_key, place_label, note, author_id, author_name, created_at)
+-- RLS: 같은 회사만 읽기 / 본인 이름으로 작성 / 본인 또는 본사가 삭제

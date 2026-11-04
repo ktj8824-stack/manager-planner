@@ -680,7 +680,7 @@ const Home = {
               </span>
             </div>
             <div style="font-size:17px; font-weight:700; line-height:1.3; margin-bottom:2px;">${esc(name)}</div>
-            ${dest ? `<div style="font-size:12.5px; color:#6b7280; margin-bottom:9px;">${esc(dest)}</div>` : '<div style="height:8px;"></div>'}
+            ${dest ? `<div style="font-size:12.5px; color:#6b7280; margin-bottom:9px;">${esc(dest)}</div><div data-venue="${esc(dest)}" data-venue-compact style="margin:-4px 0 9px;"></div>` : '<div style="height:8px;"></div>'}
             ${dest ? `<div style="display:flex; gap:6px; margin-bottom:6px;">
               <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'tmap')" style="${B} flex:1; background:#f8fafc; border:1px solid #e2e8f0; color:#111827;"><span style="width:10px;height:10px;border-radius:3px;background:#111;display:inline-block"></span>TMAP</button>
               <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'kakao')" style="${B} flex:1; background:#f8fafc; border:1px solid #e2e8f0; color:#111827;"><span style="width:10px;height:10px;border-radius:3px;background:#fee500;border:1px solid #e5cf00;display:inline-block"></span>카카오내비</button>
@@ -870,7 +870,8 @@ const Home = {
                    const bMin = bufferMatch ? parseInt(bufferMatch[1], 10) : 0;
                    const totalMin = tMin + bMin;
                    const bufferText = bMin > 0 ? ` + 버퍼 ${bMin}분 배정 ` : ' ';
-                   cleanDesc = `이동 약 ${tMin}분${bufferText}(예상 소요 약 ${totalMin}분)`;
+                   const basis = (cleanDesc.match(/·\s*([^·]+?)\)\s*$/) || [])[1];   // 예: '11/7(토) 13:20 도착 기준 교통 예측'
+                   cleanDesc = `이동 약 ${tMin}분${bufferText}(예상 소요 약 ${totalMin}분${basis ? ' · ' + basis.trim() : ''})`;
                  }
                }
                return `
@@ -878,6 +879,13 @@ const Home = {
                    ${isDriveStep ? '<span style="color:#4f46e5; font-weight:700; margin-right:4px;">⏱️ 동선 역산 :</span>' : ''}${esc(cleanDesc)}
                  </div>
                `;
+             })()}
+
+             ${(() => {
+               // 현장 메모: 메인 일정(현장)·헤어메이크업(샵) 단계에 그 장소의 메모를 보여 줌
+               const place = titleText.includes('[메인 일정]') ? (ev.locationAddress || ev.location || '')
+                 : (titleText.includes('헤어') || titleText.includes('메이크업')) ? (ev.shopAddress || ev.shopName || '') : '';
+               return place && !ev.isSecretHidden ? `<div data-venue="${esc(place)}"></div>` : '';
              })()}
 
               <!-- 하단: [티맵] [카카오] 네비게이션 버튼 (이동 단계에서만 표시) -->
