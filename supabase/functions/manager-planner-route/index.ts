@@ -10,6 +10,8 @@
 //   tmap_pois        {keyword}          티맵 장소 검색
 //   tmap_pois_near   {keyword,lat,lng,radius}  티맵 주변 장소 검색 (radius km, 1~33)
 //   tmap_route       {sx,sy,ex,ey}      티맵 자동차 경로
+//   tmap_route_at    {sx,sy,ex,ey,at,mode}  티맵 타임머신 경로 — 그 날짜·시간의 예측 교통으로 계산
+//                    at = 'YYYY-MM-DDTHH:MM' (한국 시간), mode = 'arrive'(그 시각 도착) | 'depart'(그 시각 출발)
 // 응답: 원래 API의 JSON 그대로 (웹의 해석 코드가 같도록)
 //
 // 배포: 버디플래너 Supabase 프로젝트에 함수 이름 manager-planner-route (verify_jwt = true, anon 키로 호출)
@@ -112,13 +114,32 @@ export async function handle(req: Request, env: Env, fetchFn: Fetch = fetch, now
     if (!c) return json({ error: "좌표가 올바르지 않음" }, 400, cors);
     url = `https://apis.openapi.sk.com/tmap/routes?version=1&startX=${c.sx}&startY=${c.sy}&endX=${c.ex}&endY=${c.ey}&${GEO}&searchOption=0&trafficInfo=Y`;
     init = { headers: { appKey: tmap } };
+  } else if (service === "tmap_route_at") {
+    const c = coords(p);
+    if (!c) return json({ error: "좌표가 올바르지 않음" }, 400, cors);
+    const at = String(p.at || "");
+    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(at)) return json({ error: "시간 형식 오류" }, 400, cors);
+    const t0 = Date.parse(at + ":00+09:00");
+    if (!Number.isFinite(t0) || t0 < now - 3600_000 || t0 > now + 400 * 86400_000) return json({ error: "예측할 수 없는 시간" }, 400, cors);
+    // 티맵 규칙: predictionType 'departure' = 주어진 시각에 '도착'하려면 언제 출발? / 'arrival' = 주어진 시각에 '출발'하면 언제 도착?
+    const predictionType = p.mode === "depart" ? "arrival" : "departure";
+    url = `https://apis.openapi.sk.com/tmap/routes/prediction?version=1&${GEO}&sort=index`;
+    init = {
+      method: "POST",
+      headers: { appKey: tmap, "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ routesInfo: {
+        departure: { name: "start", lon: String(c.sx), lat: String(c.sy) },
+        destination: { name: "end", lon: String(c.ex), lat: String(c.ey) },
+        predictionType, predictionTime: at + ":00+0900", searchOption: "00",
+      } }),
+    };
   } else {
     return json({ error: "지원하지 않는 요청" }, 400, cors);
   }
   if (service.startsWith("kakao") && !kakao) return json({ error: "카카오 키가 설정되지 않음" }, 503, cors);
   if (service.startsWith("tmap") && !tmap) return json({ error: "티맵 키가 설정되지 않음" }, 503, cors);
 
-  const cacheKey = service + "|" + url;
+  const cacheKey = service + "|" + url + "|" + (typeof init.body === "string" ? init.body : "");
   const hit = cache.get(cacheKey);
   if (hit && now - hit.at < CACHE_MS) return json(hit.body, 200, cors);
 
@@ -132,7 +153,7 @@ export async function handle(req: Request, env: Env, fetchFn: Fetch = fetch, now
       return json(body, 200, cors);
     }
     // 키 오류 등 원래 서비스의 실패는 내용을 숨기고 상태만 알림
-    console.warn("upstream", service, res.status);
+    console.warn("upstream", service, res.status, service === "tmap_route_at" ? body.slice(0, 300) : "");
     return json({ error: "외부 서비스 오류", status: res.status }, 502, cors);
   } catch (_e) {
     return json({ error: "외부 서비스에 연결하지 못함" }, 502, cors);

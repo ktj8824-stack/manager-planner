@@ -1844,7 +1844,34 @@ class HQDataStore {
   }
 
   // 실시간 경로 및 요일/시간대별 미래 교통 정체 예측 기반 자동차 소요시간(분) 조회
-  async getTravelDuration(originText, destText, fallbackMin = 45, targetDateStr = null, targetTimeStr = null) {
+  // ── 이동 소요시간: 그 날짜·그 시각에 '도착'하는 기준으로 예측 ──
+  //  1) 티맵 타임머신 (미래 날짜·시간 예측 교통)  2) 현재 실시간 교통 (과거·당장 출발)  3) 거리 기반 추정
+  async getTravelDuration(originText, destText, fallbackMin = 45, targetDateStr = null, arriveTimeStr = null) {
+    if (!originText || !destText) return { minutes: fallbackMin, isRealtime: false, note: '기본값' };
+    const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+    try {
+      const [a, b] = (typeof KakaoAPI !== 'undefined' && KakaoAPI.geocode)
+        ? await Promise.all([KakaoAPI.geocode(originText), KakaoAPI.geocode(destText)]) : [null, null];
+      if (a && b) {
+        const at = (targetDateStr && arriveTimeStr) ? `${targetDateStr}T${arriveTimeStr}` : null;
+        const atMs = at ? new Date(at + ':00+09:00').getTime() : NaN;
+        const d0 = new Date((targetDateStr || '') + 'T00:00:00');
+        const label = isNaN(d0) ? '' : `${d0.getMonth() + 1}/${d0.getDate()}(${DAYS[d0.getDay()]}) `;
+        if (at && atMs > Date.now() + 10 * 60000 && typeof TmapAPI !== 'undefined' && TmapAPI.getRouteTimeAt) {
+          const m = await TmapAPI.getRouteTimeAt(a.x, a.y, b.x, b.y, at, 'arrive');
+          if (m) return { minutes: m, isRealtime: true, predicted: true, note: `${label}${arriveTimeStr} 도착 기준 교통 예측`, provider: 'tmap_timemachine' };
+        }
+        let m = null;
+        if (typeof TmapAPI !== 'undefined' && TmapAPI.getRouteTime) m = await TmapAPI.getRouteTime(a.x, a.y, b.x, b.y);
+        if (!m && typeof KakaoAPI !== 'undefined' && KakaoAPI.getRouteTime) m = await KakaoAPI.getRouteTime(a.x, a.y, b.x, b.y);
+        if (m) return { minutes: m, isRealtime: true, predicted: false, note: '현재 교통 기준', provider: 'realtime' };
+      }
+    } catch (e) { console.warn('예측 소요시간 조회 실패, 추정값 사용:', e); }
+    const est = await this._estimateTravelDuration(originText, destText, fallbackMin, targetDateStr, arriveTimeStr);
+    return { ...est, predicted: false, note: '거리·시간대 기준 추정' };
+  }
+
+  async _estimateTravelDuration(originText, destText, fallbackMin = 45, targetDateStr = null, targetTimeStr = null) {
     if (!originText || !destText) {
       return { minutes: fallbackMin, isRealtime: false, note: '기본값' };
     }
@@ -2011,8 +2038,7 @@ class HQDataStore {
       const shopDuration = Number(schedule.shop.durationMin) || defaultShopMin;
 
       // 1. [헤메샵 ➡️ 메인 현장] 해당 날짜/시간대 이동 소요시간 정밀 예측
-      const approxShopDepartHour = fmt(targetArriveMinutes - 35);
-      const travelShopToMainInfo = await this.getTravelDuration(shopAddress, mainLocation, 25, scheduleDate, approxShopDepartHour);
+      const travelShopToMainInfo = await this.getTravelDuration(shopAddress, mainLocation, 25, scheduleDate, fmt(targetArriveMinutes));
       const travelShopToMain = travelShopToMainInfo.minutes;
       const totalShopToMain = travelShopToMain + travelBuffer;
 
@@ -2020,8 +2046,7 @@ class HQDataStore {
       const shopArriveMinutes = shopDepartMinutes - shopDuration;
 
       // 2. [숙소/출발지 ➡️ 헤메샵] 해당 날짜/아침 시간대 이동 소요시간 정밀 예측
-      const approxDepartHour = fmt(shopArriveMinutes - 30);
-      const travelDepartToShopInfo = await this.getTravelDuration(departureAddress, shopAddress, 20, scheduleDate, approxDepartHour);
+      const travelDepartToShopInfo = await this.getTravelDuration(departureAddress, shopAddress, 20, scheduleDate, fmt(shopArriveMinutes));
       const travelDepartToShop = travelDepartToShopInfo.minutes;
       const totalDepartToShop = travelDepartToShop + travelBuffer;
 
@@ -2030,7 +2055,7 @@ class HQDataStore {
       timeline.push({
         time: fmt(departMinutes),
         label: `[픽업 출발] ${departurePlace} 픽업 및 출발`,
-        desc: `이동 약 ${travelDepartToShop}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToShop + travelBuffer}분)`,
+        desc: `이동 약 ${travelDepartToShop}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToShop + travelBuffer}분 · ${travelDepartToShopInfo.note})`,
         done: false
       });
 
@@ -2044,13 +2069,12 @@ class HQDataStore {
       timeline.push({
         time: fmt(shopDepartMinutes),
         label: `[현장 이동] 현장(${schedule.location || '행사장'})으로 출발`,
-        desc: `이동 약 ${travelShopToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelShopToMain + travelBuffer}분)`,
+        desc: `이동 약 ${travelShopToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelShopToMain + travelBuffer}분 · ${travelShopToMainInfo.note})`,
         done: false
       });
     } else {
       // 샵 미경유: [숙소/출발지 ➡️ 메인 현장] 스케줄 날짜/시간대별 정밀 예측
-      const approxDepartHour = fmt(targetArriveMinutes - 45);
-      const travelDepartToMainInfo = await this.getTravelDuration(departureAddress, mainLocation, 40, scheduleDate, approxDepartHour);
+      const travelDepartToMainInfo = await this.getTravelDuration(departureAddress, mainLocation, 40, scheduleDate, fmt(targetArriveMinutes));
       const travelDepartToMain = travelDepartToMainInfo.minutes;
       const totalDepartToMain = travelDepartToMain + travelBuffer;
 
@@ -2059,7 +2083,7 @@ class HQDataStore {
       timeline.push({
         time: fmt(departMinutes),
         label: `[현장 이동] ${departurePlace} 출발 및 이동`,
-        desc: `이동 약 ${travelDepartToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToMain + travelBuffer}분)`,
+        desc: `이동 약 ${travelDepartToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToMain + travelBuffer}분 · ${travelDepartToMainInfo.note})`,
         done: false
       });
     }

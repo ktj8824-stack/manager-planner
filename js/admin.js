@@ -4261,6 +4261,41 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // 동선 다시 계산: 그 날짜·그 시각에 도착하는 기준의 예측 교통(티맵 타임머신)으로 출발 시간들을 새로 잡는다
+    const btnRetime = document.getElementById('btn-retime-schedule');
+    if (btnRetime) {
+      btnRetime.addEventListener('click', async () => {
+        const schId = state.activeScheduleId || window.Admin.currentDetailScheduleId;
+        const sch = (await window.hqStore.getSchedules()).find(s => s.id === schId);
+        if (!sch) return;
+        const label = btnRetime.innerHTML;
+        btnRetime.disabled = true; btnRetime.textContent = '교통 예측 계산 중…';
+        try {
+          const fresh = await window.hqStore.generateSmartTimelineAsync(JSON.parse(JSON.stringify(sch)));
+          const old = Array.isArray(sch.timeline) ? sch.timeline : [];
+          // 이미 진행한 단계(완료·이동중) 표시는 그대로 유지
+          const merged = fresh.map((st, i) => {
+            const o = old[i];
+            const sameKind = o && String(o.label || '').split(']')[0] === String(st.label || '').split(']')[0];
+            return sameKind ? { ...st, done: !!o.done, doneAt: o.doneAt || null, moving: !!o.moving } : st;
+          });
+          const changes = merged.map((st, i) => (old[i] && old[i].time !== st.time) ? `${String(st.label || '').replace(/^\[([^\]]+)\].*$/, '$1')} ${old[i].time}→${st.time}` : null).filter(Boolean);
+          const notes = merged.filter(st => /예측|기준|추정/.test(st.desc || '')).map(st => '· ' + String(st.label || '').replace(/^\[([^\]]+)\].*$/, '$1') + ': ' + (String(st.desc).match(/이동 약 \d+분/) || [''])[0] + ' (' + (String(st.desc).match(/· ([^)]+)\)$/) || ['', ''])[1] + ')');
+          if (!changes.length) { alert('✅ 그날 교통 예측으로 다시 계산해 봤는데 바뀐 시간이 없습니다.\n\n' + notes.join('\n')); return; }
+          if (!confirm('그날 교통 예측으로 다시 계산한 결과입니다.\n\n' + changes.join('\n') + '\n\n' + notes.join('\n') + '\n\n이대로 바꿀까요? (담당 매니저에게 확인 요청이 갑니다)')) return;
+          await window.hqStore.updateSchedule(schId, { timeline: merged });
+          const mid = sch.managerId, me = window.SupabaseClient?.currentUser?.id;
+          const ack = (/^[0-9a-f-]{36}$/i.test(mid || '') && mid !== me) ? { need: true, managerId: mid } : null;
+          const who = (localStorage.getItem('admin_bp_user_name') || '본사') + ' (본사)';
+          await window.hqStore.addStatusLog(schId, { label: '[동선 재계산] ' + changes.join(' · '), managerName: who, ack });
+          await renderCurrentView(); await renderKPI();
+          if (window.Admin.openScheduleDetail) await window.Admin.openScheduleDetail(schId);
+        } catch (e) {
+          alert('동선을 다시 계산하지 못했습니다: ' + (e.message || '오류'));
+        } finally { btnRetime.disabled = false; btnRetime.innerHTML = label; }
+      });
+    }
+
     // 외부 협력자용 공유 링크 (앱 설치 없이 일정 하나만 보기)
     const btnShare = document.getElementById('btn-share-schedule');
     if (btnShare) {

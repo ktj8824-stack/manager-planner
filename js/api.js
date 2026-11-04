@@ -42,6 +42,38 @@ const KakaoAPI = {
   // 카카오내비 바로 실행용 JavaScript 키 (공개용 키: 카카오 콘솔에 등록한 사이트 도메인에서만 동작). 비어 있으면 카카오맵 길찾기로 연다.
   JS_KEY: '5729341d219d8cb6f0a189fa86c91456',
 
+  /**
+   * "MBC 상암 신사옥 (서울 마포구 성암로 267)" 같은 장소 글자 → 좌표 {x, y, name}
+   * 이름과 주소를 나눠 동시에 찾고 먼저 나온 결과를 씀 (괄호가 섞인 긴 문장은 그대로 검색하면 안 나옴)
+   */
+  splitPlace(s) {
+    const str = String(s || '').replace(/\s+/g, ' ').trim();
+    const m = str.match(/^(.*?)\s*[(\[]([^()\[\]]+)[)\]]\s*$/);
+    const looksAddr = (v) => /(시|도|구|군|읍|면|동|리|로|길)\s*\d|\d+(-\d+)?\s*$/.test(v) && /(시|도|구|군)\s/.test(v + ' ');
+    if (m && m[1].trim() && looksAddr(m[2])) return { name: m[1].trim(), addr: m[2].trim() };
+    if (looksAddr(str)) return { name: '', addr: str };
+    return { name: m && m[1].trim() ? m[1].trim() : str, addr: '' };
+  },
+  _geoCache: {},
+  async geocode(text) {
+    const raw = String(text || '').trim();
+    if (!raw) return null;
+    if (this._geoCache[raw]) return this._geoCache[raw];
+    const parts = this.splitPlace(raw);
+    const queries = [...new Set([parts.addr, parts.name, raw].filter(Boolean))];
+    const find = async (q) => {
+      const docs = await this.searchPlace(q);
+      const d = Array.isArray(docs) && docs[0];
+      if (!d || !d.x || !d.y) throw new Error('none');
+      return { x: Number(d.x), y: Number(d.y), name: parts.name || d.place_name || raw };
+    };
+    try {
+      const pt = await Promise.any(queries.map(find));
+      this._geoCache[raw] = pt;
+      return pt;
+    } catch (e) { return null; }
+  },
+
   /** 카카오 로컬 장소/주소 검색 (키워드 → 없으면 주소) */
   async searchPlace(keyword) {
     const q = String(keyword || '').trim();
@@ -99,6 +131,18 @@ const TmapAPI = {
     const data = await RouteProxy.call('tmap_route', { sx: startX, sy: startY, ex: endX, ey: endY });
     const f = data && Array.isArray(data.features) && data.features[0];
     return f && f.properties && f.properties.totalTime !== undefined ? Math.ceil(f.properties.totalTime / 60) : null;
+  },
+
+  /**
+   * 티맵 타임머신: '그 날짜·그 시각'의 예측 교통으로 소요 시간(분)
+   * @param at 'YYYY-MM-DDTHH:MM' (한국 시간) / mode 'arrive' = 그 시각에 도착 (기본), 'depart' = 그 시각에 출발
+   */
+  async getRouteTimeAt(startX, startY, endX, endY, at, mode = 'arrive') {
+    if (!startX || !startY || !endX || !endY || !at) return null;
+    const data = await RouteProxy.call('tmap_route_at', { sx: startX, sy: startY, ex: endX, ey: endY, at, mode }, 10000);
+    const f = data && Array.isArray(data.features) && data.features[0];
+    const sec = f && f.properties && Number(f.properties.totalTime);
+    return sec > 0 ? Math.ceil(sec / 60) : null;
   },
 
   /** 현장 주변 편의시설(약국/편의점/카페/병원 등) 검색 */
