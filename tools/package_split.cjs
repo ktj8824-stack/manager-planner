@@ -153,7 +153,8 @@ function cleanDirExceptGit(dir) {
     return;
   }
   for (const file of fs.readdirSync(dir)) {
-    if (file === '.git') continue;
+    // .git 과 GitHub Pages 도메인 파일(CNAME)은 지우지 않음 (지우면 연결한 도메인이 끊김)
+    if (file === '.git' || file === 'CNAME') continue;
     fs.rmSync(path.join(dir, file), { recursive: true, force: true });
   }
 }
@@ -222,6 +223,14 @@ fs.rmSync(path.join(DIST_APP, 'js', 'admin.js'), { force: true });
       .replace(/관제 포털로 이동/g, '플래너 앱으로 이동');
     fs.writeFileSync(p, html, 'utf8');
   }
+}
+
+// 배포 전용 파일: deploy/app → 앱 저장소, deploy/web → 본사 저장소 (예: CNAME, .well-known/assetlinks.json)
+// .nojekyll: GitHub Pages 가 점(.)으로 시작하는 폴더(.well-known)를 숨기지 않게
+for (const [sub, dest] of [['app', DIST_APP], ['web', DIST_WEB]]) {
+  const src = path.join(ROOT, 'deploy', sub);
+  if (fs.existsSync(src)) copyDir(src, dest);
+  fs.writeFileSync(path.join(dest, '.nojekyll'), '', 'utf8');
 }
 
 for (const f of ['icon.svg', 'icon-192.png', 'icon-512.png', 'privacy.html', 'terms.html', 'share.html']) {

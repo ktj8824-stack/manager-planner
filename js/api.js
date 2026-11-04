@@ -1,5 +1,5 @@
 /* =========================================
-   ManagerPlanner v2 — API Module
+   RoadPlanner — API Module
    (Kakao Local & TMAP Route/Place Integration)
 
    카카오 REST 키와 티맵 앱키는 코드에 넣지 않습니다.

@@ -1,5 +1,5 @@
 /* =========================================
-   BuddyPlanner v2 — Manager Login Screen
+   RoadPlanner — Manager Login Screen
    (Supabase Auth & Multi-Manager Selection)
    ========================================= */
 

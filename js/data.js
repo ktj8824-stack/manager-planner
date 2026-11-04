@@ -1,5 +1,5 @@
 /* =========================================
-   ManagerPlanner v2 — Entertainment Venues & Staff Data
+   RoadPlanner — Entertainment Venues & Staff Data
    ========================================= */
 
 const COURSES = [

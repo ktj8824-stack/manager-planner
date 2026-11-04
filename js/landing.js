@@ -1,4 +1,4 @@
-// landing.js - Interactions and Animations for ManagerPlanner Landing Page
+// landing.js - Interactions and Animations for RoadPlanner Landing Page
 
 document.addEventListener('DOMContentLoaded', () => {
   // Intersection Observer for scroll animations (fade-in-up)

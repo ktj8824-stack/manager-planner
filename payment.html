@@ -5,7 +5,7 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>구독 결제 | HQ 엔터테인먼트 스케줄러</title>
+  <title>구독 결제 | 로드플래너</title>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -238,7 +238,7 @@
   const addFee      = addSlots * 20000;
   const companyName = decodeURIComponent(params.get('company') || localStorage.getItem('bp_company_name') || localStorage.getItem('hq_company_name') || 'HQ 엔터테인먼트');
   const ceoName     = decodeURIComponent(params.get('ceo') || localStorage.getItem('bp_user_name') || localStorage.getItem('hq_user_name') || '공진문 대표');
-  const ceoEmail    = decodeURIComponent(params.get('email') || localStorage.getItem('bp_user_email') || localStorage.getItem('hq_user_email') || 'ceo@kjm-ent.com');
+  const ceoEmail    = decodeURIComponent(params.get('email') || localStorage.getItem('bp_user_email') || localStorage.getItem('hq_user_email') || '');
   const ceoPhone    = decodeURIComponent(params.get('phone') || localStorage.getItem('bp_user_phone') || localStorage.getItem('hq_user_phone') || '010-1234-5678');
   const returnTarget = params.get('return') || (isProPlan ? 'mobile' : 'admin');
 
@@ -367,7 +367,7 @@
       document.getElementById('buyer-name').value = name;
     }
     if (!email) {
-      email = ceoEmail || 'ceo@kjm-ent.com';
+      email = ceoEmail || '';
       document.getElementById('buyer-email').value = email;
     }
 

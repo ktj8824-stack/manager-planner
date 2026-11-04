@@ -1,5 +1,5 @@
 /* =========================================
-   ManagerPlanner v2 — Register Screen (Entertainment)
+   RoadPlanner — Register Screen (Entertainment)
    ========================================= */
 
 const Register = {
@@ -624,8 +624,8 @@ const Register = {
     // Find metadata for hqStore
     let artistName = this.artistId;
     let vehicleName = this.vehicleId;
-    let mgrName = '김태현 팀장'; // Default or from context
-    let mgrId = 'mgr_1';
+    let mgrName = localStorage.getItem('bp_user_name') || '';
+    let mgrId = window.SupabaseClient?.currentUser?.id || localStorage.getItem('bp_manager_id') || '';
     
     if (window.hqStore) {
       const artist = window.hqStore.getArtists().find(a => a.id === this.artistId);
@@ -635,7 +635,7 @@ const Register = {
       if (vehicle) vehicleName = vehicle.name;
       
       // Read current logged in user from localStorage / AuthPersona
-      const currentMgrId = localStorage.getItem('bp_manager_id') || 'mgr_2';
+      const currentMgrId = window.SupabaseClient?.currentUser?.id || localStorage.getItem('bp_manager_id') || '';
       const me = window.hqStore.getManagers().find(m => m.id === currentMgrId);
       if (me) {
         mgrName = me.name;

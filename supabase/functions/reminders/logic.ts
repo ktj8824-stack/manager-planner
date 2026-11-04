@@ -14,7 +14,9 @@ type SupabaseClient = any;
 type Row = Record<string, any>;
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const DRIVE = /출발|이동|픽업/;
-const APP_URL = "https://ktj8824-stack.github.io/manager-planner-app/";
+// 알림을 눌렀을 때 여는 주소 — 기본값. 도메인을 바꾸면 app_settings 표의 app_url / hq_url 만 고치면 됨
+let APP_URL = "https://ktj8824-stack.github.io/manager-planner-app/";
+let HQ_URL = "https://ktj8824-stack.github.io/manager-planner-web/";
 
 // 한국 시간 기준 날짜/시각
 function kst(ms: number) {
@@ -136,6 +138,13 @@ export async function run(db: SupabaseClient, send: Sender, nowMs: number, route
   const today = kst(nowMs);
   const tomorrow = kst(nowMs + 24 * 3600e3);
   const out = { departures: 0, evening: 0, pushed: 0, retimed: 0, late: 0 };
+  try {
+    const { data: urls } = await db.from("app_settings").select("key, value").in("key", ["app_url", "hq_url"]);
+    for (const u of (urls ?? []) as Row[]) {
+      if (u.key === "app_url" && /^https:\/\//.test(u.value)) APP_URL = u.value.endsWith("/") ? u.value : u.value + "/";
+      if (u.key === "hq_url" && /^https:\/\//.test(u.value)) HQ_URL = u.value.endsWith("/") ? u.value : u.value + "/";
+    }
+  } catch (_e) { /* 기본값 사용 */ }
 
   const { data: rows, error } = await db.from("schedules")
     .select("id, title, date, start_time, location, manager_id, timeline_items, is_secret, status, status_logs, departure_info, shop_info, artists(name), vehicles(name), profiles!schedules_manager_id_fkey(name, company_id)")
@@ -196,7 +205,7 @@ export async function run(db: SupabaseClient, send: Sender, nowMs: number, route
           const { data: hq } = await db.from("profiles").select("id").eq("company_id", co).in("role", ["ceo", "hq_admin"]);
           b = await push(db, send, (hq ?? []).map((h: Row) => h.id), {
             title: `⏰ 출발 지연 ${lateMin}분 · ${s.profiles?.name || "담당 매니저"}`, body: `${who}\n${stepName(st.label)} (${st.time}) — 출발 표시 없음`,
-            tag: `late-hq-${s.id}-${i}`, url: APP_URL.replace("manager-planner-app", "manager-planner-web"), kind: "late",
+            tag: `late-hq-${s.id}-${i}`, url: HQ_URL, kind: "late",
           }, 1800);
         }
         out.pushed += a.sent + b.sent;
@@ -249,7 +258,7 @@ export async function run(db: SupabaseClient, send: Sender, nowMs: number, route
       const r = await push(db, send, (hq ?? []).map((h: Row) => h.id), {
         title: `📅 내일 ${dateLabel(tomorrow.ymd)} 일정 ${items.length}건`,
         body: [pending ? `매니저 확인 대기 ${pending}건` : "모든 변경 확인 완료", noMgr ? `담당 미지정 ${noMgr}건` : ""].filter(Boolean).join(" · "),
-        tag: `eve-hq-${tomorrow.ymd}`, url: APP_URL.replace("manager-planner-app", "manager-planner-web"), kind: "evening",
+        tag: `eve-hq-${tomorrow.ymd}`, url: HQ_URL, kind: "evening",
       }, 36000);
       out.pushed += r.sent;
     }

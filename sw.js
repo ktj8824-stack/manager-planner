@@ -115,6 +115,10 @@ const ASSET_ENTRIES = [
     "268"
   ],
   [
+    "js/site-config.js",
+    "268"
+  ],
+  [
     "js/home.js",
     "268"
   ],

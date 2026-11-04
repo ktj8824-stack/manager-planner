@@ -327,7 +327,7 @@ const Home = {
     const dateStr = `${m+1}월 ${d}일 (${U.DAYS[this.selectedDate.getDay()]})`;
     const managers = (typeof window.hqStore !== 'undefined' && Array.isArray(window.hqStore.getManagers())) ? window.hqStore.getManagers() : [];
     const currentMgr = State.currentManagerFilter || 'ALL';
-    const userName = localStorage.getItem('bp_user_name') || '홍길동 대표이사';
+    const userName = localStorage.getItem('bp_user_name') || '';
     const userRole = localStorage.getItem('bp_user_role') || 'manager';
     const assignedJson = localStorage.getItem('bp_assigned_artists');
     
@@ -347,9 +347,7 @@ const Home = {
     if (!artistSummary && allArtists.length > 0) {
       artistSummary = allArtists.map(a => cleanArtName(a.name)).join(', ');
     }
-    if (!artistSummary) {
-      artistSummary = '루나스, 에이펙스, 차은호, 유나, 사운드웨이브';
-    }
+    if (!artistSummary) artistSummary = '아직 담당 아티스트가 없어요';
 
     const events = State.calculateDailyEvents(y, m, d);
     const rawSchedules = State.getSchedulesForDate(y, m, d);
@@ -358,7 +356,7 @@ const Home = {
     const foundVehicle = events.find(e => e.vehicleName)?.vehicleName || 
                          rawSchedules.find(s => s.vehicleName)?.vehicleName || 
                          localStorage.getItem('bp_user_vehicle') || 
-                         '카니발 하이리무진 1호차 (12가 3456)';
+                         '';
     const vehicleSummary = foundVehicle;
 
     let html = `
@@ -1361,9 +1359,9 @@ const Home = {
       startTime: startVal,
       endTime: endVal || '18:00',
       managerId: managerId,
-      managerName: mgr ? mgr.name : '김태현 본부장',
+      managerName: mgr ? mgr.name : '',
       vehicleId: vehicleId,
-      vehicleName: veh ? veh.name : '카니발 하이리무진 1호차 (12가 3456)',
+      vehicleName: veh ? veh.name : '',
       location: locationVal,
       locationAddress: addressVal || locationVal,
       status: '확정',

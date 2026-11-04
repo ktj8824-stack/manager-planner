@@ -284,13 +284,9 @@ window.Admin = {
     window.location.reload();
   },
 
-  // ── 🔒 시스템 관리자 권한 체크 (ceo@jm-ent.com 전용 계정만 노출 및 접근 허용) ──
+  // ── 🔒 시스템 설정(서버 주소·키 변경)은 개발용 PC(localhost)에서만 — 운영 화면에서는 숨김 ──
   checkSystemAdminAccess() {
-    const MASTER_ADMIN_EMAIL = 'ceo@jm-ent.com';
-    const email = (localStorage.getItem('bp_user_email') || (window.SupabaseClient?.currentUser?.email) || '').trim().toLowerCase();
-    
-    // 오직 지정된 대표님 이메일(ceo@jm-ent.com)만 시스템 관리자 권한 허용
-    const isMasterAdmin = (email === MASTER_ADMIN_EMAIL.toLowerCase());
+    const isMasterAdmin = ['localhost', '127.0.0.1'].includes(location.hostname) || location.protocol === 'file:';
     
     const btn = document.getElementById('btn-open-settings');
     if (btn) {
@@ -946,7 +942,7 @@ window.Admin = {
 
     // 대표자(로그인 유저) 도메인 추출하여 폼에 반영
     const ceoEmail = localStorage.getItem('bp_user_email') || '';
-    let domain = '@star-ent.com';
+    let domain = '@회사도메인';
     if (ceoEmail.includes('@')) {
       domain = '@' + ceoEmail.split('@')[1];
     }

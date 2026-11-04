@@ -1,5 +1,5 @@
 /* =========================================
-   BuddyPlanner v2 — Onboarding Screen
+   RoadPlanner — Onboarding Screen
    ========================================= */
 
 const Onboarding = {

@@ -1,0 +1,41 @@
+# 안드로이드 앱(APK) 자동 만들기 — native/android 가 바뀌면 실행
+# 결과: Releases 의 'android-latest' 에 RoadPlanner.apk (폰에서 바로 내려받아 설치)
+name: Android APK
+on:
+  push:
+    branches: [main]
+    paths: ['native/android/**', '.github/workflows/android-apk.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Build APK
+        run: gradle -p native/android assembleDebug --no-daemon --stacktrace
+      - name: Rename
+        run: cp native/android/app/build/outputs/apk/debug/app-debug.apk RoadPlanner.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RoadPlanner-apk
+          path: RoadPlanner.apk
+      - name: Publish to release 'android-latest'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-latest
+          name: 로드플래너 안드로이드 (테스트)
+          body: |
+            폰에서 RoadPlanner.apk 를 눌러 내려받고 설치하세요. (처음 한 번 '출처를 알 수 없는 앱 설치 허용' 필요)
+            빌드: ${{ github.sha }}
+          prerelease: true
+          make_latest: false
+          files: RoadPlanner.apk

@@ -1,5 +1,5 @@
 /* =========================================
-   BuddyPlanner v2 — Upgrade Screen
+   RoadPlanner — Upgrade Screen
    ========================================= */
 
 const Upgrade = {
@@ -80,7 +80,7 @@ const Upgrade = {
 
   startPayment() {
     const userName = encodeURIComponent(localStorage.getItem('bp_user_name') || '담당 매니저');
-    const userEmail = encodeURIComponent(localStorage.getItem('bp_user_email') || 'manager@kjm-ent.com');
+    const userEmail = encodeURIComponent(localStorage.getItem('bp_user_email') || '');
     const company = encodeURIComponent(localStorage.getItem('bp_company_name') || 'HQ 엔터테인먼트');
     const payUrl = `payment.html?plan=pro&totalFee=4900&company=${company}&ceo=${userName}&email=${userEmail}&return=mobile`;
 

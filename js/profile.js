@@ -1,5 +1,5 @@
 /* =========================================
-   BuddyPlanner v2 — Profile Screen Logic
+   RoadPlanner — Profile Screen Logic
    ========================================= */
 
 /* ── SVG 아이콘 모음 ── */
@@ -51,10 +51,16 @@ const Profile = {
     const shopName   = sData.name || '';
 
     const userName       = localStorage.getItem('bp_user_name')    || '현장 매니저';
-    const userEmail      = localStorage.getItem('bp_user_email')   || 'manager@star-ent.com';
-    const userCompany    = localStorage.getItem('bp_company_name') || '스타엔터테인먼트';
-    const userDept       = localStorage.getItem('bp_dept_name')    || '매니지먼트 1본부';
-    const assignedArtists = JSON.parse(localStorage.getItem('bp_assigned_artists') || '["에스파","라이즈"]');
+    const userEmail      = localStorage.getItem('bp_user_email')   || '';
+    const userCompany    = localStorage.getItem('bp_company_name') || '';
+    const userDept       = localStorage.getItem('bp_dept_name')    || '';
+    // 담당 아티스트: 본사가 지정한 아티스트 ID → 이름
+    const assignedArtists = (() => {
+      let ids = [];
+      try { ids = JSON.parse(localStorage.getItem('bp_assigned_artists') || '[]') || []; } catch (e) { }
+      const all = window.hqStore?.getArtists?.() || [];
+      return ids.map(id => (all.find(a => a.id === id)?.name || '').replace(/\s*\([^)]*\)/g, '').trim()).filter(Boolean);
+    })();
 
     // 이니셜 아바타
     const initials = userName.length >= 2 ? userName.slice(0, 2) : userName;
@@ -288,6 +294,7 @@ const Profile = {
     if (!C || !C.pushState) { U.toast('잠시 후 다시 시도해 주세요.'); return; }
     const st = await C.pushState();
     if (st === 'unsupported') {
+      if (window.RoadPlannerAndroid) { U.toast('안드로이드 앱은 출발 15분 전 알림이 폰에 자동으로 예약돼요. (휴대폰 설정에서 로드플래너 알림 허용)'); this._renderPushBadge(); return; }
       const inApp = !!window.webkit?.messageHandlers;
       U.toast(inApp ? '아이폰 앱 알림은 다음 앱 업데이트에서 켜집니다. 지금은 앱이 켜져 있을 때 화면으로 알려 드려요.' : '이 브라우저는 푸시를 지원하지 않습니다. 아이폰은 사파리에서 "홈 화면에 추가"한 앱에서 켤 수 있어요.');
     } else if (st === 'denied') U.toast('알림이 차단되어 있습니다. 휴대폰 설정 > 알림에서 허용해 주세요.');
@@ -301,7 +308,7 @@ const Profile = {
     if (!b || !window.Chat?.pushState) return;
     const st = await window.Chat.pushState();
     const map = { on: ['켜짐', '#ecfdf5', '#047857', '#a7f3d0'], off: ['켜기', '#eef2ff', '#4338ca', '#c7d2fe'], denied: ['차단됨', '#fef2f2', '#b91c1c', '#fecaca'], unsupported: ['앱 화면 알림', '#f1f5f9', '#64748b', '#e2e8f0'] };
-    const [txt, bg, fg, bd] = map[st] || map.off;
+    const [txt, bg, fg, bd] = (st === 'unsupported' && window.RoadPlannerAndroid) ? ['앱 알림', '#ecfdf5', '#047857', '#a7f3d0'] : (map[st] || map.off);
     b.textContent = txt; b.style.background = bg; b.style.color = fg; b.style.borderColor = bd;
   },
 
@@ -363,31 +370,8 @@ const Profile = {
   },
 
   editArtists() {
-    const current = JSON.parse(localStorage.getItem('bp_assigned_artists') || '["에스파","라이즈"]');
-    const artistList = ['에스파','라이즈','NCT 127','NCT DREAM','아이브','르세라핌','뉴진스','보이넥스트도어','투어스','플레이브'];
-    const html = `
-      <div class="modal-bg open" id="artist-select-modal" onclick="if(event.target===this)this.remove()">
-        <div class="modal-panel" style="padding:20px 16px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:10px;">
-            <div style="font-size:16px;font-weight:700;color:var(--text-100);">🎤 담당 아티스트 설정</div>
-            <button onclick="document.getElementById('artist-select-modal').remove()" style="background:none;border:none;color:var(--text-400);font-size:20px;cursor:pointer;">✕</button>
-          </div>
-          <p style="font-size:13px;color:var(--text-400);margin-bottom:14px;">현재 배정되어 스케줄을 관리할 아티스트를 선택해 주세요.</p>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;" id="artist-chip-group">
-            ${artistList.map(a => {
-              const sel = current.includes(a);
-              return `<button type="button" class="artist-select-chip ${sel?'selected':''}" onclick="this.classList.toggle('selected')" data-name="${esc(a)}" style="padding:8px 14px;border-radius:var(--r-full);font-size:14px;font-weight:700;border:1px solid ${sel?'var(--primary-400)':'var(--border-subtle)'};background:${sel?'rgba(34,201,135,0.15)':'var(--bg-card)'};color:${sel?'var(--primary-400)':'var(--text-200)'};cursor:pointer;">${sel?'✓ ':''}${esc(a)}</button>`;
-            }).join('')}
-          </div>
-          <div style="display:flex;gap:8px;">
-            <button onclick="document.getElementById('artist-select-modal').remove()" class="btn btn-secondary" style="flex:1;">취소</button>
-            <button onclick="Profile.saveArtists()" class="btn btn-primary" style="flex:1.5;">저장 완료</button>
-          </div>
-        </div>
-      </div>`;
-    const old = document.getElementById('artist-select-modal');
-    if (old) old.remove();
-    document.body.insertAdjacentHTML('beforeend', html);
+    // 담당 아티스트는 본사(관리자 웹 > 매니저 관리)에서 지정합니다. 서버 기준이라 앱에서 직접 바꾸지 않음
+    U.toast('담당 아티스트는 본사에서 지정합니다. 변경이 필요하면 본사에 요청해 주세요.');
   },
 
   saveArtists() {
@@ -549,7 +533,7 @@ const Profile = {
   },
 
   editVehicle() {
-    const currentVeh = localStorage.getItem('bp_user_vehicle') || '카니발 하이리무진 (12가 3456)';
+    const currentVeh = localStorage.getItem('bp_user_vehicle') || '';
     const veh = prompt('배정 차량 정보를 입력해 주세요 (차종 및 차량번호):', currentVeh);
     if (veh?.trim()) {
       localStorage.setItem('bp_user_vehicle', veh.trim());

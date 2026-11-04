@@ -7,7 +7,7 @@
 //   - iOS 앱(Xcode): roadplanner://next → 이 주소로 열림
 // =========================================
 const AutoNav = {
-  LINK: 'https://ktj8824-stack.github.io/manager-planner-app/?go=next',
+  get LINK() { return (window.SITE ? SITE.APP : 'https://ktj8824-stack.github.io/manager-planner-app/') + '?go=next'; },   // 주소는 js/site-config.js
   WAIT_MS: 20000,
   COUNTDOWN: 3,
   _timer: null,
@@ -256,8 +256,9 @@ const AutoNav = {
 
   // 아이폰 앱(Xcode)에 다음 24시간 출발 알림 목록을 넘긴다 → 앱이 꺼져 있어도 폰이 알림 (앱 쪽 연결은 다음 빌드에서)
   _sendNative(steps) {
-    const h = window.webkit?.messageHandlers?.roadplanner;
-    if (!h) return;
+    const h = window.webkit?.messageHandlers?.roadplanner;   // 아이폰 앱
+    const a = window.RoadPlannerAndroid;                       // 안드로이드 앱
+    if (!h && !a) return;
     const items = steps.filter(s => s.at - Date.now() > 0 && s.at - Date.now() < 36 * 3600e3).map(s => ({
       id: s.id, fireAt: new Date(s.at - 15 * 60000).toISOString(),
       title: `🚗 15분 뒤 출발 · ${s.ev.time}`,
@@ -267,7 +268,8 @@ const AutoNav = {
     const sig = JSON.stringify(items);
     if (sig === this._nativeSig) return;
     this._nativeSig = sig;
-    try { h.postMessage({ type: 'reminders', items }); } catch (e) { }
+    try { if (h) h.postMessage({ type: 'reminders', items }); } catch (e) { }
+    try { if (a && a.setReminders) a.setReminders(JSON.stringify(items)); } catch (e) { }
   },
 
   // ── 이동 중 지연 예상: [출발]을 누른 단계가 있으면 2분마다 내 위치 → 목적지 실시간 소요시간으로 도착 예상 ──

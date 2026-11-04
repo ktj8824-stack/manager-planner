@@ -1,12 +1,12 @@
 /*
  * share.js — 일정 공유 링크 (앱 설치 없이 외부 협력자가 일정 하나를 보는 링크)
  *  - 서버 함수 create_schedule_share / revoke_schedule_shares 사용 (Supabase)
- *  - 링크: https://ktj8824-stack.github.io/manager-planner-app/share.html?t=토큰
+ *  - 링크: (앱 주소)/share.html?t=토큰  — 앱 주소는 js/site-config.js
  *  - 일정 다음 날 자정 자동 만료, 비공개 일정은 공유 불가
  */
 (function () {
   'use strict';
-  const BASE = 'https://ktj8824-stack.github.io/manager-planner-app/share.html?t=';
+  const BASE = (window.SITE ? SITE.APP : 'https://ktj8824-stack.github.io/manager-planner-app/') + 'share.html?t=';   // 주소는 js/site-config.js
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = (m) => { try { if (window.U && U.toast) return U.toast(m); } catch (e) { } try { alert(m); } catch (e) { } };

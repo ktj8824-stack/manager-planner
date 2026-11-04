@@ -1,5 +1,5 @@
 /* ==============================================================================
-   🏢 Supabase Client & Realtime Sync Module for Manager Planner
+   🏢 Supabase Client & Realtime Sync Module for RoadPlanner
    ============================================================================== */
 
 const SupabaseClient = {

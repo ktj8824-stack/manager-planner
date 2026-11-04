@@ -1,5 +1,5 @@
 /* =========================================
-   ManagerPlanner — Timeline Screen
+   RoadPlanner — Timeline Screen
    Multi-step: Pickup → Shop → Venue → Event
    ========================================= */
 

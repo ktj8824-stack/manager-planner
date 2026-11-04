@@ -1,23 +1,12 @@
 /* =========================================
-   BuddyPlanner v2 — Utilities
+   RoadPlanner — Utilities
    ========================================= */
 
 const U = {
   /* ── Environment Aware HQ Portal Navigation ── */
-  getHQPortalUrl() {
-    const isGithub = window.location.hostname.includes('github.io');
-    if (isGithub) {
-      return 'https://ktj8824-stack.github.io/manager-planner-web/';
-    }
-    return 'admin.html';
-  },
-  getHQLoginUrl() {
-    const isGithub = window.location.hostname.includes('github.io');
-    if (isGithub) {
-      return 'https://ktj8824-stack.github.io/manager-planner-web/admin-login.html';
-    }
-    return 'admin-login.html';
-  },
+  // 본사 주소는 js/site-config.js 한 곳에서 관리 (도메인 바꿀 때 거기만 수정)
+  getHQPortalUrl() { return window.SITE ? SITE.hq('') : 'admin.html'; },
+  getHQLoginUrl() { return window.SITE ? SITE.hq('admin-login.html') : 'admin-login.html'; },
   openHQPortal() {
     window.open(this.getHQPortalUrl(), '_blank');
   },
@@ -140,7 +129,7 @@ const U = {
     const ics = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//BuddyPlanner//KO',
+      'PRODID:-//RoadPlanner//KO',
       'CALSCALE:GREGORIAN',
       'BEGIN:VEVENT',
       `DTSTART;TZID=Asia/Seoul:${dtStart}`,
@@ -245,7 +234,7 @@ const U = {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `buddyplanner_${schedule.course.name.replace(/\s/g,'_')}.ics`;
+    a.download = `roadplanner_${schedule.course.name.replace(/\s/g,'_')}.ics`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
