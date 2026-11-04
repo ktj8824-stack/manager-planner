@@ -27,6 +27,7 @@ const AutoNav = {
   },
 
   init() {
+    this.startWatch();
     if (!this._consumeFlag()) return;
     this.start();
   },
@@ -201,6 +202,82 @@ const AutoNav = {
   },
 
   test() { this.start(); },
+
+  // ── 출발 15분 전 화면 알림 (앱이 켜져 있을 때) + 아이폰 앱 네이티브 알림 예약 전달 ──
+  //  서버(예약 알림 함수)는 푸시로 보내고, 앱이 켜져 있으면 여기서 바로 화면에 띄운다
+  _myDriveSteps() {
+    const role = localStorage.getItem('bp_user_role');
+    if (role === 'ceo' || role === 'hq_admin') return [];   // 본사 계정은 매니저 출발 알림 대상 아님
+    const me = window.SupabaseClient?.currentUser?.id;
+    if (!me || typeof State === 'undefined' || !State.calculateDailyEvents) return [];
+    const out = [];
+    for (let k = 0; k < 2; k++) {                               // 오늘·내일
+      const d = new Date(); d.setDate(d.getDate() + k);
+      let evs = [];
+      try { evs = State.calculateDailyEvents(d.getFullYear(), d.getMonth(), d.getDate()) || []; } catch (e) { }
+      const ymd = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      for (const ev of evs) {
+        const label = String(ev.title || '');
+        if (!ev.time || ev.done || ev.moving || !/출발|이동|픽업/.test(label) || /철수/.test(label)) continue;
+        if (ev.stepCategory === 'rest') continue;
+        const sch = ev.hqScheduleId && window.hqStore?.getSchedules?.().find(s => s.id === ev.hqScheduleId);
+        if (sch && sch.managerId && sch.managerId !== me) continue;
+        const at = new Date(`${ymd}T${ev.time}:00`).getTime();
+        if (isNaN(at)) continue;
+        out.push({ ev, at, ymd, sch, id: `${ev.hqScheduleId || ev.id}|${ev.timelineIdx ?? ''}|${ymd}|${ev.time}` });
+      }
+    }
+    return out.sort((a, b) => a.at - b.at);
+  },
+
+  _watchTick() {
+    if (document.hidden) return;
+    const steps = this._myDriveSteps();
+    this._sendNative(steps);
+    const now = Date.now();
+    const due = steps.find(s => (s.at - now) / 60000 <= 15 && (s.at - now) / 60000 > -5);
+    if (!due) return;
+    const key = 'rp_dep_alert_' + due.id;
+    try { if (localStorage.getItem(key)) return; localStorage.setItem(key, String(now)); } catch (e) { }
+    const left = Math.max(0, Math.round((due.at - now) / 60000));
+    const raw = String(due.ev.title || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim();
+    const name = raw.replace(/^\[[^\]]+\]\s*/, '');
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    try { navigator.vibrate && navigator.vibrate([250, 120, 250]); } catch (e) { }
+    this._overlay(`
+      <div class="an-k">🚗 ${left ? left + '분 뒤 출발' : '지금 출발할 시간'} · ${esc(due.ev.time)}</div>
+      <div class="an-t">${esc(name)}</div>
+      ${due.sch && !due.sch.isSecret ? `<div class="an-d">${esc((due.sch.artistName ? due.sch.artistName + ' · ' : '') + (due.sch.title || ''))}</div>` : ''}
+      <div class="an-b">
+        <button type="button" class="an-x" onclick="AutoNav.cancel()">닫기</button>
+        <button type="button" class="an-go" onclick="AutoNav.cancel(); AutoNav.start()">길안내 시작</button>
+      </div>`, true);
+  },
+
+  // 아이폰 앱(Xcode)에 다음 24시간 출발 알림 목록을 넘긴다 → 앱이 꺼져 있어도 폰이 알림 (앱 쪽 연결은 다음 빌드에서)
+  _sendNative(steps) {
+    const h = window.webkit?.messageHandlers?.roadplanner;
+    if (!h) return;
+    const items = steps.filter(s => s.at - Date.now() > 0 && s.at - Date.now() < 36 * 3600e3).map(s => ({
+      id: s.id, fireAt: new Date(s.at - 15 * 60000).toISOString(),
+      title: `🚗 15분 뒤 출발 · ${s.ev.time}`,
+      body: String(s.ev.title || '').replace(/^\[[^\]]+\]\s*/, ''),
+      url: this.LINK
+    }));
+    const sig = JSON.stringify(items);
+    if (sig === this._nativeSig) return;
+    this._nativeSig = sig;
+    try { h.postMessage({ type: 'reminders', items }); } catch (e) { }
+  },
+
+  startWatch() {
+    if (this._watching) return;
+    this._watching = true;
+    setTimeout(() => this._watchTick(), 4000);
+    setInterval(() => this._watchTick(), 30000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(() => this._watchTick(), 1500); });
+    window.addEventListener('hq-store-change', () => { clearTimeout(this._wt); this._wt = setTimeout(() => this._sendNative(this._myDriveSteps()), 1500); });
+  },
 };
 
 window.AutoNav = AutoNav;

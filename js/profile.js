@@ -161,9 +161,10 @@ const Profile = {
             <div onclick="Profile.togglePush()" style="padding:14px 16px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:12px;cursor:pointer;">
               <span style="color:var(--primary-400);flex-shrink:0;">${ProfileIcons.bell}</span>
               <div style="flex:1;">
-                <div style="font-size:14px;font-weight:700;color:var(--text-100);">스케줄 변동 푸시 알림</div>
+                <div style="font-size:14px;font-weight:700;color:var(--text-100);">알림 받기 (푸시)</div>
+                <div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">출발 15분 전 · 내일 일정(밤 9시) · 일정 변경 · 로드톡</div>
               </div>
-              <span style="background:rgba(79,70,229,0.15);color:#818cf8;border:1px solid rgba(99,102,241,0.3);font-size:12px;font-weight:700;padding:3px 10px;border-radius:var(--r-full);">ON</span>
+              <span id="push-state-badge" style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;font-size:12px;font-weight:700;padding:3px 10px;border-radius:var(--r-full);">확인 중</span>
             </div>
 
 
@@ -202,6 +203,7 @@ const Profile = {
 
       </div>
     `;
+    setTimeout(() => this._renderPushBadge(), 0);
   },
 
   /* ── 헬퍼: 섹션 블록 생성 ── */
@@ -280,9 +282,27 @@ const Profile = {
     U.haptic();
   },
 
-  togglePush() {
-    U.toast('알림 설정 화면으로 이동합니다.');
-    U.haptic();
+  async togglePush() {
+    U.haptic && U.haptic();
+    const C = window.Chat;
+    if (!C || !C.pushState) { U.toast('잠시 후 다시 시도해 주세요.'); return; }
+    const st = await C.pushState();
+    if (st === 'unsupported') {
+      const inApp = !!window.webkit?.messageHandlers;
+      U.toast(inApp ? '아이폰 앱 알림은 다음 앱 업데이트에서 켜집니다. 지금은 앱이 켜져 있을 때 화면으로 알려 드려요.' : '이 브라우저는 푸시를 지원하지 않습니다. 아이폰은 사파리에서 "홈 화면에 추가"한 앱에서 켤 수 있어요.');
+    } else if (st === 'denied') U.toast('알림이 차단되어 있습니다. 휴대폰 설정 > 알림에서 허용해 주세요.');
+    else if (st === 'on') { if (confirm('알림을 끌까요?')) await C.disablePush(); }
+    else await C.enablePush();
+    this._renderPushBadge();
+  },
+
+  async _renderPushBadge() {
+    const b = document.getElementById('push-state-badge');
+    if (!b || !window.Chat?.pushState) return;
+    const st = await window.Chat.pushState();
+    const map = { on: ['켜짐', '#ecfdf5', '#047857', '#a7f3d0'], off: ['켜기', '#eef2ff', '#4338ca', '#c7d2fe'], denied: ['차단됨', '#fef2f2', '#b91c1c', '#fecaca'], unsupported: ['앱 화면 알림', '#f1f5f9', '#64748b', '#e2e8f0'] };
+    const [txt, bg, fg, bd] = map[st] || map.off;
+    b.textContent = txt; b.style.background = bg; b.style.color = fg; b.style.borderColor = bd;
   },
 
   searchAndSaveAddress(type) {
