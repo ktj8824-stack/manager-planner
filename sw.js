@@ -1,7 +1,7 @@
 /* App-shell cache only. HQ admin pages/scripts, APIs and third-party requests are never intercepted. Shared admin-data.js is an app dependency. */
 const CACHE_PREFIX = 'managerplanner-app:' + encodeURIComponent(self.registration.scope) + ':';
-const CACHE_NAME = CACHE_PREFIX + 'v258-css25-js258';
-const LEGACY_CACHES = ["managerplanner-v103-cache", CACHE_PREFIX + 'v182-css24-js181', CACHE_PREFIX + 'v183-css24-js183', CACHE_PREFIX + 'v184-css24-js184', CACHE_PREFIX + 'v185-css24-js185', CACHE_PREFIX + 'v186-css24-js186', CACHE_PREFIX + 'v187-css24-js187', CACHE_PREFIX + 'v188-css24-js188', CACHE_PREFIX + 'v189-css24-js189', CACHE_PREFIX + 'v190-css24-js190', CACHE_PREFIX + 'v191-css24-js191', CACHE_PREFIX + 'v192-css24-js192', CACHE_PREFIX + 'v193-css24-js193', CACHE_PREFIX + 'v194-css24-js194', CACHE_PREFIX + 'v195-css24-js195', CACHE_PREFIX + 'v196-css24-js196', CACHE_PREFIX + 'v197-css24-js197', CACHE_PREFIX + 'v198-css24-js198', CACHE_PREFIX + 'v199-css24-js199', CACHE_PREFIX + 'v200-css24-js200', CACHE_PREFIX + 'v201-css24-js201', CACHE_PREFIX + 'v202-css24-js202', CACHE_PREFIX + 'v203-css24-js203', CACHE_PREFIX + 'v204-css24-js204', CACHE_PREFIX + 'v205-css24-js205', CACHE_PREFIX + 'v206-css24-js206', CACHE_PREFIX + 'v207-css25-js207', CACHE_PREFIX + 'v208-css25-js208', CACHE_PREFIX + 'v209-css25-js209', CACHE_PREFIX + 'v210-css25-js210', CACHE_PREFIX + 'v211-css25-js211', CACHE_PREFIX + 'v212-css25-js212', CACHE_PREFIX + 'v213-css25-js213', CACHE_PREFIX + 'v214-css25-js214', CACHE_PREFIX + 'v215-css25-js215', CACHE_PREFIX + 'v216-css25-js216', CACHE_PREFIX + 'v217-css25-js217', CACHE_PREFIX + 'v218-css25-js218', CACHE_PREFIX + 'v219-css25-js219', CACHE_PREFIX + 'v220-css25-js220', CACHE_PREFIX + 'v221-css25-js221', CACHE_PREFIX + 'v222-css25-js222', CACHE_PREFIX + 'v223-css25-js223', CACHE_PREFIX + 'v224-css25-js224', CACHE_PREFIX + 'v225-css25-js225', CACHE_PREFIX + 'v226-css25-js226', CACHE_PREFIX + 'v227-css25-js227', CACHE_PREFIX + 'v228-css25-js228', CACHE_PREFIX + 'v229-css25-js229', CACHE_PREFIX + 'v230-css25-js230', CACHE_PREFIX + 'v231-css25-js231', CACHE_PREFIX + 'v232-css25-js232', CACHE_PREFIX + 'v233-css25-js233', CACHE_PREFIX + 'v234-css25-js234', CACHE_PREFIX + 'v235-css25-js235', CACHE_PREFIX + 'v236-css25-js236', CACHE_PREFIX + 'v237-css25-js237', CACHE_PREFIX + 'v238-css25-js238', CACHE_PREFIX + 'v239-css25-js239', CACHE_PREFIX + 'v240-css25-js240', CACHE_PREFIX + 'v241-css25-js241', CACHE_PREFIX + 'v242-css25-js242', CACHE_PREFIX + 'v243-css25-js243', CACHE_PREFIX + 'v244-css25-js244', CACHE_PREFIX + 'v245-css25-js245', CACHE_PREFIX + 'v246-css25-js246', CACHE_PREFIX + 'v247-css25-js247', CACHE_PREFIX + 'v248-css25-js248', CACHE_PREFIX + 'v249-css25-js249', CACHE_PREFIX + 'v250-css25-js250', CACHE_PREFIX + 'v251-css25-js251', CACHE_PREFIX + 'v252-css25-js252', CACHE_PREFIX + 'v253-css25-js253', CACHE_PREFIX + 'v254-css25-js254', CACHE_PREFIX + 'v255-css25-js255', CACHE_PREFIX + 'v256-css25-js256', CACHE_PREFIX + 'v257-css25-js257'];
+const CACHE_NAME = CACHE_PREFIX + 'v259-css25-js259';
+const LEGACY_CACHES = ["managerplanner-v103-cache", CACHE_PREFIX + 'v182-css24-js181', CACHE_PREFIX + 'v183-css24-js183', CACHE_PREFIX + 'v184-css24-js184', CACHE_PREFIX + 'v185-css24-js185', CACHE_PREFIX + 'v186-css24-js186', CACHE_PREFIX + 'v187-css24-js187', CACHE_PREFIX + 'v188-css24-js188', CACHE_PREFIX + 'v189-css24-js189', CACHE_PREFIX + 'v190-css24-js190', CACHE_PREFIX + 'v191-css24-js191', CACHE_PREFIX + 'v192-css24-js192', CACHE_PREFIX + 'v193-css24-js193', CACHE_PREFIX + 'v194-css24-js194', CACHE_PREFIX + 'v195-css24-js195', CACHE_PREFIX + 'v196-css24-js196', CACHE_PREFIX + 'v197-css24-js197', CACHE_PREFIX + 'v198-css24-js198', CACHE_PREFIX + 'v199-css24-js199', CACHE_PREFIX + 'v200-css24-js200', CACHE_PREFIX + 'v201-css24-js201', CACHE_PREFIX + 'v202-css24-js202', CACHE_PREFIX + 'v203-css24-js203', CACHE_PREFIX + 'v204-css24-js204', CACHE_PREFIX + 'v205-css24-js205', CACHE_PREFIX + 'v206-css24-js206', CACHE_PREFIX + 'v207-css25-js207', CACHE_PREFIX + 'v208-css25-js208', CACHE_PREFIX + 'v209-css25-js209', CACHE_PREFIX + 'v210-css25-js210', CACHE_PREFIX + 'v211-css25-js211', CACHE_PREFIX + 'v212-css25-js212', CACHE_PREFIX + 'v213-css25-js213', CACHE_PREFIX + 'v214-css25-js214', CACHE_PREFIX + 'v215-css25-js215', CACHE_PREFIX + 'v216-css25-js216', CACHE_PREFIX + 'v217-css25-js217', CACHE_PREFIX + 'v218-css25-js218', CACHE_PREFIX + 'v219-css25-js219', CACHE_PREFIX + 'v220-css25-js220', CACHE_PREFIX + 'v221-css25-js221', CACHE_PREFIX + 'v222-css25-js222', CACHE_PREFIX + 'v223-css25-js223', CACHE_PREFIX + 'v224-css25-js224', CACHE_PREFIX + 'v225-css25-js225', CACHE_PREFIX + 'v226-css25-js226', CACHE_PREFIX + 'v227-css25-js227', CACHE_PREFIX + 'v228-css25-js228', CACHE_PREFIX + 'v229-css25-js229', CACHE_PREFIX + 'v230-css25-js230', CACHE_PREFIX + 'v231-css25-js231', CACHE_PREFIX + 'v232-css25-js232', CACHE_PREFIX + 'v233-css25-js233', CACHE_PREFIX + 'v234-css25-js234', CACHE_PREFIX + 'v235-css25-js235', CACHE_PREFIX + 'v236-css25-js236', CACHE_PREFIX + 'v237-css25-js237', CACHE_PREFIX + 'v238-css25-js238', CACHE_PREFIX + 'v239-css25-js239', CACHE_PREFIX + 'v240-css25-js240', CACHE_PREFIX + 'v241-css25-js241', CACHE_PREFIX + 'v242-css25-js242', CACHE_PREFIX + 'v243-css25-js243', CACHE_PREFIX + 'v244-css25-js244', CACHE_PREFIX + 'v245-css25-js245', CACHE_PREFIX + 'v246-css25-js246', CACHE_PREFIX + 'v247-css25-js247', CACHE_PREFIX + 'v248-css25-js248', CACHE_PREFIX + 'v249-css25-js249', CACHE_PREFIX + 'v250-css25-js250', CACHE_PREFIX + 'v251-css25-js251', CACHE_PREFIX + 'v252-css25-js252', CACHE_PREFIX + 'v253-css25-js253', CACHE_PREFIX + 'v254-css25-js254', CACHE_PREFIX + 'v255-css25-js255', CACHE_PREFIX + 'v256-css25-js256', CACHE_PREFIX + 'v257-css25-js257', CACHE_PREFIX + 'v258-css25-js258'];
 const SCOPE_URL = new URL(self.registration.scope);
 // Versioned and unversioned URLs share an explicit, current-version key.
 // Unknown versions bypass this worker instead of receiving a stale asset.
@@ -76,7 +76,7 @@ const ASSET_ENTRIES = [
   ],
   [
     "js/chat.js",
-    "258"
+    "259"
   ],
   [
     "css/upgrade.css",
@@ -84,67 +84,67 @@ const ASSET_ENTRIES = [
   ],
   [
     "js/icons.js",
-    "258"
+    "259"
   ],
   [
     "js/splash.js",
-    "258"
+    "259"
   ],
   [
     "js/admin-data.js",
-    "258"
+    "259"
   ],
   [
     "js/data.js",
-    "258"
+    "259"
   ],
   [
     "js/api.js",
-    "258"
+    "259"
   ],
   [
     "js/utils.js",
-    "258"
+    "259"
   ],
   [
     "js/autonav.js",
-    "258"
+    "259"
   ],
   [
     "js/home.js",
-    "258"
+    "259"
   ],
   [
     "js/timeline.js",
-    "258"
+    "259"
   ],
   [
     "js/register.js",
-    "258"
+    "259"
   ],
   [
     "js/login.js",
-    "258"
+    "259"
   ],
   [
     "js/onboarding.js",
-    "258"
+    "259"
   ],
   [
     "js/profile.js",
-    "258"
+    "259"
   ],
   [
     "js/upgrade.js",
-    "258"
+    "259"
   ],
   [
     "js/supabase-client.js",
-    "258"
+    "259"
   ],
   [
     "js/app.js",
-    "258"
+    "259"
   ]
 ];
 const ASSET_KEYS = new Map();

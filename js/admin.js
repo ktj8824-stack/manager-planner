@@ -1989,7 +1989,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const now = new Date();
     const nowMin = now.getHours() * 60 + now.getMinutes();
     const toMin = (hhmm) => { const m = /^(\d{1,2}):(\d{2})/.exec(String(hhmm || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; };
-    const lists = { all: todaySchedules.map(s => ({ s })), done: [], moving: [], late: [], active: activeSchedules.map(s => ({ s })) };
+    const lists = { all: todaySchedules.map(s => ({ s })), done: [], moving: [], late: [], active: activeSchedules.map(s => ({ s })), ack: [] };
+    // 변경 확인 대기: 오늘 이후 일정 중 담당 매니저가 아직 '확인했습니다'를 누르지 않은 것
+    try {
+      const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+      (window.hqStore.getSchedules() || []).forEach(s => {
+        const d = new Date((s.date || '') + 'T00:00:00');
+        if (!isNaN(d) && d < t0) return;
+        const st = window.hqStore.ackState(s);
+        if (st && st.pending) lists.ack.push({ s, note: (isNaN(d) ? '' : (d.getMonth() + 1) + '/' + d.getDate() + ' · ') + ((st.request.label || '').replace(/^\[[^\]]+\]\s*/, '').slice(0, 34) || '변경 확인 대기') });
+      });
+      lists.ack.sort((x, y) => ((x.s.date || '') + (x.s.startTime || '')).localeCompare((y.s.date || '') + (y.s.startTime || '')));
+    } catch (e) { }
     todaySchedules.forEach(s => {
       const tl = Array.isArray(s.timeline) ? s.timeline : [];
       const allDone = s.status === '완료' || (tl.length > 0 && tl.every(t => t.done));
@@ -2010,15 +2021,16 @@ document.addEventListener('DOMContentLoaded', () => {
       done: '<circle cx="12" cy="12" r="10"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/>',
       moving: '<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>',
       late: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
-      active: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'
+      active: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+      ack: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="m9 10 2 2 4-4"/>'
     };
     const TILES = [
       ['all', '오늘 전체', 'tb-indigo'], ['done', '완료', 'tb-green'], ['moving', '이동중', 'tb-amber'],
-      ['late', '지연·미확인', 'tb-red'], ['active', '가동 차량/팀', 'tb-cyan']
+      ['late', '지연·미확인', 'tb-red'], ['ack', '변경 확인 대기', 'tb-orange'], ['active', '가동 차량/팀', 'tb-cyan']
     ];
     const hh = String(now.getHours()).padStart(2, '0'), mm = String(now.getMinutes()).padStart(2, '0');
     const tiles = TILES.map(([k, label, cls]) => `
-      <div class="tb-tile ${cls}${k === 'late' && lists.late.length ? ' alert' : ''}" data-k="${k}" tabindex="0">
+      <div class="tb-tile ${cls}${(k === 'late' || k === 'ack') && lists[k].length ? ' alert' : ''}" data-k="${k}" tabindex="0">
         <span class="tb-txt"><em>${label}</em><b>${lists[k].length}</b></span>
         <span class="tb-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg></span>
       </div>`).join('');
@@ -2063,7 +2075,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       document.addEventListener('click', (e) => { if (!e.target.closest('.tb-tile') && !e.target.closest('#tb-pop')) pop.style.display = 'none'; });
     }
-    const TITLE = { all: '오늘 전체 일정', done: '완료된 일정', moving: '이동 중인 일정', late: '지연·미확인 일정', active: '가동 중인 차량/팀' };
+    const TITLE = { all: '오늘 전체 일정', done: '완료된 일정', moving: '이동 중인 일정', late: '지연·미확인 일정', ack: '매니저가 아직 확인 안 한 변경', active: '가동 중인 차량/팀' };
     const show = (tile) => {
       clearTimeout(pop._t);
       const k = tile.dataset.k, list = briefLists[k] || [];
@@ -3122,6 +3134,20 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       </div>
 
+      ${(() => {
+        const st = window.hqStore?.ackState?.(sch);
+        if (!st) return '';
+        const req = st.request, res = st.response;
+        const at = (l) => (l.date && l.date !== fmtDate(new Date()) ? l.date.slice(5).replace('-', '/') + ' ' : '') + (l.time || '');
+        return st.pending
+          ? `<div style="margin-top:14px; display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:10px; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; font-size:13.5px; font-weight:700;">
+               <span style="font-size:16px;">⏳</span><span style="flex:1;">담당 매니저(${esc(sch.managerName || '')})가 아직 확인하지 않았습니다 <span style="font-weight:500; color:#c2410c;">· ${esc(at(req))} 변경</span></span>
+             </div>`
+          : `<div style="margin-top:14px; display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:10px; background:#ecfdf5; border:1px solid #a7f3d0; color:#047857; font-size:13.5px; font-weight:700;">
+               <span style="font-size:16px;">✅</span><span style="flex:1;">${esc(res.managerName || sch.managerName || '담당 매니저')} 확인 완료 <span style="font-weight:500; color:#059669;">· ${esc(at(res))}</span></span>
+             </div>`;
+      })()}
+
       ${sch.statusLogs && sch.statusLogs.length > 0 ? `
         <div style="margin-top:16px; border-top:1px solid #cbd5e1; padding-top:14px;">
           <h4 style="font-size:14px; color:#0f172a; margin-bottom:8px; display:flex; align-items:center; gap:6px; font-weight:800;">
@@ -3130,7 +3156,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </h4>
           <div style="display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto;">
             ${sch.statusLogs.map(log => `
-              <div style="display:flex; justify-content:space-between; align-items:center; background:#e2e8f0; padding:6px 10px; border-radius:6px; font-size:12px; border:1px solid #cbd5e1; border-left:3px solid #6366f1;">
+              <div style="display:flex; justify-content:space-between; align-items:center; background:#e2e8f0; padding:6px 10px; border-radius:6px; font-size:12px; border:1px solid #cbd5e1; border-left:3px solid ${log.ackOf ? '#10b981' : '#6366f1'};">
                 <div style="color:#0f172a; font-weight:600;">
                   ${esc(log.label)}
                 </div>
@@ -4197,8 +4223,12 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
           const who = (localStorage.getItem('admin_bp_user_name') || localStorage.getItem('bp_user_name') || '본사') + ' (본사)';
           const changes = prevSch && window.ScheduleNotify?.historyDiff ? window.ScheduleNotify.historyDiff(prevSch, schData) : null;
-          if (!prevSch) await window.hqStore.addStatusLog(schData.id, { label: '[일정 등록] 본사에서 새 일정을 등록했습니다', managerName: who });
-          else if (changes && changes.length) await window.hqStore.addStatusLog(schData.id, { label: '[일정 수정] ' + changes.join(' · '), managerName: who });
+          // 담당 매니저(서버 계정)가 있으면 '확인했습니다' 응답을 요청
+          const mid = schData.managerId;
+          const me = window.SupabaseClient?.currentUser?.id;
+          const ack = (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(mid || '') && mid !== me) ? { need: true, managerId: mid } : null;
+          if (!prevSch) await window.hqStore.addStatusLog(schData.id, { label: '[일정 등록] 본사에서 새 일정을 등록했습니다', managerName: who, ack });
+          else if (changes && changes.length) await window.hqStore.addStatusLog(schData.id, { label: '[일정 수정] ' + changes.join(' · '), managerName: who, ack });
         } catch (e) { console.warn('변경 이력 기록 실패', e); }   // (알림은 기다리지 않음)
       } catch (err) {
         console.warn('saveSchedule warning (로컬 저장 유지):', err);

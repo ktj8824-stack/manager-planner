@@ -1778,7 +1778,9 @@ class HQDataStore {
         date: now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0'),
         recordedAt: now.toISOString(), label: input.label || '상태 변경', status: input.status || sch.status,
         stepIdx: input.stepIdx !== undefined ? input.stepIdx : null,
-        managerName: input.managerName || localStorage.getItem('bp_user_name') || '현장 매니저'
+        managerName: input.managerName || localStorage.getItem('bp_user_name') || '현장 매니저',
+        ...(input.ack ? { ack: input.ack } : {}),          // 본사 변경: 담당 매니저의 '확인' 필요 {need, managerId}
+        ...(input.ackOf ? { ackOf: input.ackOf, byId: input.byId || null } : {})   // 매니저의 '확인했습니다'
       };
       sch.statusLogs = [newLog, ...(Array.isArray(sch.statusLogs) ? sch.statusLogs : [])];
       this._queueSchedule(key, sch);
@@ -1788,6 +1790,44 @@ class HQDataStore {
       return newLog;
     });
   }
+
+  // ── "확인했습니다": 본사가 일정을 등록·변경하면 담당 매니저가 확인했다고 응답 ──
+  //  확인 요청 = 본사가 남긴 변경 기록(statusLogs, ack.need) / 응답 = 매니저가 남긴 기록(ackOf = 그 변경 기록 id)
+  //  (매니저는 상태 기록만 고칠 수 있으므로 DB 구조 변경 없이 서버 권한 안에서 동작)
+  ackState(sch) {
+    const logs = Array.isArray(sch?.statusLogs) ? sch.statusLogs : [];
+    const req = logs.find(l => l && l.ack && l.ack.need);        // 최신 요청 (기록은 최신이 앞)
+    if (!req) return null;
+    if (req.ack.managerId && sch.managerId && req.ack.managerId !== sch.managerId) return null; // 담당이 또 바뀌었으면 그 요청은 무효
+    const res = logs.find(l => l && l.ackOf === req.id);
+    return { pending: !res, request: req, response: res || null };
+  }
+
+  // 나(매니저)에게 확인을 기다리는 일정: 오늘 이후, 취소 알림도 포함
+  getPendingAcks(managerId) {
+    if (!managerId) return [];
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    return this.getSchedules().filter(s => {
+      if (s.managerId !== managerId) return false;
+      const d = new Date((s.date || '') + 'T00:00:00');
+      if (!isNaN(d) && d < today) return false;
+      const st = this.ackState(s);
+      return st && st.pending;
+    }).sort((a, b) => (a.date + (a.startTime || '')).localeCompare(b.date + (b.startTime || '')));
+  }
+
+  async ackSchedule(scheduleId) {
+    const sch = this.getSchedules().find(s => s.id === scheduleId);
+    const st = sch && this.ackState(sch);
+    if (!st || !st.pending) return null;
+    const me = window.SupabaseClient?.currentUser?.id || null;
+    return this.addStatusLog(scheduleId, {
+      label: '[확인] 담당 매니저가 변경 내용을 확인했습니다',
+      ackOf: st.request.id, byId: me,
+      managerName: localStorage.getItem('bp_user_name') || '담당 매니저'
+    });
+  }
+
 
   // 헬퍼
   getArtistName(artistId) {

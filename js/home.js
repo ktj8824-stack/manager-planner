@@ -384,6 +384,9 @@ const Home = {
       </div>
     `;
 
+    // 본사가 바꾼 일정 중 아직 '확인했습니다'를 안 누른 것 (오늘 이후 전체)
+    html += this.renderAckCards();
+
     if (events.length === 0 && rawSchedules.length === 0) {
       html += `
         <div class="tl-empty" onclick="Home.openScheduleRegisterModal()" style="border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-400); cursor:pointer; font-size:14px; font-weight:600; border:2px dashed rgba(79,70,229,0.3); min-height:280px; background:rgba(255,255,255,0.7); text-align:center; padding:20px;">
@@ -887,6 +890,54 @@ const Home = {
   },
 
   // 지금 할 일 카드의 [도착]: 단계 완료 + 본사에 도착 보고(로드톡 → 본사 푸시)
+  // ── "확인했습니다" 카드 ──
+  renderAckCards() {
+    try {
+      const me = window.SupabaseClient?.currentUser?.id;
+      const list = me && window.hqStore?.getPendingAcks ? window.hqStore.getPendingAcks(me) : [];
+      if (!list.length) return '';
+      const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+      const cards = list.slice(0, 5).map(s => {
+        const st = window.hqStore.ackState(s);
+        const d = new Date(s.date + 'T00:00:00');
+        const when = (isNaN(d) ? s.date : `${d.getMonth() + 1}/${d.getDate()}(${DAYS[d.getDay()]})`) + (s.startTime ? ' ' + s.startTime : '');
+        const isNew = /^\[일정 등록\]/.test(st.request.label || '');
+        const cancel = ['취소', 'cancelled'].includes(s.status);
+        const tag = cancel ? '일정 취소' : isNew ? '새 일정' : '일정 변경';
+        const detail = isNew ? (s.location || '') : String(st.request.label || '').replace(/^\[[^\]]+\]\s*/, '');
+        const title = s.isSecret ? '🔒 비공개 일정' : `${s.artistName ? s.artistName + ' · ' : ''}${s.title || '일정'}`;
+        return `
+          <div style="background:#fff; border:1.5px solid ${cancel ? '#fecaca' : '#fdba74'}; border-radius:14px; padding:12px 14px; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:800; color:${cancel ? '#dc2626' : '#c2410c'};">
+              <span style="background:${cancel ? '#fee2e2' : '#ffedd5'}; padding:2px 8px; border-radius:6px;">${tag}</span>
+              <span style="color:#64748b; font-weight:700;">${esc(when)}</span>
+            </div>
+            <div style="font-size:15.5px; font-weight:800; color:#0f172a; margin-top:6px; line-height:1.35;">${esc(title)}</div>
+            ${detail && !s.isSecret ? `<div style="font-size:13.5px; color:#475569; margin-top:4px; line-height:1.45; word-break:keep-all;">${esc(detail)}</div>` : ''}
+            <button type="button" onclick="Home.ackSchedule(${escJs(s.id)}, this)" style="margin-top:10px; width:100%; min-height:42px; border:0; border-radius:10px; background:#4f46e5; color:#fff; font-size:15px; font-weight:800; cursor:pointer;">확인했습니다</button>
+          </div>`;
+      }).join('');
+      return `
+        <div style="margin:0 0 12px;">
+          <div style="font-size:14px; font-weight:800; color:#0f172a; margin:0 2px 8px; display:flex; align-items:center; gap:6px;">📢 본사 변경 확인 <span style="background:#f97316; color:#fff; font-size:12px; padding:1px 8px; border-radius:999px;">${list.length}</span></div>
+          ${cards}
+          ${list.length > 5 ? `<div style="font-size:12.5px; color:#64748b; text-align:center;">외 ${list.length - 5}건</div>` : ''}
+        </div>`;
+    } catch (e) { console.warn('확인 카드 표시 실패', e); return ''; }
+  },
+
+  async ackSchedule(id, btn) {
+    if (btn) { btn.disabled = true; btn.textContent = '보내는 중…'; }
+    try {
+      await window.hqStore.ackSchedule(id);
+      U.toast('본사에 확인을 보냈어요.');
+      U.haptic && U.haptic();
+    } catch (e) {
+      U.toast(e?.localSaved ? '확인을 저장했어요. 연결되면 본사에 전달됩니다.' : '확인을 보내지 못했어요. 다시 눌러 주세요.');
+    }
+    this.render && this.render();
+  },
+
   async arriveStep(hqId, stepIdx, name) {
     this.setHQRouteStatus(hqId, stepIdx, '완료');
     try {

@@ -9,6 +9,7 @@
     ['vehicleName', '차량'], ['title', '제목'], ['status', '상태'], ['contactName', '현장 담당자']
   ];
 
+  const ACK_HINT = '👉 앱 홈에서 [확인했습니다]를 눌러 주세요';
   function dateLabel(s) {
     if (!s.date) return '';
     const d = new Date(s.date + 'T00:00:00');
@@ -71,7 +72,7 @@
         const secret = !!next.isSecret;
         if (!prev || (oldMgr !== newMgr)) {      // 새 일정이거나 담당이 바뀜 → 새 담당에게 "새 일정"
           const lines = secret ? secretMsg(next, '배정') : [when(next) + (next.location ? ' · ' + next.location : ''), next.vehicleName ? '차량: ' + next.vehicleName : '', next.notes ? '메모: ' + String(next.notes).slice(0, 80) : ''].filter(Boolean);
-          const r = await send(newMgr, '📅 새 일정 배정 · ' + (secret ? '비공개' : head(next)), lines.join('\n'), urgent);
+          const r = await send(newMgr, '📅 새 일정 배정 · ' + (secret ? '비공개' : head(next)), lines.concat([ACK_HINT]).join('\n'), urgent);
           if (prev && oldMgr && oldMgr !== newMgr) {  // 이전 담당에게 "해제"
             await send(oldMgr, '📅 일정 담당 해제 · ' + (prev.isSecret ? '비공개' : head(prev)), prev.isSecret ? '비공개 일정 담당에서 제외되었습니다.' : `${when(prev)} 일정은 다른 매니저가 담당합니다.`, false);
           }
@@ -82,7 +83,7 @@
         const isCx = v => ['취소', 'cancelled'].includes(norm(v));
         const canceled = isCx(next.status) && !isCx(prev.status);
         const lines = secret ? secretMsg(next, canceled ? '취소' : '변경') : [when(next) + (next.location ? ' · ' + next.location : ''), ...changes];
-        return note(await send(newMgr, (canceled ? '❌ 일정 취소 · ' : '📅 일정 변경 · ') + (secret ? '비공개' : head(next)), lines.join('\n'), urgent || canceled && startsWithin(next, 24)));
+        return note(await send(newMgr, (canceled ? '❌ 일정 취소 · ' : '📅 일정 변경 · ') + (secret ? '비공개' : head(next)), lines.concat([ACK_HINT]).join('\n'), urgent || canceled && startsWithin(next, 24)));
       } catch (e) { console.warn('일정 알림 오류', e); return '⚠️ 담당 매니저 알림을 보내지 못했습니다: ' + (e.message || '오류'); }
     },
     // 삭제 직후
