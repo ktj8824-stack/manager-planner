@@ -865,6 +865,8 @@ class HQDataStore {
     if (role !== 'ceo' && role !== 'hq_admin') return;
     const sc = window.SupabaseClient;
     const [ra, rv] = await Promise.all([sc.getArtists(), sc.getVehicles()]);
+    // 서버에 이미 자료가 있으면 서버가 기준 (지운 아티스트·차량이 이 기기에서 다시 올라가지 않게)
+    if (ra.length || rv.length) return;
     const haveA = new Set(ra.map(a => a.id));
     const haveV = new Set(rv.map(v => v.id));
     const demo = this._demoIds();
@@ -1060,7 +1062,8 @@ class HQDataStore {
         status: (existing?.status && this._scheduleDbStatus(existing.status) === row.status) ? existing.status : this._scheduleUiStatus(row.status), isSecret: !!row.is_secret,
         secretLevel: row.secret_level || (row.is_secret ? 'confidential' : 'public'),
         notes: row.notes || '', timeline: row.timeline_items || [], statusLogs: row.status_logs || [],
-        outfit: row.outfit || '', supplies: row.supplies || '', departure: row.departure_info || {}
+        outfit: row.outfit || '', supplies: row.supplies || '', departure: row.departure_info || {},
+        shop: (row.shop_info && Object.keys(row.shop_info).length) ? row.shop_info : existing?.shop
       });
       outbox[id] = { ...(entry || {}), remoteId: row.id, created: true, pending: false };
     }
@@ -1441,7 +1444,9 @@ class HQDataStore {
       status: this._scheduleDbStatus(schedule.status), is_secret: !!schedule.isSecret,
       secret_level: schedule.secretLevel || (schedule.isSecret ? 'confidential' : 'public'),
       notes: schedule.notes || '', timeline_items: schedule.timeline || [], status_logs: schedule.statusLogs || [],
-      departure_info: schedule.departure || {}, outfit: schedule.outfit || null, supplies: schedule.supplies || null
+      departure_info: schedule.departure || {}, outfit: schedule.outfit || null, supplies: schedule.supplies || null,
+      // 샵 상세(주소·소요시간)도 서버에 보관 → 다른 기기·매니저 앱에서도 길안내/동선 계산 가능
+      shop_info: (schedule.shop && typeof schedule.shop === 'object') ? schedule.shop : {}
     };
   }
 
