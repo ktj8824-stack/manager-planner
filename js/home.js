@@ -694,7 +694,13 @@ const Home = {
       }
     } catch (e) { console.warn('지금 할 일 카드 오류', e); }
 
+    // 이미 끝난 앞쪽 단계는 접어 두고(지우지 않음), 다음에 할 단계가 맨 위에 오게 한다
+    const firstPending = uniqueEvents.findIndex(e => !e.done);
+    const foldCount = firstPending > 0 ? firstPending : 0;
+    const listStart = html.length;
+    let foldEnd = -1;
     uniqueEvents.forEach((ev, idx) => {
+      if (idx === foldCount && foldCount > 0) foldEnd = html.length;
       const isLast = idx === uniqueEvents.length - 1;
       const isDone = ev.done || false;
       const isHQ = ev.isHQ;
@@ -894,6 +900,19 @@ const Home = {
         </div>
       `;
     });
+
+    if (foldCount > 0 && foldEnd > listStart) {
+      const doneHtml = html.slice(listStart, foldEnd);
+      const open = !!this._showDoneSteps;
+      const realDone = uniqueEvents.slice(0, foldCount).filter(e => e.stepCategory !== 'rest').length || foldCount;
+      html = html.slice(0, listStart) + `
+        <button type="button" onclick="Home._showDoneSteps=!Home._showDoneSteps; Home.updateRightTimeline ? Home.updateRightTimeline() : Home.render();" style="display:flex; align-items:center; gap:8px; width:100%; margin:0 0 12px; padding:10px 14px; border-radius:12px; border:1px solid #d1fae5; background:#f0fdf4; color:#047857; font-size:14px; font-weight:700; cursor:pointer; text-align:left;">
+          <span style="display:inline-flex; width:20px; height:20px; border-radius:50%; background:#10b981; color:#fff; align-items:center; justify-content:center; font-size:12px;">✓</span>
+          <span style="flex:1;">완료된 단계 ${realDone}개</span>
+          <span style="color:#059669; font-size:13px;">${open ? '접기 ▴' : '보기 ▾'}</span>
+        </button>
+        <div style="${open ? '' : 'display:none;'}">${doneHtml}</div>` + html.slice(foldEnd);
+    }
 
     html += '</div>';
     return html;
