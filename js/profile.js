@@ -85,6 +85,7 @@ const Profile = {
               <div style="font-size:12.5px;color:rgba(255,255,255,0.55);margin-bottom:2px;">${esc(userEmail)}</div>
               <div style="font-size:12px;color:rgba(255,255,255,0.4);">${esc(userCompany)} · ${esc(userDept)}</div>
             </div>
+            <button type="button" onclick="Profile.switchAccount()" style="flex-shrink:0;align-self:center;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.28);color:#fff;font-size:12.5px;font-weight:700;padding:7px 10px;border-radius:9px;cursor:pointer;white-space:nowrap;">계정 전환</button>
           </div>
 
           <!-- 담당 아티스트 태그 -->
@@ -307,8 +308,15 @@ const Profile = {
     });
   },
 
-  async logout() {
-    if (confirm('정말 로그아웃 하시겠습니까?')) {
+  // 다른 계정으로 로그인: 지금 계정을 로그아웃하고, 폰에 저장된 비밀번호가 자동으로 채워지지 않는 빈 로그인 화면을 연다
+  async switchAccount() {
+    if (!confirm('다른 계정으로 로그인할까요?\n지금 계정은 로그아웃됩니다.')) return;
+    try { sessionStorage.setItem('rp_fresh_login', '1'); } catch (e) { }
+    await this.logout(true);
+  },
+
+  async logout(skipConfirm = false) {
+    if (skipConfirm === true || confirm('정말 로그아웃 하시겠습니까?')) {
       const provider = localStorage.getItem('bp_provider');
       if (window.SupabaseClient) {
         try { await window.SupabaseClient.signOut(); } catch (e) {}

@@ -31,11 +31,11 @@ const Login = {
         <!-- B2B 로그인 폼 -->
         <div id="login-b2b-section" style="background:var(--bg-card); border-radius:16px; padding:24px; margin-bottom:24px; border:1px solid var(--border-default); box-shadow:var(--shadow-md); display:block;">
           <form id="form-supabase-login" onsubmit="Login.handleEmailLogin(event)" style="display:flex; flex-direction:column; gap:14px;">
-            <input type="email" id="login-email" class="form-input" placeholder="사내 이메일 (ID)" aria-label="사내 이메일" autocomplete="username" required 
+            <input type="email" id="login-email" class="form-input" placeholder="사내 이메일 (ID)" aria-label="사내 이메일" autocomplete="${Login._fresh() ? 'off' : 'username'}" required 
               style="background:var(--bg-input); border:1px solid transparent; color:var(--text-100); padding:16px; border-radius:12px; font-size:15px; width:100%; transition:all 0.2s; outline:none;" 
               onfocus="this.style.background='var(--bg-input-focus)'; this.style.borderColor='var(--accent)';" 
               onblur="this.style.background='var(--bg-input)'; this.style.borderColor='transparent';" />
-            <input type="password" id="login-pw" class="form-input" placeholder="비밀번호" aria-label="비밀번호" autocomplete="current-password" required 
+            <input type="password" id="login-pw" class="form-input" placeholder="비밀번호" aria-label="비밀번호" autocomplete="${Login._fresh() ? 'new-password' : 'current-password'}" required 
               style="background:var(--bg-input); border:1px solid transparent; color:var(--text-100); padding:16px; border-radius:12px; font-size:15px; width:100%; transition:all 0.2s; outline:none;" 
               onfocus="this.style.background='var(--bg-input-focus)'; this.style.borderColor='var(--accent)';" 
               onblur="this.style.background='var(--bg-input)'; this.style.borderColor='transparent';" />
@@ -206,6 +206,7 @@ const Login = {
       State.setManagerFilter(mgrId);
     }
 
+    try { sessionStorage.removeItem('rp_fresh_login'); } catch (e) { }
     U.toast(`✅ ${user.name}님 환영합니다!`);
     localStorage.setItem('bp_onboarded', 'true');
     if (window.hqStore) window.hqStore.flushPendingSchedules()
@@ -216,6 +217,9 @@ const Login = {
     App.initRealtimeSync();
     App.navigate('home');
   },
+
+  // '계정 전환'으로 들어온 로그인 화면: 폰에 저장된 이전 계정 비밀번호가 자동으로 채워지지 않게
+  _fresh() { try { return sessionStorage.getItem('rp_fresh_login') === '1'; } catch (e) { return false; } },
 
   // 개발용 PC(localhost)에서만 데모 로그인을 허용
   isDevHost() {
