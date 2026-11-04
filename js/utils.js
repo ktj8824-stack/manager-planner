@@ -315,17 +315,37 @@ const U = {
    *   없으면 카카오맵 앱의 자동차 길찾기로 연다.
    */
   _navCache: {},
+  // "MBC 상암 신사옥 (서울 마포구 성암로 267)" → { name:'MBC 상암 신사옥', addr:'서울 마포구 성암로 267' }
+  _splitPlace(s) {
+    const str = String(s || '').replace(/\s+/g, ' ').trim();
+    const m = str.match(/^(.*?)\s*[(\[]([^()\[\]]+)[)\]]\s*$/);
+    const looksAddr = (v) => /(시|도|구|군|읍|면|동|리|로|길)\s*\d|\d+(-\d+)?\s*$/.test(v) && /(시|도|구|군)\s/.test(v + ' ');
+    if (m && m[1].trim() && looksAddr(m[2])) return { name: m[1].trim(), addr: m[2].trim() };
+    if (looksAddr(str)) return { name: '', addr: str };
+    return { name: m && m[1].trim() ? m[1].trim() : str, addr: '' };
+  },
+
   async _resolveDest(destName, destAddr) {
-    const q = String(destAddr || destName || '').trim();
-    if (!q) return null;
-    if (this._navCache[q]) return this._navCache[q];
+    const raw = String(destAddr || destName || '').trim();
+    if (!raw) return null;
+    if (this._navCache[raw]) return this._navCache[raw];
     if (typeof KakaoAPI === 'undefined' || !KakaoAPI.searchPlace) return null;
-    try {
-      const docs = await Promise.race([KakaoAPI.searchPlace(q), new Promise(r => setTimeout(() => r(null), 2500))]);
+    const parts = this._splitPlace(raw);
+    const label = parts.name || destName || parts.addr || raw;
+    // 주소가 있으면 주소로, 이름이 있으면 이름으로 동시에 찾고 먼저 나온 결과를 쓴다 (괄호가 섞인 긴 문자열은 검색이 안 됨)
+    const queries = [...new Set([parts.addr, parts.name, raw].filter(Boolean))];
+    const find = async (q) => {
+      const docs = await KakaoAPI.searchPlace(q);
       const d = Array.isArray(docs) && docs[0];
-      if (!d || !d.x || !d.y) return null;
-      const pt = { name: destName || d.place_name || q, lat: String(d.y), lng: String(d.x) };
-      this._navCache[q] = pt;
+      if (!d || !d.x || !d.y) throw new Error('none');
+      return { name: parts.name || d.place_name || label, lat: String(d.y), lng: String(d.x) };
+    };
+    try {
+      const pt = await Promise.race([
+        Promise.any(queries.map(find)),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000))
+      ]);
+      this._navCache[raw] = pt;
       return pt;
     } catch (e) { return null; }
   },
@@ -345,7 +365,7 @@ const U = {
       this.toast('목적지 정보가 없습니다.');
       return;
     }
-    const label = destName || destAddr;
+    const label = (this._splitPlace(destName || destAddr).name || this._splitPlace(destName || destAddr).addr || destName || destAddr);
     const pref = forcedNavi || localStorage.getItem('bp_preferred_navi') || 'choice';
     if (pref === 'choice' && !forcedNavi) {
       this.showNaviChoiceModal(destName, destAddr);
