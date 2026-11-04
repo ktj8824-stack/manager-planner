@@ -14,7 +14,7 @@
 ## 2. Claude: 코드 (한 번에 배포)
 - [ ] `deploy/app/CNAME` = `app.roadplanner.kr`, `deploy/web/CNAME` = `hq.roadplanner.kr`
 - [ ] `js/site-config.js` 의 `APP`, `HQ` 두 줄
-- [ ] 알림 주소: `update public.app_settings` (app_url, hq_url) — 서버 표만 고치면 됨
+- [ ] 알림 주소: reminders 함수 재배포(소스에 주소 설정 읽기 반영됨, 11/4) + `app_settings` 표에 app_url, hq_url 저장
       `insert into public.app_settings(key,value) values ('app_url','https://app.roadplanner.kr/'),('hq_url','https://hq.roadplanner.kr/') on conflict (key) do update set value = excluded.value;`
 - [ ] 경로 함수(manager-planner-route) 기본 허용 주소에 새 도메인 추가 후 재배포
 - [ ] 패키징(`tools/package_split.cjs`) → 3개 저장소 push
