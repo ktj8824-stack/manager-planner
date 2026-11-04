@@ -644,7 +644,7 @@ const Home = {
         const name = (bm ? bm[2] : raw) || raw;
         const tt = raw;
         let dest = '';
-        if (tt.includes('숙소 픽업') || tt.includes('픽업 및 출발')) dest = nowEv.shopAddress || nowEv.shopName || '';
+        if (tt.includes('숙소 픽업') || tt.includes('픽업 및 출발')) dest = nowEv.shopAddress || nowEv.shopName || nowEv.locationAddress || nowEv.location || '';
         else if (tt.includes('복귀') || tt.includes('철수')) dest = nowEv.departureAddress || nowEv.departurePlace || '';
         else dest = nowEv.locationAddress || nowEv.location || '';
         const isDrive = tt.includes('출발') || tt.includes('이동') || tt.includes('픽업') || tt.includes('철수') || nowEv.moving === true;
@@ -700,7 +700,7 @@ const Home = {
       // 목적지 추정 (길안내용)
       let destinationTarget = '';
       if (titleText.includes('숙소 픽업') || titleText.includes('픽업 및 출발')) {
-        destinationTarget = ev.shopAddress || ev.shopName || '순수 청담본점';
+        destinationTarget = ev.shopAddress || ev.shopName || ev.locationAddress || ev.location || '';
       } else if (titleText.includes('현장') || titleText.includes('이동 출발')) {
         destinationTarget = ev.locationAddress || ev.location || ev.title.replace(/.*현장\(/, '').replace(/\).*/, '') || '행사장';
       } else if (titleText.includes('복귀') || titleText.includes('철수')) {

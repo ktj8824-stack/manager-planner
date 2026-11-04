@@ -9,6 +9,7 @@
 (function () {
   'use strict';
   try {
+    if (/[?&#]go=next\b|#next$/.test(location.href)) return; // 차 연결 자동 길안내는 바로
     if (sessionStorage.getItem('rp_splash_shown')) return;
     sessionStorage.setItem('rp_splash_shown', '1');
   } catch (e) { /* 저장소를 못 쓰면 매번 보여 줌 */ }

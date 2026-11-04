@@ -660,4 +660,4 @@ const App = {
 };
 
 
-document.addEventListener('DOMContentLoaded', () => App.init());
+document.addEventListener('DOMContentLoaded', () => { App.init(); try { window.AutoNav && AutoNav.init(); } catch (e) { console.warn('autonav', e); } });

@@ -133,6 +133,29 @@ const Profile = {
               </div>
             </div>
 
+            <!-- 기본 내비 -->
+            <div style="padding:14px 16px;border-bottom:1px solid var(--border-subtle);">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                <span style="font-size:15px;">🧭</span>
+                <span style="font-size:14px;font-weight:700;color:var(--text-100);">기본 내비</span>
+              </div>
+              <div class="setting-options" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+                <button class="setting-opt-btn${currentNavi === 'tmap' ? ' active' : ''}" onclick="Profile.setNavi('tmap',this)">티맵</button>
+                <button class="setting-opt-btn${currentNavi === 'kakao' ? ' active' : ''}" onclick="Profile.setNavi('kakao',this)">카카오내비</button>
+                <button class="setting-opt-btn${currentNavi === 'choice' ? ' active' : ''}" onclick="Profile.setNavi('choice',this)">매번 선택</button>
+              </div>
+            </div>
+
+            <!-- 차에 타면 자동 길안내 -->
+            <div onclick="AutoNav.openGuide()" style="padding:14px 16px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:12px;cursor:pointer;">
+              <span style="font-size:15px;flex-shrink:0;">🚗</span>
+              <div style="flex:1;">
+                <div style="font-size:14px;font-weight:700;color:var(--text-100);">차에 타면 자동 길안내</div>
+                <div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">차와 연결되면 다음 일정으로 내비 자동 실행</div>
+              </div>
+              ${ProfileIcons.chevron}
+            </div>
+
             <!-- 푸시 알림 -->
             <div onclick="Profile.togglePush()" style="padding:14px 16px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:12px;cursor:pointer;">
               <span style="color:var(--primary-400);flex-shrink:0;">${ProfileIcons.bell}</span>

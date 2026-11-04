@@ -470,6 +470,19 @@ const State = {
   },
 
 
+  // 길안내용 장소 정보 (지금 할 일·자동 길안내가 픽업/복귀 목적지를 찾을 때 사용)
+  _placeFields(hs) {
+    const shop = (hs && hs.shop && typeof hs.shop === 'object' && hs.shop.needed) ? hs.shop : null;
+    const dep = (hs && hs.departure && typeof hs.departure === 'object') ? hs.departure : null;
+    return {
+      locationAddress: (hs && hs.locationAddress) || '',
+      shopName: shop ? (shop.name || '') : '',
+      shopAddress: shop ? (shop.address || '') : '',
+      departurePlace: dep ? (dep.place || '') : '',
+      departureAddress: dep ? (dep.address || '') : '',
+    };
+  },
+
   calculateDailyEvents(y, m, d) {
     const hqScheds = this.getHQSchedulesForDate(y, m, d);
     const hqIds = new Set((hqScheds || []).map(hs => hs.id));
@@ -613,6 +626,7 @@ const State = {
               managerName: hs.managerName,
               vehicleName: hs.vehicleName,
               location: hs.location,
+              ...State._placeFields(hs),
               outfit: hs.outfit,
               status: hs.status
             });
@@ -636,6 +650,7 @@ const State = {
             managerName: hs.managerName,
             vehicleName: hs.vehicleName,
             location: hs.location,
+            ...State._placeFields(hs),
             outfit: hs.outfit,
             status: hs.status,
             isAuto: true
