@@ -270,11 +270,75 @@ const AutoNav = {
     try { h.postMessage({ type: 'reminders', items }); } catch (e) { }
   },
 
+  // ── 이동 중 지연 예상: [출발]을 누른 단계가 있으면 2분마다 내 위치 → 목적지 실시간 소요시간으로 도착 예상 ──
+  //   목표 도착(다음 단계 시각)보다 5분 이상 늦을 것 같으면 알려 주고, 버튼 하나로 본사에 지연 보고
+  async _delayCheck() {
+    if (document.hidden || !navigator.geolocation || typeof TmapAPI === 'undefined') return;
+    if (Date.now() - (this._lastDelayCheck || 0) < 110000) return;
+    const me = window.SupabaseClient?.currentUser?.id;
+    if (!me) return;
+    const todayYmd = (() => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); })();
+    const sch = (window.hqStore?.getSchedules?.() || []).find(s => s.managerId === me && s.date === todayYmd && Array.isArray(s.timeline) && s.timeline.some(st => st.moving && !st.done));
+    if (!sch) return;
+    const idx = sch.timeline.findIndex(st => st.moving && !st.done);
+    const step = sch.timeline[idx], next = sch.timeline[idx + 1];
+    if (!next || !next.time) return;
+    this._lastDelayCheck = Date.now();
+    const label = String(step.label || '');
+    let dest = '';
+    if (/픽업/.test(label) && sch.shop && sch.shop.needed) dest = sch.shop.address || sch.shop.name;
+    else if (/복귀|철수/.test(label)) dest = (sch.departure && (sch.departure.address || sch.departure.place)) || '';
+    else dest = sch.locationAddress || sch.location || '';
+    if (!dest) return;
+    const wait = /^\[메인 일정\]/.test(next.label || '') ? Number((String(next.desc || '').match(/(\d+)분 전\(/) || [])[1] || 10) : 0;
+    const [h, m] = next.time.split(':').map(Number);
+    const target = new Date(); target.setHours(h, m - wait, 0, 0);
+    const pos = await new Promise(res => navigator.geolocation.getCurrentPosition(p => res(p), () => res(null), { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }));
+    if (!pos) return;
+    const pt = await KakaoAPI.geocode(dest);
+    if (!pt) return;
+    const eta = await TmapAPI.getRouteTime(pos.coords.longitude, pos.coords.latitude, pt.x, pt.y);
+    if (!eta) return;
+    const arrive = new Date(Date.now() + eta * 60000);
+    const late = Math.round((arrive - target) / 60000);
+    const key = 'rp_delay_' + sch.id + '_' + idx;
+    let prev = 0; try { prev = Number(localStorage.getItem(key) || 0); } catch (e) { }
+    if (late < 5 || late < prev + 10 && prev) return;      // 5분 미만이면 조용히, 이미 알린 뒤엔 10분 더 늦어질 때만
+    try { localStorage.setItem(key, String(late)); } catch (e) { }
+    const hhmm = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    const name = label.replace(/^\[[^\]]+\]\s*/, '');
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    this._pendingDelay = { sch, late, arrive: hhmm(arrive), target: hhmm(target), name };
+    try { navigator.vibrate && navigator.vibrate([300, 150, 300]); } catch (e) { }
+    this._overlay(`
+      <div class="an-k" style="color:#dc2626;">⏰ 지연 예상 약 ${late}분</div>
+      <div class="an-t">${esc(name)}</div>
+      <div class="an-d">지금 교통이면 도착 예상 <b>${hhmm(arrive)}</b> (목표 ${hhmm(target)})</div>
+      <div class="an-b">
+        <button type="button" class="an-x" onclick="AutoNav.cancel()">닫기</button>
+        <button type="button" class="an-go" style="background:#dc2626;" onclick="AutoNav.reportDelay()">본사에 지연 알리기</button>
+      </div>`, true);
+  },
+
+  async reportDelay() {
+    const d = this._pendingDelay;
+    this.cancel();
+    if (!d) return;
+    const who = d.sch.isSecret ? '비공개 일정' : `${d.sch.artistName ? d.sch.artistName + ' · ' : ''}${d.sch.title || ''}`;
+    try {
+      if (window.Chat && window.Chat.available && window.Chat.available()) {
+        await window.Chat.sendNotice({ title: `⏰ 지연 예상 약 ${d.late}분`, content: `${who}\n${d.name} · 도착 예상 ${d.arrive} (목표 ${d.target}, 현재 교통 기준)`, isUrgent: d.late >= 15 });
+      }
+      if (window.hqStore?.addStatusLog) await window.hqStore.addStatusLog(d.sch.id, { label: `[지연 예상] 약 ${d.late}분 · 도착 예상 ${d.arrive} (목표 ${d.target})` });
+      if (typeof U !== 'undefined') U.toast('본사에 지연을 알렸어요.');
+    } catch (e) { if (typeof U !== 'undefined') U.toast('알리지 못했어요. 로드톡으로 직접 보내 주세요.'); }
+  },
+
   startWatch() {
     if (this._watching) return;
     this._watching = true;
     setTimeout(() => this._watchTick(), 4000);
-    setInterval(() => this._watchTick(), 30000);
+    setInterval(() => { this._watchTick(); this._delayCheck().catch(() => { }); }, 30000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(() => this._watchTick(), 1500); });
     window.addEventListener('hq-store-change', () => { clearTimeout(this._wt); this._wt = setTimeout(() => this._sendNative(this._myDriveSteps()), 1500); });
   },
