@@ -619,6 +619,40 @@ class HQDataStore {
     this._purgeLocalDemo();
     this.broadcast = new BroadcastChannel('HQ_PLANNER_CHANNEL');
     this.syncFromSupabase().catch(() => { }); // failures are published via hq-store-change
+    this._startAutoSync();
+  }
+
+  // ── 자동 동기화: 화면이 켜져 있는 동안 1분마다, 앱으로 돌아올 때, 실시간 변경 알림이 올 때 ──
+  //    1) 보내지 못한 변경을 다시 보내고  2) 서버 내용을 다시 받아 이 기기를 서버와 맞춘다
+  _startAutoSync() {
+    if (this._autoSyncStarted || typeof window === 'undefined') return;
+    this._autoSyncStarted = true;
+    setInterval(() => { if (!document.hidden) this.requestSync(0); }, 60000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) this.requestSync(300); });
+    window.addEventListener('focus', () => this.requestSync(300));
+  }
+
+  requestSync(delay = 800) {
+    clearTimeout(this._syncTimer);
+    this._syncTimer = setTimeout(() => this._syncNow(), delay);
+    return this._syncWaiter || (this._syncWaiter = new Promise(res => { this._syncResolve = res; }));
+  }
+
+  async _syncNow() {
+    const done = (v) => { const r = this._syncResolve; this._syncWaiter = null; this._syncResolve = null; if (r) r(v); };
+    if (!this._canFlushSchedules()) return done({ skipped: true });
+    if (this._syncRunning) { this._syncAgain = true; return; }
+    this._syncRunning = true;
+    let result = { ok: true };
+    try {
+      if (this.getScheduleSyncState().pending) { try { await this.flushPendingSchedules(); } catch (e) { result.ok = false; } }
+      try { await this.syncFromSupabase(); this.lastServerSyncAt = Date.now(); } catch (e) { result.ok = false; }
+    } finally {
+      this._syncRunning = false;
+      this.notifyChange('SYNC_STATE', this.getScheduleSyncState());
+      if (this._syncAgain) { this._syncAgain = false; this._syncTimer = setTimeout(() => this._syncNow(), 200); }
+      else done(result);
+    }
   }
 
   // ── 🔒 계정(아이디)별 독립 스토리지 네임스페이스 키 생성 (매니저는 본사 데이터 공유) ──
@@ -796,8 +830,7 @@ class HQDataStore {
     const baseline = this._readScheduleOutbox(scheduleKey);
     const keys = { artists: this.getUserStorageKey(HQ_STORAGE_KEYS.ARTISTS), managers: this.getUserStorageKey(HQ_STORAGE_KEYS.MANAGERS), vehicles: this.getUserStorageKey(HQ_STORAGE_KEYS.VEHICLES) };
     try {
-      try { await this._seedCatalogToServer(); }
-      catch (e) { this._reportServerError('아티스트·차량 서버 올리기', e); }
+      // 서버가 기준: 이 기기에만 있던 아티스트·차량을 서버로 올리지 않음 (지운 자료가 되살아나는 문제 방지)
       const [remoteArtists, remoteManagers, remoteVehicles, remoteSchedules] = await Promise.allSettled([
         window.SupabaseClient.getArtists(),
         window.SupabaseClient.getManagers(),
@@ -806,6 +839,8 @@ class HQDataStore {
       ]);
 
       if (scheduleKey !== this.getUserStorageKey(HQ_STORAGE_KEYS.SCHEDULES)) return { deferred: true };
+      const snap = () => [keys.artists, keys.managers, keys.vehicles, scheduleKey].map(k => localStorage.getItem(k)).join('\u0001');
+      const before = snap();
       if (remoteArtists.status === 'fulfilled' && Array.isArray(remoteArtists.value)) {
         localStorage.setItem(keys.artists, JSON.stringify(remoteArtists.value));
       }
@@ -851,8 +886,9 @@ class HQDataStore {
         error.resources = failures;
         throw error;
       }
-      this.notifyChange('SUPABASE_REFRESHED');
-      return { refreshed: true };
+      const changed = snap() !== before;
+      if (changed) this.notifyChange('SUPABASE_REFRESHED');
+      return { refreshed: true, changed };
     } catch (error) {
       this.notifyChange('SUPABASE_SYNC_FAILED', { resources: error.resources || ['unknown'] });
       throw error;
@@ -989,7 +1025,7 @@ class HQDataStore {
     let sub = null;
     try { sub = JSON.parse(localStorage.getItem(key)); } catch (e) { }
     sub = sub || { ...DEFAULT_SUBSCRIPTION };
-    if ((sub.additionalSlots || 0) >= serverExtra) return;
+    if ((sub.additionalSlots || 0) === serverExtra) return; // 서버 값이 기준
     sub.additionalSlots = serverExtra;
     localStorage.setItem(key, JSON.stringify(sub));
     this.notifyChange('SUBSCRIPTION_UPDATED');
@@ -1068,12 +1104,41 @@ class HQDataStore {
       outbox[id] = { ...(entry || {}), remoteId: row.id, created: true, pending: false };
     }
     // Preserve unsent/local-only rows. Never enqueue demos merely because refresh ran.
+    const orphans = [];
     for (const schedule of local) {
       if (seen.has(schedule.id) || outbox[schedule.id]?.deleted) continue;
-      if (outbox[schedule.id]?.pending || !this._scheduleRemoteId(schedule)) merged.push(schedule);
+      if (outbox[schedule.id]?.pending) merged.push(schedule);       // 아직 서버로 보내는 중인 변경
+      else if (!this._scheduleRemoteId(schedule)) orphans.push(schedule); // 서버에 한 번도 안 올라간 옛 자료
+    }
+    // 서버가 기준: 서버에 없는 옛 기기 전용 일정은 화면에서 빼고 따로 보관만 해 둔다 (기기마다 일정이 달라지는 원인)
+    if (orphans.length) {
+      try {
+        const bk = 'HQ_LOCAL_ONLY_BACKUP_V1';
+        const prev = JSON.parse(localStorage.getItem(bk) || '[]');
+        const ids = new Set(prev.map(s => s.id));
+        localStorage.setItem(bk, JSON.stringify(prev.concat(orphans.filter(s => !ids.has(s.id))).slice(-500)));
+      } catch (e) { }
     }
     this._writeScheduleOutbox(key, outbox);
     this._writeSchedules(key, merged);
+  }
+
+  // ── 서버 우선 저장: 로그인 상태면 서버에 먼저 저장하고, 성공했을 때만 이 기기 목록을 바꾼다 ──
+  // (서버에 실패한 변경이 이 기기에만 남아 기기마다 내용이 달라지는 일을 막음)
+  async _serverFirst(what, fn) {
+    const sc = window.SupabaseClient;
+    const loggedIn = !!(sc?.isConfigured && sc.currentUser?.id);
+    if (!loggedIn) return null; // 로그인 전·체험 모드: 이 기기에만 저장
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      throw new Error('인터넷 연결이 없어 저장하지 못했습니다. 연결된 뒤 다시 시도해 주세요.');
+    }
+    try { return await fn(sc); }
+    catch (e) {
+      this._reportServerError(what, e);
+      const err = new Error('서버에 저장하지 못했습니다 (' + what + '). 잠시 후 다시 시도해 주세요.' + (e?.message ? '\n· ' + e.message : ''));
+      err.cause = e;
+      throw err;
+    }
   }
 
   // ── 아티스트 (항상 동기 배열 반환 - 계정별 격리) ──
@@ -1108,56 +1173,30 @@ class HQDataStore {
   }
 
   async addArtist(artist) {
-    const artists = this.getArtists();
+    await this._serverFirst('아티스트 등록', sc => sc.createArtist(artist));
+    const artists = this.getArtists().filter(a => a.id !== artist.id);
     artists.push(artist);
     this.saveArtists(artists);
-
-    if (window.SupabaseClient && window.SupabaseClient.isConfigured) {
-      try {
-        await window.SupabaseClient.createArtist(artist);
-      } catch (e) {
-        this._reportServerError('아티스트 등록', e);
-      }
-    }
     return artist;
   }
 
   async deleteArtist(id) {
-    let artists = this.getArtists();
-    artists = artists.filter(a => a.id !== id);
-    this.saveArtists(artists);
-
-    if (window.SupabaseClient && window.SupabaseClient.isConfigured) {
-      try {
-        if (window.SupabaseClient.deleteArtist) {
-          await window.SupabaseClient.deleteArtist(id);
-        }
-      } catch (e) {
-        this._reportServerError('아티스트 삭제', e);
-      }
-    }
+    await this._serverFirst('아티스트 삭제', sc => sc.deleteArtist(id));
+    this.saveArtists(this.getArtists().filter(a => a.id !== id));
+    // 서버에서 함께 지워진 그 아티스트의 일정도 바로 반영
+    this.syncFromSupabase().catch(() => { });
     return true;
   }
 
   async updateArtist(id, data) {
     const artists = this.getArtists();
     const idx = artists.findIndex(a => a.id === id);
-    if (idx !== -1) {
-      artists[idx] = { ...artists[idx], ...data };
-      this.saveArtists(artists);
-
-      if (window.SupabaseClient && window.SupabaseClient.isConfigured) {
-        try {
-          if (window.SupabaseClient.updateArtist) {
-            await window.SupabaseClient.updateArtist(id, artists[idx]);
-          }
-        } catch (e) {
-          this._reportServerError('아티스트 수정', e);
-        }
-      }
-      return artists[idx];
-    }
-    return null;
+    if (idx === -1) return null;
+    const next = { ...artists[idx], ...data };
+    await this._serverFirst('아티스트 수정', sc => sc.updateArtist(id, next));
+    artists[idx] = next;
+    this.saveArtists(artists);
+    return next;
   }
 
   // ── 매니저 (항상 동기 배열 반환 - 계정별 격리) ──
@@ -1209,24 +1248,16 @@ class HQDataStore {
   async updateManagerAssignment(managerId, assignedArtistIds) {
     const managers = this.getManagers();
     const target = managers.find(m => m.id === managerId);
+    const before = [...(target?.assignedArtists || [])];
+    const next = [...new Set(assignedArtistIds || [])];
+    await this._serverFirst('담당 아티스트 배정', async sc => {
+      for (const artId of before.filter(a => !next.includes(a))) await sc.unassignManagerFromArtist(artId, managerId);
+      for (const artId of next.filter(a => !before.includes(a))) await sc.assignManagerToArtist(artId, managerId);
+    });
     if (target) {
-      target.assignedArtists = assignedArtistIds;
+      target.assignedArtists = next;
       this.saveManagers(managers);
     }
-
-    if (window.SupabaseClient && window.SupabaseClient.isConfigured) {
-      try {
-        for (const artId of (target?.assignedArtists || [])) {
-          await window.SupabaseClient.unassignManagerFromArtist(artId, managerId);
-        }
-        for (const artId of assignedArtistIds) {
-          await window.SupabaseClient.assignManagerToArtist(artId, managerId);
-        }
-      } catch (e) {
-        console.warn('Supabase updateManagerAssignment error:', e);
-      }
-    }
-
     this.notifyChange('MANAGER_ASSIGNED');
     return true;
   }
@@ -1246,8 +1277,6 @@ class HQDataStore {
     if (!target) throw new Error('매니저 계정을 찾을 수 없습니다.');
 
     const { password, ...safeData } = data;
-    Object.assign(target, safeData);
-    delete target.password;
 
     // 김태현 본부장 계정인 경우 등록된 서버 UUID 연결
     if (target.email === 'th.kim@entplanner.com' && (!target.serverId || target.id === 'mgr_1')) {
@@ -1262,14 +1291,12 @@ class HQDataStore {
         if (data[field] !== undefined && (field !== 'password' || data[field])) request[field] = data[field];
       }
       if (Object.keys(request).length > 0 && typeof window.SupabaseClient.adminUpdateUser === 'function') {
-        try {
-          await window.SupabaseClient.adminUpdateUser(targetUuid, request);
-        } catch (e) {
-          console.warn('Supabase 계정 서버 동기화 건너뜀 (로컬 수정 정보 보존):', e);
-        }
+        await this._serverFirst('매니저 정보 수정', sc => sc.adminUpdateUser(targetUuid, request));
       }
     }
 
+    Object.assign(target, safeData);
+    delete target.password;
     this.saveManagers(managers);
     localStorage.removeItem('mock_registered_users');
     return target;
@@ -1277,8 +1304,12 @@ class HQDataStore {
 
   async deleteManager(id) {
     const managers = this.getManagers();
-    const newManagers = managers.filter(m => m.id !== id);
-    this.saveManagers(newManagers);
+    const target = managers.find(m => m.id === id);
+    const uuid = target?.serverId || (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) ? id : null);
+    // 서버 계정까지 지워야 다음 새로고침 때 다시 나타나지 않고, 앱 로그인도 막힌다
+    if (uuid) await this._serverFirst('매니저 계정 삭제', sc => sc.adminDeleteUser(uuid));
+    this.saveManagers(managers.filter(m => m.id !== id));
+    this.syncFromSupabase().catch(() => { });
     return true;
   }
 
@@ -1315,29 +1346,19 @@ class HQDataStore {
 
   async saveVehicle(vehicle) {
     if (!vehicle.id) vehicle.id = 'veh_' + Date.now();
+    await this._serverFirst('차량 저장', sc => sc.saveVehicle(vehicle));
     const vehicles = this.getVehicles();
     const idx = vehicles.findIndex(v => v.id === vehicle.id);
-    if (idx !== -1) {
-      vehicles[idx] = vehicle;
-    } else {
-      vehicles.push(vehicle);
-    }
+    if (idx !== -1) vehicles[idx] = vehicle;
+    else vehicles.push(vehicle);
     this.saveVehicles(vehicles);
-    if (window.SupabaseClient && window.SupabaseClient.isConfigured) {
-      try { await window.SupabaseClient.saveVehicle(vehicle); }
-      catch (e) { this._reportServerError('차량 저장', e); }
-    }
     return vehicle;
   }
 
   async deleteVehicle(id) {
-    const vehicles = this.getVehicles();
-    const newVehicles = vehicles.filter(v => v.id !== id);
-    this.saveVehicles(newVehicles);
-    if (window.SupabaseClient && window.SupabaseClient.isConfigured) {
-      try { await window.SupabaseClient.deleteVehicle(id); }
-      catch (e) { this._reportServerError('차량 삭제', e); }
-    }
+    await this._serverFirst('차량 삭제', sc => sc.deleteVehicle(id));
+    this.saveVehicles(this.getVehicles().filter(v => v.id !== id));
+    this.syncFromSupabase().catch(() => { });
     return true;
   }
 
@@ -1379,6 +1400,7 @@ class HQDataStore {
 
   _writeSchedules(key, schedules) {
     const serialized = JSON.stringify(schedules);
+    if (localStorage.getItem(key) === serialized) return; // 바뀐 게 없으면 화면을 다시 그리지 않음 (자동 동기화 때 깜빡임 방지)
     localStorage.setItem(key, serialized);
     // Maintain legacy UI readers without changing the canonical account key.
     for (const alias of [HQ_STORAGE_KEYS.SCHEDULES, 'HQ_SCHEDULES_V6_ceo_jm_ent_com',
@@ -1488,6 +1510,14 @@ class HQDataStore {
     return next;
   }
 
+  // 다시 보내도 성공할 수 없는 서버 거절 (권한·형식·참조 오류). 네트워크/일시 오류는 해당 없음
+  _isPermanentServerError(error) {
+    const code = String(error?.code || '');
+    if (['42501', '23503', '23502', '23514', '22P02', '22007', '22008', '22001', 'PGRST204', 'PGRST116'].includes(code)) return true;
+    const status = Number(error?.status || 0);
+    return status === 400 || status === 403 || status === 404 || status === 409 && code !== '23505';
+  }
+
   _canFlushSchedules() {
     return !!(window.SupabaseClient?.isConfigured && window.SupabaseClient.currentUser?.id &&
       (typeof navigator === 'undefined' || navigator.onLine !== false));
@@ -1579,17 +1609,43 @@ class HQDataStore {
         }
         synced++;
       } catch (error) {
-        failures.push({ id, code: error?.code || 'SCHEDULE_SYNC_ERROR', message: error?.message || '' });
+        const permanent = this._isPermanentServerError(error);
+        failures.push({ id, code: error?.code || 'SCHEDULE_SYNC_ERROR', message: error?.message || '', permanent });
+        // 서버가 '권한 없음·형식 오류'로 거절한 변경은 다시 보내도 계속 실패한다.
+        // 기기에만 남겨 두면 기기마다 내용이 달라지므로 대기열에서 빼고, 다음 새로고침 때 서버 내용으로 되돌린다.
+        if (permanent) {
+          try {
+            const current = this._readScheduleOutbox(key);
+            const local = this._readSchedules(key);
+            const row = local.find(s => s.id === id);
+            if (row) {
+              const bk = 'HQ_LOCAL_ONLY_BACKUP_V1';
+              const prev = JSON.parse(localStorage.getItem(bk) || '[]');
+              localStorage.setItem(bk, JSON.stringify(prev.concat([{ ...row, rejectedAt: new Date().toISOString(), rejectedCode: error?.code || '' }]).slice(-500)));
+            }
+            if (current[id]?.created) current[id].pending = false;
+            else {
+              delete current[id];
+              if (row) this._writeSchedules(key, local.filter(s => s.id !== id));
+            }
+            this._writeScheduleOutbox(key, current);
+          } catch (e) { }
+        }
       }
     }
     const pending = Object.values(this._readScheduleOutbox(key)).filter(e => e.pending).length;
     const result = { synced, pending, deferred: pending > 0 && !failures.length, failures };
     this.lastScheduleSyncResult = result;
+    if (failures.some(f => f.permanent)) this.syncFromSupabase().catch(() => { });
     if (failures.length) {
       this.notifyChange('SCHEDULE_SYNC_FAILED', result);
       this._reportServerError('스케줄 저장', new Error((failures[0].code || '') + ' ' + (failures[0].message || '')));
-      const error = new Error('일정은 로컬에 저장되었지만 서버 동기화에 실패했습니다. 온라인 상태에서 다시 시도해 주세요.');
-      error.localSaved = true;
+      const rejected = failures.some(f => f.permanent);
+      const error = new Error(rejected
+        ? '서버가 이 변경을 받아주지 않아 저장되지 않았습니다. (권한이 없거나 입력값 오류) 화면을 서버 내용으로 되돌립니다.'
+        : '일정은 이 기기에 저장되었고, 서버 전송은 대기 중입니다. 연결되면 자동으로 다시 보냅니다.');
+      error.localSaved = !rejected;
+      error.rejected = rejected;
       error.syncResult = result;
       throw error;
     }
@@ -2084,6 +2140,54 @@ class HQDataStore {
 
 // Global HQ Store Instance
 window.hqStore = new HQDataStore();
+
+// ── 서버 저장 상태 표시: 보내지 못한 일정이 있거나 서버가 거절했을 때만 화면 아래에 작게 뜬다 ──
+(function () {
+  if (typeof document === 'undefined') return;
+  let lastFail = null;
+  function el() {
+    let b = document.getElementById('sync-badge');
+    if (!b) {
+      b = document.createElement('button');
+      b.id = 'sync-badge';
+      b.type = 'button';
+      b.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));z-index:9990;display:none;align-items:center;gap:6px;max-width:calc(100vw - 32px);padding:9px 14px;border-radius:999px;border:0;font:700 13px/1.3 -apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo",sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.18);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+      b.onclick = async () => {
+        b.textContent = '서버와 맞추는 중…';
+        lastFail = null;
+        try { await window.hqStore.requestSync(0); } catch (e) { }
+        render();
+      };
+      (document.body || document.documentElement).appendChild(b);
+    }
+    return b;
+  }
+  function render() {
+    if (!document.body) return;
+    const st = window.hqStore?.getScheduleSyncState?.() || { pending: 0 };
+    const offline = navigator.onLine === false;
+    const b = el();
+    let text = '', bg = '', fg = '#fff';
+    if (lastFail && !st.pending) { text = '⚠️ 서버가 일부 변경을 거절했어요 · 눌러서 다시 맞추기'; bg = '#b91c1c'; }
+    else if (st.pending && offline) { text = '📴 오프라인 · 보낼 변경 ' + st.pending + '건 (연결되면 자동 전송)'; bg = '#334155'; }
+    else if (st.pending) { text = '⏳ 서버 저장 대기 ' + st.pending + '건 · 눌러서 다시 보내기'; bg = '#b45309'; }
+    if (!text) { b.style.display = 'none'; return; }
+    b.textContent = text; b.style.background = bg; b.style.color = fg; b.style.display = 'flex';
+  }
+  window.addEventListener('hq-store-change', (e) => {
+    const type = e.detail?.type;
+    if (type === 'SCHEDULE_SYNC_FAILED') {
+      const f = e.detail?.payload?.failures || [];
+      lastFail = f.some(x => x.permanent) ? Date.now() : lastFail;
+    }
+    if (type === 'SCHEDULE_SYNCED' || type === 'SUPABASE_REFRESHED') { if (lastFail && Date.now() - lastFail > 15000) lastFail = null; }
+    if (/SYNC|SCHEDULE|SUPABASE/.test(type || '')) setTimeout(render, 0);
+  });
+  window.addEventListener('online', render);
+  window.addEventListener('offline', render);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', render); else render();
+  window.SyncBadge = { render, clear() { lastFail = null; render(); } };
+})();
 
 /* ===================================================
    🎭 AuthPersona — Role-Based Access Control (RBAC) & Persona Switcher

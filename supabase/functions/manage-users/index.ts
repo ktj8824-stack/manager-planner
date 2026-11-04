@@ -248,6 +248,22 @@ async function updateMember(db: SupabaseClient, caller: Caller, body: JsonObject
   return { success: true };
 }
 
+// 매니저·스태프 계정 삭제 (같은 회사, 본인 제외). 일정의 담당자는 비워지고(배정 해제) 일정 자체는 남습니다.
+async function deleteMember(db: SupabaseClient, caller: Caller, body: JsonObject, requestId: string) {
+  onlyKeys(body, ["action", "id"]);
+  if (typeof body.id !== "string" || !UUID.test(body.id)) throw new HttpError(400, "INVALID_ID", "Invalid user id.");
+  if (body.id === caller.id) throw new HttpError(400, "SELF_DELETE", "You cannot delete your own account.");
+  const currentCaller = await callerProfile(db, caller.id);
+  if (currentCaller.company_id !== caller.company_id) throw new HttpError(403, "CALLER_CHANGED", "Caller company changed. Start a new request.");
+  const target = await targetProfile(db, body.id, currentCaller);
+  const { error } = await db.auth.admin.deleteUser(target.id);
+  if (error) {
+    console.error("manage-users delete failed", { requestId, userId: target.id });
+    throw authFailure(error);
+  }
+  return { success: true };
+}
+
 Deno.serve(async (req: Request): Promise<Response> => {
   const requestId = crypto.randomUUID();
   const headers = new Headers({ "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", "Vary": "Origin", "X-Content-Type-Options": "nosniff" });
@@ -292,7 +308,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const body = await readBody(req);
     if (body.action === "create") return json(await createMember(db, caller, body, requestId), 201);
     if (body.action === "update") return json(await updateMember(db, caller, body, requestId));
-    throw new HttpError(400, "INVALID_ACTION", "Action must be create or update.");
+    if (body.action === "delete") return json(await deleteMember(db, caller, body, requestId));
+    throw new HttpError(400, "INVALID_ACTION", "Action must be create, update or delete.");
   } catch (failure) {
     const error = failure instanceof HttpError ? failure : new HttpError(500, "INTERNAL_ERROR", "An internal server error occurred.");
     if (!(failure instanceof HttpError)) console.error("manage-users internal failure", { requestId });

@@ -105,6 +105,10 @@ const SupabaseClient = {
     return this.invokeUserManagement({ action: 'update', id, data });
   },
 
+  async adminDeleteUser(id) {
+    return this.invokeUserManagement({ action: 'delete', id });
+  },
+
   async signUp(email, password, name, role = 'manager', phone = '') {
     return this.adminCreateUser(email, password, name, role, phone);
   },
@@ -702,11 +706,6 @@ const SupabaseClient = {
         { event: '*', schema: 'public', table: 'schedules' },
         (payload) => {
           console.log('⚡ [Realtime] 스케줄 변경 감지:', payload);
-          // 🔒 ceo@kjm-ent.com 테스트 계정은 로컬 데이터 보호를 위해 실시간 외부 갱신 건너뜀
-          const rawEmail = (localStorage.getItem('admin_bp_user_email') || localStorage.getItem('bp_user_email') || SupabaseClient?.currentUser?.email || '').trim().toLowerCase();
-          if (rawEmail === 'ceo@kjm-ent.com' || rawEmail === 'ceo@jm-ent.com') {
-            return;
-          }
           if (typeof onUpdate === 'function') {
             onUpdate(payload);
           }

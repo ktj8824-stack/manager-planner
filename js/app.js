@@ -28,9 +28,11 @@ const App = {
     // 로컬 창 및 탭 간 커스텀 이벤트/스토리지 이벤트 즉시 수신
     window.addEventListener('hq-store-change', (event) => {
       const type = event.detail?.type;
-      if (type === 'SERVER_WRITE_FAILED') U.toast('서버에 저장하지 못했습니다. 기기에는 저장되어 있어요.');
-      if (type === 'SCHEDULE_SYNC_FAILED' || type === 'SUPABASE_SYNC_FAILED') U.toast('기기에 저장되어 있습니다. 서버 동기화에 실패해 재시도가 필요합니다.');
-      else if (type === 'SCHEDULE_SYNC_PENDING') U.toast('기기에 저장됨 · 서버 동기화 대기 중');
+      const rejected = type === 'SCHEDULE_SYNC_FAILED' && (event.detail?.payload?.failures || []).some(f => f.permanent);
+      if (rejected) U.toast('서버가 변경을 받아주지 않아 저장되지 않았어요. 서버 내용으로 되돌립니다.');
+      else if (type === 'SCHEDULE_SYNC_FAILED') U.toast('기기에 저장됨 · 연결되면 서버로 자동 전송합니다.');
+      else if (type === 'SUPABASE_SYNC_FAILED' && Date.now() - (this._lastSyncFailToast || 0) > 300000 && (this._lastSyncFailToast = Date.now())) U.toast('서버에서 최신 내용을 받아오지 못했어요. 잠시 후 자동으로 다시 시도합니다.');
+      else if (type === 'SCHEDULE_SYNC_PENDING') U.toast('기기에 저장됨 · 서버 전송 대기 중');
       this.refreshActiveScreens();
     });
     window.addEventListener('storage', (e) => {
@@ -101,7 +103,7 @@ const App = {
         onScheduleChange: async (payload) => {
           console.log('⚡ [App] 실시간 스케줄 변경 감지:', payload);
           if (window.hqStore) {
-            await window.hqStore.syncFromSupabase();
+            try { await window.hqStore.requestSync(500); } catch (e) { }
             this.refreshActiveScreens();
           }
         },

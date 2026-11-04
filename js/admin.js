@@ -1126,7 +1126,8 @@ window.Admin = {
       ok = confirm(`'${label}' 아티스트를 삭제하시겠습니까?\n등록된 스케줄은 없습니다.`);
     }
     if (ok) {
-      await window.hqStore.deleteArtist(id);
+      try { await window.hqStore.deleteArtist(id); }
+      catch (e) { alert(e.message || '삭제하지 못했습니다.'); return; }
       await this.renderArtistManagementList();
       const selectPop = document.querySelector('#form-artist');
       if (selectPop) {
@@ -1384,13 +1385,15 @@ window.Admin = {
       assigned.push(artistId);
     }
 
-    await window.hqStore.updateManagerAssignment(managerId, assigned);
+    try { await window.hqStore.updateManagerAssignment(managerId, assigned); }
+    catch (e) { alert(e.message || '배정을 저장하지 못했습니다.'); }
     await this.renderManagerManagementList();
   },
 
   async deleteManager(id) {
     if (confirm('해당 매니저를 삭제하시겠습니까?\n매니저가 삭제되면 앱 로그인이 차단되며 담당 배차 내역에도 영향을 줄 수 있습니다.')) {
-      await window.hqStore.deleteManager(id);
+      try { await window.hqStore.deleteManager(id); }
+      catch (e) { alert(e.message || '매니저를 삭제하지 못했습니다.'); return; }
       this.updateManagerSlotUI();
       await this.renderManagerManagementList();
       await populateSelectOptions();
@@ -1532,7 +1535,8 @@ window.Admin = {
 
   async deleteVehicle(id, name) {
     if (confirm(`'${name || '해당'}' 차량을 정말 삭제하시겠습니까?\n스케줄 배차 내역에 영향을 줄 수 있습니다.`)) {
-      await window.hqStore.deleteVehicle(id);
+      try { await window.hqStore.deleteVehicle(id); }
+      catch (e) { alert(e.message || '차량을 삭제하지 못했습니다.'); return; }
       await this.renderVehicleManagementList();
       const vehSelect = document.getElementById('form-vehicle');
       if (vehSelect) {
@@ -1555,7 +1559,7 @@ window.addEventListener('hq-store-change', (event) => {
     box.style.cssText = 'position:fixed;right:20px;bottom:20px;z-index:99999;max-width:360px;padding:14px 16px;border-radius:10px;background:#7f1d1d;color:#fff;font-size:13px;line-height:1.5;box-shadow:0 8px 24px rgba(0,0,0,.35)';
     document.body.appendChild(box);
   }
-  box.textContent = '서버 저장 실패 (' + (d.what || '') + '): ' + (d.message || '') + ' — 이 기기에는 저장되어 있어요.';
+  box.textContent = '서버 저장 실패 (' + (d.what || '') + '): ' + (d.message || '');
   clearTimeout(box._t);
   box._t = setTimeout(() => box.remove(), 9000);
 });
@@ -1846,7 +1850,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Supabase Realtime 구독
     if (window.SupabaseClient && window.SupabaseClient.isConfigured) {
-      window.SupabaseClient.subscribeToSchedules(() => {
+      // 다른 기기(매니저 앱 등)에서 바뀐 내용을 서버에서 다시 받아온 뒤 화면을 그린다
+      window.SupabaseClient.subscribeToSchedules(async () => {
+        try { await window.hqStore.requestSync(500); } catch (e) { }
         renderSidebar();
         renderKPI();
         renderCurrentView();
@@ -4183,6 +4189,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let prevSch = null;
       try { prevSch = (await window.hqStore.getSchedules()).find(x => x.id === schData.id) || null; if (prevSch) prevSch = JSON.parse(JSON.stringify(prevSch)); } catch (e) { }
 
+      let queuedOnly = false;
       try {
         await window.hqStore.saveSchedule(schData);
         if (window.ScheduleNotify) window.ScheduleNotify.afterSave(prevSch, schData).then(m => { if (m) setTimeout(() => alert(m), 1200); }).catch(() => { });   // 담당 매니저에게 자동 알림
@@ -4196,16 +4203,19 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (err) {
         console.warn('saveSchedule warning (로컬 저장 유지):', err);
         if (!err.localSaved) {
-          alert('스케줄 저장 중 오류가 발생했습니다: ' + (err.message || '알 수 없는 오류'));
+          alert('스케줄을 저장하지 못했습니다: ' + (err.message || '알 수 없는 오류'));
           return;
         }
+        queuedOnly = true;
       }
 
       el.modalScheduleForm.classList.remove('active');
       await renderSidebar();
       await renderKPI();
       await renderCurrentView();
-      alert(`✅ [${schData.title || '스케줄'}] 일정이 성공적으로 저장되었습니다.`);
+      alert(queuedOnly
+        ? `⏳ [${schData.title || '스케줄'}] 이 컴퓨터에 저장했지만 아직 서버에 올라가지 않았습니다.\n인터넷이 연결되면 자동으로 올라가며, 화면 아래 노란 표시가 사라지면 완료입니다.`
+        : `✅ [${schData.title || '스케줄'}] 일정이 서버에 저장되었습니다.`);
     });
 
     // 스케줄 수정 버튼
@@ -4380,6 +4390,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const memberListRaw = (document.getElementById('new-artist-member-list') ? document.getElementById('new-artist-member-list').value : '').trim();
         const memberList = memberListRaw ? memberListRaw.split(',').map(m => m.trim()).filter(Boolean) : [];
 
+        try {
         if (editId) {
           await window.hqStore.updateArtist(editId, {
             name,
@@ -4413,6 +4424,7 @@ document.addEventListener('DOMContentLoaded', () => {
           await window.hqStore.addArtist(newArt);
           alert(`✅ [${name}] 아티스트가 성공적으로 등록되었습니다.`);
         }
+        } catch (err) { alert(err.message || '아티스트를 저장하지 못했습니다.'); return; }
 
         el.modalArtistForm.classList.remove('active');
         await window.Admin.renderArtistManagementList();
@@ -4449,15 +4461,17 @@ document.addEventListener('DOMContentLoaded', () => {
           notes
         };
 
-        if (editId) {
-          vehPayload.id = editId;
-          await window.hqStore.saveVehicle(vehPayload);
-          alert(`✅ [${name}] 차량 정보가 수정되었습니다.`);
-        } else {
-          vehPayload.id = 'veh_' + Date.now();
-          await window.hqStore.saveVehicle(vehPayload);
-          alert(`✅ [${name}] 차량이 성공적으로 등록되었습니다.`);
-        }
+        try {
+          if (editId) {
+            vehPayload.id = editId;
+            await window.hqStore.saveVehicle(vehPayload);
+            alert(`✅ [${name}] 차량 정보가 수정되었습니다.`);
+          } else {
+            vehPayload.id = 'veh_' + Date.now();
+            await window.hqStore.saveVehicle(vehPayload);
+            alert(`✅ [${name}] 차량이 성공적으로 등록되었습니다.`);
+          }
+        } catch (err) { alert(err.message || '차량을 저장하지 못했습니다.'); return; }
 
         const modal = document.getElementById('modal-vehicle-form');
         if (modal) modal.classList.remove('active');
