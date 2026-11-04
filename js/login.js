@@ -213,8 +213,9 @@ const Login = {
       .then(() => window.hqStore.syncFromSupabase())
       .then(() => App.refreshActiveScreens())
       .catch(() => U.toast('기기 저장 데이터를 유지합니다. 서버 동기화를 확인해주세요.'));
-    App.renderNav();
-    App.initRealtimeSync();
+    // 화면·실시간 연결에서 오류가 나도 로그인 자체는 성공으로 처리 (로그인 화면에 오류가 남지 않게)
+    try { App.renderNav(); } catch (e) { console.warn('메뉴 표시 오류', e); }
+    try { App.initRealtimeSync(); } catch (e) { console.warn('실시간 연결 오류', e); }
     App.navigate('home');
   },
 

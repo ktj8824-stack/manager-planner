@@ -130,6 +130,9 @@ const SupabaseClient = {
 
   async signOut() {
     if (this.isConfigured && this.client) {
+      // 이전 계정의 실시간 구독을 모두 정리 (다음 계정 로그인 때 '이미 구독 중' 오류 방지)
+      try { await this.client.removeAllChannels(); } catch (e) { }
+      this._chatChannel = null; this.realtimeChannel = null; this._notiChannel = null;
       await this.client.auth.signOut();
     }
     this.currentUser = null;
@@ -721,7 +724,9 @@ const SupabaseClient = {
   subscribeToAnnouncements(onNewAnnouncement) {
     if (!this.isConfigured || !this.client) return null;
 
-    const notiChannel = this.client
+    // 같은 이름의 채널이 이미 구독 중이면 먼저 지운다 (계정 전환 후 다시 로그인할 때 오류 방지)
+    if (this._notiChannel) { try { this.client.removeChannel(this._notiChannel); } catch (e) { } }
+    const notiChannel = this._notiChannel = this.client
       .channel('public:announcements')
       .on(
         'postgres_changes',
