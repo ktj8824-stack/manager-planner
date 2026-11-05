@@ -40,6 +40,7 @@ const TESTS = [
   ['앱 스케줄 등록 (출발지·매니저·연타·겹침·결제 주소)', 'web/register-test.cjs', [], [/"mgrDefault":"me-uuid"/, /"shopDefault":""/, /"autoEnd":"12:30"/, /"savedCount":1/, /"departure":"출발지 미정"/, /"shop":false/, /겹치는 일정/, /"company":"100%엔터","qmarks":1,"phone":""/]],
   ['기상·준비는 하루 한 번', 'web/wake-multi-test.cjs', [], [/"wakeCount":1/, /"firstTitle":"\[기상/]],
   ['날짜별 버튼 (미래 잠금·지난 날 완료만)', 'web/dayguard-test.cjs', [], [/"F":\{"move":0,"done":0,"wait":true\}/, /"P":\{"move":0,"done":3/, /"T":\{"move":1/, /그날이 아니에요/, /완료\]만/]],
+  ['일정 복사: 서버 번호 새로 받기', 'web/copy-remote-test.cjs', [], [/"copied":true,"sameRemote":false/]],
   ['아이폰 14: 등록→이동 순서·복사 (화면 크기·글씨)', 'web/iphone14-flow-test.cjs', ['$DEMO'], [/"small":0,"smallList":\[\],"texts":\d+,"minFont":1[3-9]/, /"weekDays":7,"timelineWidth":390/, /"secretLabel":true/, /"regErr":\{"red":true,"msg":"현장 장소를/, /"inView":true/, /"modalErr":\{"red":"rgb\(220, 38, 38\)"/, /"hasTitle":true/, /"holdMenu":true,"copied":true/, /"profile":\{"targets":\d+,"small":0,"smallList":\[\],"texts":\d+,"minFont":14/]],
   ['경로 함수 (타임머신)', 'server/route-at-test.mts', [], [/predictionType/, /예측할 수 없는 시간/]],
 ];
