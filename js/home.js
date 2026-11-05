@@ -80,7 +80,8 @@ const Home = {
     else if (/^\d{4}-\d{2}-\d{2}$/.test(when || '')) date = when;
     else return;
     const copy = JSON.parse(JSON.stringify(src));
-    ['timeline', 'statusLogs', 'status_logs', 'shareToken', 'share_token', 'createdAt', 'created_at', 'updatedAt', 'updated_at'].forEach(k => delete copy[k]);
+    // 서버 번호(remoteId)·동기화 상태까지 지워야 복사본이 새 일정으로 올라감 (남기면 원본 일정이 복사본 날짜로 덮어써짐)
+    ['timeline', 'statusLogs', 'status_logs', 'shareToken', 'share_token', 'createdAt', 'created_at', 'updatedAt', 'updated_at', 'remoteId', 'remote_id', 'syncStatus'].forEach(k => delete copy[k]);
     Object.assign(copy, { id: 'sch_' + Date.now(), date, status: '확정' });
     const conflicts = this._findConflicts(copy);
     if (conflicts.length && !confirm(`${date}에 겹치는 일정이 있어요.\n\n${conflicts.slice(0, 3).join('\n')}\n\n그래도 복사할까요?`)) return;
