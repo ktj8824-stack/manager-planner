@@ -80,6 +80,7 @@
 }
 
 .setting-opt-btn {
+  min-height: 46px;
   flex: 1;
   padding: var(--sp-2) 0;
   border-radius: var(--r-md);

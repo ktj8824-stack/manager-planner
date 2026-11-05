@@ -23,7 +23,82 @@ const Home = {
   currentTab: 'schedule', // 'schedule' (회사 스케줄표) | 'timeline' (매니저 동선 타임라인)
   broadcastBound: false,
 
-  init() { 
+  // ── 일정 카드 길게 누르기 → 내일로 복사 (같은 방송국·같은 차량 일정이 이어질 때 한 번에 등록) ──
+  _bindHold() {
+    if (this._holdBound) return;
+    this._holdBound = true;
+    let timer = null, sx = 0, sy = 0, target = null;
+    const cancel = () => { clearTimeout(timer); timer = null; target = null; };
+    document.addEventListener('pointerdown', (e) => {
+      const card = e.target.closest && e.target.closest('[data-hold-sch]');
+      if (!card || e.target.closest('button, a, input, select, textarea')) return;
+      target = card; sx = e.clientX; sy = e.clientY;
+      timer = setTimeout(() => {
+        const id = target && target.getAttribute('data-hold-sch');
+        cancel();
+        if (!id) return;
+        this._holdFired = Date.now();
+        try { navigator.vibrate && navigator.vibrate(30); } catch (err) { }
+        this.openHoldMenu(id);
+      }, 550);
+    }, { passive: true });
+    document.addEventListener('pointermove', (e) => { if (timer && (Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10)) cancel(); }, { passive: true });
+    ['pointerup', 'pointercancel', 'scroll'].forEach(t => document.addEventListener(t, () => { if (timer) cancel(); }, { passive: true, capture: true }));
+    // 길게 누른 뒤 손을 떼며 생기는 클릭(카드 열기)은 무시
+    document.addEventListener('click', (e) => {
+      if (this._holdFired && Date.now() - this._holdFired < 700 && e.target.closest && e.target.closest('[data-hold-sch]')) { e.stopPropagation(); e.preventDefault(); }
+    }, true);
+    document.addEventListener('contextmenu', (e) => { if (e.target.closest && e.target.closest('[data-hold-sch]')) e.preventDefault(); });
+  },
+
+  openHoldMenu(id) {
+    const sch = (window.hqStore?.getSchedules?.() || []).find(s => s.id === id);
+    if (!sch) { U.toast('일정을 찾지 못했어요.'); return; }
+    const d = new Date(sch.date + 'T12:00:00');
+    const nx = new Date(d); nx.setDate(d.getDate() + 1);
+    const lbl = (x) => `${x.getMonth() + 1}/${x.getDate()}(${U.DAYS[x.getDay()]})`;
+    const B = 'width:100%; min-height:52px; border-radius:12px; font-size:16px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;';
+    App.showModal('일정 복사', `
+      <div style="padding:2px 0 12px;">
+        <div style="font-size:15px; color:#334155; margin-bottom:12px; line-height:1.5;"><b>${esc(sch.title || '일정')}</b><br>${esc(lbl(d))} ${esc(sch.startTime || '')}${sch.location ? ' · ' + esc(String(sch.location).replace(/\s*\([^()]*\)\s*$/, '')) : ''}${sch.vehicleName ? ' · ' + esc(sch.vehicleName) : ''}</div>
+        <button type="button" onclick="Home.copySchedule(${escJs(id)}, 1)" style="${B} border:0; background:#4f46e5; color:#fff; margin-bottom:8px;">📋 내일로 복사 · ${esc(lbl(nx))}</button>
+        <label style="${B} position:relative; border:1px solid #c7d2fe; background:#eef2ff; color:#4338ca; margin-bottom:8px;">
+          📅 다른 날짜로 복사
+          <input type="date" aria-label="복사할 날짜" onchange="Home.copySchedule(${escJs(id)}, this.value)" style="position:absolute; inset:0; opacity:0; font-size:16px; cursor:pointer;" />
+        </label>
+        <div style="font-size:14px; color:#64748b; margin:4px 2px 10px; line-height:1.5;">같은 장소·아티스트·차량·담당 매니저·샵으로 복사하고, 출발 시간은 그날 교통으로 다시 계산해요.</div>
+        <button type="button" onclick="App.closeModal()" style="${B} border:1px solid #cbd5e1; background:#fff; color:#475569;">닫기</button>
+      </div>`);
+  },
+
+  async copySchedule(id, when) {
+    if (this._copying) return;
+    const src = (window.hqStore?.getSchedules?.() || []).find(s => s.id === id);
+    if (!src || !window.hqStore?.saveSchedule) return;
+    let date;
+    if (typeof when === 'number') { const d = new Date(src.date + 'T12:00:00'); d.setDate(d.getDate() + when); date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+    else if (/^\d{4}-\d{2}-\d{2}$/.test(when || '')) date = when;
+    else return;
+    const copy = JSON.parse(JSON.stringify(src));
+    ['timeline', 'statusLogs', 'status_logs', 'shareToken', 'share_token', 'createdAt', 'created_at', 'updatedAt', 'updated_at'].forEach(k => delete copy[k]);
+    Object.assign(copy, { id: 'sch_' + Date.now(), date, status: '확정' });
+    const conflicts = this._findConflicts(copy);
+    if (conflicts.length && !confirm(`${date}에 겹치는 일정이 있어요.\n\n${conflicts.slice(0, 3).join('\n')}\n\n그래도 복사할까요?`)) return;
+    this._copying = true;
+    U.toast('복사하는 중… 출발 시간을 계산하고 있어요');
+    try {
+      await window.hqStore.saveSchedule(copy);
+      App.closeModal();
+      const [y, m, d] = date.split('-').map(Number);
+      this.selectDate(y, m - 1, d);
+      U.toast(`✅ ${m}/${d}에 복사했어요.`);
+    } catch (err) {
+      U.toast('복사하지 못했습니다: ' + (err?.message || err));
+    } finally { this._copying = false; }
+  },
+
+  init() {
+    this._bindHold(); 
     this.selectedDate = window._selectedDateForRegister || new Date();
     window._selectedDateForRegister = null;
     this.calMonth = this.selectedDate.getMonth();
@@ -105,47 +180,66 @@ const Home = {
     const el = U.$('#screen-home');
     if (!el) return;
 
+    // 위: 가로 주간 띠 / 아래: 일정 (화면 폭 전체)
     el.innerHTML = `
-      <div class="split-view" style="display:flex; height:100vh; padding-top:var(--header-h); overflow:hidden; background:var(--bg-app); flex-direction:row;">
-        
-        <!-- LEFT: Vertical Calendar -->
-        <div class="split-left" style="width:85px; flex-shrink:0; border-right:1px solid var(--border-default); background:#ffffff; display:flex; flex-direction:column; height:calc(100vh - var(--header-h));">
-          
-          <!-- Header -->
-          <div style="padding: 16px 8px 12px; flex-shrink:0; border-bottom:1px solid rgba(0,0,0,0.06); text-align:center;">
-            <div id="mini-cal-year" style="font-size:12.5px; font-weight:700; color:#64748b; margin-bottom:2px;">${this.calYear}년</div>
-            <div id="mini-cal-title" style="font-size:20px; font-weight:700; color:#0f172a; line-height:1.2; margin-bottom:8px;">${this.calMonth+1}월</div>
-            <div style="display:flex; justify-content:center; gap:8px;">
-              <button onclick="Home.prevMonth()" style="background:transparent; border:none; padding:4px 8px; color:#64748b; font-size:14px; font-weight:700; cursor:pointer;">&lt;</button>
-              <button onclick="Home.nextMonth()" style="background:transparent; border:none; padding:4px 8px; color:#64748b; font-size:14px; font-weight:700; cursor:pointer;">&gt;</button>
-            </div>
-          </div>
-          
-          <!-- Scrollable Dates -->
-          <div id="mini-cal-grid" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; padding:10px 4px; position:relative;">
-            ${this.renderMiniCal()}
-          </div>
-          
-          <!-- Footer -->
-          <div style="padding:10px 6px; flex-shrink:0; border-top:1px solid rgba(0,0,0,0.05); display:flex; flex-direction:column; gap:6px;">
-             <a href="${typeof U !== 'undefined' && U.getHQPortalUrl ? U.getHQPortalUrl() : 'admin.html'}" target="_blank" style="display:inline-flex; align-items:center; justify-content:center; gap:5px; width:100%; padding:8px 0; border-radius:8px; background:linear-gradient(135deg, #4f46e5, #7c3aed); color:#fff; font-weight:700; font-size:12px; text-align:center; text-decoration:none; box-shadow:0 2px 8px rgba(79,70,229,0.3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="12" y1="22" x2="12" y2="22.01"/><line x1="8" y1="6" x2="8" y2="6.01"/><line x1="16" y1="6" x2="16" y2="6.01"/><line x1="8" y1="10" x2="8" y2="10.01"/><line x1="16" y1="10" x2="16" y2="10.01"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="16" y1="14" x2="16" y2="14.01"/></svg> 본사</a>
-             <button onclick="App.navigate('profile')" style="width:100%; padding:8px 0; border-radius:8px; background:var(--bg-input); font-weight:700; font-size:12px; color:var(--text-200); text-align:center; border:none; cursor:pointer;">내 정보</button>
-          </div>
+      <div class="split-view home-col" style="display:flex; flex-direction:column; height:calc(100dvh - var(--header-h) - var(--bottom-nav-h, 0px) - env(safe-area-inset-bottom)); margin-top:var(--header-h); overflow:hidden; background:var(--bg-app);">
+        <div id="week-strip" style="flex-shrink:0; background:#ffffff; border-bottom:1px solid var(--border-default); padding:8px 10px 10px;">
+          ${this.renderWeekStrip()}
         </div>
-
-        <!-- RIGHT: Timeline -->
-        <div class="split-right" style="flex:1; overflow-y:auto; overflow-x:hidden; background:var(--bg-default); position:relative; height:calc(100vh - var(--header-h));">
-          <div id="timeline-area" style="padding:16px 8px; max-width:800px; margin:0 auto; min-height:100%;">
+        <div class="split-right" style="flex:1; overflow-y:auto; overflow-x:hidden; background:var(--bg-default); position:relative;">
+          <div id="timeline-area" style="padding:14px 12px 24px; max-width:800px; margin:0 auto; min-height:100%;">
             ${this.renderTimeline()}
           </div>
         </div>
       </div>
     `;
-
-    setTimeout(() => {
-      this.centerSelectedDate();
-    }, 80);
   },
+
+  // 가로 주간 띠: 선택한 날이 들어 있는 주(월~일) + 앞뒤 주 이동 + 오늘 + 날짜 고르기
+  renderWeekStrip() {
+    const sel = this.selectedDate;
+    const today = new Date();
+    const same = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    const start = new Date(sel.getFullYear(), sel.getMonth(), sel.getDate() - ((sel.getDay() + 6) % 7));   // 월요일
+    const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    let days = '';
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+      const isSel = same(d, sel), isToday = same(d, today);
+      const has = (State.getSchedulesForDate(d.getFullYear(), d.getMonth(), d.getDate()) || []).length > 0;
+      const dow = d.getDay();
+      const dowColor = isSel ? 'rgba(255,255,255,0.85)' : dow === 0 ? '#dc2626' : dow === 6 ? '#2563eb' : '#475569';
+      days += `
+        <button type="button" onclick="Home.selectDate(${d.getFullYear()},${d.getMonth()},${d.getDate()})" aria-label="${d.getMonth() + 1}월 ${d.getDate()}일${has ? ' 일정 있음' : ''}" aria-pressed="${isSel}"
+          style="flex:1 1 0; min-width:44px; min-height:60px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; border:0; border-radius:12px; cursor:pointer; padding:4px 0;
+                 ${isSel ? 'background:#1e293b; color:#fff; box-shadow:0 3px 10px rgba(15,23,42,0.18);' : isToday ? 'background:#eef2ff; color:#0f172a;' : 'background:transparent; color:#0f172a;'}">
+          <span style="font-size:13px; font-weight:700; color:${dowColor};">${U.DAYS[dow]}</span>
+          <span style="font-size:19px; font-weight:800; letter-spacing:-0.5px;">${d.getDate()}</span>
+          <span style="width:6px; height:6px; border-radius:50%; background:${has ? (isSel ? '#fff' : '#4f46e5') : 'transparent'};"></span>
+        </button>`;
+    }
+    const isThisWeek = same(start, new Date(today.getFullYear(), today.getMonth(), today.getDate() - ((today.getDay() + 6) % 7)));
+    const B = 'min-width:44px; min-height:44px; border:1px solid #e2e8f0; background:#fff; border-radius:10px; font-size:15px; font-weight:700; color:#334155; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;';
+    return `
+      <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+        <label style="position:relative; display:inline-flex; align-items:center; gap:4px; min-height:44px; padding:0 4px; font-size:18px; font-weight:800; color:#0f172a; cursor:pointer;">
+          ${sel.getFullYear()}년 ${sel.getMonth() + 1}월 <span style="font-size:13px; color:#64748b;">▼</span>
+          <input type="date" value="${ymd(sel)}" aria-label="날짜 고르기" onchange="Home.jumpTo(this.value)" style="position:absolute; inset:0; opacity:0; cursor:pointer; font-size:16px;" />
+        </label>
+        <span style="flex:1;"></span>
+        ${isThisWeek ? '' : `<button type="button" onclick="Home.goToday()" style="${B} padding:0 12px;">오늘</button>`}
+        <button type="button" onclick="Home.shiftWeek(-1)" aria-label="지난주" style="${B}">‹</button>
+        <button type="button" onclick="Home.shiftWeek(1)" aria-label="다음 주" style="${B}">›</button>
+      </div>
+      <div style="display:flex; gap:2px;">${days}</div>`;
+  },
+
+  shiftWeek(n) {
+    const d = this.selectedDate;
+    this.selectDate(d.getFullYear(), d.getMonth(), d.getDate() + 7 * n);
+  },
+  goToday() { const t = new Date(); this.selectDate(t.getFullYear(), t.getMonth(), t.getDate()); },
+  jumpTo(v) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || ''); if (m) this.selectDate(+m[1], +m[2] - 1, +m[3]); },
 
   // 타임라인 영역(오른쪽 칸)만 스크롤한다. scrollIntoView는 앱 전체 틀까지 밀어서 화면이 잘리는 문제가 있었음
   _scrollToStep(el) {
@@ -224,7 +318,7 @@ const Home = {
     // 월 구분 라벨 (깔끔한 미니 캡슐 뱃지)
     html += `
       <div style="display:flex; align-items:center; justify-content:center; padding:12px 0 8px; margin:4px 0;">
-        <span style="background:#eef2ff; color:#4f46e5; font-size:12px; font-weight:700; padding:2px 10px; border-radius:12px; border:1px solid #e0e7ff; letter-spacing:0.5px; box-shadow:0 1px 2px rgba(0,0,0,0.02);">
+        <span style="background:#eef2ff; color:#4f46e5; font-size:13px; font-weight:700; padding:2px 10px; border-radius:12px; border:1px solid #e0e7ff; letter-spacing:0.5px; box-shadow:0 1px 2px rgba(0,0,0,0.02);">
           ${esc(nextM + 1)}월
         </span>
       </div>
@@ -286,8 +380,8 @@ const Home = {
   
   selectDate(y, m, d) {
     this.selectedDate = new Date(y, m, d);
-    this.calYear = y;
-    this.calMonth = m;
+    this.calYear = this.selectedDate.getFullYear();
+    this.calMonth = this.selectedDate.getMonth();
     this.updateLeftCal();
     this.updateRightTimeline();
   },
@@ -299,6 +393,8 @@ const Home = {
     if(yearEl) yearEl.textContent = `${this.calYear}년`;
     if(title) title.textContent = `${this.calMonth+1}월`;
     if(grid) grid.innerHTML = this.renderMiniCal();
+    const ws = U.$('#week-strip');
+    if (ws) ws.innerHTML = this.renderWeekStrip();
   },
   
   updateRightTimeline() {
@@ -377,7 +473,7 @@ const Home = {
         </div>
         <div onclick="Home.setTab('timeline')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:12px 0; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; transition:all 0.2s; ${this.currentTab === 'timeline' ? 'background:#ffffff; color:#4f46e5; box-shadow:0 2px 8px rgba(0,0,0,0.06);' : 'color:#64748b; background:transparent;'}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-          동선 타임라인
+          이동 순서
         </div>
       </div>
     `;
@@ -493,27 +589,27 @@ const Home = {
           </div>
 
           <!-- 스케줄 카드 -->
-          <div onclick="Home.toggleScheduleDetail(${escJs(schId)})" 
+          <div onclick="Home.toggleScheduleDetail(${escJs(schId)})" ${isHQ && activeSched.id ? `data-hold-sch="${esc(activeSched.id)}"` : ''}
                style="width:100%; background:${esc(cardBg)}; border-radius:14px; padding:14px 14px 16px; border:1px solid ${esc(cardBorderColor)}; ${esc(cardBorderLeft)} box-shadow:0 2px 10px rgba(0,0,0,0.04); cursor:pointer; transition:all 0.2s ease; box-sizing:border-box;">
             
             <!-- 상단: 시간 & 아티스트 태그 & 상세보기 -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
               <div style="display:flex; flex-direction:column; gap:4px;">
-                <div style="font-size:12px; font-weight:700; color:${isSecret ? '#9333ea' : '#4f46e5'}; display:flex; align-items:center; gap:4px;">
+                <div style="font-size:13px; font-weight:700; color:${isSecret ? '#9333ea' : '#4f46e5'}; display:flex; align-items:center; gap:4px;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   <span>${esc(startTime)} ~ ${esc(endTime)}</span>
                 </div>
                 <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
-                  <span style="background:${esc(artObj.color || '#1e293b')}; color:#fff; font-size:12px; font-weight:700; padding:2px 7px; border-radius:5px; display:inline-flex; align-items:center; gap:4px;">
+                  <span style="background:${esc(artObj.color || '#1e293b')}; color:#fff; font-size:13px; font-weight:700; padding:2px 7px; border-radius:5px; display:inline-flex; align-items:center; gap:4px;">
                     ${getArtistTypeIcon(artObj, 11)}
                     <span>${esc(activeSched.artistName || '아티스트')}</span>
                   </span>
-                  ${isHQ ? '<span style="background:rgba(79,70,229,0.1); color:#4f46e5; font-size:12px; font-weight:700; padding:1px 6px; border-radius:4px; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="12" y1="22" x2="12" y2="22.01"/></svg>HQ연동</span>' : ''}
-                  ${isSecret ? '<span style="background:#f3e8ff; color:#9333ea; font-size:12px; font-weight:700; padding:1px 6px; border-radius:4px; border:1px solid #d8b4fe; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Secret</span>' : ''}
+                  ${isHQ ? '<span style="background:rgba(79,70,229,0.1); color:#4f46e5; font-size:13px; font-weight:700; padding:1px 6px; border-radius:4px; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="12" y1="22" x2="12" y2="22.01"/></svg>HQ연동</span>' : ''}
+                  ${isSecret ? '<span style="background:#f3e8ff; color:#9333ea; font-size:13px; font-weight:700; padding:1px 6px; border-radius:4px; border:1px solid #d8b4fe; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Secret</span>' : ''}
                 </div>
               </div>
 
-              <div style="font-size:12px; font-weight:700; color:${isExpanded ? (isSecret ? '#9333ea' : '#4f46e5') : '#64748b'}; text-align:right; line-height:1; white-space:nowrap; flex-shrink:0; padding-top:2px;">
+              <div style="font-size:13px; font-weight:700; color:${isExpanded ? (isSecret ? '#9333ea' : '#4f46e5') : '#64748b'}; text-align:right; line-height:1; white-space:nowrap; flex-shrink:0; padding-top:2px;">
                 ${isExpanded ? '상세접기 ▲' : '상세보기 ▼'}
               </div>
             </div>
@@ -524,7 +620,7 @@ const Home = {
             </div>
             
             <!-- 장소 -->
-            <div style="font-size:12px; color:#64748b; font-weight:600; line-height:1.3; word-break:keep-all; display:flex; align-items:center; gap:4px;">
+            <div style="font-size:13px; color:#64748b; font-weight:600; line-height:1.3; word-break:keep-all; display:flex; align-items:center; gap:4px;">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               <span>${esc(displayLocation)}</span>
             </div>
@@ -532,7 +628,7 @@ const Home = {
             <!-- 클릭 시 제자리 확장 상세 정보 -->
             ${isExpanded ? `
               <div style="margin-top:12px; padding-top:12px; border-top:1px dashed ${isSecret ? '#e9d5ff' : '#e2e8f0'}; animation:fadeIn 0.2s ease-in-out;">
-                <div style="background:${isSecret ? '#faf5ff' : '#f8fafc'}; border-radius:8px; padding:10px 12px; font-size:12px; color:var(--text-200); display:flex; flex-direction:column; gap:6px; border:1px solid ${isSecret ? '#f3e8ff' : '#f1f5f9'};">
+                <div style="background:${isSecret ? '#faf5ff' : '#f8fafc'}; border-radius:8px; padding:10px 12px; font-size:13px; color:var(--text-200); display:flex; flex-direction:column; gap:6px; border:1px solid ${isSecret ? '#f3e8ff' : '#f1f5f9'};">
                   ${(isSecret && !canViewSecret) ? `
                     <div style="color:#dc2626; font-weight:700; display:flex; align-items:center; gap:4px;">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -554,7 +650,7 @@ const Home = {
                 ${['ceo', 'hq_admin'].includes(currentRole) ? `<div style="display:flex; gap:8px; margin-top:8px;">
                   <button type="button" onclick="event.stopPropagation(); Home.openScheduleRegisterModal(${escJs(activeSched.id)})" style="flex:1; height:40px; border-radius:10px; border:1px solid #c7d2fe; background:#eef2ff; color:#4338ca; font-size:14px; font-weight:700;">✏️ 수정</button>
                   <button type="button" onclick="event.stopPropagation(); Home.deleteScheduleFromApp(${escJs(activeSched.id)})" style="flex:1; height:40px; border-radius:10px; border:1px solid #fecaca; background:#fef2f2; color:#dc2626; font-size:14px; font-weight:700;">🗑️ 삭제</button>
-                </div>` : `<div style="margin-top:8px; font-size:12.5px; color:#64748b; text-align:center;">일정 수정·삭제는 본사에 요청해 주세요 (로드톡)</div>`}
+                </div>` : `<div style="margin-top:8px; font-size:13px; color:#64748b; text-align:center;">일정 수정·삭제는 본사에 요청해 주세요 (로드톡)</div>`}
               </div>
             ` : ''}
 
@@ -597,7 +693,7 @@ const Home = {
         if (!isCovered) {
           html += `
             <div style="margin-bottom:8px; position:relative;">
-              <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:4px;">
+              <div style="font-size:13px; font-weight:700; color:#64748b; margin-bottom:4px;">
                 ${esc(hourStr)}
               </div>
               <div style="border-bottom:1px solid #f1f5f9; margin-bottom:6px;"></div>
@@ -678,14 +774,14 @@ const Home = {
         html += `
           <div style="background:#fff; color:#111827; border:1.5px solid #c7d2fe; border-radius:16px; padding:12px 13px; margin-bottom:12px; box-shadow:0 4px 14px rgba(79,70,229,.10);">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px;">
-              <span style="font-size:12px; font-weight:700; color:#4f46e5; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">지금 할 일 · ${esc(tag)}</span>
+              <span style="font-size:13px; font-weight:700; color:#4f46e5; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">지금 할 일 · ${esc(tag)}</span>
               <span style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-                <span style="font-size:12.5px; font-weight:700; background:#eef2ff; color:#4338ca; padding:4px 9px; border-radius:8px;">${nowEv.forNextDay ? '내일 일정 · ' : nowEv.dayOffset === -1 ? '전날 ' : nowEv.dayOffset === 1 ? '다음날 ' : ''}${esc(nowEv.time || '')}</span>
-                <button type="button" onclick="Home.openScheduleRegisterModal()" style="font-size:12.5px; font-weight:800; background:#4f46e5; color:#fff; border:0; padding:4px 9px; border-radius:8px; cursor:pointer; white-space:nowrap;">+ 스케줄 추가</button>
+                <span style="font-size:13px; font-weight:700; background:#eef2ff; color:#4338ca; padding:4px 9px; border-radius:8px;">${nowEv.forNextDay ? '내일 일정 · ' : nowEv.dayOffset === -1 ? '전날 ' : nowEv.dayOffset === 1 ? '다음날 ' : ''}${esc(nowEv.time || '')}</span>
+                <button type="button" onclick="Home.openScheduleRegisterModal()" style="font-size:13px; font-weight:800; background:#4f46e5; color:#fff; border:0; padding:4px 9px; border-radius:8px; cursor:pointer; white-space:nowrap;">+ 스케줄 추가</button>
               </span>
             </div>
             <div style="font-size:17px; font-weight:700; line-height:1.3; margin-bottom:2px;">${esc(name)}</div>
-            ${dest ? `<div style="font-size:12.5px; color:#6b7280; margin-bottom:9px;">${esc(dest)}</div><div data-venue="${esc(dest)}" data-venue-compact style="margin:-4px 0 9px;"></div>` : '<div style="height:8px;"></div>'}
+            ${dest ? `<div style="font-size:13px; color:#6b7280; margin-bottom:9px;">${esc(dest)}</div><div data-venue="${esc(dest)}" data-venue-compact style="margin:-4px 0 9px;"></div>` : '<div style="height:8px;"></div>'}
             ${dest ? `<div style="display:flex; gap:6px; margin-bottom:6px;">
               <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'tmap')" style="${B} flex:1; background:#f8fafc; border:1px solid #e2e8f0; color:#111827;"><span style="width:10px;height:10px;border-radius:3px;background:#111;display:inline-block"></span>TMAP</button>
               <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'kakao')" style="${B} flex:1; background:#f8fafc; border:1px solid #e2e8f0; color:#111827;"><span style="width:10px;height:10px;border-radius:3px;background:#fee500;border:1px solid #e5cf00;display:inline-block"></span>카카오내비</button>
@@ -814,24 +910,24 @@ const Home = {
           </div>
           
           <!-- Route Card -->
-          <div style="flex:1; margin-left:8px; background:#fff; border-radius:14px; padding:12px 14px; box-shadow:0 2px 10px rgba(0,0,0,0.03); border:1px solid rgba(0,0,0,0.04); ${esc(cardBorder)} position:relative;">
+          <div ${isHQ && ev.hqScheduleId && tag === '메인 일정' ? `data-hold-sch="${esc(ev.hqScheduleId)}"` : ''} style="flex:1; margin-left:8px; background:#fff; border-radius:14px; padding:12px 14px; box-shadow:0 2px 10px rgba(0,0,0,0.03); border:1px solid rgba(0,0,0,0.04); ${esc(cardBorder)} position:relative;">
              
              <!-- 카드 1행: 좌측 카테고리 뱃지 & 우측 [이동중] [완료] 버튼 (같은 라인에 배치) -->
              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:8px; gap:6px 8px;">
                 <div style="display:flex; align-items:center; flex-wrap:wrap; gap:6px; min-width:0;">
-                  <span style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:7px; font-size:12px; font-weight:700; letter-spacing:-0.2px; white-space:nowrap; ${esc(badgeStyle)}">
+                  <span style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:7px; font-size:13px; font-weight:700; letter-spacing:-0.2px; white-space:nowrap; ${esc(badgeStyle)}">
                     ${getLineIcon(iconType)}
                     <span>${esc(tag)}</span>
                   </span>
                   ${isDone && ev.doneAt ? `
-                    <span style="display:inline-flex; align-items:center; gap:3px; white-space:nowrap; background:#ecfdf5; color:#059669; font-size:12px; font-weight:700; padding:2px 6px; border-radius:5px; border:1px solid rgba(16,185,129,0.3);">
+                    <span style="display:inline-flex; align-items:center; gap:3px; white-space:nowrap; background:#ecfdf5; color:#059669; font-size:13px; font-weight:700; padding:2px 6px; border-radius:5px; border:1px solid rgba(16,185,129,0.3);">
                       ${esc(ev.doneAt)} 완료
                     </span>
                   ` : ''}
                 </div>
                 
                 ${isHQ && ev.hqScheduleId && Home._stepDay(ev.hqScheduleId, ev.timelineIdx) === 'future' ? `
-                  <span style="font-size:12px; font-weight:700; color:#64748b; white-space:nowrap; flex-shrink:0;">당일에 표시</span>
+                  <span style="font-size:13px; font-weight:700; color:#64748b; white-space:nowrap; flex-shrink:0;">당일에 표시</span>
                 ` : isHQ && ev.hqScheduleId ? `
                   <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
                     ${isDriveStep && Home._stepDay(ev.hqScheduleId, ev.timelineIdx) === 'today' ? `
@@ -902,11 +998,11 @@ const Home = {
               ${isDriveStep ? `
                 <div style="margin-top:10px; padding-top:8px; border-top:1px dashed rgba(0,0,0,0.06); display:flex; justify-content:flex-end; align-items:center;">
                   <div style="display:flex; align-items:center; gap:6px; margin-left:auto; flex:1; max-width:180px; justify-content:flex-end;">
-                    <button type="button" onclick="U.openNavigation('${destinationTarget.replace(/'/g, "\\'")}', '', 'tmap')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:4px; padding:6px 0; border-radius:6px; background:#f8fafc; color:#111827; font-size:12px; font-weight:700; border:1px solid #e2e8f0; cursor:pointer;" title="티맵 길안내">
+                    <button type="button" onclick="U.openNavigation('${destinationTarget.replace(/'/g, "\\'")}', '', 'tmap')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:4px; padding:6px 0; border-radius:6px; background:#f8fafc; color:#111827; font-size:13px; font-weight:700; border:1px solid #e2e8f0; cursor:pointer;" title="티맵 길안내">
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="#111111" style="margin-top:-1px"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16zM11.99 1.5L2.5 9l9.49 7.5L21.5 9l-9.51-7.5z"/></svg>
                       TMAP
                     </button>
-                    <button type="button" onclick="U.openNavigation('${destinationTarget.replace(/'/g, "\\'")}', '', 'kakao')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:4px; padding:6px 0; border-radius:6px; background:#f8fafc; color:#111827; font-size:12px; font-weight:700; border:1px solid #e2e8f0; cursor:pointer;" title="카카오내비 길안내">
+                    <button type="button" onclick="U.openNavigation('${destinationTarget.replace(/'/g, "\\'")}', '', 'kakao')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:4px; padding:6px 0; border-radius:6px; background:#f8fafc; color:#111827; font-size:13px; font-weight:700; border:1px solid #e2e8f0; cursor:pointer;" title="카카오내비 길안내">
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="#e5c100" style="margin-top:-1px"><path d="M12 3c-5.523 0-10 3.553-10 7.938 0 2.825 1.83 5.303 4.606 6.744l-1.01 3.7c-.053.195.166.353.332.227l4.316-2.82c.575.08 1.162.124 1.756.124 5.523 0 10-3.553 10-7.938C22 6.553 17.523 3 12 3z"/></svg>
                       카카오내비
                     </button>
@@ -925,7 +1021,7 @@ const Home = {
       const realDone = uniqueEvents.slice(0, foldCount).filter(e => e.stepCategory !== 'rest').length || foldCount;
       html = html.slice(0, listStart) + `
         <button type="button" onclick="Home._showDoneSteps=!Home._showDoneSteps; Home.updateRightTimeline ? Home.updateRightTimeline() : Home.render();" style="display:flex; align-items:center; gap:8px; width:100%; margin:0 0 12px; padding:10px 14px; border-radius:12px; border:1px solid #d1fae5; background:#f0fdf4; color:#047857; font-size:14px; font-weight:700; cursor:pointer; text-align:left;">
-          <span style="display:inline-flex; width:20px; height:20px; border-radius:50%; background:#10b981; color:#fff; align-items:center; justify-content:center; font-size:12px;">✓</span>
+          <span style="display:inline-flex; width:20px; height:20px; border-radius:50%; background:#10b981; color:#fff; align-items:center; justify-content:center; font-size:13px;">✓</span>
           <span style="flex:1;">완료된 단계 ${realDone}개</span>
           <span style="color:#059669; font-size:13px;">${open ? '접기 ▴' : '보기 ▾'}</span>
         </button>
@@ -1002,7 +1098,7 @@ const Home = {
         const title = s.isSecret ? '🔒 비공개 일정' : `${s.artistName ? s.artistName + ' · ' : ''}${s.title || '일정'}`;
         return `
           <div style="background:#fff; border:1.5px solid ${cancel ? '#fecaca' : '#fdba74'}; border-radius:14px; padding:12px 14px; margin-bottom:8px;">
-            <div style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:800; color:${cancel ? '#dc2626' : '#c2410c'};">
+            <div style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:800; color:${cancel ? '#dc2626' : '#c2410c'};">
               <span style="background:${cancel ? '#fee2e2' : '#ffedd5'}; padding:2px 8px; border-radius:6px;">${tag}</span>
               <span style="color:#64748b; font-weight:700;">${esc(when)}</span>
             </div>
@@ -1013,9 +1109,9 @@ const Home = {
       }).join('');
       return `
         <div style="margin:0 0 12px;">
-          <div style="font-size:14px; font-weight:800; color:#0f172a; margin:0 2px 8px; display:flex; align-items:center; gap:6px;">📢 본사 변경 확인 <span style="background:#f97316; color:#fff; font-size:12px; padding:1px 8px; border-radius:999px;">${list.length}</span></div>
+          <div style="font-size:14px; font-weight:800; color:#0f172a; margin:0 2px 8px; display:flex; align-items:center; gap:6px;">📢 본사 변경 확인 <span style="background:#f97316; color:#fff; font-size:13px; padding:1px 8px; border-radius:999px;">${list.length}</span></div>
           ${cards}
-          ${list.length > 5 ? `<div style="font-size:12.5px; color:#64748b; text-align:center;">외 ${list.length - 5}건</div>` : ''}
+          ${list.length > 5 ? `<div style="font-size:13px; color:#64748b; text-align:center;">외 ${list.length - 5}건</div>` : ''}
         </div>`;
     } catch (e) { console.warn('확인 카드 표시 실패', e); return ''; }
   },
@@ -1270,46 +1366,46 @@ const Home = {
     const vehicleOptions = opt('', '선택 안 함', !v.veh) + vehicles.map(x => opt(x.id, `${x.name}${x.number ? ' (' + x.number + ')' : ''}`, x.id === v.veh)).join('');
     const managerOptions = managers.map(m => opt(m.id, `${m.name}${m.id === me ? ' (나)' : ''}`, m.id === v.mgr)).join('');
     const cats = [['music_show', '음악방송 / 생방송'], ['broadcast', '예능 / 라디오 / 인터뷰'], ['shooting', '화보 / 촬영 / 광고'], ['event', '행사 / 콘서트 / 페스티벌'], ['fansign', '팬미팅 / 팬사인회'], ['recording', '녹음 / 안무레슨 / 연습'], ['overseas', '해외 투어 / 출국'], ['meeting', '미팅 / 기획회의 / 기타']];
-    const I = 'width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:16px; background:#fff; box-sizing:border-box;';
-    const L = 'font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;';
+    const I = 'width:100%; min-height:48px; padding:10px 12px; border:1px solid #cbd5e1; border-radius:10px; font-size:16px; background:#fff; box-sizing:border-box;';
+    const L = 'font-size:14px; font-weight:700; color:#334155; display:block; margin-bottom:5px;';
     const BOX = 'background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;';
     const modalHtml = `
       <div id="app-schedule-form-container" style="padding:4px 0 20px; max-height:75vh; overflow-y:auto; -webkit-overflow-scrolling:touch;">
-        <form id="app-schedule-form" onsubmit="event.preventDefault(); Home.submitScheduleFromModal(${edit ? escJs(edit.id) : 'null'});" style="display:flex; flex-direction:column; gap:14px;">
+        <form id="app-schedule-form" novalidate onsubmit="event.preventDefault(); Home.submitScheduleFromModal(${edit ? escJs(edit.id) : 'null'});" style="display:flex; flex-direction:column; gap:14px;">
           <div style="${BOX}">
             <div style="font-size:14px; font-weight:700; color:#4f46e5; margin-bottom:10px;">기본 스케줄 정보</div>
             <div style="margin-bottom:12px;"><label style="${L}">스케줄명 <span style="color:#ef4444;">*</span></label>
-              <input type="text" id="m-sch-title" required maxlength="80" value="${esc(v.title)}" placeholder="예: 뮤직뱅크 사전녹화" style="${I}" /></div>
+              <input type="text" id="m-sch-title" maxlength="80" value="${esc(v.title)}" placeholder="예: 뮤직뱅크 사전녹화" style="${I}" /></div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
-              <div><label style="${L}">아티스트 <span style="color:#ef4444;">*</span></label><select id="m-sch-artist" required style="${I} padding:10px 8px;">${artistOptions}</select></div>
-              <div><label style="${L}">분류 <span style="color:#ef4444;">*</span></label><select id="m-sch-category" required style="${I} padding:10px 8px;">${cats.map(c => opt(c[0], c[1], c[0] === v.category)).join('')}</select></div>
+              <div><label style="${L}">아티스트 <span style="color:#ef4444;">*</span></label><select id="m-sch-artist" style="${I} padding:10px 8px;">${artistOptions}</select></div>
+              <div><label style="${L}">분류 <span style="color:#ef4444;">*</span></label><select id="m-sch-category" style="${I} padding:10px 8px;">${cats.map(c => opt(c[0], c[1], c[0] === v.category)).join('')}</select></div>
             </div>
             <div style="margin-bottom:12px;"><label style="${L}">날짜 <span style="color:#ef4444;">*</span></label>
-              <input type="date" id="m-sch-date" value="${esc(v.date)}" required style="${I} font-weight:700;" /></div>
+              <input type="date" id="m-sch-date" value="${esc(v.date)}" style="${I} font-weight:700;" /></div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
               <div><label style="${L}">시작 <span style="color:#ef4444;">*</span></label>
-                <input type="time" id="m-sch-start" value="${esc(v.start)}" required onchange="Home._autoEnd(this.value)" style="${I} padding:10px 8px; font-weight:700;" /></div>
+                <input type="time" id="m-sch-start" value="${esc(v.start)}" onchange="Home._autoEnd(this.value)" style="${I} padding:10px 8px; font-weight:700;" /></div>
               <div><label style="${L}">종료 <span style="color:#ef4444;">*</span></label>
-                <input type="time" id="m-sch-end" value="${esc(v.end)}" required oninput="this.dataset.touched='1'" style="${I} padding:10px 8px; font-weight:700;" /></div>
+                <input type="time" id="m-sch-end" value="${esc(v.end)}" oninput="this.dataset.touched='1'" style="${I} padding:10px 8px; font-weight:700;" /></div>
             </div>
           </div>
 
           <div style="${BOX}">
             <div style="font-size:14px; font-weight:700; color:#2563eb; margin-bottom:10px;">장소 · 출발지</div>
             <div style="margin-bottom:10px;"><label style="${L}">행사장 / 촬영 위치 <span style="color:#ef4444;">*</span></label>
-              <input type="text" id="m-sch-loc" required value="${esc(v.loc)}" placeholder="예: 상암 SBS 프리즘타워" style="${I}" /></div>
+              <input type="text" id="m-sch-loc" value="${esc(v.loc)}" placeholder="예: 상암 SBS 프리즘타워" style="${I}" /></div>
             <div style="margin-bottom:10px;"><label style="${L}">상세 주소 (길안내용)</label>
               <input type="text" id="m-sch-addr" value="${esc(v.addr)}" placeholder="예: 서울 마포구 상암산로 82" style="${I}" /></div>
             <div><label style="${L}">출발지 (숙소·사옥 등)</label>
               <input type="text" id="m-sch-dep" value="${esc(v.dep)}" placeholder="예: 서울 강남구 압구정로79길 19 (비우면 출발지 미정)" style="${I}" />
-              <div style="font-size:12px; color:#64748b; margin-top:4px;">출발 시간을 이 주소 기준으로 계산해요. 다음 등록 때 자동으로 채워져요.</div></div>
+              <div style="font-size:13px; color:#64748b; margin-top:4px;">출발 시간을 이 주소 기준으로 계산해요. 다음 등록 때 자동으로 채워져요.</div></div>
           </div>
 
           <div style="${BOX}">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <div style="font-size:14px; font-weight:700; color:#ec4899;">헤어 / 메이크업(샵) 경유</div>
-              <label style="display:flex; align-items:center; gap:6px; font-size:14px; font-weight:700; cursor:pointer;">
-                <input type="checkbox" id="m-sch-shop-needed" ${v.shopNeeded ? 'checked' : ''} onchange="document.getElementById('m-sch-shop-fields').style.display = this.checked ? 'block' : 'none';" style="width:18px; height:18px; accent-color:#ec4899;" /> 경유함</label>
+              <label style="display:flex; align-items:center; gap:8px; min-height:44px; min-width:44px; padding:0 4px; font-size:15px; font-weight:700; cursor:pointer;">
+                <input type="checkbox" id="m-sch-shop-needed" ${v.shopNeeded ? 'checked' : ''} onchange="document.getElementById('m-sch-shop-fields').style.display = this.checked ? 'block' : 'none';" style="width:24px; height:24px; accent-color:#ec4899;" /> 경유함</label>
             </div>
             <div id="m-sch-shop-fields" style="display:${v.shopNeeded ? 'block' : 'none'}; padding-top:10px;">
               <label style="${L}">샵 이름</label><input type="text" id="m-sch-shop-name" value="${esc(v.shopName)}" placeholder="예: 정샘물 청담본점" style="${I} margin-bottom:8px;" />
@@ -1323,10 +1419,10 @@ const Home = {
               <div><label style="${L}">배차 차량</label><select id="m-sch-veh" style="${I} padding:10px 8px;">${vehicleOptions}</select></div>
               <div><label style="${L}">담당 매니저</label><select id="m-sch-mgr" style="${I} padding:10px 8px;">${managerOptions}</select></div>
             </div>
-            <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1; display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:13px; font-weight:700; color:#64748b;">🔒 비공개 보안 스케줄</span>
-              <input type="checkbox" id="m-sch-secret" ${v.secret ? 'checked' : ''} style="width:18px; height:18px; accent-color:#9333ea;" />
-            </div>
+            <label style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1; display:flex; justify-content:space-between; align-items:center; min-height:44px; cursor:pointer;">
+              <span style="font-size:15px; font-weight:700; color:#475569;">🔒 비공개 (현장 스태프에게 안 보임)</span>
+              <input type="checkbox" id="m-sch-secret" ${v.secret ? 'checked' : ''} style="width:24px; height:24px; accent-color:#9333ea;" />
+            </label>
           </div>
 
           <div style="display:flex; gap:8px; margin-top:8px;">
@@ -1374,8 +1470,25 @@ const Home = {
     const shopNeeded = !!g('m-sch-shop-needed')?.checked, shopName = val('m-sch-shop-name'), shopAddr = val('m-sch-shop-addr');
     const vehicleId = g('m-sch-veh')?.value || '', managerId = g('m-sch-mgr')?.value || '', isSecret = !!g('m-sch-secret')?.checked;
 
-    if (!title || !dateVal || !startVal || !locationVal) { U.toast('필수 항목(스케줄명, 날짜, 시작시간, 장소)을 모두 입력해주세요.'); return; }
-    if (shopNeeded && !shopName && !shopAddr) { U.toast('샵 이름이나 주소를 입력해 주세요. (샵에 안 가면 "경유함"을 끄세요)'); return; }
+    // 빠진 칸: 그 칸으로 화면을 옮기고 빨간 테두리 + 칸 아래 설명 한 줄
+    document.querySelectorAll('#app-schedule-form .field-err-msg').forEach(n => n.remove());
+    document.querySelectorAll('#app-schedule-form [data-err]').forEach(n => { n.style.borderColor = ''; n.style.background = ''; n.removeAttribute('data-err'); });
+    const miss = (id, msg) => {
+      const el = g(id); if (!el) { U.toast(msg); return true; }
+      el.setAttribute('data-err', '1'); el.style.borderColor = '#dc2626'; el.style.background = '#fef2f2';
+      const note = document.createElement('div'); note.className = 'field-err-msg'; note.setAttribute('role', 'alert');
+      note.style.cssText = 'color:#dc2626; font-size:14px; font-weight:700; margin-top:5px;'; note.textContent = msg;
+      el.insertAdjacentElement('afterend', note);
+      try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) { }
+      setTimeout(() => { try { el.focus({ preventScroll: true }); } catch (e) { } }, 350);
+      el.addEventListener('input', () => { el.style.borderColor = ''; el.style.background = ''; note.remove(); }, { once: true });
+      return true;
+    };
+    if (!title) return miss('m-sch-title', '스케줄명을 입력해 주세요. (예: 뮤직뱅크 사전녹화)');
+    if (!dateVal) return miss('m-sch-date', '날짜를 골라 주세요.');
+    if (!startVal) return miss('m-sch-start', '시작 시간을 골라 주세요.');
+    if (!locationVal) return miss('m-sch-loc', '행사장이나 촬영 위치를 입력해 주세요.');
+    if (shopNeeded && !shopName && !shopAddr) return miss('m-sch-shop-name', '샵 이름이나 주소를 입력해 주세요. 샵에 안 가면 위의 "경유함"을 끄세요.');
     const today = new Date(); const todayYmd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     if (dateVal < todayYmd && !confirm(`지난 날짜(${dateVal})예요. 그래도 저장할까요?`)) return;
     if (endVal && endVal <= startVal && !confirm(`종료(${endVal})가 시작(${startVal})보다 빨라요.\n다음날 ${endVal}에 끝나는 일정인가요?`)) return;

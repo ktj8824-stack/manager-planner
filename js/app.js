@@ -227,13 +227,11 @@ const App = {
     this.updateNav(name === 'timeline' ? 'home' : name);
     
     const nav = U.$('#top-header');
-    if (nav) {
-      if (name === 'login' || name === 'onboarding') {
-        nav.style.display = 'none';
-      } else {
-        nav.style.display = 'flex';
-      }
-    }
+    const hide = name === 'login' || name === 'onboarding';
+    if (nav) nav.style.display = hide ? 'none' : 'flex';
+    const bn = U.$('#bottom-nav');
+    if (bn) bn.style.display = hide ? 'none' : 'flex';
+    document.body.classList.toggle('has-bottom-nav', !hide && !!bn);
     
     State.screen = name;
     window.scrollTo(0,0);
@@ -268,34 +266,44 @@ const App = {
   renderNav() {
     try { this._lockFrame(); } catch (e) { }
     U.$('#top-header')?.remove();
+    U.$('#bottom-nav')?.remove();
+    // 위: 이름만 (본사 계정은 본사 화면 바로가기)
+    const role = localStorage.getItem('bp_user_role') || '';
     const nav = U.el('header','top-header');
     nav.id = 'top-header';
     nav.innerHTML = `
       <div class="top-brand">
         <span class="top-brand-icon">🎬</span><span class="top-brand-text">로드플래너</span>
       </div>
-      <div class="top-nav-right">
-        <button class="top-nav-item active" data-s="home" onclick="App.navigate('home')">
-          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="1.8" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-          <span class="nav-label">홈</span>
-        </button>
-        <button class="top-nav-item" data-s="profile" onclick="App.navigate('profile')">
-          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="1.8" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-          <span class="nav-label">내 정보</span>
-        </button>
-        <button class="top-nav-item top-nav-sos" onclick="App.openEmergencyModal()" aria-label="긴급 지원">
-          <span class="top-sos-ico">🚨</span>
-          <span class="nav-label">긴급</span>
-        </button>
-        <button id="notice-bell" class="top-nav-item" onclick="App.openMessages()" aria-label="로드톡">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          <span class="nav-label">로드톡</span>
-          <span id="notice-badge" class="notice-badge" hidden>0</span>
-        </button>
-      </div>
+      ${['ceo', 'hq_admin'].includes(role) ? `<a class="top-hq-link" href="${esc(U.getHQPortalUrl ? U.getHQPortalUrl() : 'admin.html')}" target="_blank" rel="noopener">본사 화면</a>` : ''}
     `;
-    // Prepend to app instead of append so it's logically first
     U.$('#app').prepend(nav);
+
+    // 아래: 한 손 엄지로 누르는 메뉴 4개
+    const bn = U.el('nav', 'bottom-nav');
+    bn.id = 'bottom-nav';
+    bn.setAttribute('aria-label', '메뉴');
+    bn.innerHTML = `
+      <button class="bnav-item active" data-s="home" onclick="App.navigate('home')">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <span>홈</span>
+      </button>
+      <button id="notice-bell" class="bnav-item" onclick="App.openMessages()" aria-label="로드톡">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>로드톡</span>
+        <span id="notice-badge" class="notice-badge" hidden>0</span>
+      </button>
+      <button class="bnav-item bnav-sos" onclick="App.openEmergencyModal()" aria-label="긴급 지원">
+        <span class="bnav-sos-ico">🚨</span>
+        <span>긴급</span>
+      </button>
+      <button class="bnav-item" data-s="profile" onclick="App.navigate('profile')">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <span>내 정보</span>
+      </button>
+    `;
+    U.$('#app').appendChild(bn);
+    document.body.classList.add('has-bottom-nav');
     try { this.updateNoticeBadge(); } catch (e) { }
   },
 
@@ -349,7 +357,7 @@ const App = {
 
 
   updateNav(name) {
-    U.$$('.top-nav-item').forEach(i => i.classList.toggle('active', i.dataset.s === name));
+    U.$$('.top-nav-item, .bnav-item').forEach(i => i.classList.toggle('active', i.dataset.s === name));
   },
 
   showModal(title, content) {
@@ -484,10 +492,10 @@ const App = {
       <div style="flex:1; min-width:0;">
         <div style="font-weight:700; font-size:14px; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
           <span>${noti.isUrgent ? '본사 긴급 공지' : '본사 알림'}</span>
-          <span style="font-size:12px; font-weight:700; padding:1px 6px; border-radius:10px; ${noti.isUrgent ? 'background:#ef4444; color:#fff;' : 'background:#4f46e5; color:#fff;'}">${noti.isUrgent ? 'URGENT' : 'NOTICE'}</span>
+          <span style="font-size:13px; font-weight:700; padding:1px 6px; border-radius:10px; ${noti.isUrgent ? 'background:#ef4444; color:#fff;' : 'background:#4f46e5; color:#fff;'}">${noti.isUrgent ? 'URGENT' : 'NOTICE'}</span>
         </div>
         <div style="line-height:1.45; font-size:14px; color:#f1f5f9; word-break:break-word;">${safeContent}</div>
-        <div style="font-size:12px; color:#94a3b8; margin-top:6px;">${esc(timeStr)}</div>
+        <div style="font-size:13px; color:#94a3b8; margin-top:6px;">${esc(timeStr)}</div>
       </div>
       <button style="background:transparent; border:none; color:#94a3b8; font-size:16px; cursor:pointer; padding:2px 4px; line-height:1;" onclick="this.parentElement.remove()" title="닫기">✕</button>
     `;
@@ -606,8 +614,8 @@ const App = {
             ${notices.map(n => `
               <div style="background:var(--bg-card); border:1px solid ${n.urgent ? 'rgba(239,68,68,0.35)' : 'var(--border-subtle)'}; border-radius:var(--r-lg); padding:14px; position:relative;">
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-                  <span style="font-size:12px; font-weight:700; padding:2px 8px; border-radius:6px; ${n.urgent ? 'background:#ef4444; color:#fff;' : 'background:var(--primary-500); color:#fff;'}">${n.urgent ? '긴급 공지' : '본사 공지'}</span>
-                  <span style="font-size:12px; color:var(--text-400);">${esc(n.date || '최신')}</span>
+                  <span style="font-size:13px; font-weight:700; padding:2px 8px; border-radius:6px; ${n.urgent ? 'background:#ef4444; color:#fff;' : 'background:var(--primary-500); color:#fff;'}">${n.urgent ? '긴급 공지' : '본사 공지'}</span>
+                  <span style="font-size:13px; color:var(--text-400);">${esc(n.date || '최신')}</span>
                 </div>
                 <div style="font-size:14px; font-weight:700; color:var(--text-100); margin-bottom:6px;">${esc(n.title)}</div>
                 <div style="font-size:13px; color:var(--text-300); line-height:1.5;">${esc(n.content)}</div>
@@ -653,9 +661,9 @@ const App = {
               </div>
               <div style="flex:1;">
                 <div style="font-size:14px;font-weight:700;color:var(--text-100);">현장 돌발상황 / 사고 긴급 보고</div>
-                <div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">본사 관제 포털로 실시간 긴급 푸시 전송</div>
+                <div style="font-size:13px;color:var(--text-400);margin-top:2px;">본사 관제 포털로 실시간 긴급 푸시 전송</div>
               </div>
-              <span style="background:rgba(245,158,11,0.12);color:#f59e0b;font-size:12px;font-weight:700;padding:3px 9px;border-radius:6px;white-space:nowrap;">보고서</span>
+              <span style="background:rgba(245,158,11,0.12);color:#f59e0b;font-size:13px;font-weight:700;padding:3px 9px;border-radius:6px;white-space:nowrap;">보고서</span>
             </div>
           </div>
 

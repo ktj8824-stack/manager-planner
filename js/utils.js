@@ -426,7 +426,7 @@ const U = {
           </button>
         </div>
 
-        <div style="margin-top:16px; font-size:11px; color:#94a3b8;">
+        <div style="margin-top:16px; font-size:13px; color:#94a3b8;">
           ※ [내정보]에서 선호하는 네비를 설정하시면 원클릭으로 바로 실행됩니다.
         </div>
       </div>

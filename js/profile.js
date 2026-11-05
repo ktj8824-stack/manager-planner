@@ -67,7 +67,7 @@ const Profile = {
 
     app.innerHTML = `
       <div class="header">
-        <button class="header-btn" onclick="App.navigate('home')">
+        <button class="header-btn" aria-label="뒤로" style="width:44px; height:44px;" onclick="App.navigate('home')">
           <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
         </button>
         <h1 class="header-title">마이페이지</h1>
@@ -88,17 +88,17 @@ const Profile = {
             <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:-1px;">${esc(initials)}</div>
             <div style="flex:1;min-width:0;">
               <div style="font-size:17px;font-weight:700;color:#fff;letter-spacing:-0.4px;margin-bottom:3px;">${esc(userName)}</div>
-              <div style="font-size:12.5px;color:rgba(255,255,255,0.55);margin-bottom:2px;">${esc(userEmail)}</div>
-              <div style="font-size:12px;color:rgba(255,255,255,0.4);">${esc(userCompany)} · ${esc(userDept)}</div>
+              <div style="font-size:14px;color:rgba(255,255,255,0.55);margin-bottom:2px;">${esc(userEmail)}</div>
+              <div style="font-size:14px;color:rgba(255,255,255,0.4);">${esc(userCompany)} · ${esc(userDept)}</div>
             </div>
-            <button type="button" onclick="Profile.switchAccount()" style="flex-shrink:0;align-self:center;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.28);color:#fff;font-size:12.5px;font-weight:700;padding:7px 10px;border-radius:9px;cursor:pointer;white-space:nowrap;">계정 전환</button>
+            <button type="button" onclick="Profile.switchAccount()" style="flex-shrink:0;align-self:center;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.28);color:#fff;font-size:14px;font-weight:700;min-height:44px;padding:0 12px;border-radius:10px;cursor:pointer;white-space:nowrap;">계정 전환</button>
           </div>
 
           <!-- 담당 아티스트 태그 -->
           <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:space-between;position:relative;">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-              <span style="font-size:12px;color:rgba(255,255,255,0.4);font-weight:500;">담당 아티스트</span>
-              ${assignedArtists.map(a => `<span style="background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9);font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);">${esc(a)}</span>`).join('')}
+              <span style="font-size:14px;color:rgba(255,255,255,0.4);font-weight:500;">담당 아티스트</span>
+              ${assignedArtists.map(a => `<span style="background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9);font-size:14px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);">${esc(a)}</span>`).join('')}
             </div>
           </div>
         </div>
@@ -106,13 +106,13 @@ const Profile = {
         <!-- ── 인증 상태 배너 ── -->
         <div style="margin:0 var(--sp-5) var(--sp-4);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:14px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
           <div>
-            <div style="font-size:12px;color:var(--primary-400);font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:5px;">
+            <div style="font-size:14px;color:var(--primary-400);font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:5px;">
               <span style="display:inline-block;width:6px;height:6px;background:#4ade80;border-radius:50%;box-shadow:0 0 6px #4ade80;"></span>
               사내 전용 매니지먼트 플래너
             </div>
             <div style="font-size:14px;font-weight:700;color:var(--text-100);">동선·스케줄 최적화 가동 중</div>
           </div>
-          <div style="background:rgba(34,197,94,0.12);color:#4ade80;border:1px solid rgba(34,197,94,0.25);padding:5px 11px;border-radius:var(--r-full);font-size:12px;font-weight:700;white-space:nowrap;">인증 완료</div>
+          <div style="background:rgba(34,197,94,0.12);color:#4ade80;border:1px solid rgba(34,197,94,0.25);padding:5px 11px;border-radius:var(--r-full);font-size:14px;font-weight:700;white-space:nowrap;">인증 완료</div>
         </div>
 
         <!-- ── 내 정보 관리 ── -->
@@ -144,7 +144,7 @@ const Profile = {
               <span style="font-size:18px;">⏰</span>
               <div style="flex:1;min-width:0;">
                 <div style="font-size:14px;font-weight:700;color:var(--text-100);">기상·준비 시간</div>
-                <div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">첫 출발 ${esc(localStorage.getItem('bp_buffer_prep') ?? '60')}분 전에 기상·준비 알림 (0이면 끔)</div>
+                <div style="font-size:14px;color:var(--text-400);margin-top:2px;">첫 출발 ${esc(localStorage.getItem('bp_buffer_prep') ?? '60')}분 전에 기상·준비 알림 (0이면 끔)</div>
               </div>
               ${ProfileIcons.chevron}
             </div>
@@ -154,7 +154,7 @@ const Profile = {
               <span style="font-size:15px;flex-shrink:0;">🚗</span>
               <div style="flex:1;">
                 <div style="font-size:14px;font-weight:700;color:var(--text-100);">차에 타면 자동 길안내</div>
-                <div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">차와 연결되면 다음 일정으로 내비 자동 실행</div>
+                <div style="font-size:14px;color:var(--text-400);margin-top:2px;">차와 연결되면 다음 일정으로 내비 자동 실행</div>
               </div>
               ${ProfileIcons.chevron}
             </div>
@@ -164,9 +164,9 @@ const Profile = {
               <span style="color:var(--primary-400);flex-shrink:0;">${ProfileIcons.bell}</span>
               <div style="flex:1;">
                 <div style="font-size:14px;font-weight:700;color:var(--text-100);">알림 받기 (푸시)</div>
-                <div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">출발 15분 전 · 내일 일정(밤 9시) · 일정 변경 · 로드톡</div>
+                <div style="font-size:14px;color:var(--text-400);margin-top:2px;">출발 15분 전 · 내일 일정(밤 9시) · 일정 변경 · 로드톡</div>
               </div>
-              <span id="push-state-badge" style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;font-size:12px;font-weight:700;padding:3px 10px;border-radius:var(--r-full);">확인 중</span>
+              <span id="push-state-badge" style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;font-size:14px;font-weight:700;padding:3px 10px;border-radius:var(--r-full);">확인 중</span>
             </div>
 
 
@@ -190,7 +190,7 @@ const Profile = {
         <!-- ── 고객지원 / 앱 정보 ── -->
         ${Profile._section('고객지원 / 앱 정보', 'normal', [
           { icon: '🚨',        label: '긴급 지원 / 현장 긴급보고', sub: '본사 연락처 · 긴급 보고(위치·사진)', badge: ProfileIcons.chevron, action: 'App.openEmergencyModal()' },
-          { icon: ProfileIcons.info,        label: '앱 버전 정보',             sub: '', badge: '<span style="font-size:12.5px;color:var(--text-400);">v1.0.0 (최신)</span>', action: 'Profile.showVersion()' },
+          { icon: ProfileIcons.info,        label: '앱 버전 정보',             sub: '', badge: '<span style="font-size:14px;color:var(--text-400);">v1.0.0 (최신)</span>', action: 'Profile.showVersion()' },
           { icon: ProfileIcons.file,        label: '이용약관 및 개인정보처리방침', sub: '', badge: ProfileIcons.chevron, action: "window.open('./terms.html', '_blank', 'noopener')" },
         ])}
 
@@ -217,7 +217,7 @@ const Profile = {
           <span style="color:${type==='red'?'#f87171':'var(--primary-400)'};flex-shrink:0;">${item.icon}</span>
           <div style="flex:1;min-width:0;">
             <div style="font-size:14px;font-weight:700;color:var(--text-100);">${esc(item.label)}</div>
-            ${item.sub ? `<div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">${esc(item.sub)}</div>` : ''}
+            ${item.sub ? `<div style="font-size:14px;color:var(--text-400);margin-top:2px;">${esc(item.sub)}</div>` : ''}
           </div>
           <div style="flex-shrink:0;color:var(--text-400);">${item.badge}</div>
         </div>`;
@@ -237,7 +237,7 @@ const Profile = {
       <div onclick="${action}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;${border?'border-bottom:1px solid var(--border-subtle);':''}cursor:pointer;">
         <span style="color:var(--primary-400);flex-shrink:0;">${icon}</span>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:12px;color:var(--text-400);margin-bottom:2px;">${esc(label)}</div>
+          <div style="font-size:14px;color:var(--text-400);margin-bottom:2px;">${esc(label)}</div>
           <div style="font-size:14px;font-weight:${value?'600':'400'};color:${value?'var(--text-100)':'var(--text-400)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(value || placeholder)}</div>
         </div>
         <div style="color:var(--text-400);flex-shrink:0;">${ProfileIcons.chevron}</div>
@@ -406,9 +406,9 @@ const Profile = {
               <div style="background:var(--bg-card);border:1px solid ${c.accent?'rgba(239,68,68,0.3)':'var(--border-subtle)'};border-radius:var(--r-lg);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;">
                 <div>
                   <div style="font-weight:700;color:${esc(c.accent||'var(--text-100)')};font-size:14px;">${esc(c.label)}</div>
-                  <div style="font-size:13px;color:var(--text-400);margin-top:2px;">${esc(c.sub)}</div>
+                  <div style="font-size:14px;color:var(--text-400);margin-top:2px;">${esc(c.sub)}</div>
                 </div>
-                <a href="tel:${esc(c.tel)}" style="background:${esc(c.accent||'var(--bg-elevated)')};border:1px solid ${c.accent?'transparent':'var(--border-subtle)'};color:${c.accent?'#fff':'var(--text-100)'};padding:6px 14px;border-radius:var(--r-md);text-decoration:none;font-size:13px;font-weight:700;">전화</a>
+                <a href="tel:${esc(c.tel)}" style="background:${esc(c.accent||'var(--bg-elevated)')};border:1px solid ${c.accent?'transparent':'var(--border-subtle)'};color:${c.accent?'#fff':'var(--text-100)'};padding:6px 14px;border-radius:var(--r-md);text-decoration:none;font-size:14px;font-weight:700;">전화</a>
               </div>`).join('')}
           </div>
           <button onclick="document.getElementById('emergency-contact-modal').remove()" class="btn btn-secondary" style="width:100%;margin-top:16px;">닫기</button>
@@ -427,7 +427,7 @@ const Profile = {
             <div style="font-size:16px;font-weight:700;color:#f87171;">⚡ 현장 긴급 상황 보고</div>
             <button onclick="document.getElementById('emergency-report-modal').remove()" style="background:none;border:none;color:var(--text-400);font-size:20px;cursor:pointer;">✕</button>
           </div>
-          <p style="font-size:13px;color:var(--text-400);margin-bottom:12px;">작성 즉시 본사 HQ 마스터 관제 포털에 긴급 경보로 전송됩니다.</p>
+          <p style="font-size:14px;color:var(--text-400);margin-bottom:12px;">작성 즉시 본사 HQ 마스터 관제 포털에 긴급 경보로 전송됩니다.</p>
           <div class="field">
             <label class="field-label">유형 선택 <span class="req">*</span></label>
             <select id="em-type" style="width:100%;padding:10px 12px;border-radius:var(--r-lg);background:var(--bg-card);border:1px solid var(--border-subtle);color:var(--text-100);font-size:14px;">

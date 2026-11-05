@@ -362,7 +362,7 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.6);
   background: none;
@@ -848,8 +848,40 @@
 }
 .notice-bell:active { transform: scale(.94); }
 .notice-badge {
-  position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px; padding: 0 4px;
-  border-radius: 9px; background: #ef4444; color: #fff; font-size: 12px; font-weight: 700;
-  line-height: 17px; text-align: center; box-sizing: border-box;
+  position: absolute; top: -5px; right: -5px; min-width: 20px; height: 20px; padding: 0 5px;
+  border-radius: 10px; background: #ef4444; color: #fff; font-size: 13px; font-weight: 700;
+  line-height: 20px; text-align: center; box-sizing: border-box;
 }
 .notice-badge[hidden] { display: none; }
+
+/* ── 아래 메뉴 (한 손 엄지로) ── */
+:root { --bottom-nav-h: 64px; }
+.bottom-nav {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: 0;
+  width: 100%; max-width: var(--app-w);
+  height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex; align-items: stretch;
+  background: #ffffff; border-top: 1px solid #e2e8f0;
+  box-shadow: 0 -2px 12px rgba(15, 23, 42, 0.06);
+  z-index: var(--z-sticky);
+}
+.bnav-item {
+  position: relative; flex: 1 1 0; min-width: 44px; min-height: 56px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  background: none; border: 0; cursor: pointer;
+  font-size: 13px; font-weight: 700; color: #64748b; letter-spacing: -0.2px;
+  -webkit-tap-highlight-color: transparent;
+}
+.bnav-item svg { width: 24px; height: 24px; }
+.bnav-item.active { color: #4f46e5; }
+.bnav-sos { color: #dc2626; }
+.bnav-sos-ico { font-size: 22px; line-height: 24px; height: 24px; }
+.bnav-item .notice-badge { top: 6px; right: calc(50% - 22px); }
+body.has-bottom-nav #app { padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom)); }
+.top-hq-link {
+  flex-shrink: 0; display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px;
+  border-radius: 10px; background: rgba(255,255,255,0.12); color: #fff; font-size: 14px; font-weight: 700; text-decoration: none;
+}
+/* 일정 카드 길게 누르기: 글자 선택·확대 메뉴 막기 */
+[data-hold-sch] { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }

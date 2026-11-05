@@ -43,10 +43,42 @@ const Register = {
     const vehicles = window.hqStore ? window.hqStore.getVehicles() : [];
     this.vehicleId = vehicles.length > 0 ? vehicles[0].id : null;
     this.shopNeeded = false;
-    this.shopName = '청담 알루(ALUU) 본점';
+    this.shopName = '';
     this.shopTimeH = null;
     this.shopTimeM = null;
     this.isSecret = false;
+  },
+
+  // 켜고 끄는 스위치 (누르는 곳 56×44)
+  _switch(on, action, color, label) {
+    return `<button type="button" role="switch" aria-checked="${on ? 'true' : 'false'}" aria-label="${esc(label)}" onclick="${action}" style="width:60px; height:44px; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:none; border:0; padding:0; cursor:pointer;">
+      <span style="width:50px; height:30px; background:${on ? color : '#cbd5e1'}; border-radius:15px; position:relative; transition:all 0.2s; display:block;">
+        <span style="width:26px; height:26px; background:#fff; border-radius:50%; position:absolute; top:2px; left:${on ? '22px' : '2px'}; transition:all 0.2s; box-shadow:0 2px 4px rgba(0,0,0,0.15); display:block;"></span>
+      </span>
+    </button>`;
+  },
+
+  // 빠진 칸: 그 칸으로 화면을 옮기고 빨간 테두리 + 칸 아래 설명 한 줄 (고치면 사라짐)
+  _clearErrors() {
+    U.$$('#screen-register .field-err').forEach(el => el.classList.remove('field-err'));
+    U.$$('#screen-register .field-err-msg').forEach(el => el.remove());
+  },
+  _fieldError(el, msg) {
+    if (!el) { U.toast(msg); return; }
+    const box = el.closest('.field-input') || el;   // 장소 칸은 돋보기까지 감싼 틀에 표시
+    box.classList.add('field-err');
+    if (box !== el) el.style.background = 'transparent';
+    const field = el.closest('.field') || el.parentElement;
+    const note = document.createElement('div');
+    note.className = 'field-err-msg';
+    note.setAttribute('role', 'alert');
+    note.textContent = msg;
+    field.appendChild(note);
+    try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) { el.scrollIntoView(); }
+    if (el.tagName === 'INPUT') setTimeout(() => { try { el.focus({ preventScroll: true }); } catch (e) { } }, 350);
+    const clear = () => { box.classList.remove('field-err'); el.style.background = ''; note.remove(); };
+    el.addEventListener('input', clear, { once: true });
+    el.addEventListener('click', clear, { once: true });
   },
 
   toggleSecret() {
@@ -161,7 +193,7 @@ const Register = {
     const artistChips = artists.map(a => `
       <div class="artist-chip ${this.artistId === a.id ? 'active' : ''}" 
            onclick="Register.selectArtist(${escJs(a.id)})"
-           style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; background:${esc(this.artistId === a.id ? a.color : '#f1f5f9')}; color:${this.artistId === a.id ? '#fff' : '#475569'}; border-radius:20px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s; margin-right:8px; white-space:nowrap; border:1px solid ${this.artistId === a.id ? 'transparent' : '#e2e8f0'}">
+           style="display:inline-flex; align-items:center; gap:6px; min-height:44px; box-sizing:border-box; padding:10px 16px; background:${esc(this.artistId === a.id ? a.color : '#f1f5f9')}; color:${this.artistId === a.id ? '#fff' : '#475569'}; border-radius:20px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s; margin-right:8px; white-space:nowrap; border:1px solid ${this.artistId === a.id ? 'transparent' : '#e2e8f0'}">
         <span>${esc(a.emoji)}</span>
         <span>${esc(a.name)}</span>
       </div>
@@ -177,7 +209,7 @@ const Register = {
     
     el.innerHTML = `
       <div class="header">
-        <button class="header-btn" onclick="Register.editIdx=null; App.navigate('home')">
+        <button class="header-btn" aria-label="뒤로" style="width:44px; height:44px;" onclick="Register.editIdx=null; App.navigate('home')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
         </button>
         <h1 class="header-title">${isEdit ? '일정 수정' : '새 일정 추가'}</h1>
@@ -239,20 +271,18 @@ const Register = {
             <div class="field" style="margin-top:24px; padding-top:20px; border-top:1px solid #e2e8f0;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                 <label class="field-label" style="margin:0;">💄 샵(헤어/메이크업) 경유</label>
-                <div class="toggle-switch ${this.shopNeeded ? 'on' : ''}" onclick="Register.toggleShop()" style="width:44px; height:24px; background:${this.shopNeeded ? 'var(--accent)' : '#cbd5e1'}; border-radius:12px; position:relative; cursor:pointer; transition:all 0.2s;">
-                  <div style="width:20px; height:20px; background:#fff; border-radius:50%; position:absolute; top:2px; left:${this.shopNeeded ? '22px' : '2px'}; transition:all 0.2s; box-shadow:0 2px 4px rgba(0,0,0,0.1);"></div>
-                </div>
+                ${this._switch(this.shopNeeded, 'Register.toggleShop()', 'var(--accent)', '샵 경유')}
               </div>
               
               ${this.shopNeeded ? `
                 <div style="background:#f8fafc; padding:16px; border-radius:12px; border:1px solid #e2e8f0; margin-top:12px;">
                   <div style="margin-bottom:12px;">
                     <label style="font-size:13px; color:#64748b; font-weight:600; display:block; margin-bottom:6px;">샵 이름</label>
-                    <input type="text" id="r-shop-name" value="${this.shopName}" onchange="Register.shopName=this.value" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; outline:none;"/>
+                    <input type="text" id="r-shop-name" value="${esc(this.shopName)}" placeholder="예: 정샘물 청담본점" onchange="Register.shopName=this.value" style="width:100%; min-height:44px; box-sizing:border-box; padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:16px; outline:none;"/>
                   </div>
                   <div>
                     <label style="font-size:13px; color:#64748b; font-weight:600; display:block; margin-bottom:6px;">샵 도착 시간</label>
-                    <button class="picker-btn" onclick="Register.openTimePicker('shop')" style="width:100%; display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; font-weight:600; background:#fff; color:#1e293b;">
+                    <button class="picker-btn" onclick="Register.openTimePicker('shop')" style="width:100%; min-height:44px; display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; font-weight:600; background:#fff; color:#1e293b;">
                       <span class="picker-val ${this.shopTimeH === null ? 'is-empty' : ''}" id="r-shop-time">${esc(shopTimeStr)}</span>
                       <span class="picker-ico">🕒</span>
                     </button>
@@ -273,12 +303,10 @@ const Register = {
             <div class="field" style="margin-top:24px; padding-top:20px; border-top:1px solid #e2e8f0;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                 <label class="field-label" style="margin:0; display:flex; align-items:center; gap:6px; color:${this.isSecret ? '#dc2626' : '#1e293b'};">
-                  <span>🔒 비공개 스케줄 (Secret Mode)</span>
-                  ${this.isSecret ? '<span style="font-size:12px; background:#fee2e2; color:#dc2626; padding:2px 6px; border-radius:4px; font-weight:700;">극비 보안</span>' : ''}
+                  <span>🔒 비공개 (현장 스태프에게 안 보임)</span>
+                  ${this.isSecret ? '<span style="font-size:13px; background:#fee2e2; color:#dc2626; padding:2px 6px; border-radius:4px; font-weight:700;">켜짐</span>' : ''}
                 </label>
-                <div class="toggle-switch ${this.isSecret ? 'on' : ''}" onclick="Register.toggleSecret()" style="width:44px; height:24px; background:${this.isSecret ? '#ef4444' : '#cbd5e1'}; border-radius:12px; position:relative; cursor:pointer; transition:all 0.2s;">
-                  <div style="width:20px; height:20px; background:#fff; border-radius:50%; position:absolute; top:2px; left:${this.isSecret ? '22px' : '2px'}; transition:all 0.2s; box-shadow:0 2px 4px rgba(0,0,0,0.1);"></div>
-                </div>
+                ${this._switch(this.isSecret, 'Register.toggleSecret()', '#ef4444', '비공개')}
               </div>
               <div style="font-size:13px; color:#64748b; line-height:1.4;">
                 ${this.isSecret 
@@ -298,6 +326,7 @@ const Register = {
           </div>
           
           <div class="reg-submit" style="margin-top:32px;">
+            ${isEdit && typeof this.editIdx === 'string' ? `<button type="button" onclick="Home.copySchedule(${escJs(this.editIdx)}, 1)" style="width:100%; min-height:52px; margin-bottom:10px; border-radius:14px; border:1px solid #c7d2fe; background:#eef2ff; color:#4338ca; font-size:16px; font-weight:800; cursor:pointer;">📋 이 일정을 내일로 복사</button>` : ''}
             <button class="btn btn-primary" id="r-submit" onclick="Register.createPlan()" style="width:100%; height:56px; border-radius:16px; font-size:16px; font-weight:700; background:${this.isSecret ? 'linear-gradient(135deg, #1e1b4b, #312e81)' : '#1a1a1a'}; color:#fff; box-shadow:${this.isSecret ? '0 4px 14px rgba(49, 46, 129, 0.4)' : 'none'};">${isEdit ? (this.isSecret ? '🔒 비공개 일정 수정 완료' : '일정 수정 완료') : (this.isSecret ? '🔒 비공개 일정 등록 완료' : '일정 등록 완료')}</button>
           </div>
         </div>
@@ -310,9 +339,11 @@ const Register = {
         .search-item-name { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
         .search-item-addr { font-size: 14px; color: #64748b; }
         .search-drop.show { display: block !important; }
+        .field-err-msg { color: #dc2626; font-size: 14px; font-weight: 700; margin-top: 6px; }
+        .field-err { border: 2px solid #dc2626 !important; background: #fef2f2 !important; }
         
         .pills { display: flex; flex-wrap: wrap; gap: 8px; }
-        .pill { padding: 8px 16px; border: 1px solid #e2e8f0; border-radius: 20px; font-size: 14px; font-weight: 600; color: #64748b; background: #fff; cursor: pointer; transition: all 0.2s; }
+        .pill { min-width: 48px; min-height: 44px; box-sizing: border-box; padding: 10px 16px; border: 1px solid #e2e8f0; border-radius: 22px; font-size: 16px; font-weight: 600; color: #64748b; background: #fff; cursor: pointer; transition: all 0.2s; }
         .pill.on { background: var(--accent); color: #fff; border-color: var(--accent); }
       </style>
     `;
@@ -604,9 +635,11 @@ const Register = {
   },
 
   async createPlan() {
-    if (!this.course && !U.$('#r-search').value.trim()) { U.toast('⚠️ 장소를 입력해주세요'); return; }
-    if (!this.date) { U.toast('⚠️ 날짜를 선택해주세요'); return; }
-    if (this.timeH === null || this.timeM === null) { U.toast('⚠️ 시간을 선택해주세요'); return; }
+    if (this._saving) return;   // 두 번 눌러도 한 번만
+    this._clearErrors();
+    if (!this.course && !U.$('#r-search').value.trim()) { this._fieldError(U.$('#r-search'), '현장 장소를 입력해 주세요. 이름을 쓰면 아래에 검색 결과가 나와요.'); return; }
+    if (!this.date) { this._fieldError(U.$('#r-date')?.closest('button'), '날짜를 골라 주세요.'); return; }
+    if (this.timeH === null || this.timeM === null) { this._fieldError(U.$('#r-time')?.closest('button'), '현장 도착(시작) 시간을 골라 주세요.'); return; }
 
     const teeOff = `${String(this.timeH).padStart(2,'0')}:${String(this.timeM).padStart(2,'0')}`;
     
@@ -698,6 +731,11 @@ const Register = {
       }
     }
     
+    const savedDate = new Date(this.date);
+    this._saving = true;
+    const btn = U.$('#r-submit'); const label = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = '저장 중… (출발 시간 계산)'; }
+    try {
     // Use hqStore if available to sync with Supabase and global state
     if (window.hqStore) {
       await window.hqStore.saveSchedule(sched);
@@ -718,12 +756,20 @@ const Register = {
     }
     
     U.toast(this.editIdx !== null ? '✅ 일정이 수정되었습니다.' : '✅ 새 일정이 등록되었습니다.');
+    } catch (err) {
+      U.toast('저장하지 못했습니다: ' + (err?.message || err));
+      return;
+    } finally {
+      this._saving = false;
+      if (btn) { btn.disabled = false; btn.textContent = label; }
+    }
 
+    this.editIdx = null;
     this.reset();
     App.navigate('home');
     
     if (Home && Home.selectDate) {
-      Home.selectDate(this.date.getFullYear(), this.date.getMonth(), this.date.getDate());
+      Home.selectDate(savedDate.getFullYear(), savedDate.getMonth(), savedDate.getDate());
     }
   }
 };

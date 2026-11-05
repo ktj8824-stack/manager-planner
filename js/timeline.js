@@ -28,7 +28,7 @@ const Timeline = {
         <button class="header-btn" onclick="App.navigate('home')">
           <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
         </button>
-        <h1 class="header-title">스마트 타임라인</h1>
+        <h1 class="header-title">이동 순서</h1>
         <button class="header-btn" onclick="U.downloadICS(State.schedules[${this.schedIdx}])">
           <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         </button>
@@ -67,7 +67,7 @@ const Timeline = {
             <div style="flex: 1; min-width: 0;">
               <h3 class="tl-title" style="display:flex; align-items:center; gap:6px; margin-bottom: 4px;">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                타임라인
+                이동 순서
               </h3>
               <p class="tl-sub">${tl.hasMeal ? '출발지 → 식당 → 일정코스 동선 연산' : '출발지 → 일정코스 최적 경로'}</p>
             </div>
@@ -309,7 +309,7 @@ const Timeline = {
 
   renderTimelineItems(s) {
     const steps = this.getTimelineSteps(s);
-    if (!steps || steps.length === 0) return '<div style="text-align:center; padding:20px; color:var(--text-400);">타임라인 정보가 없습니다.</div>';
+    if (!steps || steps.length === 0) return '<div style="text-align:center; padding:20px; color:var(--text-400);">이동 순서 정보가 없습니다.</div>';
 
     const tmapIcon = `<svg width="15" height="15" viewBox="0 0 24 24" fill="#ffffff" style="margin-top:-1px"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16zM11.99 1.5L2.5 9l9.49 7.5L21.5 9l-9.51-7.5z"/></svg>`;
     const kakaoIcon = `<svg width="15" height="15" viewBox="0 0 24 24" fill="#191919" style="margin-top:-1px"><path d="M12 3c-5.523 0-10 3.553-10 7.938 0 2.825 1.83 5.303 4.606 6.744l-1.01 3.7c-.053.195.166.353.332.227l4.316-2.82c.575.08 1.162.124 1.756.124 5.523 0 10-3.553 10-7.938C22 6.553 17.523 3 12 3z"/></svg>`;
@@ -336,9 +336,9 @@ const Timeline = {
           isNextDay = true;
         }
         if (isNextDay) {
-          timeBadge = `<span style="font-size:12px; color:#4f46e5; background:rgba(79,70,229,0.12); padding:1px 5px; border-radius:4px; margin-right:4px; font-weight:700;">익일</span>`;
+          timeBadge = `<span style="font-size:13px; color:#4f46e5; background:rgba(79,70,229,0.12); padding:1px 5px; border-radius:4px; margin-right:4px; font-weight:700;">익일</span>`;
         } else if (idx === 0 && currentMin >= 21 * 60 && s.startTime && parseInt(s.startTime) <= 6) {
-          timeBadge = `<span style="font-size:12px; color:#f59e0b; background:rgba(245,158,11,0.12); padding:1px 5px; border-radius:4px; margin-right:4px; font-weight:700;">전일</span>`;
+          timeBadge = `<span style="font-size:13px; color:#f59e0b; background:rgba(245,158,11,0.12); padding:1px 5px; border-radius:4px; margin-right:4px; font-weight:700;">전일</span>`;
         }
         prevMinutes = currentMin;
       }
@@ -427,7 +427,7 @@ const Timeline = {
         this.alarmTimeouts = [];
       }
       
-      U.toast('동선 타임라인 알람이 해제되었습니다.');
+      U.toast('이동 순서 알람이 해제되었습니다.');
     } else {
       btn.classList.add('alarm-on');
       btn.innerHTML = '🔔 알람 켜짐';
@@ -439,7 +439,7 @@ const Timeline = {
       if ('Notification' in window) {
         Notification.requestPermission().then(permission => {
           if (permission === 'granted') {
-            U.toast('실제 타임라인 일정에 맞춰 알람이 예약되었습니다!');
+            U.toast('실제 이동 순서에 맞춰 알람이 예약되었습니다!');
             this.scheduleTimelineAlarms();
           } else {
             U.toast('알림 권한이 차단되어 푸시 알림을 보낼 수 없습니다.');
@@ -480,7 +480,7 @@ const Timeline = {
       const delay = getDelay(ev.time);
       if (delay > 0) {
         const timeoutId = setTimeout(() => {
-          new Notification('로드플래너 타임라인', {
+          new Notification('로드플래너 이동 순서', {
             body: ev.msg,
             icon: 'assets/icons/icon-192x192.png'
           });

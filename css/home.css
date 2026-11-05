@@ -38,7 +38,7 @@
 .hac-badge {
   background: var(--accent-dim);
   color: var(--accent);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: var(--fw-bold);
   padding: 3px 8px;
   border-radius: var(--r-full);
@@ -201,7 +201,7 @@
   color: var(--text-100);
 }
 .dash-card-desc {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-500);
   font-weight: var(--fw-medium);
 }

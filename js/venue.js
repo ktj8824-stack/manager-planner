@@ -82,14 +82,14 @@ const VenueNotes = {
     el.innerHTML = `
       <div style="margin-top:8px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:8px 10px;" onclick="event.stopPropagation()">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
-          <span style="font-size:12.5px;font-weight:800;color:#92400e;">📌 현장 메모 ${rows.length}</span>${addBtn}
+          <span style="font-size:13px;font-weight:800;color:#92400e;">📌 현장 메모 ${rows.length}</span>${addBtn}
         </div>
         ${shown.map(r => `
           <div style="display:flex;gap:6px;align-items:flex-start;font-size:13.5px;color:#334155;line-height:1.45;padding:3px 0;border-top:1px dashed #fde68a;">
             <span style="flex:1;word-break:keep-all;">${this._esc(r.note)} <span style="font-size:11.5px;color:#a16207;white-space:nowrap;">· ${this._esc(r.author_name || '')} ${this._date(r.created_at)}</span></span>
             ${(r.author_id === me || hq) ? `<button type="button" onclick="event.stopPropagation(); VenueNotes.remove(${this._esc(JSON.stringify(r.id))})" title="지우기" style="border:0;background:none;color:#b45309;cursor:pointer;font-size:14px;line-height:1;padding:0 2px;">×</button>` : ''}
           </div>`).join('')}
-        ${rows.length > shown.length ? `<div style="font-size:12px;color:#a16207;">외 ${rows.length - shown.length}개</div>` : ''}
+        ${rows.length > shown.length ? `<div style="font-size:13px;color:#a16207;">외 ${rows.length - shown.length}개</div>` : ''}
       </div>`;
   },
 
