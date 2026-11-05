@@ -33,6 +33,8 @@ const TESTS = [
   ['현장 메모', 'web/venue-test.cjs', [], [/현장 메모 2/, /지하 2층 B구역 주차/]],
   ['예약 알림 (출발·밤 요약)', 'server/rem-test.mts', [], [/13분 뒤 출발/, /매니저 확인 대기 1건/]],
   ['아침 재계산·출발 지연', 'server/rem2-test.mts', [], [/retimed: 1/, /late: 1/, /출발 지연 7분/]],
+  ['결제 서버 확인·알림 안내 (화면)', 'web/billing-test.cjs', [], [/"amount":120000/, /"tampered":"blocked"/, /"ok":"success"/, /"shown":true,"afterOn":true,"nativeHidden":true/]],
+  ['결제 서버 로직 (금액 조작·권한)', 'server/pay-test.mts', [], [/"mgrBlocked":"FORBIDDEN"/, /"tamper":"AMOUNT_MISMATCH"/, /"otherUser":"ORDER_NOT_FOUND"/, /"slots":2/, /"rejected":"REJECT_CARD_COMPANY"/]],
   ['경로 함수 (타임머신)', 'server/route-at-test.mts', [], [/predictionType/, /예측할 수 없는 시간/]],
 ];
 

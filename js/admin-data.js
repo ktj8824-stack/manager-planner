@@ -627,6 +627,8 @@ class HQDataStore {
   _startAutoSync() {
     if (this._autoSyncStarted || typeof window === 'undefined') return;
     this._autoSyncStarted = true;
+    this.refreshBilling();
+    setInterval(() => { if (!document.hidden) this.refreshBilling(); }, 10 * 60000);
     setInterval(() => { if (!document.hidden) this.requestSync(0); }, 60000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) this.requestSync(300); });
     window.addEventListener('focus', () => this.requestSync(300));
@@ -773,6 +775,30 @@ class HQDataStore {
     } catch {
       return DEFAULT_SUBSCRIPTION;
     }
+  }
+
+  // 요금제·인원은 서버(결제 승인 결과)가 기준. 이 기기의 값은 화면 표시용 사본
+  async refreshBilling() {
+    const SC = window.SupabaseClient;
+    const role = SC?.currentProfile?.role;
+    if (!SC?.isConfigured || !SC.currentUser || !['ceo', 'hq_admin'].includes(role)) return null;
+    try {
+      const st = await SC.invokePayments({ action: 'status' });
+      const c = st?.company; if (!c) return null;
+      const cur = JSON.parse(localStorage.getItem(this.getUserStorageKey(HQ_STORAGE_KEYS.SUBSCRIPTION)) || 'null') || {};
+      const next = {
+        ...DEFAULT_SUBSCRIPTION, ...cur,
+        companyName: cur.companyName || DEFAULT_SUBSCRIPTION.companyName,
+        ceoName: cur.ceoName || DEFAULT_SUBSCRIPTION.ceoName,
+        baseSlots: c.baseSlots, additionalSlots: c.extraSlots, baseFee: c.baseFee, additionalSlotFee: c.perSlotFee,
+        plan: c.plan, paidUntil: c.paidUntil, status: c.active ? 'active' : (c.plan === 'free' ? 'trial' : 'expired'),
+        paymentDate: c.paidUntil ? new Date(c.paidUntil).toLocaleDateString('ko-KR') + ' 까지' : '결제 전',
+        payments: st.payments || [], payMode: st.mode, serverSynced: Date.now(),
+      };
+      if (JSON.stringify({ ...cur, serverSynced: 0 }) !== JSON.stringify({ ...next, serverSynced: 0 })) this.saveSubscription(next);
+      else localStorage.setItem(this.getUserStorageKey(HQ_STORAGE_KEYS.SUBSCRIPTION), JSON.stringify(next));
+      return next;
+    } catch (e) { console.warn('요금제 확인 실패:', e.message); return null; }
   }
 
   saveSubscription(sub) {

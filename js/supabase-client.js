@@ -105,6 +105,20 @@ const SupabaseClient = {
     return this.invokeUserManagement({ action: 'update', id, data });
   },
 
+  // 결제 서버 (금액 확정·토스 승인·요금제 반영은 모두 서버가 함)
+  async invokePayments(body) {
+    if (!this.isConfigured) throw new Error('서버에 연결되지 않았습니다.');
+    const { data: s } = await this.client.auth.getSession();
+    if (!s?.session) throw new Error('로그인이 필요합니다. 앱에서 다시 로그인한 뒤 결제해 주세요.');
+    const { data, error } = await this.client.functions.invoke('payments', { body });
+    if (error) {
+      let msg = '';
+      try { const j = await error.context.clone().json(); msg = j?.error?.message || ''; } catch (e) { }
+      throw new Error(msg || '결제 서버에 연결하지 못했습니다.');
+    }
+    return data;
+  },
+
   async adminDeleteUser(id) {
     return this.invokeUserManagement({ action: 'delete', id });
   },

@@ -105,7 +105,7 @@
     .sec-badge { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #475569; }
     .sec-badge span { font-size: 14px; }
   </style>
-<script src="js/icons.js?v=269"></script>
+<script src="js/icons.js?v=270"></script>
 </head>
 <body>
 <div id="test-banner" style="position:sticky;top:0;z-index:9999;background:#f59e0b;color:#1f1300;text-align:center;font:700 13px/1.4 Pretendard,sans-serif;padding:8px 12px;">🧪 테스트 결제 — 실제 결제되지 않습니다 (카드가 청구되지 않아요)</div>
@@ -227,6 +227,8 @@
 </div>
 
 <script src="https://js.tosspayments.com/v2/standard"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js?v=270"></script>
 <script>
   const IS_DEV_HOST = ['localhost','127.0.0.1',''].includes(location.hostname) || location.protocol === 'file:';
   const params      = new URLSearchParams(location.search);
@@ -384,10 +386,20 @@
     // 2) 토스 위젯 (카드/간편결제) 모드인 경우
     btn.innerHTML = '<span class="spinner"></span>결제창 여는 중...';
 
-    const orderId   = (isProPlan ? 'PRO-SUB-' : 'HQ-SUB-') + Date.now();
-    const orderName = isProPlan 
-      ? '로드플래너 PRO 멤버십 (1개월)' 
-      : `${companyName} Enterprise Standard (${totalSlots}명)`;
+    // 서버가 금액을 정하고 주문번호를 발급 (주소의 금액은 화면 표시용일 뿐)
+    let order;
+    try {
+      order = await SupabaseClient.invokePayments({ action: 'prepare', plan: isProPlan ? 'pro' : 'standard', addSlots });
+    } catch (err) {
+      if (IS_DEV_HOST && !widgets) { simulateTestPayment(); return; }
+      alert(err.message || '주문을 만들지 못했습니다.');
+      btn.disabled = false;
+      btn.innerHTML = '&#128179; <span id="pay-btn-text">월 ' + totalFee.toLocaleString() + '원 결제하기</span>';
+      return;
+    }
+    const orderId   = order.orderId;
+    const orderName = order.orderName;
+    if (widgets && order.amount !== totalFee) await widgets.setAmount({ currency: 'KRW', value: order.amount });
 
     const base       = location.href.replace('payment.html', 'payment-result.html');
     const successUrl = `${base}?status=success&orderId=${orderId}&plan=${plan}&return=${returnTarget}&addSlots=${addSlots}&totalSlots=${totalSlots}&totalFee=${totalFee}`;

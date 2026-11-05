@@ -1,17 +1,10 @@
 # 로드플래너 아이폰 앱 (Xcode)
 
-맥 바탕화면의 `RoadPlanner` Xcode 프로젝트에 적용합니다.
+맥 바탕화면 `RoadPlanner` Xcode 프로젝트 (2026-11-05 적용·설치 완료)
+- `RoadPlannerApp.swift` (이 폴더와 같음): 앱 시작, 출발 알림 예약(Reminders), roadplanner://next(Router), 알림 누르면 길안내
+- `WebView.swift` (맥 프로젝트에 있음): 웹 화면 + `window.webkit.messageHandlers.roadplanner` 연결, 당겨서 새로고침, 오프라인 화면
+- Info.plist: URL Types `roadplanner` 추가됨, 위치·카메라·사진 권한 문구는 빌드 설정에 있음
+- 바꾸기 전 원본: 바탕화면 `RoadPlanner_backup_1105`
 
-## 1. 코드
-- `RoadPlannerWeb.swift` 로 기존 앱/웹뷰 코드를 교체 (`@main` 이 두 개면 기존 것을 지움)
-- 기능: 웹앱 화면, 출발 15분 전 알림 예약(앱이 꺼져 있어도), 알림 누르면 바로 길안내,
-  `roadplanner://next`, 티맵·카카오·전화 열기, 확인/입력 창, 확대 방지
-
-## 2. Info.plist (Xcode > 프로젝트 > Info 탭)
-- URL Types 추가: Identifier `com.roadplanner.manager`, URL Schemes `roadplanner`
-- `Privacy - Location When In Use Usage Description`:
-  `이동 중 도착 예상 시간을 계산하려고 현재 위치를 사용합니다.`
-- (선택) `LSApplicationQueriesSchemes`: `tmap`, `kakaomap`, `kakaonavi-sdk`
-
-## 3. 단축어 자동화 링크
-- 아이폰 앱으로 바로 열기: `roadplanner://next`
+도메인을 바꾸면 `RoadPlannerApp.swift` 의 `APP_URL` 한 줄만 바꾸고 Xcode ▶ 실행.
+무료 Apple ID 설치는 7일마다 다시 ▶ 실행 필요.

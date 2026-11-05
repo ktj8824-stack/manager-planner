@@ -394,6 +394,7 @@ const Home = {
       }
     } catch (e) { }
     html += this.renderAckCards();
+    html += this.renderPushCard();
 
     if (events.length === 0 && rawSchedules.length === 0) {
       html += `
@@ -926,6 +927,53 @@ const Home = {
 
   // 지금 할 일 카드의 [도착]: 단계 완료 + 본사에 도착 보고(로드톡 → 본사 푸시)
   // ── "확인했습니다" 카드 ──
+  // ── 알림 켜기 안내: 알림을 받는 매니저가 없으면 출발·변경 알림이 아무에게도 안 감 ──
+  renderPushCard() {
+    setTimeout(() => this.fillPushCard(), 0);
+    return '<div id="home-push-card"></div>';
+  },
+  async fillPushCard() {
+    const box = document.getElementById('home-push-card');
+    if (!box) return;
+    box.innerHTML = '';
+    try {
+      // 아이폰·안드로이드 앱은 앱이 직접 알림을 예약하므로 안내 불필요
+      if (window.webkit?.messageHandlers?.roadplanner || window.RoadPlannerAndroid) return;
+      if (!window.SupabaseClient?.currentUser || !window.Chat?.pushState) return;
+      try { if (Date.now() - Number(localStorage.getItem('rp_push_card_later') || 0) < 3 * 86400e3) return; } catch (e) { }
+      const st = await window.Chat.pushState();
+      const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+      const standalone = window.navigator.standalone === true || window.matchMedia?.('(display-mode: standalone)').matches;
+      let body = '', btn = '';
+      if (st === 'off') {
+        body = '출발 15분 전·본사 일정 변경·로드톡 메시지를 앱을 닫아도 알려 드려요.';
+        btn = '<button type="button" onclick="Home.enablePushFromCard(this)" style="flex:1; min-height:42px; border:0; border-radius:10px; background:#4f46e5; color:#fff; font-size:15px; font-weight:800;">알림 켜기</button>';
+      } else if (st === 'unsupported' && ios && !standalone) {
+        body = '아이폰은 사파리 아래쪽 <b>공유 버튼 → 홈 화면에 추가</b>로 설치한 뒤, 그 앱에서 알림을 켤 수 있어요.';
+      } else if (st === 'denied') {
+        body = '알림이 막혀 있어요. 휴대폰 <b>설정 → 알림</b>에서 이 앱(또는 브라우저)의 알림을 허용해 주세요.';
+      } else return;
+      box.innerHTML = `
+        <div style="background:#eef2ff; border:1.5px solid #c7d2fe; border-radius:14px; padding:12px 14px; margin:0 0 12px;">
+          <div style="font-size:15px; font-weight:800; color:#312e81;">🔔 알림을 켜 주세요</div>
+          <div style="font-size:13.5px; color:#3730a3; margin-top:4px; line-height:1.5; word-break:keep-all;">${body}</div>
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            ${btn}
+            <button type="button" onclick="Home.laterPushCard()" style="${btn ? 'width:88px;' : 'flex:1;'} min-height:42px; border:1px solid #c7d2fe; border-radius:10px; background:#fff; color:#4338ca; font-size:14px; font-weight:700;">나중에</button>
+          </div>
+        </div>`;
+    } catch (e) { box.innerHTML = ''; }
+  },
+  async enablePushFromCard(btn) {
+    if (btn) { btn.disabled = true; btn.textContent = '켜는 중…'; }
+    await window.Chat?.enablePush?.();
+    this.fillPushCard();
+  },
+  laterPushCard() {
+    try { localStorage.setItem('rp_push_card_later', String(Date.now())); } catch (e) { }
+    const box = document.getElementById('home-push-card'); if (box) box.innerHTML = '';
+  },
+
   renderAckCards() {
     try {
       const me = window.SupabaseClient?.currentUser?.id;

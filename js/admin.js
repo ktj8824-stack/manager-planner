@@ -1238,6 +1238,12 @@ window.Admin = {
       const adjustEl = document.getElementById('sub-slot-adjust-count');
       if (adjustEl) adjustEl.textContent = this.tempAdditionalSlots;
     }
+    // 서버의 최신 요금제로 다시 그림
+    window.hqStore.refreshBilling?.().then(r => {
+      if (!r || !modal?.classList.contains('active')) return;
+      this.tempAdditionalSlots = r.additionalSlots || 0;
+      this.renderSubscriptionModalContent();
+    });
   },
 
   closeSubscriptionModal() {
@@ -1297,10 +1303,7 @@ window.Admin = {
     const ceo     = encodeURIComponent(localStorage.getItem('bp_user_name') || '대표자');
     const email   = encodeURIComponent(localStorage.getItem('bp_user_email') || '');
 
-    // 임시로 슬롯 저장 (결제 완료 후 payment-result.html에서 최종 확정)
-    sub.additionalSlots = addSlots;
-    window.hqStore.saveSubscription(sub);
-
+    // 슬롯은 결제가 서버에서 승인된 뒤에만 바뀜 (여기서 미리 저장하지 않음)
     this.closeSubscriptionModal();
 
     // 결제 전용 페이지로 이동
