@@ -1078,3 +1078,7 @@ body {
 .header-title-group h2 {
   white-space: nowrap !important;
 }
+/* 아이폰에서 입력칸을 누르면 화면이 확대되는 것 방지 (16px 미만이면 확대됨) */
+@media (pointer: coarse) {
+  input:not([type=checkbox]):not([type=radio]):not([type=range]), select, textarea { font-size: 16px !important; }
+}

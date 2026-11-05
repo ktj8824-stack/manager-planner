@@ -483,6 +483,22 @@ const State = {
     };
   },
 
+  // 단계별 날짜 차이(-1 전날 / 0 당일 / +1 다음날). 새벽 일정의 전날 밤 픽업·샵 단계를 위해.
+  //  저장된 dayOffset 이 있으면 그대로, 없으면 메인 일정을 기준으로 시각이 거꾸로 가는 곳에서 하루를 넘긴 것으로 봄
+  stepDayOffsets(tl, startTime) {
+    const list = Array.isArray(tl) ? tl : [];
+    if (list.length && list.every(s => Number.isInteger(s && s.dayOffset))) return list.map(s => s.dayOffset);
+    const hm = (t) => { const m = /^(\d{1,2}):(\d{2})/.exec(String(t || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; };
+    const mins = list.map(s => hm(s && s.time));
+    let mi = list.findIndex(s => /^\[메인/.test(String(s && s.label || '')));
+    if (mi < 0) mi = list.findIndex(s => s && s.time === startTime);
+    if (mi < 0) mi = 0;
+    const off = list.map(() => 0);
+    for (let i = mi - 1; i >= 0; i--) off[i] = off[i + 1] - (mins[i] != null && mins[i + 1] != null && mins[i] > mins[i + 1] ? 1 : 0);
+    for (let i = mi + 1; i < list.length; i++) off[i] = off[i - 1] + (mins[i] != null && mins[i - 1] != null && mins[i] < mins[i - 1] ? 1 : 0);
+    return off;
+  },
+
   calculateDailyEvents(y, m, d) {
     const hqScheds = this.getHQSchedulesForDate(y, m, d);
     const hqIds = new Set((hqScheds || []).map(hs => hs.id));
@@ -581,7 +597,7 @@ const State = {
         // 스케줄 타임라인 유효성 검사 및 정제
         let activeTimeline = hs.timeline;
         const hasShopInTimeline = (activeTimeline || []).some(st => st.label && (st.label.includes('헤어') || st.label.includes('메이크업') || st.label.includes('스타일링') || (st.label.includes('샵') && !st.label.includes('현장'))));
-        const hasDuplicates = (activeTimeline || []).length > 6 || (new Set((activeTimeline || []).map(st => `${st.time}_${st.label}`)).size !== (activeTimeline || []).length);
+        const hasDuplicates = (activeTimeline || []).length > 7 || (new Set((activeTimeline || []).map(st => `${st.time}_${st.label}`)).size !== (activeTimeline || []).length);
 
         if (!activeTimeline || activeTimeline.length === 0 || (!isShopNeeded && hasShopInTimeline) || hasDuplicates) {
           if (typeof window.hqStore !== 'undefined' && typeof window.hqStore.generateAutoTimeline === 'function') {
@@ -593,6 +609,7 @@ const State = {
 
         // 스케줄에 저장된 세부 동선 타임라인이 있으면 그것을 직접 이벤트로 풀어서 전달
         if (activeTimeline && activeTimeline.length > 0) {
+          const dayOffs = State.stepDayOffsets(activeTimeline, hs.startTime);
           activeTimeline.forEach((step, stepIdx) => {
             // 샵 미경유 스케줄인 경우 샵/헤어/스타일링 관련 잘못 누적된 단계 최종 스킵
             if (!isShopNeeded && (step.label.includes('헤어') || step.label.includes('메이크업') || step.label.includes('스타일링') || (step.label.includes('샵') && !step.label.includes('현장')))) {
@@ -616,6 +633,7 @@ const State = {
               type: type,
               title: step.label,
               time: step.time,
+              dayOffset: dayOffs[stepIdx] || 0,
               durMin: 30,
               icon: icon,
               desc: step.desc || '',
@@ -767,12 +785,30 @@ const State = {
 
     events = events.concat(mappedCustom);
 
-    // Sort by time
-    events.sort((a, b) => {
-      const aTime = parseInt((a.time||'00:00').replace(':', ''), 10) || 0;
-      const bTime = parseInt((b.time||'00:00').replace(':', ''), 10) || 0;
-      return aTime - bTime;
-    });
+    // 내일 새벽 일정의 '전날 밤' 단계(픽업·샵 등)는 오늘 할 일에도 넣는다
+    try {
+      const nx = new Date(y, m, d + 1);
+      (this.getHQSchedulesForDate(nx.getFullYear(), nx.getMonth(), nx.getDate()) || []).forEach(hs => {
+        const tl = Array.isArray(hs.timeline) ? hs.timeline : [];
+        if (!tl.length) return;
+        const offs = State.stepDayOffsets(tl, hs.startTime);
+        tl.forEach((step, stepIdx) => {
+          if (offs[stepIdx] !== -1) return;
+          const lb = String(step.label || '');
+          events.push({
+            id: `hq_${hs.id}_step_${stepIdx}`, hqScheduleId: hs.id, timelineIdx: stepIdx, isHQ: true, isAuto: true,
+            type: /출발|픽업|이동/.test(lb) ? 'travel' : 'prep', title: lb, time: step.time, dayOffset: 0, forNextDay: true,
+            durMin: 30, icon: /출발|픽업/.test(lb) ? '🚗' : '💄', desc: step.desc || '', done: step.done || false, doneAt: step.doneAt || null,
+            moving: step.moving || false, artistName: hs.artistName, managerName: hs.managerName, vehicleName: hs.vehicleName,
+            location: hs.location, ...State._placeFields(hs), outfit: hs.outfit, status: hs.status,
+          });
+        });
+      });
+    } catch (e) { }
+
+    // 시간순 정렬 (전날·다음날 단계까지 고려)
+    const key = (e) => { const t = String(e.time || '00:00').split(':'); return (e.dayOffset || 0) * 1440 + (parseInt(t[0], 10) || 0) * 60 + (parseInt(t[1], 10) || 0); };
+    events.sort((a, b) => key(a) - key(b));
 
     return events;
   },

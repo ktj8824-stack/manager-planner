@@ -30,6 +30,19 @@ const stepName = (label: string) => String(label || "").replace(/^\[[^\]]+\]\s*/
 const placeName = (s: string) => String(s || "").replace(/\s*\([^()]*\)\s*$/, "").trim();
 const hm2min = (hm: string) => { const m = /^(\d{1,2}):(\d{2})/.exec(String(hm || "")); return m ? (+m[1]) * 60 + (+m[2]) : NaN; };
 const min2hm = (n: number) => { const v = ((Math.round(n) % 1440) + 1440) % 1440; return `${String(Math.floor(v / 60)).padStart(2, "0")}:${String(v % 60).padStart(2, "0")}`; };
+// 단계별 날짜 차이 (-1 전날 / 0 당일 / +1 다음날) — 앱(data.js stepDayOffsets)과 같은 규칙
+export function stepDayOffsets(tl: Row[], startTime?: string): number[] {
+  const list = Array.isArray(tl) ? tl : [];
+  if (list.length && list.every((x) => Number.isInteger(x?.dayOffset))) return list.map((x) => x.dayOffset);
+  const mins = list.map((x) => hm2min(x?.time));
+  let mi = list.findIndex((x) => /^\[메인/.test(String(x?.label || "")));
+  if (mi < 0) mi = list.findIndex((x) => x?.time === String(startTime || "").slice(0, 5));
+  if (mi < 0) mi = 0;
+  const off = list.map(() => 0);
+  for (let i = mi - 1; i >= 0; i--) off[i] = off[i + 1] - (mins[i] > mins[i + 1] ? 1 : 0);
+  for (let i = mi + 1; i < list.length; i++) off[i] = off[i - 1] + (mins[i] < mins[i - 1] ? 1 : 0);
+  return off;
+}
 const tag = (label: string) => (String(label || "").match(/^\[([^\]]+)\]/) || [, ""])[1];
 
 // "MBC 상암 신사옥 (서울 마포구 성암로 267)" → 이름/주소
@@ -71,7 +84,7 @@ export async function retimeSchedule(route: Route, s: Row, ymd: string) {
   const iMain = tl.findIndex((x) => tag(x.label) === "메인 일정");
   const iMove = tl.findIndex((x, i) => i < iMain && tag(x.label) === "현장 이동");
   if (iMain < 0 || iMove < 0) return null;
-  if (tl.slice(0, iMain + 1).some((x) => x.done || x.moving)) return null;     // 이미 시작한 일정은 건드리지 않음
+  if (tl.slice(0, iMain + 1).some((x) => (x.done || x.moving) && !/^\[기상/.test(String(x.label || "")))) return null;     // 이미 시작한 일정은 건드리지 않음
   const wait = Number((String(tl[iMain].desc || "").match(/(\d+)분 전\(/) || [])[1] ?? 10);
   const buf = Number((String(tl[iMove].desc || "").match(/버퍼 (\d+)분/) || [])[1] ?? 10);
   const shop = s.shop_info && s.shop_info.needed ? s.shop_info : null;
@@ -79,6 +92,7 @@ export async function retimeSchedule(route: Route, s: Row, ymd: string) {
   const depText = dep.address || dep.place || "";
   const shopText = shop ? (shop.address || shop.name || "") : "";
   const arrive = hm2min(String(s.start_time)) - wait;
+  if (!(arrive > 0)) return null;   // 자정을 넘는 동선은 재계산하지 않음 (전날 단계)
   const t2 = await predict(route, shop ? shopText : depText, String(s.location || ""), ymd, arrive);
   if (!t2) return null;
   const newTimes: Record<number, { time: string; travel: number; at: number }> = {};
@@ -105,6 +119,14 @@ export async function retimeSchedule(route: Route, s: Row, ymd: string) {
     if (v.travel) tl[i].desc = `이동 약 ${v.travel}분 + 버퍼 ${buf}분 배정 (예상 소요 약 ${v.travel + buf}분 · 오늘 ${min2hm(v.at)} 도착 기준 교통 예측)`;
   }
   if (maxDiff < 5) return { timeline: null, changes: [] };
+  // 기상·준비 단계도 첫 출발에 맞춰 같이 옮김
+  const iWake = tl.findIndex((x) => /^\[기상/.test(String(x.label || "")));
+  const firstRun = tl.find((x, i) => i !== iWake && x.time);
+  if (iWake >= 0 && firstRun) {
+    const prep = Number((String(tl[iWake].desc || "").match(/(\d+)분 전/) || [])[1] ?? 60);
+    const w = hm2min(firstRun.time) - prep;
+    if (w >= 0 && min2hm(w) !== tl[iWake].time) { changes.push(`기상·준비 ${tl[iWake].time}→${min2hm(w)}`); tl[iWake].time = min2hm(w); }
+  }
   return { timeline: tl, changes };
 }
 
@@ -183,12 +205,14 @@ export async function run(db: SupabaseClient, send: Sender, nowMs: number, route
 
   // 1) 출발 15분 전
   for (const s of list) {
-    if (s.date !== today.ymd || !s.manager_id) continue;
+    if (!s.manager_id) continue;
     const tl = Array.isArray(s.timeline_items) ? s.timeline_items : [];
+    const offs = stepDayOffsets(tl, s.start_time);   // 내일 새벽 일정의 전날 밤 픽업도 오늘 알림
     for (let i = 0; i < tl.length; i++) {
       const st = tl[i] || {};
-      if (st.done || st.moving || !st.time || !DRIVE.test(st.label || "") || /철수/.test(st.label || "")) continue;
-      const left = (toMs(s.date, st.time) - nowMs) / 60000;
+      if (st.done || st.moving || !st.time || !DRIVE.test(st.label || "") || /철수|^\[기상/.test(st.label || "")) continue;
+      const left = (toMs(s.date, st.time) + (offs[i] || 0) * 86400e3 - nowMs) / 60000;
+      if (left > 16 || left < -21) continue;
       // 4) 출발 지연: 출발 시간이 5~20분 지났는데 출발/완료 표시가 없음 → 매니저 + 본사
       if (left <= -5 && left > -20) {
         if (!(await claim(db, `late|${s.id}|${i}|${st.time}`))) continue;
@@ -233,7 +257,9 @@ export async function run(db: SupabaseClient, send: Sender, nowMs: number, route
       if (!(await claim(db, `eve|${mid}|${tomorrow.ymd}`))) continue;
       items.sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)));
       const first = items[0];
-      const tl0 = (Array.isArray(first.timeline_items) ? first.timeline_items : []).find((t: Row) => t && t.time) || null;
+      const tlF = Array.isArray(first.timeline_items) ? first.timeline_items : [];
+      const i0 = Math.max(tlF.findIndex((t: Row) => t && t.time && DRIVE.test(String(t.label || ""))), tlF.findIndex((t: Row) => t && t.time));
+      const tl0 = i0 >= 0 ? { time: (stepDayOffsets(tlF, first.start_time)[i0] === -1 ? "오늘 " : "") + tlF[i0].time } : null;
       const lines = items.slice(0, 4).map((s) => `${String(s.start_time).slice(0, 5)} ${s.is_secret ? "비공개 일정" : (s.artists?.name ? s.artists.name + " " : "") + s.title}${!s.is_secret && s.location ? " · " + placeName(s.location) : ""}`);
       if (items.length > 4) lines.push(`외 ${items.length - 4}건`);
       const r = await push(db, send, [mid], {

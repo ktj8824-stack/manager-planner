@@ -6,6 +6,12 @@ const App = {
   screens: ['home','register','timeline','login','onboarding','profile','upgrade'],
 
   async init() {
+    // 오프라인 기능(서비스워커)은 맨 먼저 등록 (로그인 확인을 기다리다 load 이벤트를 놓치지 않게)
+    if ('serviceWorker' in navigator) {
+      const reg = () => navigator.serviceWorker.register('./sw.js').catch(err => console.error('Service Worker Registration Failed:', err));
+      if (document.readyState === 'complete') reg(); else window.addEventListener('load', reg, { once: true });
+    }
+    this._setupBack();
     if (!State.loadSchedules()) {
       State.initDemo();
     }
@@ -79,14 +85,37 @@ const App = {
       U.toast('로그인 권한을 확인할 수 없습니다. 다시 로그인해주세요.');
     }
 
-    // Register Service Worker for PWA
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Service Worker Registered!', reg.scope))
-          .catch(err => console.error('Service Worker Registration Failed:', err));
-      });
+    // 결제 후 돌아오는 주소(#profile)면 로그인 확인 뒤 내 정보로
+    if (location.hash === '#profile' && localStorage.getItem('bp_logged_in')) {
+      try { history.replaceState(history.state, '', location.pathname + location.search); } catch (e) { }
+      this.navigate('profile');
     }
+  },
+
+  // 폰 '뒤로' 버튼: 창 닫기 → 홈으로 → (홈에서) 앱 종료
+  _setupBack() {
+    if (this._backReady) return;
+    this._backReady = true;
+    try {
+      history.replaceState({ rp: 'base' }, '');
+      history.pushState({ rp: 'app' }, '');
+    } catch (e) { return; }
+    window.addEventListener('popstate', () => {
+      const modal = document.getElementById('app-modal') || document.getElementById('app-bottom-sheet');
+      const overlay = document.getElementById('an-bg');
+      if (modal || overlay) {
+        if (modal) { this.closeModal(); this.closeBottomSheet(); }
+        if (overlay && window.AutoNav?.cancel) window.AutoNav.cancel();
+        history.pushState({ rp: 'app' }, '');
+        return;
+      }
+      if (State.screen && !['home', 'login', 'onboarding'].includes(State.screen)) {
+        this.navigate('home');
+        history.pushState({ rp: 'app' }, '');
+        return;
+      }
+      // 홈에서는 한 번 더 뒤로 → 기록이 없으니 안드로이드 앱이 종료됨
+    });
   },
 
   initRealtimeSync() {

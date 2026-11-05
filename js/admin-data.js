@@ -23,6 +23,25 @@ const HQ_STORAGE_KEYS = {
   SUBSCRIPTION: 'HQ_SUBSCRIPTION_V6'
 };
 
+// 동선 맨 앞에 '기상·준비' 단계 (첫 출발 시각 - 준비 시간, 기본 60분 · 0이면 넣지 않음)
+function addWakeStep(timeline) {
+  try {
+    if (!Array.isArray(timeline) || !timeline.length || timeline.some(s => /^\[기상/.test(s.label || ''))) return timeline;
+    const prep = Number(localStorage.getItem('bp_buffer_prep') ?? 60);
+    if (!(prep > 0)) return timeline;
+    const first = timeline[0];
+    const m = /^(\d{1,2}):(\d{2})/.exec(first.time || '');
+    if (!m) return timeline;
+    const min = (+m[1]) * 60 + (+m[2]) + (Number(first.dayOffset) || 0) * 1440 - prep;
+    const v = ((min % 1440) + 1440) % 1440;
+    timeline.unshift({
+      time: `${String(Math.floor(v / 60)).padStart(2, '0')}:${String(v % 60).padStart(2, '0')}`, dayOffset: Math.floor(min / 1440),
+      label: '[기상·준비] 기상 및 외출 준비', desc: `첫 출발(${first.time}) ${prep}분 전 · 준비 시간은 내 정보에서 바꿀 수 있어요`, done: false,
+    });
+  } catch (e) { }
+  return timeline;
+}
+
 // 기본 회사 구독 정보 (월 10만 / 기본 2인 포함 + 1인당 월 2만 추가)
 const DEFAULT_SUBSCRIPTION = {
   get companyName() { return localStorage.getItem('bp_company_name') || 'My Entertainment'; },
@@ -531,7 +550,7 @@ function getInitialMockSchedules() {
     const timeline = [];
     const mainStartTime = schedule.startTime || '10:00';
     const [startH, startM] = mainStartTime.split(':').map(Number);
-    const startMinutes = (startH || 10) * 60 + (startM || 0);
+    const startMinutes = (Number.isFinite(startH) ? startH : 10) * 60 + (Number.isFinite(startM) ? startM : 0);   // 0시(자정)도 그대로
 
     const waitBuffer = Number(localStorage.getItem('bp_buffer_wait') !== null ? localStorage.getItem('bp_buffer_wait') : 10);
     const travelBuffer = Number(localStorage.getItem('bp_buffer_travel') !== null ? localStorage.getItem('bp_buffer_travel') : 10);
@@ -557,19 +576,19 @@ function getInitialMockSchedules() {
       const departMinutes = shopArriveMinutes - totalDepartToShop;
 
       timeline.push({
-        time: fmt(departMinutes),
+        time: fmt(departMinutes), dayOffset: Math.floor((departMinutes) / 1440),
         label: `[픽업 출발] ${schedule.departure?.place || '숙소'} 픽업 및 출발`,
         desc: `이동 약 ${travelDepartToShop}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToShop + travelBuffer}분)`,
         done: false
       });
       timeline.push({
-        time: fmt(shopArriveMinutes),
+        time: fmt(shopArriveMinutes), dayOffset: Math.floor((shopArriveMinutes) / 1440),
         label: `[헤어·메이크업] ${schedule.shop.name || '헤메샵'} 도착 및 스타일링`,
         desc: `소요시간 약 ${shopDuration}분 (${schedule.shop.address || ''})`,
         done: false
       });
       timeline.push({
-        time: fmt(shopDepartMinutes),
+        time: fmt(shopDepartMinutes), dayOffset: Math.floor((shopDepartMinutes) / 1440),
         label: `[현장 이동] 현장(${schedule.location || '행사장'})으로 출발`,
         desc: `이동 약 ${travelShopToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelShopToMain + travelBuffer}분)`,
         done: false
@@ -580,7 +599,7 @@ function getInitialMockSchedules() {
       const departMinutes = targetArriveMinutes - totalDepartToMain;
 
       timeline.push({
-        time: fmt(departMinutes),
+        time: fmt(departMinutes), dayOffset: Math.floor((departMinutes) / 1440),
         label: `[현장 이동] ${schedule.departure?.place || '출발지'} 출발 및 이동`,
         desc: `이동 약 ${travelDepartToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToMain + travelBuffer}분)`,
         done: false
@@ -588,20 +607,20 @@ function getInitialMockSchedules() {
     }
 
     timeline.push({
-      time: schedule.startTime,
+      time: schedule.startTime, dayOffset: 0,
       label: `[메인 일정] ${schedule.title}`,
       desc: `장소: ${schedule.location || '현장'} / ${waitBuffer}분 전(${fmt(targetArriveMinutes)}) 현장 도착 완료 후 정시 시작`,
       done: false
     });
     if (schedule.endTime) {
       timeline.push({
-        time: schedule.endTime,
+        time: schedule.endTime, dayOffset: (String(schedule.endTime) < String(schedule.startTime) ? 1 : 0),
         label: `[현장 철수] 일정 종료 및 복귀 이동`,
         desc: '협찬 의상 수거, 준비물 점검 후 숙소/사옥 복귀',
         done: false
       });
     }
-    return timeline;
+    return addWakeStep(timeline);
   };
 
   return schedules.map(sch => {
@@ -1679,13 +1698,23 @@ class HQDataStore {
     return result;
   }
 
+  // 동선 계산 (교통 예측). 경로 서버가 느리면 10초 뒤 추정값으로 — 등록이 멈추지 않게
+  async buildTimelineCapped(schedule, capMs = 10000) {
+    if (typeof this.generateSmartTimelineAsync !== 'function') return this.generateAutoTimeline(schedule);
+    let timer;
+    const slow = new Promise(res => { timer = setTimeout(() => res(null), capMs); });
+    try {
+      const tl = await Promise.race([this.generateSmartTimelineAsync(schedule).catch(() => null), slow]);
+      return (Array.isArray(tl) && tl.length) ? tl : this.generateAutoTimeline(schedule);
+    } finally { clearTimeout(timer); }
+  }
+
   async saveSchedule(schedule) {
     if (!schedule.id) schedule.id = 'sch_' + this._scheduleUuid();
     const key = this.getUserStorageKey(HQ_STORAGE_KEYS.SCHEDULES);
     const input = JSON.parse(JSON.stringify(schedule));
     return this._withScheduleMutation(key, input.id, async () => {
-      input.timeline = typeof this.generateSmartTimelineAsync === 'function'
-        ? await this.generateSmartTimelineAsync(input) : this.generateAutoTimeline(input);
+      input.timeline = await this.buildTimelineCapped(input);
       const schedules = this._readSchedules(key);
       const idx = schedules.findIndex(s => s.id === input.id);
       const saved = { ...(idx >= 0 ? schedules[idx] : {}), ...input, id: input.id };
@@ -1922,8 +1951,9 @@ class HQDataStore {
       let targetMin = 0;
       if (targetTimeStr) {
         const tParts = targetTimeStr.split(':');
-        targetHour = parseInt(tParts[0], 10) || 10;
-        targetMin = parseInt(tParts[1], 10) || 0;
+        const th = parseInt(tParts[0], 10), tm = parseInt(tParts[1], 10);
+        targetHour = Number.isFinite(th) ? th : 10;
+        targetMin = Number.isFinite(tm) ? tm : 0;
       }
       const timeDecimal = targetHour + (targetMin / 60);
 
@@ -2040,7 +2070,7 @@ class HQDataStore {
     const mainStartTime = schedule.startTime || '10:00';
     const scheduleDate = schedule.date || (new Date().toISOString().split('T')[0]);
     const [startH, startM] = mainStartTime.split(':').map(Number);
-    const startMinutes = (startH || 10) * 60 + (startM || 0);
+    const startMinutes = (Number.isFinite(startH) ? startH : 10) * 60 + (Number.isFinite(startM) ? startM : 0);   // 0시(자정)도 그대로
 
     const waitBuffer = Number(localStorage.getItem('bp_buffer_wait') !== null ? localStorage.getItem('bp_buffer_wait') : 10);
     const travelBuffer = Number(localStorage.getItem('bp_buffer_travel') !== null ? localStorage.getItem('bp_buffer_travel') : 10);
@@ -2052,6 +2082,13 @@ class HQDataStore {
       return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
     };
 
+    // 자정 전으로 넘어가는 시각(예: 00:30 일정 → 23:20 출발)은 교통 예측 날짜도 전날로
+    const dayOf = (min) => {
+      const off = Math.floor(min / 1440);
+      if (!off) return scheduleDate;
+      const d = new Date(scheduleDate + 'T12:00:00'); d.setDate(d.getDate() + off);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
     const targetArriveMinutes = startMinutes - waitBuffer;
     const departurePlace = (typeof schedule.departure === 'object' ? schedule.departure?.place : schedule.departure) || '숙소';
     const departureAddress = (typeof schedule.departure === 'object' ? schedule.departure?.address : null) || departurePlace;
@@ -2064,7 +2101,7 @@ class HQDataStore {
       const shopDuration = Number(schedule.shop.durationMin) || defaultShopMin;
 
       // 1. [헤메샵 ➡️ 메인 현장] 해당 날짜/시간대 이동 소요시간 정밀 예측
-      const travelShopToMainInfo = await this.getTravelDuration(shopAddress, mainLocation, 25, scheduleDate, fmt(targetArriveMinutes));
+      const travelShopToMainInfo = await this.getTravelDuration(shopAddress, mainLocation, 25, dayOf(targetArriveMinutes), fmt(targetArriveMinutes));
       const travelShopToMain = travelShopToMainInfo.minutes;
       const totalShopToMain = travelShopToMain + travelBuffer;
 
@@ -2072,42 +2109,42 @@ class HQDataStore {
       const shopArriveMinutes = shopDepartMinutes - shopDuration;
 
       // 2. [숙소/출발지 ➡️ 헤메샵] 해당 날짜/아침 시간대 이동 소요시간 정밀 예측
-      const travelDepartToShopInfo = await this.getTravelDuration(departureAddress, shopAddress, 20, scheduleDate, fmt(shopArriveMinutes));
+      const travelDepartToShopInfo = await this.getTravelDuration(departureAddress, shopAddress, 20, dayOf(shopArriveMinutes), fmt(shopArriveMinutes));
       const travelDepartToShop = travelDepartToShopInfo.minutes;
       const totalDepartToShop = travelDepartToShop + travelBuffer;
 
       const departMinutes = shopArriveMinutes - totalDepartToShop;
 
       timeline.push({
-        time: fmt(departMinutes),
+        time: fmt(departMinutes), dayOffset: Math.floor((departMinutes) / 1440),
         label: `[픽업 출발] ${departurePlace} 픽업 및 출발`,
         desc: `이동 약 ${travelDepartToShop}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToShop + travelBuffer}분 · ${travelDepartToShopInfo.note})`,
         done: false
       });
 
       timeline.push({
-        time: fmt(shopArriveMinutes),
+        time: fmt(shopArriveMinutes), dayOffset: Math.floor((shopArriveMinutes) / 1440),
         label: `[헤어·메이크업] ${shopName} 도착 및 스타일링`,
         desc: `소요시간 약 ${shopDuration}분 (${schedule.shop.address || ''})`,
         done: false
       });
 
       timeline.push({
-        time: fmt(shopDepartMinutes),
+        time: fmt(shopDepartMinutes), dayOffset: Math.floor((shopDepartMinutes) / 1440),
         label: `[현장 이동] 현장(${schedule.location || '행사장'})으로 출발`,
         desc: `이동 약 ${travelShopToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelShopToMain + travelBuffer}분 · ${travelShopToMainInfo.note})`,
         done: false
       });
     } else {
       // 샵 미경유: [숙소/출발지 ➡️ 메인 현장] 스케줄 날짜/시간대별 정밀 예측
-      const travelDepartToMainInfo = await this.getTravelDuration(departureAddress, mainLocation, 40, scheduleDate, fmt(targetArriveMinutes));
+      const travelDepartToMainInfo = await this.getTravelDuration(departureAddress, mainLocation, 40, dayOf(targetArriveMinutes), fmt(targetArriveMinutes));
       const travelDepartToMain = travelDepartToMainInfo.minutes;
       const totalDepartToMain = travelDepartToMain + travelBuffer;
 
       const departMinutes = targetArriveMinutes - totalDepartToMain;
 
       timeline.push({
-        time: fmt(departMinutes),
+        time: fmt(departMinutes), dayOffset: Math.floor((departMinutes) / 1440),
         label: `[현장 이동] ${departurePlace} 출발 및 이동`,
         desc: `이동 약 ${travelDepartToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToMain + travelBuffer}분 · ${travelDepartToMainInfo.note})`,
         done: false
@@ -2115,7 +2152,7 @@ class HQDataStore {
     }
 
     timeline.push({
-      time: schedule.startTime,
+      time: schedule.startTime, dayOffset: 0,
       label: `[메인 일정] ${schedule.title}`,
       desc: `장소: ${schedule.location || '현장'} ${schedule.locationAddress ? `(${schedule.locationAddress})` : ''} / ${waitBuffer}분 전(${fmt(targetArriveMinutes)}) 현장 도착 완료 후 정시 시작`,
       done: false
@@ -2123,14 +2160,14 @@ class HQDataStore {
 
     if (schedule.endTime) {
       timeline.push({
-        time: schedule.endTime,
+        time: schedule.endTime, dayOffset: (String(schedule.endTime) < String(schedule.startTime) ? 1 : 0),
         label: `[현장 철수] 일정 종료 및 복귀 이동`,
         desc: '협찬 의상 수거, 준비물 점검 후 숙소/사옥 복귀',
         done: false
       });
     }
 
-    return timeline;
+    return addWakeStep(timeline);
   }
 
   // 매니저용 스마트 동선 타임라인 역산 생성기 (동기 기본형)
@@ -2138,7 +2175,7 @@ class HQDataStore {
     const timeline = [];
     const mainStartTime = schedule.startTime || '10:00';
     const [startH, startM] = mainStartTime.split(':').map(Number);
-    const startMinutes = (startH || 10) * 60 + (startM || 0);
+    const startMinutes = (Number.isFinite(startH) ? startH : 10) * 60 + (Number.isFinite(startM) ? startM : 0);   // 0시(자정)도 그대로
 
     const waitBuffer = Number(localStorage.getItem('bp_buffer_wait') !== null ? localStorage.getItem('bp_buffer_wait') : 10);
     const travelBuffer = Number(localStorage.getItem('bp_buffer_travel') !== null ? localStorage.getItem('bp_buffer_travel') : 10);
@@ -2164,19 +2201,19 @@ class HQDataStore {
       const departMinutes = shopArriveMinutes - totalDepartToShop;
 
       timeline.push({
-        time: fmt(departMinutes),
+        time: fmt(departMinutes), dayOffset: Math.floor((departMinutes) / 1440),
         label: `[픽업 출발] ${schedule.departure?.place || '숙소'} 픽업 및 출발`,
         desc: `이동 약 ${travelDepartToShop}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToShop + travelBuffer}분)`,
         done: false
       });
       timeline.push({
-        time: fmt(shopArriveMinutes),
+        time: fmt(shopArriveMinutes), dayOffset: Math.floor((shopArriveMinutes) / 1440),
         label: `[헤어·메이크업] ${schedule.shop.name || '헤메샵'} 도착 및 스타일링`,
         desc: `소요시간 약 ${shopDuration}분 (${schedule.shop.address || ''})`,
         done: false
       });
       timeline.push({
-        time: fmt(shopDepartMinutes),
+        time: fmt(shopDepartMinutes), dayOffset: Math.floor((shopDepartMinutes) / 1440),
         label: `[현장 이동] 현장(${schedule.location || '행사장'})으로 출발`,
         desc: `이동 약 ${travelShopToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelShopToMain + travelBuffer}분)`,
         done: false
@@ -2187,7 +2224,7 @@ class HQDataStore {
       const departMinutes = targetArriveMinutes - totalDepartToMain;
 
       timeline.push({
-        time: fmt(departMinutes),
+        time: fmt(departMinutes), dayOffset: Math.floor((departMinutes) / 1440),
         label: `[현장 이동] ${schedule.departure?.place || '출발지'} 출발 및 이동`,
         desc: `이동 약 ${travelDepartToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToMain + travelBuffer}분)`,
         done: false
@@ -2195,7 +2232,7 @@ class HQDataStore {
     }
 
     timeline.push({
-      time: schedule.startTime,
+      time: schedule.startTime, dayOffset: 0,
       label: `[메인 일정] ${schedule.title}`,
       desc: `장소: ${schedule.location || '현장'} / ${waitBuffer}분 전(${fmt(targetArriveMinutes)}) 현장 도착 완료 후 정시 시작`,
       done: false
@@ -2203,14 +2240,14 @@ class HQDataStore {
 
     if (schedule.endTime) {
       timeline.push({
-        time: schedule.endTime,
+        time: schedule.endTime, dayOffset: (String(schedule.endTime) < String(schedule.startTime) ? 1 : 0),
         label: `[현장 철수] 일정 종료 및 복귀 이동`,
         desc: '협찬 의상 수거, 준비물 점검 후 숙소/사옥 복귀',
         done: false
       });
     }
 
-    return timeline;
+    return addWakeStep(timeline);
   }
 
   notifyChange(type, payload = null) {
@@ -2241,7 +2278,7 @@ window.hqStore = new HQDataStore();
       b = document.createElement('button');
       b.id = 'sync-badge';
       b.type = 'button';
-      b.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));z-index:9990;display:none;align-items:center;gap:6px;max-width:calc(100vw - 32px);padding:9px 14px;border-radius:999px;border:0;font:700 13px/1.3 -apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo",sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.18);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+      b.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);top:calc(70px + env(safe-area-inset-top));z-index:9990;display:none;align-items:center;gap:6px;max-width:calc(100vw - 32px);padding:9px 14px;border-radius:999px;border:0;font:700 13px/1.3 -apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo",sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.18);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
       b.onclick = async () => {
         b.textContent = '서버와 맞추는 중…';
         lastFail = null;
@@ -2261,6 +2298,8 @@ window.hqStore = new HQDataStore();
     if (lastFail && !st.pending) { text = '⚠️ 서버가 일부 변경을 거절했어요 · 눌러서 다시 맞추기'; bg = '#b91c1c'; }
     else if (st.pending && offline) { text = '📴 오프라인 · 보낼 변경 ' + st.pending + '건 (연결되면 자동 전송)'; bg = '#334155'; }
     else if (st.pending) { text = '⏳ 서버 저장 대기 ' + st.pending + '건 · 눌러서 다시 보내기'; bg = '#b45309'; }
+    // 데모(서버 로그인 없음)에서는 보낼 서버가 없으니 띄우지 않음
+    if (!window.SupabaseClient?.currentUser) text = '';
     if (!text) { b.style.display = 'none'; return; }
     b.textContent = text; b.style.background = bg; b.style.color = fg; b.style.display = 'flex';
   }

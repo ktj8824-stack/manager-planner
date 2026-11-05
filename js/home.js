@@ -113,7 +113,7 @@ const Home = {
           
           <!-- Header -->
           <div style="padding: 16px 8px 12px; flex-shrink:0; border-bottom:1px solid rgba(0,0,0,0.06); text-align:center;">
-            <div id="mini-cal-year" style="font-size:12.5px; font-weight:700; color:#94a3b8; margin-bottom:2px;">${this.calYear}년</div>
+            <div id="mini-cal-year" style="font-size:12.5px; font-weight:700; color:#64748b; margin-bottom:2px;">${this.calYear}년</div>
             <div id="mini-cal-title" style="font-size:20px; font-weight:700; color:#0f172a; line-height:1.2; margin-bottom:8px;">${this.calMonth+1}월</div>
             <div style="display:flex; justify-content:center; gap:8px;">
               <button onclick="Home.prevMonth()" style="background:transparent; border:none; padding:4px 8px; color:#64748b; font-size:14px; font-weight:700; cursor:pointer;">&lt;</button>
@@ -513,7 +513,7 @@ const Home = {
                 </div>
               </div>
 
-              <div style="font-size:12px; font-weight:700; color:${isExpanded ? (isSecret ? '#9333ea' : '#4f46e5') : '#94a3b8'}; text-align:right; line-height:1; white-space:nowrap; flex-shrink:0; padding-top:2px;">
+              <div style="font-size:12px; font-weight:700; color:${isExpanded ? (isSecret ? '#9333ea' : '#4f46e5') : '#64748b'}; text-align:right; line-height:1; white-space:nowrap; flex-shrink:0; padding-top:2px;">
                 ${isExpanded ? '상세접기 ▲' : '상세보기 ▼'}
               </div>
             </div>
@@ -551,6 +551,10 @@ const Home = {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                   메이크업·스타일리스트에게 일정 공유
                 </button>` : ''}
+                ${['ceo', 'hq_admin'].includes(currentRole) ? `<div style="display:flex; gap:8px; margin-top:8px;">
+                  <button type="button" onclick="event.stopPropagation(); Home.openScheduleRegisterModal(${escJs(activeSched.id)})" style="flex:1; height:40px; border-radius:10px; border:1px solid #c7d2fe; background:#eef2ff; color:#4338ca; font-size:14px; font-weight:700;">✏️ 수정</button>
+                  <button type="button" onclick="event.stopPropagation(); Home.deleteScheduleFromApp(${escJs(activeSched.id)})" style="flex:1; height:40px; border-radius:10px; border:1px solid #fecaca; background:#fef2f2; color:#dc2626; font-size:14px; font-weight:700;">🗑️ 삭제</button>
+                </div>` : `<div style="margin-top:8px; font-size:12.5px; color:#64748b; text-align:center;">일정 수정·삭제는 본사에 요청해 주세요 (로드톡)</div>`}
               </div>
             ` : ''}
 
@@ -593,7 +597,7 @@ const Home = {
         if (!isCovered) {
           html += `
             <div style="margin-bottom:8px; position:relative;">
-              <div style="font-size:12px; font-weight:700; color:#94a3b8; margin-bottom:4px;">
+              <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:4px;">
                 ${esc(hourStr)}
               </div>
               <div style="border-bottom:1px solid #f1f5f9; margin-bottom:6px;"></div>
@@ -644,7 +648,7 @@ const Home = {
 
     // ── 지금 할 일 카드: 이동중인 단계가 있으면 그것, 없으면 아직 안 끝난 첫 단계를 크게 보여 준다 ──
     try {
-      const pending = uniqueEvents.filter(e => !e.done);
+      const pending = uniqueEvents.filter(e => !e.done && e.stepCategory !== 'rest');
       const nowEv = pending.find(e => e.moving === true) || pending[0];
       if (!nowEv) html += addRow;
       if (uniqueEvents.length && !nowEv) {
@@ -659,7 +663,8 @@ const Home = {
         if (tt.includes('숙소 픽업') || tt.includes('픽업 및 출발')) dest = nowEv.shopAddress || nowEv.shopName || nowEv.locationAddress || nowEv.location || '';
         else if (tt.includes('복귀') || tt.includes('철수')) dest = nowEv.departureAddress || nowEv.departurePlace || '';
         else dest = nowEv.locationAddress || nowEv.location || '';
-        const isDrive = tt.includes('출발') || tt.includes('이동') || tt.includes('픽업') || tt.includes('철수') || nowEv.moving === true;
+        if (/^\[(대기|식사|기상)/.test(tt) || nowEv.stepCategory === 'rest') dest = '';   // 기상·대기 단계는 길안내 없음
+        const isDrive = nowEv.stepCategory !== 'rest' && !/^\[(대기|식사|기상)/.test(tt) && (tt.includes('출발') || tt.includes('이동') || tt.includes('픽업') || tt.includes('철수') || nowEv.moving === true);
         const canAct = nowEv.isHQ && nowEv.hqScheduleId;
         let contact = null;
         try {
@@ -674,7 +679,7 @@ const Home = {
             <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px;">
               <span style="font-size:12px; font-weight:700; color:#4f46e5; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">지금 할 일 · ${esc(tag)}</span>
               <span style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-                <span style="font-size:12.5px; font-weight:700; background:#eef2ff; color:#4338ca; padding:4px 9px; border-radius:8px;">${esc(nowEv.time || '')}</span>
+                <span style="font-size:12.5px; font-weight:700; background:#eef2ff; color:#4338ca; padding:4px 9px; border-radius:8px;">${nowEv.forNextDay ? '내일 일정 · ' : nowEv.dayOffset === -1 ? '전날 ' : nowEv.dayOffset === 1 ? '다음날 ' : ''}${esc(nowEv.time || '')}</span>
                 <button type="button" onclick="Home.openScheduleRegisterModal()" style="font-size:12.5px; font-weight:800; background:#4f46e5; color:#fff; border:0; padding:4px 9px; border-radius:8px; cursor:pointer; white-space:nowrap;">+ 스케줄 추가</button>
               </span>
             </div>
@@ -712,7 +717,7 @@ const Home = {
 
       // 운전/이동 단계 여부 판별 (체류/스타일링/메인 행사 단계에서는 네비 버튼 숨김)
       const titleText = (ev.title || '');
-      const isStayStep = titleText.includes('도착 및 스타일링') || titleText.includes('스타일링') || titleText.includes('[메인 일정]') || titleText.includes('녹음') || titleText.includes('레슨');
+      const isStayStep = ev.stepCategory === 'rest' || /^\[(대기|식사|기상)/.test(titleText) || titleText.includes('도착 및 스타일링') || titleText.includes('스타일링') || titleText.includes('[메인 일정]') || titleText.includes('녹음') || titleText.includes('레슨');
       const isDriveStep = !isStayStep && (titleText.includes('출발') || titleText.includes('이동') || titleText.includes('픽업') || titleText.includes('철수') || ev.moving === true);
 
       // 목적지 추정 (길안내용)
@@ -802,6 +807,7 @@ const Home = {
             <div style="margin-top:6px; font-size:14px; font-weight:700; color:${isDone ? '#10b981' : isMoving ? '#d97706' : '#0f172a'}; text-align:center; white-space:nowrap; background:#ffffff; padding:2px 4px; border-radius:6px; border:1.5px solid ${isDone ? '#10b981' : isMoving ? '#f59e0b' : '#cbd5e1'}; z-index:2; letter-spacing:-0.3px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
               ${esc(ev.time)}
             </div>
+            ${ev.forNextDay ? '<div style="margin-top:3px; font-size:10.5px; font-weight:800; color:#7c3aed; white-space:nowrap;">내일 일정</div>' : ev.dayOffset === -1 ? '<div style="margin-top:3px; font-size:10.5px; font-weight:800; color:#7c3aed; white-space:nowrap;">전날</div>' : ev.dayOffset === 1 ? '<div style="margin-top:3px; font-size:10.5px; font-weight:800; color:#7c3aed; white-space:nowrap;">다음날</div>' : ''}
           </div>
           
           <!-- Route Card -->
@@ -1211,248 +1217,210 @@ const Home = {
   },
 
   // 🌟 웹과 100% 동일한 '스케줄 등록' 모달 앱 내 팝업 렌더링
-  openScheduleRegisterModal() {
-    const y = this.selectedDate.getFullYear();
-    const m = String(this.selectedDate.getMonth() + 1).padStart(2, '0');
-    const d = String(this.selectedDate.getDate()).padStart(2, '0');
-    const defaultDate = `${y}-${m}-${d}`;
+  // ── 스케줄 등록·수정 창 (editId 가 있으면 수정) ──
+  openScheduleRegisterModal(editId = null) {
+    const ymd = (dt) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+    const edit = editId && window.hqStore ? (window.hqStore.getSchedules() || []).find(s => s.id === editId) : null;
+    const role = localStorage.getItem('bp_user_role') || 'manager';
+    const isHQRole = role === 'ceo' || role === 'hq_admin';
+    const me = window.SupabaseClient?.currentUser?.id || '';
 
     const artists = (window.hqStore ? window.hqStore.getArtists() : []) || [];
     const vehicles = (window.hqStore ? window.hqStore.getVehicles() : []) || [];
     const managers = (window.hqStore ? window.hqStore.getManagers() : []) || [];
+    const meMgr = managers.find(m => m.id === me);
+    // 현장 매니저는 자기 담당 아티스트만 고를 수 있음 (담당이 없으면 전체)
+    const myArtists = !isHQRole && meMgr && Array.isArray(meMgr.assignedArtists) && meMgr.assignedArtists.length
+      ? artists.filter(a => meMgr.assignedArtists.includes(a.id)) : artists;
 
-    const artistOptions = artists.map(a => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
-    const vehicleOptions = vehicles.map(v => `<option value="${esc(v.id)}">${esc(v.name)} (${esc(v.number || '')})</option>`).join('');
-    const managerOptions = managers.map(m => `<option value="${esc(m.id)}">${esc(m.name)} (${esc(m.title || '매니저')})</option>`).join('');
-
+    let dep = '';
+    try { dep = localStorage.getItem('rp_default_departure') || ''; } catch (e) { }
+    const v = {
+      title: edit?.title || '', artistId: edit?.artistId || (myArtists[0]?.id || 'ALL'), category: edit?.category || 'music_show',
+      date: edit?.date || ymd(this.selectedDate), start: edit?.startTime || '10:00', end: edit?.endTime || '12:00',
+      loc: edit?.location || '', addr: edit?.locationAddress && edit.locationAddress !== edit.location ? edit.locationAddress : '',
+      shopNeeded: !!edit?.shop?.needed, shopName: edit?.shop?.needed ? (edit.shop.name || '') : '', shopAddr: edit?.shop?.needed ? (edit.shop.address || '') : '',
+      dep: edit ? ((typeof edit.departure === 'object' ? (edit.departure?.address || edit.departure?.place) : edit.departure) || '') : dep,
+      veh: edit?.vehicleId || '', mgr: edit?.managerId || (meMgr ? me : (managers[0]?.id || '')), secret: !!edit?.isSecret,
+    };
+    const opt = (val, label, sel) => `<option value="${esc(val)}"${sel ? ' selected' : ''}>${esc(label)}</option>`;
+    const artistOptions = (isHQRole || myArtists === artists ? opt('ALL', '전체 아티스트 (전원)', v.artistId === 'ALL') : '') + myArtists.map(a => opt(a.id, a.name, a.id === v.artistId)).join('');
+    const vehicleOptions = opt('', '선택 안 함', !v.veh) + vehicles.map(x => opt(x.id, `${x.name}${x.number ? ' (' + x.number + ')' : ''}`, x.id === v.veh)).join('');
+    const managerOptions = managers.map(m => opt(m.id, `${m.name}${m.id === me ? ' (나)' : ''}`, m.id === v.mgr)).join('');
+    const cats = [['music_show', '음악방송 / 생방송'], ['broadcast', '예능 / 라디오 / 인터뷰'], ['shooting', '화보 / 촬영 / 광고'], ['event', '행사 / 콘서트 / 페스티벌'], ['fansign', '팬미팅 / 팬사인회'], ['recording', '녹음 / 안무레슨 / 연습'], ['overseas', '해외 투어 / 출국'], ['meeting', '미팅 / 기획회의 / 기타']];
+    const I = 'width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:16px; background:#fff; box-sizing:border-box;';
+    const L = 'font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;';
+    const BOX = 'background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;';
     const modalHtml = `
       <div id="app-schedule-form-container" style="padding:4px 0 20px; max-height:75vh; overflow-y:auto; -webkit-overflow-scrolling:touch;">
-        <form id="app-schedule-form" onsubmit="event.preventDefault(); Home.submitScheduleFromModal();" style="display:flex; flex-direction:column; gap:14px;">
-          
-          <!-- 1. 스케줄 기본 정보 -->
-          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
-            <div style="font-size:14px; font-weight:700; color:#4f46e5; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              기본 스케줄 정보
-            </div>
-
-            <div style="margin-bottom:12px;">
-              <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">스케줄명 (일정 / 방송 / 행사명) <span style="color:#ef4444;">*</span></label>
-              <input type="text" id="m-sch-title" required placeholder="예: 뮤직뱅크 사전녹화, 브랜드 팝업 행사" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;" />
-            </div>
-
+        <form id="app-schedule-form" onsubmit="event.preventDefault(); Home.submitScheduleFromModal(${edit ? escJs(edit.id) : 'null'});" style="display:flex; flex-direction:column; gap:14px;">
+          <div style="${BOX}">
+            <div style="font-size:14px; font-weight:700; color:#4f46e5; margin-bottom:10px;">기본 스케줄 정보</div>
+            <div style="margin-bottom:12px;"><label style="${L}">스케줄명 <span style="color:#ef4444;">*</span></label>
+              <input type="text" id="m-sch-title" required maxlength="80" value="${esc(v.title)}" placeholder="예: 뮤직뱅크 사전녹화" style="${I}" /></div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
-              <div>
-                <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">담당 아티스트 <span style="color:#ef4444;">*</span></label>
-                <select id="m-sch-artist" required style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;">
-                  <option value="ALL">전체 아티스트 (전원)</option>
-                  ${artistOptions}
-                </select>
-              </div>
-              <div>
-                <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">스케줄 분류 <span style="color:#ef4444;">*</span></label>
-                <select id="m-sch-category" required style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;">
-                  <option value="music_show">음악방송 / 생방송</option>
-                  <option value="broadcast">예능 / 라디오 / 인터뷰</option>
-                  <option value="shooting">화보 / 촬영 / 광고</option>
-                  <option value="event">행사 / 콘서트 / 페스티벌</option>
-                  <option value="fansign">팬미팅 / 팬사인회</option>
-                  <option value="recording">녹음 / 안무레슨 / 연습</option>
-                  <option value="overseas">해외 투어 / 출국</option>
-                  <option value="meeting">미팅 / 기획회의 / 기타</option>
-                </select>
-              </div>
+              <div><label style="${L}">아티스트 <span style="color:#ef4444;">*</span></label><select id="m-sch-artist" required style="${I} padding:10px 8px;">${artistOptions}</select></div>
+              <div><label style="${L}">분류 <span style="color:#ef4444;">*</span></label><select id="m-sch-category" required style="${I} padding:10px 8px;">${cats.map(c => opt(c[0], c[1], c[0] === v.category)).join('')}</select></div>
             </div>
-
-            <div style="margin-bottom:12px;">
-              <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">스케줄 일자 <span style="color:#ef4444;">*</span></label>
-              <input type="date" id="m-sch-date" value="${esc(defaultDate)}" required style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-weight:700; background:#fff; box-sizing:border-box;" />
-            </div>
-
+            <div style="margin-bottom:12px;"><label style="${L}">날짜 <span style="color:#ef4444;">*</span></label>
+              <input type="date" id="m-sch-date" value="${esc(v.date)}" required style="${I} font-weight:700;" /></div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-              <div>
-                <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">시작 시간 <span style="color:#ef4444;">*</span></label>
-                <input type="time" id="m-sch-start" value="10:00" required style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-weight:700; background:#fff; box-sizing:border-box;" />
-              </div>
-              <div>
-                <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">종료 시간 <span style="color:#ef4444;">*</span></label>
-                <input type="time" id="m-sch-end" value="18:00" required style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-weight:700; background:#fff; box-sizing:border-box;" />
-              </div>
+              <div><label style="${L}">시작 <span style="color:#ef4444;">*</span></label>
+                <input type="time" id="m-sch-start" value="${esc(v.start)}" required onchange="Home._autoEnd(this.value)" style="${I} padding:10px 8px; font-weight:700;" /></div>
+              <div><label style="${L}">종료 <span style="color:#ef4444;">*</span></label>
+                <input type="time" id="m-sch-end" value="${esc(v.end)}" required oninput="this.dataset.touched='1'" style="${I} padding:10px 8px; font-weight:700;" /></div>
             </div>
           </div>
 
-          <!-- 2. 장소 정보 -->
-          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
-            <div style="font-size:14px; font-weight:700; color:#2563eb; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              현장 장소 및 이동
-            </div>
+          <div style="${BOX}">
+            <div style="font-size:14px; font-weight:700; color:#2563eb; margin-bottom:10px;">장소 · 출발지</div>
+            <div style="margin-bottom:10px;"><label style="${L}">행사장 / 촬영 위치 <span style="color:#ef4444;">*</span></label>
+              <input type="text" id="m-sch-loc" required value="${esc(v.loc)}" placeholder="예: 상암 SBS 프리즘타워" style="${I}" /></div>
+            <div style="margin-bottom:10px;"><label style="${L}">상세 주소 (길안내용)</label>
+              <input type="text" id="m-sch-addr" value="${esc(v.addr)}" placeholder="예: 서울 마포구 상암산로 82" style="${I}" /></div>
+            <div><label style="${L}">출발지 (숙소·사옥 등)</label>
+              <input type="text" id="m-sch-dep" value="${esc(v.dep)}" placeholder="예: 서울 강남구 압구정로79길 19 (비우면 출발지 미정)" style="${I}" />
+              <div style="font-size:12px; color:#64748b; margin-top:4px;">출발 시간을 이 주소 기준으로 계산해요. 다음 등록 때 자동으로 채워져요.</div></div>
+          </div>
 
-            <div style="margin-bottom:10px;">
-              <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">행사장 / 촬영 위치 <span style="color:#ef4444;">*</span></label>
-              <input type="text" id="m-sch-loc" required placeholder="예: 상암 SBS 프리즘타워, 성수 에스팩토리" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;" />
+          <div style="${BOX}">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div style="font-size:14px; font-weight:700; color:#ec4899;">헤어 / 메이크업(샵) 경유</div>
+              <label style="display:flex; align-items:center; gap:6px; font-size:14px; font-weight:700; cursor:pointer;">
+                <input type="checkbox" id="m-sch-shop-needed" ${v.shopNeeded ? 'checked' : ''} onchange="document.getElementById('m-sch-shop-fields').style.display = this.checked ? 'block' : 'none';" style="width:18px; height:18px; accent-color:#ec4899;" /> 경유함</label>
             </div>
-
-            <div>
-              <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">상세 도로명 주소 (네비 연동용)</label>
-              <input type="text" id="m-sch-addr" placeholder="예: 서울 마포구 상암산로 82" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;" />
+            <div id="m-sch-shop-fields" style="display:${v.shopNeeded ? 'block' : 'none'}; padding-top:10px;">
+              <label style="${L}">샵 이름</label><input type="text" id="m-sch-shop-name" value="${esc(v.shopName)}" placeholder="예: 정샘물 청담본점" style="${I} margin-bottom:8px;" />
+              <label style="${L}">샵 주소</label><input type="text" id="m-sch-shop-addr" value="${esc(v.shopAddr)}" placeholder="예: 서울 강남구 도산대로 ..." style="${I}" />
             </div>
           </div>
 
-          <!-- 3. 헤어/메이크업(샵) 경유 -->
-          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-              <div style="font-size:14px; font-weight:700; color:#ec4899; display:flex; align-items:center; gap:6px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg>
-                헤어 / 메이크업(샵) 경유
-              </div>
-              <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:700; cursor:pointer;">
-                <input type="checkbox" id="m-sch-shop-needed" onchange="document.getElementById('m-sch-shop-fields').style.display = this.checked ? 'block' : 'none';" style="width:16px; height:16px; accent-color:#ec4899; cursor:pointer;" />
-                <span>경유함</span>
-              </label>
-            </div>
-
-            <div id="m-sch-shop-fields" style="display:none; padding-top:6px;">
-              <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">샵 이름 및 주소</label>
-              <input type="text" id="m-sch-shop-name" value="순수 청담본점" placeholder="예: 순수 청담본점, 알루(ALUU) 본점" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;" />
-            </div>
-          </div>
-
-          <!-- 4. 배차 및 매니저 지정 -->
-          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
-            <div style="font-size:14px; font-weight:700; color:#0f172a; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg>
-              차량 배차 & 담당 매니저
-            </div>
-
+          <div style="${BOX}">
+            <div style="font-size:14px; font-weight:700; color:#0f172a; margin-bottom:10px;">차량 · 담당 매니저</div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-              <div>
-                <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">배차 차량</label>
-                <select id="m-sch-veh" style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;">
-                  ${vehicleOptions}
-                </select>
-              </div>
-              <div>
-                <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">담당 매니저</label>
-                <select id="m-sch-mgr" style="width:100%; padding:10px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; box-sizing:border-box;">
-                  ${managerOptions}
-                </select>
-              </div>
+              <div><label style="${L}">배차 차량</label><select id="m-sch-veh" style="${I} padding:10px 8px;">${vehicleOptions}</select></div>
+              <div><label style="${L}">담당 매니저</label><select id="m-sch-mgr" style="${I} padding:10px 8px;">${managerOptions}</select></div>
             </div>
-
-            <!-- 비공개 토글 -->
             <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1; display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:13px; font-weight:700; color:#64748b; display:flex; align-items:center; gap:4px;">
-                <span>🔒</span> 비공개 보안 스케줄
-              </span>
-              <input type="checkbox" id="m-sch-secret" style="width:16px; height:16px; accent-color:#9333ea; cursor:pointer;" />
+              <span style="font-size:13px; font-weight:700; color:#64748b;">🔒 비공개 보안 스케줄</span>
+              <input type="checkbox" id="m-sch-secret" ${v.secret ? 'checked' : ''} style="width:18px; height:18px; accent-color:#9333ea;" />
             </div>
           </div>
 
-          <!-- 등록 버튼 -->
           <div style="display:flex; gap:8px; margin-top:8px;">
-            <button type="button" onclick="App.closeModal();" style="flex:1; padding:14px 0; border:1px solid #cbd5e1; background:#ffffff; color:#475569; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer;">
-              취소
-            </button>
-            <button type="submit" style="flex:2; padding:14px 0; border:none; background:linear-gradient(135deg, #4f46e5, #4f46e5); color:#ffffff; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 3px 10px rgba(79,70,229,0.3);">
-              스케줄 등록 완료
-            </button>
+            <button type="button" onclick="App.closeModal();" style="flex:1; padding:14px 0; border:1px solid #cbd5e1; background:#fff; color:#475569; border-radius:10px; font-size:15px; font-weight:700;">취소</button>
+            <button type="submit" id="m-sch-submit" style="flex:2; padding:14px 0; border:none; background:#4f46e5; color:#fff; border-radius:10px; font-size:15px; font-weight:700;">${edit ? '수정 저장' : '스케줄 등록 완료'}</button>
           </div>
         </form>
-      </div>
-    `;
-
-    App.showModal('📅 신규 스케줄 등록', modalHtml);
+      </div>`;
+    App.showModal(edit ? '✏️ 스케줄 수정' : '📅 신규 스케줄 등록', modalHtml);
   },
 
-  async submitScheduleFromModal() {
-    const title = document.getElementById('m-sch-title')?.value.trim();
-    const artistId = document.getElementById('m-sch-artist')?.value;
-    const category = document.getElementById('m-sch-category')?.value;
-    const dateVal = document.getElementById('m-sch-date')?.value;
-    const startVal = document.getElementById('m-sch-start')?.value;
-    const endVal = document.getElementById('m-sch-end')?.value;
-    const locationVal = document.getElementById('m-sch-loc')?.value.trim();
-    const addressVal = document.getElementById('m-sch-addr')?.value.trim();
-    const shopNeeded = document.getElementById('m-sch-shop-needed')?.checked;
-    const shopName = document.getElementById('m-sch-shop-name')?.value.trim();
-    const vehicleId = document.getElementById('m-sch-veh')?.value;
-    const managerId = document.getElementById('m-sch-mgr')?.value;
-    const isSecret = document.getElementById('m-sch-secret')?.checked;
+  // 시작 시간을 바꾸면 (종료를 직접 고치지 않았을 때) 종료 = 시작 + 2시간
+  _autoEnd(start) {
+    const el = document.getElementById('m-sch-end');
+    if (!el || el.dataset.touched === '1' || !/^\d{2}:\d{2}$/.test(start || '')) return;
+    const [h, m] = start.split(':').map(Number);
+    const t = (h * 60 + m + 120) % 1440;
+    el.value = `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+  },
 
-    if (!title || !dateVal || !startVal || !locationVal) {
-      U.toast('필수 항목(스케줄명, 날짜, 시작시간, 장소)을 모두 입력해주세요.');
-      return;
-    }
+  // 같은 날 같은 차량·매니저가 겹치는 일정 찾기
+  _findConflicts(sch) {
+    const toMin = (t) => { const [h, m] = String(t || '').split(':').map(Number); return Number.isFinite(h) ? h * 60 + (m || 0) : null; };
+    const s1 = toMin(sch.startTime); let e1 = toMin(sch.endTime);
+    if (s1 == null) return [];
+    if (e1 == null) e1 = s1 + 120; else if (e1 <= s1) e1 += 1440;
+    return ((window.hqStore?.getSchedules?.()) || []).filter(o => {
+      if (!o || o.id === sch.id || o.date !== sch.date || ['취소', 'cancelled'].includes(o.status)) return false;
+      const same = (sch.vehicleId && o.vehicleId === sch.vehicleId) || (sch.managerId && o.managerId === sch.managerId);
+      if (!same) return false;
+      const s2 = toMin(o.startTime); let e2 = toMin(o.endTime);
+      if (s2 == null) return false;
+      if (e2 == null) e2 = s2 + 120; else if (e2 <= s2) e2 += 1440;
+      return s1 < e2 && s2 < e1;
+    }).map(o => `${o.startTime}~${o.endTime || ''} ${o.title}${sch.vehicleId && o.vehicleId === sch.vehicleId ? ' (같은 차량)' : ''}${sch.managerId && o.managerId === sch.managerId ? ' (같은 매니저)' : ''}`);
+  },
+
+  async submitScheduleFromModal(editId = null) {
+    if (this._submittingSchedule) return;          // 두 번 눌러도 한 번만
+    const g = (id) => document.getElementById(id);
+    const val = (id) => (g(id)?.value || '').trim();
+    const title = val('m-sch-title'), artistId = g('m-sch-artist')?.value, category = g('m-sch-category')?.value;
+    const dateVal = val('m-sch-date'), startVal = val('m-sch-start'), endVal = val('m-sch-end');
+    const locationVal = val('m-sch-loc'), addressVal = val('m-sch-addr'), depVal = val('m-sch-dep');
+    const shopNeeded = !!g('m-sch-shop-needed')?.checked, shopName = val('m-sch-shop-name'), shopAddr = val('m-sch-shop-addr');
+    const vehicleId = g('m-sch-veh')?.value || '', managerId = g('m-sch-mgr')?.value || '', isSecret = !!g('m-sch-secret')?.checked;
+
+    if (!title || !dateVal || !startVal || !locationVal) { U.toast('필수 항목(스케줄명, 날짜, 시작시간, 장소)을 모두 입력해주세요.'); return; }
+    if (shopNeeded && !shopName && !shopAddr) { U.toast('샵 이름이나 주소를 입력해 주세요. (샵에 안 가면 "경유함"을 끄세요)'); return; }
+    const today = new Date(); const todayYmd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    if (dateVal < todayYmd && !confirm(`지난 날짜(${dateVal})예요. 그래도 저장할까요?`)) return;
+    if (endVal && endVal <= startVal && !confirm(`종료(${endVal})가 시작(${startVal})보다 빨라요.\n다음날 ${endVal}에 끝나는 일정인가요?`)) return;
 
     const artists = (window.hqStore ? window.hqStore.getArtists() : []) || [];
     const vehicles = (window.hqStore ? window.hqStore.getVehicles() : []) || [];
     const managers = (window.hqStore ? window.hqStore.getManagers() : []) || [];
-
     const isAll = artistId === 'ALL';
     const art = isAll ? null : artists.find(a => a.id === artistId);
-    const veh = vehicles.find(v => v.id === vehicleId);
+    const veh = vehicles.find(x => x.id === vehicleId);
     const mgr = managers.find(m => m.id === managerId);
+    const prev = editId ? (window.hqStore?.getSchedules?.() || []).find(s => s.id === editId) : null;
 
-    const schId = 'sch_' + Date.now();
     const schData = {
-      id: schId,
-      title: title,
-      artistId: artistId,
-      artistIds: isAll ? artists.map(a => a.id) : [artistId],
+      ...(prev || {}),
+      id: editId || ('sch_' + Date.now()),
+      title, artistId, artistIds: isAll ? artists.map(a => a.id) : [artistId],
       artistName: isAll ? '전체 아티스트 (전원)' : (art ? art.name : '아티스트'),
-      targetMembers: 'ALL',
-      category: category || 'music_show',
-      date: dateVal,
-      startTime: startVal,
-      endTime: endVal || '18:00',
-      managerId: managerId,
-      managerName: mgr ? mgr.name : '',
-      vehicleId: vehicleId,
-      vehicleName: veh ? veh.name : '',
-      location: locationVal,
-      locationAddress: addressVal || locationVal,
-      status: '확정',
-      isSecret: isSecret,
-      secretLevel: isSecret ? 'confidential' : 'public',
-      shop: {
-        needed: !!shopNeeded,
-        name: shopName || '순수 청담본점',
-        durationMin: 90,
-        address: '서울 강남구 도산대로'
-      },
-      departure: {
-        place: '숙소 (청담 래미안)',
-        address: '서울 강남구 청담동'
-      }
+      targetMembers: 'ALL', category: category || 'music_show',
+      date: dateVal, startTime: startVal, endTime: endVal || startVal,
+      managerId, managerName: mgr ? mgr.name : '', vehicleId, vehicleName: veh ? veh.name : '',
+      location: locationVal, locationAddress: addressVal || locationVal,
+      status: prev?.status || '확정', isSecret, secretLevel: isSecret ? 'confidential' : 'public',
+      shop: shopNeeded ? { needed: true, name: shopName || shopAddr, address: shopAddr || shopName, durationMin: Number(prev?.shop?.durationMin) || 90 } : { needed: false },
+      departure: depVal ? { place: depVal, address: depVal } : { place: '출발지 미정', address: '' },
     };
+    if (editId) delete schData.timeline;   // 수정하면 동선 다시 계산
 
-    // 실시간 교통/소요시간 기반 스마트 동선 타임라인 역산 자동 생성
-    if (window.hqStore && typeof window.hqStore.generateSmartTimelineAsync === 'function') {
-      try {
-        schData.timeline = await window.hqStore.generateSmartTimelineAsync(schData);
-      } catch (err) {
-        console.warn('스마트 타임라인 생성 fallback:', err);
+    const conflicts = this._findConflicts(schData);
+    if (conflicts.length && !confirm(`같은 시간에 겹치는 일정이 있어요.\n\n${conflicts.slice(0, 3).join('\n')}\n\n그래도 저장할까요?`)) return;
+
+    const btn = g('m-sch-submit');
+    const label = btn ? btn.textContent : '';
+    this._submittingSchedule = true;
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; btn.textContent = '동선 계산 중… (최대 10초)'; }
+    try {
+      try { if (depVal) localStorage.setItem('rp_default_departure', depVal); } catch (e) { }
+      // 동선 계산은 저장 함수(saveSchedule) 안에서 한 번만 (10초 넘으면 추정값으로)
+      if (window.hqStore && typeof window.hqStore.saveSchedule === 'function') {
+        if (editId && window.hqStore.updateSchedule) {
+          schData.timeline = await window.hqStore.buildTimelineCapped(schData);
+          await window.hqStore.updateSchedule(editId, schData);
+          await window.hqStore.addStatusLog?.(editId, { label: `[일정 수정] ${title} ${dateVal} ${startVal}`, managerName: window.SupabaseClient?.currentProfile?.name || '', ack: managerId && managerId !== window.SupabaseClient?.currentUser?.id ? { need: true, managerId } : undefined });
+        } else {
+          await window.hqStore.saveSchedule(schData);
+        }
+      } else {
+        State.addSchedule(schData);
       }
-    }
-
-    // hqStore에 저장 (DB 및 로컬 스토리지 자동 반영)
-    if (window.hqStore && typeof window.hqStore.saveSchedule === 'function') {
-      await window.hqStore.saveSchedule(schData);
-    } else {
-      State.addSchedule(schData);
-    }
-
-    App.closeModal();
-    U.toast('✅ 스케줄이 성공적으로 등록되었습니다!');
-
-    // 등록한 날짜로 화면 포커스 및 타임라인 자동 갱신
-    if (dateVal) {
+      App.closeModal();
+      U.toast(editId ? '✅ 스케줄을 수정했습니다.' : '✅ 스케줄이 등록되었습니다!');
       const parts = dateVal.split('-').map(Number);
-      if (parts.length === 3) {
-        this.selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
-      }
+      if (parts.length === 3) this.selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      this.render();
+    } catch (err) {
+      U.toast('저장하지 못했습니다: ' + (err?.message || err));
+      if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.textContent = label; }
+    } finally {
+      this._submittingSchedule = false;
     }
-    this.render();
+  },
+
+  // 상세보기 [삭제] (본사 계정)
+  async deleteScheduleFromApp(id) {
+    const sch = (window.hqStore?.getSchedules?.() || []).find(s => s.id === id);
+    if (!sch || !confirm(`"${sch.title}" (${sch.date} ${sch.startTime}) 일정을 삭제할까요?\n담당 매니저 화면에서도 사라집니다.`)) return;
+    try { await window.hqStore.deleteSchedule(id); U.toast('🗑️ 일정을 삭제했습니다.'); this.render(); }
+    catch (err) { U.toast('삭제하지 못했습니다: ' + (err?.message || err)); }
   }
 };

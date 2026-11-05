@@ -79,7 +79,7 @@
     .billing-label { font-size: 12px; color: #64748b; margin-bottom: 5px; font-weight: 600; }
     .billing-input {
       width: 100%; background: #0f172a; border: 1.5px solid #334155; border-radius: 10px;
-      padding: 12px 14px; font-size: 14px; font-family: 'Pretendard', sans-serif;
+      padding: 12px 14px; font-size: 16px; font-family: 'Pretendard', sans-serif;
       color: #f8fafc; outline: none; transition: border-color 0.2s;
     }
     .billing-input:focus { border-color: #6366f1; }
@@ -105,7 +105,7 @@
     .sec-badge { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #475569; }
     .sec-badge span { font-size: 14px; }
   </style>
-<script src="js/icons.js?v=270"></script>
+<script src="js/icons.js?v=271"></script>
 </head>
 <body>
 <div id="test-banner" style="position:sticky;top:0;z-index:9999;background:#f59e0b;color:#1f1300;text-align:center;font:700 13px/1.4 Pretendard,sans-serif;padding:8px 12px;">🧪 테스트 결제 — 실제 결제되지 않습니다 (카드가 청구되지 않아요)</div>
@@ -141,7 +141,7 @@
     <!-- 계좌 결제 통합 (계좌이체 & 가상계좌 나란히 1:1 배치) -->
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
       <button type="button" id="tab-btn-card" class="method-tab active" onclick="switchMethodTab('card')" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 14px 10px;">
-        <span style="font-size: 15px; font-weight: 800; color: #f8fafc;">🏦 계좌이체</span>
+        <span style="font-size: 15px; font-weight: 800; color: #f8fafc;">💳 카드·간편결제</span>
         <span style="font-size: 11px; color: #94a3b8;">실시간 이체 · 카드 · 간편결제</span>
       </button>
       <button type="button" id="tab-btn-va" class="method-tab" onclick="switchMethodTab('va')" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 14px 10px;">
@@ -228,7 +228,7 @@
 
 <script src="https://js.tosspayments.com/v2/standard"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js?v=270"></script>
+<script src="js/supabase-client.js?v=271"></script>
 <script>
   const IS_DEV_HOST = ['localhost','127.0.0.1',''].includes(location.hostname) || location.protocol === 'file:';
   const params      = new URLSearchParams(location.search);
@@ -238,10 +238,13 @@
   const totalSlots  = parseInt(params.get('totalSlots') || (isProPlan ? '1' : '2'));
   const totalFee    = parseInt(params.get('totalFee') || params.get('fee') || (isProPlan ? '4900' : '100000'));
   const addFee      = addSlots * 20000;
-  const companyName = decodeURIComponent(params.get('company') || localStorage.getItem('bp_company_name') || localStorage.getItem('hq_company_name') || 'HQ 엔터테인먼트');
-  const ceoName     = decodeURIComponent(params.get('ceo') || localStorage.getItem('bp_user_name') || localStorage.getItem('hq_user_name') || '공진문 대표');
-  const ceoEmail    = decodeURIComponent(params.get('email') || localStorage.getItem('bp_user_email') || localStorage.getItem('hq_user_email') || '');
-  const ceoPhone    = decodeURIComponent(params.get('phone') || localStorage.getItem('bp_user_phone') || localStorage.getItem('hq_user_phone') || '010-1234-5678');
+  // URLSearchParams 가 이미 풀어 준 값 (한 번 더 풀면 % 들어간 이름에서 멈춤)
+  const companyName = params.get('company') || localStorage.getItem('bp_company_name') || localStorage.getItem('hq_company_name') || '';
+  const ceoName     = params.get('ceo') || localStorage.getItem('bp_user_name') || localStorage.getItem('hq_user_name') || '';
+  const ceoEmail    = params.get('email') || localStorage.getItem('bp_user_email') || localStorage.getItem('hq_user_email') || '';
+  const ceoPhone    = params.get('phone') || localStorage.getItem('bp_user_phone') || localStorage.getItem('hq_user_phone') || '';
+  // 결과 페이지 주소 (원래 주소의 ?... 를 버리고 새로 붙임)
+  const resultUrl = (q) => { const u = new URL('payment-result.html', location.href); Object.entries(q).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== '') u.searchParams.set(k, String(v)); }); return u.toString(); };
   const returnTarget = params.get('return') || (isProPlan ? 'mobile' : 'admin');
 
   // UI 요소 바인딩
@@ -308,7 +311,7 @@
       // 기본 입금자명 자동 채우기
       const depositorInput = document.getElementById('va-depositor');
       if (!depositorInput.value) {
-        depositorInput.value = document.getElementById('buyer-name').value || '공진문';
+        depositorInput.value = document.getElementById('buyer-name').value || '';
       }
     }
   }
@@ -365,7 +368,7 @@
     let email = document.getElementById('buyer-email').value.trim();
     let phone = document.getElementById('buyer-phone').value.trim();
     if (!name) {
-      name = ceoName || '공진문 대표';
+      name = ceoName || '';
       document.getElementById('buyer-name').value = name;
     }
     if (!email) {
@@ -401,9 +404,8 @@
     const orderName = order.orderName;
     if (widgets && order.amount !== totalFee) await widgets.setAmount({ currency: 'KRW', value: order.amount });
 
-    const base       = location.href.replace('payment.html', 'payment-result.html');
-    const successUrl = `${base}?status=success&orderId=${orderId}&plan=${plan}&return=${returnTarget}&addSlots=${addSlots}&totalSlots=${totalSlots}&totalFee=${totalFee}`;
-    const failUrl    = `${base}?status=fail&plan=${plan}&return=${returnTarget}`;
+    const successUrl = resultUrl({ status: 'success', plan, return: returnTarget, addSlots, totalSlots, totalFee: order ? order.amount : totalFee });
+    const failUrl    = resultUrl({ status: 'fail', plan, return: returnTarget });
 
     try {
       if (widgets) {
@@ -414,7 +416,7 @@
           failUrl: failUrl,
           customerName: name,
           customerEmail: email,
-          customerMobilePhone: phone.replace(/-/g, '') || undefined,
+          customerMobilePhone: /^01\d{8,9}$/.test(phone.replace(/-/g, '')) ? phone.replace(/-/g, '') : undefined,
         });
       } else if (IS_DEV_HOST) {
         simulateTestPayment();
@@ -437,7 +439,7 @@
       return;
     }
     const bank = document.getElementById('va-bank-select').value;
-    const depositor = document.getElementById('va-depositor').value.trim() || name || '공진문';
+    const depositor = document.getElementById('va-depositor').value.trim() || name || '';
     const taxNumber = document.getElementById('va-tax-number').value.trim();
 
     // 은행별 실제 가상계좌 체계 생성
@@ -458,9 +460,7 @@
     dueDate.setHours(23, 59, 59, 0);
 
     const orderId = (isProPlan ? 'PRO-VA-' : 'HQ-VA-') + Date.now();
-    const base = location.href.replace('payment.html', 'payment-result.html');
-
-    const targetUrl = `${base}?status=success&method=VIRTUAL_ACCOUNT&orderId=${orderId}&plan=${plan}&return=${returnTarget}&addSlots=${addSlots}&totalSlots=${totalSlots}&totalFee=${totalFee}&vaBank=${encodeURIComponent(bank)}&vaAcc=${encodeURIComponent(accountNumber)}&vaHolder=${encodeURIComponent(depositor)}&vaDue=${encodeURIComponent(dueDate.toISOString())}&taxNum=${encodeURIComponent(taxNumber)}`;
+    const targetUrl = resultUrl({ status: 'success', method: 'VIRTUAL_ACCOUNT', orderId, plan, return: returnTarget, addSlots, totalSlots, totalFee, vaBank: bank, vaAcc: accountNumber, vaHolder: depositor, vaDue: dueDate.toISOString(), taxNum: taxNumber });
 
     window.location.href = targetUrl;
   }
@@ -468,8 +468,7 @@
   function simulateTestPayment() {
     if (!IS_DEV_HOST) return;
     const orderId = (isProPlan ? 'PRO-TEST-' : 'HQ-TEST-') + Date.now();
-    const base = location.href.replace('payment.html', 'payment-result.html');
-    location.href = `${base}?status=success&orderId=${orderId}&plan=${plan}&return=${returnTarget}&addSlots=${addSlots}&totalSlots=${totalSlots}&totalFee=${totalFee}`;
+    location.href = resultUrl({ status: 'success', orderId, plan, return: returnTarget, addSlots, totalSlots, totalFee });
   }
 </script>
 </body>

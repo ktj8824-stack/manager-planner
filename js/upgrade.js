@@ -97,14 +97,15 @@ const Upgrade = {
           신용카드 / 간편결제 진행
         </button>
 
-        <button class="btn-secondary" style="width:100%; padding:12px; font-size:14px; border:1px dashed rgba(255,255,255,0.2); background:transparent; color:var(--text-300);" onclick="Upgrade.completePayment()">
-          ⚡ 테스트 계정 즉시 활성화 (체험용)
-        </button>
+        ${window.SITE?.isDev ? `<button class="btn-secondary" style="width:100%; padding:12px; font-size:14px; border:1px dashed rgba(255,255,255,0.2); background:transparent; color:var(--text-300);" onclick="Upgrade.completePayment()">
+          ⚡ (개발용) 테스트 즉시 활성화
+        </button>` : ''}
       </div>
     `);
   },
 
   completePayment() {
+    if (!window.SITE?.isDev) return;   // 개발 주소에서만
     // 1. Mark user as PRO in localStorage
     localStorage.setItem('bp_pro', 'true');
     State.isPro = true;

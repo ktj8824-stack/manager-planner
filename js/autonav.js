@@ -45,7 +45,7 @@ const AutoNav = {
       if (seen.has(k)) return false;
       seen.add(k); return true;
     });
-    const pending = uniq.filter(e => !e.done);
+    const pending = uniq.filter(e => !e.done && e.stepCategory !== 'rest' && !/^\[기상/.test(String(e.title || '')));   // 기상·준비는 길안내 대상 아님
     const ev = pending.find(e => e.moving === true) || pending[0];
     if (!ev) return { total: uniq.length, ev: null };
     const raw = String(ev.title || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim();
@@ -218,13 +218,19 @@ const AutoNav = {
       const ymd = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
       for (const ev of evs) {
         const label = String(ev.title || '');
-        if (!ev.time || ev.done || ev.moving || !/출발|이동|픽업/.test(label) || /철수/.test(label)) continue;
+        const wake = /^\[기상/.test(label);
+        if (!ev.time || ev.done || ev.moving || (!wake && !/출발|이동|픽업/.test(label)) || /철수/.test(label)) continue;
         if (ev.stepCategory === 'rest') continue;
         const sch = ev.hqScheduleId && window.hqStore?.getSchedules?.().find(s => s.id === ev.hqScheduleId);
         if (sch && sch.managerId && sch.managerId !== me) continue;
-        const at = new Date(`${ymd}T${ev.time}:00`).getTime();
-        if (isNaN(at)) continue;
-        out.push({ ev, at, ymd, sch, id: `${ev.hqScheduleId || ev.id}|${ev.timelineIdx ?? ''}|${ymd}|${ev.time}` });
+        const base = new Date(`${ymd}T${ev.time}:00`);
+        if (isNaN(base)) continue;
+        base.setDate(base.getDate() + (ev.dayOffset || 0));   // 전날·다음날 단계
+        const at = base.getTime();
+        const realYmd = base.getFullYear() + '-' + String(base.getMonth() + 1).padStart(2, '0') + '-' + String(base.getDate()).padStart(2, '0');
+        const id = `${ev.hqScheduleId || ev.id}|${ev.timelineIdx ?? ''}|${realYmd}|${ev.time}`;
+        if (out.some(o => o.id === id)) continue;              // 오늘 목록·내일 목록에 같은 단계가 두 번 나오는 경우
+        out.push({ ev, at, ymd: realYmd, sch, id, wake });
       }
     }
     return out.sort((a, b) => a.at - b.at);
@@ -235,7 +241,7 @@ const AutoNav = {
     const steps = this._myDriveSteps();
     this._sendNative(steps);
     const now = Date.now();
-    const due = steps.find(s => (s.at - now) / 60000 <= 15 && (s.at - now) / 60000 > -5);
+    const due = steps.find(s => !s.wake && (s.at - now) / 60000 <= 15 && (s.at - now) / 60000 > -5);
     if (!due) return;
     const key = 'rp_dep_alert_' + due.id;
     try { if (localStorage.getItem(key)) return; localStorage.setItem(key, String(now)); } catch (e) { }
@@ -260,8 +266,8 @@ const AutoNav = {
     const a = window.RoadPlannerAndroid;                       // 안드로이드 앱
     if (!h && !a) return;
     const items = steps.filter(s => s.at - Date.now() > 0 && s.at - Date.now() < 36 * 3600e3).map(s => ({
-      id: s.id, fireAt: new Date(s.at - 15 * 60000).toISOString(),
-      title: `🚗 15분 뒤 출발 · ${s.ev.time}`,
+      id: s.id, fireAt: new Date(s.wake ? s.at : s.at - 15 * 60000).toISOString(),
+      title: s.wake ? `⏰ 기상·준비 시간 · ${s.ev.time}` : `🚗 15분 뒤 출발 · ${s.ev.time}`,
       body: String(s.ev.title || '').replace(/^\[[^\]]+\]\s*/, ''),
       url: this.LINK
     }));

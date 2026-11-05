@@ -100,7 +100,6 @@ const Profile = {
               <span style="font-size:12px;color:rgba(255,255,255,0.4);font-weight:500;">담당 아티스트</span>
               ${assignedArtists.map(a => `<span style="background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9);font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);">${esc(a)}</span>`).join('')}
             </div>
-            <button onclick="Profile.editArtists()" style="display:flex;align-items:center;gap:4px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:12px;font-weight:600;padding:5px 10px;border-radius:8px;cursor:pointer;white-space:nowrap;flex-shrink:0;">${ProfileIcons.edit} 변경</button>
           </div>
         </div>
 
@@ -118,7 +117,7 @@ const Profile = {
 
         <!-- ── 내 정보 관리 ── -->
         ${Profile._section('내 정보 관리', 'normal', [
-          { icon: ProfileIcons.phone, label: '휴대폰 번호 수정',      sub: '', badge: ProfileIcons.chevron, action: 'Profile.editContact()' },
+          { icon: ProfileIcons.phone, label: '휴대폰 번호',      sub: (window.SupabaseClient?.currentProfile?.phone || localStorage.getItem('bp_user_phone') || '등록 안 됨'), badge: ProfileIcons.chevron, action: 'Profile.editContact()' },
           { icon: ProfileIcons.car,   label: '배정 차량 정보 관리',   sub: '', badge: ProfileIcons.chevron, action: 'Profile.editVehicle()' },
         ])}
 
@@ -126,19 +125,6 @@ const Profile = {
         <div style="margin:0 var(--sp-5) var(--sp-4);">
           <div class="profile-section-title" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">${ProfileIcons.moon}<span>기본 설정</span></div>
           <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:16px;overflow:hidden;">
-
-            <!-- 테마 -->
-            <div style="padding:14px 16px;border-bottom:1px solid var(--border-subtle);">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-                <span style="color:var(--primary-400);">${ProfileIcons.moon}</span>
-                <span style="font-size:14px;font-weight:700;color:var(--text-100);">화면 테마 (다크모드)</span>
-              </div>
-              <div class="setting-options" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
-                <button class="setting-opt-btn active" onclick="Profile.setTheme('system',this)">시스템</button>
-                <button class="setting-opt-btn" onclick="Profile.setTheme('light',this)">라이트</button>
-                <button class="setting-opt-btn" onclick="Profile.setTheme('dark',this)">다크</button>
-              </div>
-            </div>
 
             <!-- 기본 내비 -->
             <div style="padding:14px 16px;border-bottom:1px solid var(--border-subtle);">
@@ -151,6 +137,16 @@ const Profile = {
                 <button class="setting-opt-btn${currentNavi === 'kakao' ? ' active' : ''}" onclick="Profile.setNavi('kakao',this)">카카오내비</button>
                 <button class="setting-opt-btn${currentNavi === 'choice' ? ' active' : ''}" onclick="Profile.setNavi('choice',this)">매번 선택</button>
               </div>
+            </div>
+
+            <!-- 기상·준비 시간 -->
+            <div onclick="Profile.editPrep()" style="padding:14px 16px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:12px;cursor:pointer;">
+              <span style="font-size:18px;">⏰</span>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:14px;font-weight:700;color:var(--text-100);">기상·준비 시간</div>
+                <div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">첫 출발 ${esc(localStorage.getItem('bp_buffer_prep') ?? '60')}분 전에 기상·준비 알림 (0이면 끔)</div>
+              </div>
+              ${ProfileIcons.chevron}
             </div>
 
             <!-- 차에 타면 자동 길안내 -->
@@ -196,7 +192,6 @@ const Profile = {
           { icon: '🚨',        label: '긴급 지원 / 현장 긴급보고', sub: '본사 연락처 · 긴급 보고(위치·사진)', badge: ProfileIcons.chevron, action: 'App.openEmergencyModal()' },
           { icon: ProfileIcons.info,        label: '앱 버전 정보',             sub: '', badge: '<span style="font-size:12.5px;color:var(--text-400);">v1.0.0 (최신)</span>', action: 'Profile.showVersion()' },
           { icon: ProfileIcons.file,        label: '이용약관 및 개인정보처리방침', sub: '', badge: ProfileIcons.chevron, action: "window.open('./terms.html', '_blank', 'noopener')" },
-          { icon: ProfileIcons.headphones,  label: '고객센터 문의하기',        sub: '', badge: ProfileIcons.chevron, action: "U.toast('고객센터 문의 폼이 열립니다.')" },
         ])}
 
         <!-- ── 로그아웃 ── -->
@@ -521,15 +516,32 @@ const Profile = {
     }
   },
 
+  editPrep() {
+    const cur = localStorage.getItem('bp_buffer_prep') ?? '60';
+    const v = prompt('첫 출발 몇 분 전에 기상·준비 단계를 넣을까요? (0 = 넣지 않음)', cur);
+    if (v === null) return;
+    const n = parseInt(v, 10);
+    if (!Number.isFinite(n) || n < 0 || n > 240) { U.toast('0~240 사이 숫자로 입력해 주세요.'); return; }
+    localStorage.setItem('bp_buffer_prep', String(n));
+    U.toast(n ? `✅ 새로 만드는 동선부터 출발 ${n}분 전 기상·준비 단계가 들어가요.` : '기상·준비 단계를 넣지 않아요.');
+    Profile.render();
+  },
+
   editContact() {
-    const current = localStorage.getItem('bp_user_phone') || '010-1234-5678';
+    const current = window.SupabaseClient?.currentProfile?.phone || localStorage.getItem('bp_user_phone') || '';
     const phone = prompt('수정할 휴대폰 번호를 입력해 주세요:', current);
-    if (phone?.trim()) {
-      localStorage.setItem('bp_user_phone', phone.trim());
-      U.toast(`휴대폰 번호가 '${phone.trim()}'(으)로 수정되었습니다.`);
-      U.haptic();
-      Profile.render();
-    }
+    if (phone === null) return;
+    const v = phone.trim();
+    if (v && !/^0\d{1,2}-?\d{3,4}-?\d{4}$/.test(v)) { U.toast('번호 형식을 확인해 주세요. (예: 010-1234-5678)'); return; }
+    localStorage.setItem('bp_user_phone', v);
+    const sc = window.SupabaseClient;
+    if (sc?.isConfigured && sc.currentUser) {
+      sc.client.from('profiles').update({ phone: v || null }).eq('id', sc.currentUser.id)
+        .then(({ error }) => U.toast(error ? '기기에는 저장했지만 서버 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.' : '✅ 휴대폰 번호를 저장했습니다. 본사 긴급연락처에도 반영돼요.'));
+      if (sc.currentProfile) sc.currentProfile.phone = v;
+    } else U.toast('휴대폰 번호를 저장했습니다.');
+    U.haptic();
+    Profile.render();
   },
 
   editVehicle() {

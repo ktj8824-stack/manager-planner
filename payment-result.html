@@ -12,7 +12,7 @@
     body {
       font-family: 'Pretendard', -apple-system, sans-serif;
       background: #0f172a; min-height: 100vh;
-      display: flex; align-items: center; justify-content: center;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
       padding: 24px 16px; color: #f8fafc;
     }
     body::before {
@@ -52,9 +52,9 @@
     .btn-secondary:hover { border-color: #6366f1; color: #f8fafc; }
     .confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
   </style>
-<script src="js/icons.js?v=270"></script>
+<script src="js/icons.js?v=271"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js?v=270"></script>
+<script src="js/supabase-client.js?v=271"></script>
 </head>
 <body>
 <div id="test-banner" style="position:sticky;top:0;z-index:9999;background:#f59e0b;color:#1f1300;text-align:center;font:700 13px/1.4 Pretendard,sans-serif;padding:8px 12px;">🧪 테스트 결제 — 실제 결제되지 않습니다 (카드가 청구되지 않아요)</div>
@@ -143,7 +143,7 @@
           virtualAccount: {
             bank: vaBank || 'KB국민은행',
             accountNumber: vaAcc || '004-819230-02-123',
-            customerName: vaHolder || '공진문',
+            customerName: vaHolder || '',
             dueDate: vaDue || new Date(Date.now() + 7 * 86400000).toISOString()
           }
         });

@@ -2007,7 +2007,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const mv = tl.find(t => t.moving && !t.done);
       if (mv) lists.moving.push({ s, note: mv.label || '이동', time: mv.time });
       // 지연: 아직 안 끝난 첫 단계의 시간이 10분 넘게 지났는데 이동중/완료 표시가 없음
-      const next = tl.find(t => !t.done);
+      const next = tl.find(t => !t.done && !/^\[기상/.test(t.label || ''));   // 기상·준비는 본사 지연 판단에서 제외
       const nm = next ? toMin(next.time) : null;
       if (next && !next.moving && nm !== null && nowMin - nm >= 10) lists.late.push({ s, note: `${next.label || '다음 단계'} 미확인`, late: nowMin - nm });
     });
@@ -4117,6 +4117,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // 스케줄 폼 제출
     el.formSchedule.addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (Admin._savingSchedule) return;   // 두 번 눌러도 한 번만 저장
+      Admin._savingSchedule = true;
+      const submitBtn = el.formSchedule.querySelector('[type="submit"]');
+      const submitLabel = submitBtn ? submitBtn.textContent : '';
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '저장 중… (동선 계산)'; }
+      try {
       const schId = el.formSchId.value || 'sch_' + Date.now();
       const artists = await window.hqStore.getArtists();
       const managers = await window.hqStore.getManagers();
@@ -4202,14 +4208,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           }).join('\n');
 
-          // 중복 경고 confirm 팝업 제거 - 항상 저장 진행
+          if (!confirm('⚠️ 같은 시간대에 겹치는 배정이 있습니다.\n\n' + warnMsgs + '\n\n그래도 저장할까요?')) return;
         }
       }
 
-      // 🚦 실시간 교통 정체/소요 시간 기반 스마트 동선 타임라인 역산 생성
-      if (window.hqStore && typeof window.hqStore.generateSmartTimelineAsync === 'function') {
-        schData.timeline = await window.hqStore.generateSmartTimelineAsync(schData);
-      }
+      // 동선(교통 예측)은 saveSchedule 안에서 한 번만 계산 (10초 넘으면 추정값)
 
       // 알림용: 저장 전의 일정 (새 일정이면 없음)
       let prevSch = null;
@@ -4246,6 +4249,10 @@ document.addEventListener('DOMContentLoaded', () => {
       alert(queuedOnly
         ? `⏳ [${schData.title || '스케줄'}] 이 컴퓨터에 저장했지만 아직 서버에 올라가지 않았습니다.\n인터넷이 연결되면 자동으로 올라가며, 화면 아래 노란 표시가 사라지면 완료입니다.`
         : `✅ [${schData.title || '스케줄'}] 일정이 서버에 저장되었습니다.`);
+      } finally {
+        Admin._savingSchedule = false;
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = submitLabel; }
+      }
     });
 
     // 스케줄 수정 버튼

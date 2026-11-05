@@ -35,6 +35,9 @@ const TESTS = [
   ['아침 재계산·출발 지연', 'server/rem2-test.mts', [], [/retimed: 1/, /late: 1/, /출발 지연 7분/]],
   ['결제 서버 확인·알림 안내 (화면)', 'web/billing-test.cjs', [], [/"amount":120000/, /"tampered":"blocked"/, /"ok":"success"/, /"shown":true,"afterOn":true,"nativeHidden":true/]],
   ['결제 서버 로직 (금액 조작·권한)', 'server/pay-test.mts', [], [/"mgrBlocked":"FORBIDDEN"/, /"tamper":"AMOUNT_MISMATCH"/, /"otherUser":"ORDER_NOT_FOUND"/, /"slots":2/, /"rejected":"REJECT_CARD_COMPANY"/]],
+  ['자정 넘는 일정 (전날 픽업·순서)', 'web/midnight-test.cjs', [], [/"depart0030":"23:35"/, /"inferred":"-1,-1,0,0,0"/, /"order":"21:55 22:20 00:20 01:00 03:00"/, /"badge":3/]],
+  ['자정 넘는 일정 (서버 알림 날짜)', 'server/midnight-rem-test.mts', [], [/"offs":\[-1,-1,0,0,0\]/, /"late":\[0,1\]/]],
+  ['앱 스케줄 등록 (출발지·매니저·연타·겹침·결제 주소)', 'web/register-test.cjs', [], [/"mgrDefault":"me-uuid"/, /"shopDefault":""/, /"autoEnd":"12:30"/, /"savedCount":1/, /"departure":"출발지 미정"/, /"shop":false/, /겹치는 일정/, /"company":"100%엔터","qmarks":1,"phone":""/]],
   ['경로 함수 (타임머신)', 'server/route-at-test.mts', [], [/predictionType/, /예측할 수 없는 시간/]],
 ];
 

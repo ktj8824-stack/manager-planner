@@ -1,7 +1,7 @@
 const { chromium } = require('playwright');
 (async () => {
   const b = await chromium.launch(); const p = await b.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.addInitScript(() => sessionStorage.setItem('rp_splash_shown', '1'));
+  await p.addInitScript(() => { sessionStorage.setItem('rp_splash_shown', '1'); localStorage.setItem('bp_buffer_prep', '0'); });
   await p.route(/^https?:\/\/(?!127\.0\.0\.1|localhost|0\.0\.0\.0)/, r => r.request().url().endsWith('.js') ? r.fulfill({ status: 200, contentType: 'application/javascript', body: '' }) : r.abort());
   await p.goto(process.env.BASE_PROD + '/index.html'); await p.waitForTimeout(500);
   const r = await p.evaluate(async () => {
