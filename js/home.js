@@ -666,6 +666,7 @@ const Home = {
         if (/^\[(대기|식사|기상)/.test(tt) || nowEv.stepCategory === 'rest') dest = '';   // 기상·대기 단계는 길안내 없음
         const isDrive = nowEv.stepCategory !== 'rest' && !/^\[(대기|식사|기상)/.test(tt) && (tt.includes('출발') || tt.includes('이동') || tt.includes('픽업') || tt.includes('철수') || nowEv.moving === true);
         const canAct = nowEv.isHQ && nowEv.hqScheduleId;
+        const nowDay = canAct ? Home._stepDay(nowEv.hqScheduleId, nowEv.timelineIdx) : 'today';
         let contact = null;
         try {
           const sch = window.hqStore?.getSchedules().find(s => s.id === nowEv.hqScheduleId);
@@ -690,8 +691,10 @@ const Home = {
               <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'kakao')" style="${B} flex:1; background:#f8fafc; border:1px solid #e2e8f0; color:#111827;"><span style="width:10px;height:10px;border-radius:3px;background:#fee500;border:1px solid #e5cf00;display:inline-block"></span>카카오내비</button>
             </div>` : ''}
             ${canAct ? `<div style="display:flex; gap:6px;">
+              ${nowDay === 'future' ? `<div style="flex:1; text-align:center; font-size:13.5px; font-weight:700; color:#64748b; padding:10px 0;">일정 당일에 출발·도착을 누를 수 있어요</div>` : nowDay === 'past' ? `<button type="button" onclick="Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '완료')" style="${B} flex:1; background:#4f46e5; color:#fff;">완료</button>` : `
               ${isDrive ? `<button type="button" onclick="Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '이동중')" style="${B} flex:1; background:#fff; border:1.5px solid ${nowEv.moving ? '#f59e0b' : '#c7d2fe'}; color:${nowEv.moving ? '#b45309' : '#4f46e5'};">${nowEv.moving ? '● 이동중' : '출발'}</button>` : ''}
               <button type="button" onclick="${isDrive ? `Home.arriveStep(${escJs(nowEv.hqScheduleId)}, ${idx}, ${escJs(name)})` : `Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '완료')`}" style="${B} flex:1; background:#4f46e5; color:#fff;">${isDrive ? '도착' : '완료'}</button>
+              `}
             </div>` : ''}
             ${contact ? `<a href="tel:${esc(contact.phone.replace(/[^0-9+]/g, ''))}" style="${B} margin-top:6px; background:#f8fafc; border:1px solid #e2e8f0; color:#334155; text-decoration:none; font-size:13px; min-height:36px;">${esc(contact.name)} 전화 ${esc(contact.phone)}</a>` : ''}
           </div>`;
@@ -827,9 +830,11 @@ const Home = {
                   ` : ''}
                 </div>
                 
-                ${isHQ && ev.hqScheduleId ? `
+                ${isHQ && ev.hqScheduleId && Home._stepDay(ev.hqScheduleId, ev.timelineIdx) === 'future' ? `
+                  <span style="font-size:12px; font-weight:700; color:#64748b; white-space:nowrap; flex-shrink:0;">당일에 표시</span>
+                ` : isHQ && ev.hqScheduleId ? `
                   <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
-                    ${isDriveStep ? `
+                    ${isDriveStep && Home._stepDay(ev.hqScheduleId, ev.timelineIdx) === 'today' ? `
                       <!-- 이동중 버튼 (더 진하고 뚜렷하게) -->
                       <button type="button"
                         onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '이동중')"
@@ -1041,8 +1046,25 @@ const Home = {
   },
 
   // 동선 타임라인에서 [이동중] 또는 [완료] 선택 시 본사 포털과 실시간 연동 및 타임스탬프 기록
+  // 이 단계의 실제 날짜가 오늘보다 앞(past) / 오늘(today) / 뒤(future)인지 (전날 밤 픽업 같은 단계도 반영)
+  _stepDay(hqId, stepIdx) {
+    try {
+      const sch = (window.hqStore?.getSchedules?.() || []).find(s => s.id === hqId);
+      if (!sch || !sch.date) return 'today';
+      const offs = State.stepDayOffsets(sch.timeline || [], sch.startTime);
+      const d = new Date(sch.date + 'T12:00:00');
+      d.setDate(d.getDate() + (offs[stepIdx] || 0));
+      const ymd = (x) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+      const a = ymd(d), t = ymd(new Date());
+      return a < t ? 'past' : a > t ? 'future' : 'today';
+    } catch (e) { return 'today'; }
+  },
+
   setHQRouteStatus(hqId, stepIdx, targetStatus) {
     if (typeof window.hqStore === 'undefined') return;
+    const day = Home._stepDay(hqId, stepIdx);
+    if (day === 'future') { U.toast('아직 그날이 아니에요. 이동중·완료는 일정 당일에 누를 수 있어요.'); return; }
+    if (day === 'past' && targetStatus !== '완료') { U.toast('지난 일정은 [완료]만 누를 수 있어요.'); return; }
 
     const schedules = window.hqStore.getSchedules();
     const sch = schedules.find(s => s.id === hqId);

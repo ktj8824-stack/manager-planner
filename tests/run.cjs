@@ -39,6 +39,7 @@ const TESTS = [
   ['자정 넘는 일정 (서버 알림 날짜)', 'server/midnight-rem-test.mts', [], [/"offs":\[-1,-1,0,0,0\]/, /"late":\[0,1\]/]],
   ['앱 스케줄 등록 (출발지·매니저·연타·겹침·결제 주소)', 'web/register-test.cjs', [], [/"mgrDefault":"me-uuid"/, /"shopDefault":""/, /"autoEnd":"12:30"/, /"savedCount":1/, /"departure":"출발지 미정"/, /"shop":false/, /겹치는 일정/, /"company":"100%엔터","qmarks":1,"phone":""/]],
   ['기상·준비는 하루 한 번', 'web/wake-multi-test.cjs', [], [/"wakeCount":1/, /"firstTitle":"\[기상/]],
+  ['날짜별 버튼 (미래 잠금·지난 날 완료만)', 'web/dayguard-test.cjs', [], [/"F":\{"move":0,"done":0,"wait":true\}/, /"P":\{"move":0,"done":3/, /"T":\{"move":1/, /그날이 아니에요/, /완료\]만/]],
   ['경로 함수 (타임머신)', 'server/route-at-test.mts', [], [/predictionType/, /예측할 수 없는 시간/]],
 ];
 
