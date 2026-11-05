@@ -529,7 +529,7 @@ const State = {
       hqScheds.forEach((hs, hqIdx) => {
         // 스케줄 사이의 빈틈(Gap) 계산 및 삽입
         if (previousEndTimeStr && hs.timeline && hs.timeline.length > 0) {
-          const firstEventTime = hs.timeline[0].time;
+          const firstEventTime = (hs.timeline.find(t => !/^\[기상/.test(String(t.label || ''))) || hs.timeline[0]).time;   // 기상·준비는 빈틈 계산에서 제외
           const [ph, pm] = previousEndTimeStr.split(':').map(Number);
           const [nh, nm] = firstEventTime.split(':').map(Number);
           const prevMins = ph * 60 + pm;
@@ -809,6 +809,10 @@ const State = {
     // 시간순 정렬 (전날·다음날 단계까지 고려)
     const key = (e) => { const t = String(e.time || '00:00').split(':'); return (e.dayOffset || 0) * 1440 + (parseInt(t[0], 10) || 0) * 60 + (parseInt(t[1], 10) || 0); };
     events.sort((a, b) => key(a) - key(b));
+
+    // '기상·준비'는 그날 첫 단계 앞의 하나만 (일정이 여러 개면 두 번째부터는 지움)
+    const firstIdx = events.findIndex(e => e && e.stepCategory !== 'rest');
+    events = events.filter((e, i) => !/^\[기상/.test(String(e && e.title || '')) || i === firstIdx);
 
     return events;
   },
