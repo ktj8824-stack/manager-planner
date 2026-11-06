@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 앱 아이콘을 길게 누르면 나오는 바로가기: 다음 일정 길안내 -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="nav_next"
+        android:enabled="true"
+        android:icon="@mipmap/ic_nav"
+        android:shortcutShortLabel="@string/nav_short"
+        android:shortcutLongLabel="@string/nav_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="roadplanner://next"
+            android:targetPackage="com.roadplanner.manager"
+            android:targetClass="com.roadplanner.manager.MainActivity" />
+    </shortcut>
+</shortcuts>

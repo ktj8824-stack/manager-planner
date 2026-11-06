@@ -48,6 +48,7 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
             <!-- roadplanner://next → 다음 일정 길안내 (갤럭시 '모드 및 루틴'에서 사용) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -56,6 +57,20 @@
                 <data android:scheme="roadplanner" />
             </intent-filter>
         </activity>
+
+        <!-- 두 번째 아이콘 '로드플래너 길안내': 누르면(또는 갤럭시 루틴 '앱 열기'로 열면) 바로 다음 일정 길안내 -->
+        <activity-alias
+            android:name=".NavGo"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:label="@string/nav_app_name"
+            android:icon="@mipmap/ic_nav"
+            android:roundIcon="@mipmap/ic_nav">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <receiver android:name=".ReminderReceiver" android:exported="false" />
         <receiver android:name=".BootReceiver" android:exported="true">

@@ -184,8 +184,9 @@ const AutoNav = {
       <ol style="${S}padding-left:22px;margin:0;list-style:decimal;">
         <li><b>설정</b> → <b>모드 및 루틴</b> → <b>루틴</b> → <b>＋</b></li>
         <li>조건: <b>블루투스 기기 연결</b> → 차량 선택 (Android Auto도 가능)</li>
-        <li>실행: <b>앱 → 웹페이지 열기</b>(또는 링크 열기) → 아래 링크</li>
-      </ol>`;
+        <li>실행: <b>앱 열기</b> → <b>로드플래너 길안내</b> (로드플래너 안드로이드 앱을 설치하면 생기는 파란 길안내 아이콘)</li>
+      </ol>
+      <div style="font-size:13px;color:#64748b;margin-top:6px;">앱 대신 브라우저로 쓰는 경우: 실행을 <b>웹페이지 열기</b>(또는 링크 열기) → 아래 링크로 하세요. 앱 아이콘을 길게 누르면 나오는 <b>다음 일정 길안내</b>도 같은 기능이에요.</div>`;
     const html = `
       <div style="${S}">차에 타서 휴대폰이 차와 연결되면, 로드플래너가 열리면서 <b>오늘 다음 일정</b>으로 내비가 자동으로 켜집니다.</div>
       <div style="font-weight:800;font-size:15px;margin:16px 0 8px;">1. 기본 내비</div>

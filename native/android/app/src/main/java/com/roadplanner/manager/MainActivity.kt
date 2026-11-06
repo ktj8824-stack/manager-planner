@@ -120,6 +120,7 @@ class MainActivity : AppCompatActivity() {
         val fromReminder = intent?.getStringExtra("open_url")
         return when {
             !fromReminder.isNullOrBlank() && fromReminder.startsWith(base) -> fromReminder
+            intent?.component?.className?.endsWith(".NavGo") == true -> "$base?go=next"   // '로드플래너 길안내' 아이콘
             data != null && data.scheme == "roadplanner" && (data.host == "next" || data.path?.contains("next") == true) -> "$base?go=next"
             else -> base
         }
