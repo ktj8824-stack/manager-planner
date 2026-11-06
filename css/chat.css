@@ -17,7 +17,7 @@
 .chat-list { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--c-line); background: var(--c-panel); }
 .chat-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--c-line); background: var(--c-bg); min-height: 56px; box-sizing: border-box; }
 .chat-head h2 { margin: 0; font-size: 16px; font-weight: 800; }
-.chat-iconbtn { width: 34px; height: 34px; border: 0; border-radius: 10px; background: transparent; color: var(--c-text); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.chat-iconbtn { width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: var(--c-text); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 .chat-iconbtn:hover { background: var(--c-panel); }
 .chat-rooms { flex: 1; overflow-y: auto; }
 .chat-room { display: flex; gap: 10px; align-items: center; width: 100%; padding: 12px 14px; border: 0; border-bottom: 1px solid var(--c-line); background: transparent; color: inherit; text-align: left; cursor: pointer; }
@@ -122,3 +122,11 @@
 }
 .chat-opt { border: 1px solid var(--c-line); border-radius: 12px; padding: 0 12px; margin-bottom: 6px; cursor: pointer; background: var(--c-panel); }
 .chat-opt:has(input:checked) { border-color: var(--c-accent); background: rgba(79, 70, 229, .10); font-weight: 700; }
+
+/* 매니저 앱(아래 메뉴가 있는 화면): 로드톡을 열어도 아래 메뉴(홈·로드톡·긴급·내 정보)가 보이게 */
+@media (max-width: 760px) {
+  body.has-bottom-nav .chat-root { bottom: calc(var(--bottom-nav-h, 64px) + env(safe-area-inset-bottom)); }
+  body.has-bottom-nav.chat-typing .chat-root { bottom: 0; }
+}
+body.chat-open #bottom-nav { z-index: 99995; }
+body.chat-open.chat-typing #bottom-nav { display: none !important; }

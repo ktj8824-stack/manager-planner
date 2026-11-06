@@ -101,6 +101,7 @@ const App = {
       history.pushState({ rp: 'app' }, '');
     } catch (e) { return; }
     window.addEventListener('popstate', () => {
+      if (window.Chat && window.Chat.st && window.Chat.st.open) { window.Chat.close(); history.pushState({ rp: 'app' }, ''); return; }
       const modal = document.getElementById('app-modal') || document.getElementById('app-bottom-sheet');
       const overlay = document.getElementById('an-bg');
       if (modal || overlay) {
@@ -210,6 +211,7 @@ const App = {
 
   navigate(name) {
     if (!this.screens.includes(name)) return;
+    try { if (window.Chat && window.Chat.st && window.Chat.st.open) window.Chat.close(); } catch (e) { }   // 홈·내 정보로 가면 로드톡 닫기
     this.screens.forEach(s => { const el=U.$(`#screen-${s}`); if(el)el.classList.remove('active'); });
     const target = U.$(`#screen-${name}`);
     if (target) {
@@ -569,6 +571,7 @@ const App = {
 
   // 종 버튼: 서버 연결 시 대화창, 아니면 기존 공지함
   openMessages() {
+    if (window.Chat && window.Chat.st && window.Chat.st.open) { window.Chat.close(); return; }   // 로드톡을 다시 누르면 닫기
     if (window.Chat && window.Chat.available()) window.Chat.open();
     else this.openNoticeModal();
   },
@@ -629,6 +632,7 @@ const App = {
   },
 
   openEmergencyModal() {
+    try { if (window.Chat && window.Chat.st && window.Chat.st.open) window.Chat.close(); } catch (e) { }
     const html = `
       <div class="modal-bg center open" id="hq-emergency-modal" onclick="if(event.target===this)this.remove()">
         <div class="modal-panel" style="padding:20px 16px;">

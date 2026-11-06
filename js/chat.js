@@ -216,6 +216,9 @@
       });
       const input = root.querySelector('#chat-input');
       input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && window.innerWidth > 760 && !e.isComposing) { e.preventDefault(); this.send(); } });
+      // 글자 입력 중(키보드가 올라와 있을 때)에는 아래 메뉴를 잠깐 숨김
+      input.addEventListener('focus', () => document.body.classList.add('chat-typing'));
+      input.addEventListener('blur', () => setTimeout(() => document.body.classList.remove('chat-typing'), 150));
       input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 120) + 'px'; });
       root.querySelector('#chat-search').addEventListener('input', (e) => {
         this.st.query = e.target.value.trim();
@@ -242,6 +245,8 @@
         return;
       }
       this.st.open = true; root.hidden = false; this._askNotifyPermission();
+      document.body.classList.add('chat-open');
+      try { document.querySelectorAll('.bnav-item').forEach(b => b.classList.toggle('active', b.id === 'notice-bell')); } catch (e) { }
       root.querySelector('#chat-urgent-wrap').hidden = !this.isHq();
       this._renderList();
       try {
@@ -259,6 +264,8 @@
       this.st.open = false; this.st.active = null; this._stopPoll();
       const root = document.getElementById('chat-root');
       if (root) { root.hidden = true; root.classList.remove('conv-open'); }
+      document.body.classList.remove('chat-open', 'chat-typing');
+      try { const cur = window.State?.screen || 'home'; document.querySelectorAll('.bnav-item').forEach(b => b.classList.toggle('active', b.dataset.s === cur)); } catch (e) { }
       this.refreshList().catch(() => { });
     },
 
