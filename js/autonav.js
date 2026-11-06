@@ -178,7 +178,7 @@ const AutoNav = {
         <li><b>CarPlay</b> 선택 → <b>연결될 때</b> → <b>즉시 실행</b></li>
         <li>동작에서 <b>URL 열기</b> 추가 → 아래 링크 붙여넣기</li>
       </ol>
-      <div style="font-size:13px;color:#64748b;margin-top:6px;">CarPlay가 없으면 2번에서 <b>블루투스</b> → 차량 이름을 고르세요. 로드플래너 앱(아이폰 앱)이나 로그인된 Safari에서 열려야 합니다.</div>`;
+      <div style="font-size:12.5px;color:#64748b;margin-top:6px;">CarPlay가 없으면 2번에서 <b>블루투스</b> → 차량 이름을 고르세요. 로드플래너 앱(아이폰 앱)이나 로그인된 Safari에서 열려야 합니다.</div>`;
     const android = `
       <div style="font-weight:800;font-size:15px;margin:14px 0 6px;">갤럭시</div>
       <ol style="${S}padding-left:22px;margin:0;list-style:decimal;">

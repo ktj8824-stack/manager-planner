@@ -267,19 +267,16 @@ const App = {
     try { this._lockFrame(); } catch (e) { }
     U.$('#top-header')?.remove();
     U.$('#bottom-nav')?.remove();
-    // 위: 이름만 (본사 계정은 본사 화면 바로가기)
-    const role = localStorage.getItem('bp_user_role') || '';
     const nav = U.el('header','top-header');
     nav.id = 'top-header';
     nav.innerHTML = `
       <div class="top-brand">
         <span class="top-brand-icon">🎬</span><span class="top-brand-text">로드플래너</span>
       </div>
-      ${['ceo', 'hq_admin'].includes(role) ? `<a class="top-hq-link" href="${esc(U.getHQPortalUrl ? U.getHQPortalUrl() : 'admin.html')}" target="_blank" rel="noopener">본사 화면</a>` : ''}
     `;
     U.$('#app').prepend(nav);
 
-    // 아래: 한 손 엄지로 누르는 메뉴 4개
+    // 아래: 한 손 엄지로 누르는 메뉴 4개 (홈·로드톡·긴급·내 정보)
     const bn = U.el('nav', 'bottom-nav');
     bn.id = 'bottom-nav';
     bn.setAttribute('aria-label', '메뉴');
@@ -492,10 +489,10 @@ const App = {
       <div style="flex:1; min-width:0;">
         <div style="font-weight:700; font-size:14px; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
           <span>${noti.isUrgent ? '본사 긴급 공지' : '본사 알림'}</span>
-          <span style="font-size:13px; font-weight:700; padding:1px 6px; border-radius:10px; ${noti.isUrgent ? 'background:#ef4444; color:#fff;' : 'background:#4f46e5; color:#fff;'}">${noti.isUrgent ? 'URGENT' : 'NOTICE'}</span>
+          <span style="font-size:12px; font-weight:700; padding:1px 6px; border-radius:10px; ${noti.isUrgent ? 'background:#ef4444; color:#fff;' : 'background:#4f46e5; color:#fff;'}">${noti.isUrgent ? 'URGENT' : 'NOTICE'}</span>
         </div>
         <div style="line-height:1.45; font-size:14px; color:#f1f5f9; word-break:break-word;">${safeContent}</div>
-        <div style="font-size:13px; color:#94a3b8; margin-top:6px;">${esc(timeStr)}</div>
+        <div style="font-size:12px; color:#94a3b8; margin-top:6px;">${esc(timeStr)}</div>
       </div>
       <button style="background:transparent; border:none; color:#94a3b8; font-size:16px; cursor:pointer; padding:2px 4px; line-height:1;" onclick="this.parentElement.remove()" title="닫기">✕</button>
     `;
@@ -614,8 +611,8 @@ const App = {
             ${notices.map(n => `
               <div style="background:var(--bg-card); border:1px solid ${n.urgent ? 'rgba(239,68,68,0.35)' : 'var(--border-subtle)'}; border-radius:var(--r-lg); padding:14px; position:relative;">
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-                  <span style="font-size:13px; font-weight:700; padding:2px 8px; border-radius:6px; ${n.urgent ? 'background:#ef4444; color:#fff;' : 'background:var(--primary-500); color:#fff;'}">${n.urgent ? '긴급 공지' : '본사 공지'}</span>
-                  <span style="font-size:13px; color:var(--text-400);">${esc(n.date || '최신')}</span>
+                  <span style="font-size:12px; font-weight:700; padding:2px 8px; border-radius:6px; ${n.urgent ? 'background:#ef4444; color:#fff;' : 'background:var(--primary-500); color:#fff;'}">${n.urgent ? '긴급 공지' : '본사 공지'}</span>
+                  <span style="font-size:12px; color:var(--text-400);">${esc(n.date || '최신')}</span>
                 </div>
                 <div style="font-size:14px; font-weight:700; color:var(--text-100); margin-bottom:6px;">${esc(n.title)}</div>
                 <div style="font-size:13px; color:var(--text-300); line-height:1.5;">${esc(n.content)}</div>
@@ -661,9 +658,9 @@ const App = {
               </div>
               <div style="flex:1;">
                 <div style="font-size:14px;font-weight:700;color:var(--text-100);">현장 돌발상황 / 사고 긴급 보고</div>
-                <div style="font-size:13px;color:var(--text-400);margin-top:2px;">본사 관제 포털로 실시간 긴급 푸시 전송</div>
+                <div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">본사 관제 포털로 실시간 긴급 푸시 전송</div>
               </div>
-              <span style="background:rgba(245,158,11,0.12);color:#f59e0b;font-size:13px;font-weight:700;padding:3px 9px;border-radius:6px;white-space:nowrap;">보고서</span>
+              <span style="background:rgba(245,158,11,0.12);color:#f59e0b;font-size:12px;font-weight:700;padding:3px 9px;border-radius:6px;white-space:nowrap;">보고서</span>
             </div>
           </div>
 

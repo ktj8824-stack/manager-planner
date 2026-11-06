@@ -362,7 +362,7 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.6);
   background: none;
@@ -848,13 +848,13 @@
 }
 .notice-bell:active { transform: scale(.94); }
 .notice-badge {
-  position: absolute; top: -5px; right: -5px; min-width: 20px; height: 20px; padding: 0 5px;
-  border-radius: 10px; background: #ef4444; color: #fff; font-size: 13px; font-weight: 700;
-  line-height: 20px; text-align: center; box-sizing: border-box;
+  position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px; padding: 0 4px;
+  border-radius: 9px; background: #ef4444; color: #fff; font-size: 12px; font-weight: 700;
+  line-height: 17px; text-align: center; box-sizing: border-box;
 }
 .notice-badge[hidden] { display: none; }
 
-/* ── 아래 메뉴 (한 손 엄지로) ── */
+/* ── 아래 메뉴 (홈·로드톡·긴급·내 정보) ── */
 :root { --bottom-nav-h: 64px; }
 .bottom-nav {
   position: fixed; left: 50%; transform: translateX(-50%); bottom: 0;
@@ -879,9 +879,3 @@
 .bnav-sos-ico { font-size: 22px; line-height: 24px; height: 24px; }
 .bnav-item .notice-badge { top: 6px; right: calc(50% - 22px); }
 body.has-bottom-nav #app { padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom)); }
-.top-hq-link {
-  flex-shrink: 0; display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px;
-  border-radius: 10px; background: rgba(255,255,255,0.12); color: #fff; font-size: 14px; font-weight: 700; text-decoration: none;
-}
-/* 일정 카드 길게 누르기: 글자 선택·확대 메뉴 막기 */
-[data-hold-sch] { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
