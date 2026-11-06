@@ -232,6 +232,7 @@ const App = {
     const nav = U.$('#top-header');
     const hide = name === 'login' || name === 'onboarding';
     if (nav) nav.style.display = hide ? 'none' : 'flex';
+    if (!hide) this.updateHeaderUser();
     const bn = U.$('#bottom-nav');
     if (bn) bn.style.display = hide ? 'none' : 'flex';
     document.body.classList.toggle('has-bottom-nav', !hide && !!bn);
@@ -266,6 +267,16 @@ const App = {
     window.addEventListener('resize', () => { reset(document.getElementById('app')); reset(document.querySelector('.split-view')); });
   },
 
+  // 위 막대 오른쪽: 내 이름 + 로그아웃
+  updateHeaderUser() {
+    const el = U.$('#top-user-name');
+    if (!el) return;
+    let name = window.SupabaseClient?.currentProfile?.name || '';
+    try { name = name || localStorage.getItem('bp_user_name') || ''; } catch (e) { }
+    el.textContent = name ? name + '님' : '';
+    el.title = name;
+  },
+
   renderNav() {
     try { this._lockFrame(); } catch (e) { }
     U.$('#top-header')?.remove();
@@ -276,8 +287,13 @@ const App = {
       <div class="top-brand">
         <span class="top-brand-icon">🎬</span><span class="top-brand-text">로드플래너</span>
       </div>
+      <div class="top-user">
+        <span class="top-user-name" id="top-user-name"></span>
+        <button class="top-logout" onclick="Profile.logout()" aria-label="로그아웃">로그아웃</button>
+      </div>
     `;
     U.$('#app').prepend(nav);
+    this.updateHeaderUser();
 
     // 아래: 한 손 엄지로 누르는 메뉴 5개 (홈·로드톡·AI 비서·긴급·내 정보)
     const bn = U.el('nav', 'bottom-nav');

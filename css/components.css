@@ -310,6 +310,11 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.top-user { display: flex; align-items: center; gap: 8px; flex: 0 1 auto; min-width: 0; max-width: 62%; }
+.top-user-name { color: #e5e7eb; font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top-logout { min-height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.28); background: rgba(255,255,255,0.08); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; flex: 0 0 auto; }
+.top-logout:active { background: rgba(255,255,255,0.18); }
+
 .top-brand {
   position: static;
   flex: 1 1 auto;
@@ -327,22 +332,6 @@
   white-space: nowrap;
   pointer-events: none;
   z-index: 1;
-}
-
-.top-user {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  min-width: 0;
-  font-size: 14px;
-  font-weight: 700;
-  color: #f8fafc;
-  white-space: nowrap;
-}
-.top-user-name {
-  max-width: 72px;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .top-nav-left,
