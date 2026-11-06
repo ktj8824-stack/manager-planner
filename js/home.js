@@ -194,22 +194,23 @@ const Home = {
       const cellDate = new Date(y, m, d);
       const isSelected = y === this.selectedDate.getFullYear() && m === this.selectedDate.getMonth() && d === this.selectedDate.getDate();
       const isToday = y === today.getFullYear() && m === today.getMonth() && d === today.getDate();
+      const isPast = !isToday && cellDate < today;   // 지난 날은 흐리게
       const scheds = State.getSchedulesForDate(y, m, d);
       const hasSched = scheds.length > 0;
       
       const dayName = U.DAYS[cellDate.getDay()];
-      let dayColor = cellDate.getDay() === 0 ? 'color:#ef4444;' : cellDate.getDay() === 6 ? 'color:#2563eb;' : 'color:#64748b;';
+      let dayColor = isPast ? 'color:#cbd5e1;' : cellDate.getDay() === 0 ? 'color:#ef4444;' : cellDate.getDay() === 6 ? 'color:#2563eb;' : 'color:#64748b;';
       
       let cls = 'v-cal-day';
       if(isSelected) cls += ' selected';
       if(isToday && !isSelected) cls += ' today';
       
-      let dot = hasSched ? `<div style="width:5px; height:5px; background:${isSelected?'#fff':'#4f46e5'}; border-radius:50%; margin-left:auto;"></div>` : '';
+      let dot = hasSched ? `<div style="width:5px; height:5px; background:${isSelected?'#fff':(isPast?'#cbd5e1':'#4f46e5')}; border-radius:50%; margin-left:auto;"></div>` : '';
       
       html += `
         <div class="${esc(cls)}" onclick="Home.selectDate(${y},${m},${d})" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 4px; cursor:pointer; border-radius:12px; margin-bottom:4px; transition:all 0.15s; ${isSelected ? 'background:#1e293b; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.12);' : isToday ? 'background:rgba(79,70,229,0.08);' : ''}">
           <div style="font-size:14px; font-weight:700; ${esc(isSelected ? 'color:rgba(255,255,255,0.8);' : dayColor)}">${esc(dayName)}</div>
-          <div style="font-size:17px; font-weight:700; width:26px; text-align:center; letter-spacing:-0.5px; ${isSelected ? 'color:#fff;' : 'color:#0f172a;'}">${esc(d)}</div>
+          <div style="font-size:17px; font-weight:700; width:26px; text-align:center; letter-spacing:-0.5px; ${isSelected ? 'color:#fff;' : isPast ? 'color:#94a3b8;' : 'color:#0f172a;'}">${esc(d)}</div>
           <div style="width:4px; height:4px; display:flex; align-items:center; justify-content:center;">${dot}</div>
         </div>
       `;
@@ -486,7 +487,7 @@ const Home = {
       const artObj = allArtists.find(a => a.id === activeSched.artistId) || { name: activeSched.artistName || '아티스트' };
 
       return `
-        <div style="margin-bottom:12px; position:relative;">
+        <div style="margin-bottom:12px; position:relative; ${Home._selDay() === 'past' ? 'filter:grayscale(1); opacity:0.55;' : ''}">
           <!-- 시작 시간 텍스트 -->
           <div style="font-size:13px; font-weight:700; color:${isSecret ? '#9333ea' : '#4f46e5'}; margin-bottom:6px;">
             ${esc(hourLabel)}
@@ -626,7 +627,21 @@ const Home = {
     return html;
   },
 
+  // 고른 날짜가 오늘보다 앞(past) / 오늘 / 뒤(future)
+  _selDay() {
+    const ymd = (x) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+    const a = ymd(this.selectedDate || new Date()), t = ymd(new Date());
+    return a < t ? 'past' : a > t ? 'future' : 'today';
+  },
+
   renderManagerRoute(events) {
+    // 단계마다 실제 날짜(지난/오늘/앞으로)를 붙이고, 아직 오지 않은 단계의 완료·이동중 표시는 무시 (잘못 눌린 기록 방지)
+    const selDay = this._selDay();
+    events = (events || []).map(ev => {
+      if (!ev) return ev;
+      const day = ev.isHQ && ev.hqScheduleId ? Home._stepDay(ev.hqScheduleId, ev.timelineIdx) : selDay;
+      return day === 'future' ? { ...ev, done: false, doneAt: null, moving: false, _day: day } : { ...ev, _day: day };
+    });
     this.currentEvents = events;
     let html = '<div style="padding: 8px 4px 40px;">';
     
@@ -647,11 +662,16 @@ const Home = {
     });
 
     // ── 지금 할 일 카드: 이동중인 단계가 있으면 그것, 없으면 아직 안 끝난 첫 단계를 크게 보여 준다 ──
+    const allPast = uniqueEvents.length > 0 && uniqueEvents.every(e => e._day === 'past');
     try {
       const pending = uniqueEvents.filter(e => !e.done && e.stepCategory !== 'rest');
-      const nowEv = pending.find(e => e.moving === true) || pending[0];
+      const nowEv = allPast ? null : (pending.find(e => e.moving === true) || pending[0]);
       if (!nowEv) html += addRow;
-      if (uniqueEvents.length && !nowEv) {
+      if (allPast) {
+        const d = this.selectedDate;
+        html += `<div style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:14px; padding:12px 14px; margin-bottom:14px; font-size:15px; font-weight:700; color:#64748b; display:flex; align-items:center; gap:8px;">
+          <span style="font-size:18px;">🗂️</span><span>지난 일정이에요 · ${d.getMonth() + 1}/${d.getDate()}(${U.DAYS[d.getDay()]}) — 기록으로 흐리게 보여요</span></div>`;
+      } else if (uniqueEvents.length && !nowEv) {
         html += `<div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:16px; padding:16px; margin-bottom:14px; text-align:center; font-size:15px; font-weight:700; color:#047857;">오늘 일정이 모두 끝났습니다. 수고하셨습니다.</div>`;
       } else if (nowEv) {
         const raw = String(nowEv.title || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim();
@@ -795,7 +815,7 @@ const Home = {
       if (!tag) tag = '일정';
 
       html += `
-        <div id="route-step-${esc(ev.hqScheduleId || '')}-${esc(ev.timelineIdx ?? idx)}" style="display:flex; position:relative; margin-bottom:16px;">
+        <div id="route-step-${esc(ev.hqScheduleId || '')}-${esc(ev.timelineIdx ?? idx)}" class="${ev._day === 'past' ? 'step-past' : ''}" style="display:flex; position:relative; margin-bottom:16px; ${ev._day === 'past' ? 'filter:grayscale(1); opacity:0.55;' : ''}">
           <!-- 좌측 컬럼: Vertical Track Line & Dot(O) & 시간 -->
           <div style="display:flex; flex-direction:column; align-items:center; width:48px; flex-shrink:0; position:relative;">
             <!-- Vertical Track Line -->

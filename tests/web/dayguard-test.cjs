@@ -8,16 +8,19 @@ const { chromium } = require('playwright');
   await p.goto(process.env.BASE_PROD + '/index.html'); await p.waitForTimeout(600);
   const out = await p.evaluate(() => {
     const ymd = (k) => { const d = new Date(); d.setDate(d.getDate() + k); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
-    const tl = () => [{ time: '09:00', label: '[픽업 출발] 숙소 픽업 및 출발' }, { time: '10:00', label: '[메인 일정] 녹화' }];
+    const tl = () => [{ time: '09:00', label: '[픽업 출발] 숙소 픽업 및 출발' }, { time: '10:00', label: '[메인 일정] 녹화', done: true, doneAt: '22:21' }];
     const store = [{ id: 'F', date: ymd(2), startTime: '10:00', timeline: tl() }, { id: 'P', date: ymd(-2), startTime: '10:00', timeline: tl() }, { id: 'T', date: ymd(0), startTime: '10:00', timeline: tl() }];
     window.hqStore.getSchedules = () => store;
     let toast = ''; U.toast = (m) => { toast = m; };
     const R = {};
     for (const id of ['F', 'P', 'T']) {
-      const evs = store.find(s => s.id === id).timeline.map((s, i) => ({ time: s.time, title: s.label, isHQ: true, hqScheduleId: id, timelineIdx: i, done: false }));
-      const host = document.createElement('div'); host.innerHTML = Home.renderManagerRoute(evs);
+      const sch = store.find(s => s.id === id);
+      const [y, m, d] = sch.date.split('-').map(Number); Home.selectedDate = new Date(y, m - 1, d);
+      const evs = sch.timeline.map((s, i) => ({ time: s.time, title: s.label, isHQ: true, hqScheduleId: id, timelineIdx: i, done: !!s.done, doneAt: s.doneAt }));
+      const host = document.createElement('div'); host.innerHTML = Home.renderManagerRoute(evs); document.body.appendChild(host);
       const txt = host.innerText.replace(/\s+/g, ' ');
-      R[id] = { move: (txt.match(/이동중/g) || []).length, done: (txt.match(/완료/g) || []).length, wait: /당일/.test(txt) };
+      R[id] = { move: (txt.match(/이동중/g) || []).length, wait: /당일/.test(txt), now: /지금 할 일/.test(txt), pastBanner: /지난 일정이에요/.test(txt), gray: host.querySelectorAll('.step-past').length, staleDone: /22:21 완료/.test(txt) };
+      host.remove();
     }
     toast = ''; Home.setHQRouteStatus('F', 0, '완료'); R.futureToast = toast;
     toast = ''; Home.setHQRouteStatus('P', 0, '이동중'); R.pastMoveToast = toast;
