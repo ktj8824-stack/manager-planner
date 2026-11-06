@@ -41,6 +41,8 @@ const TESTS = [
   ['기상·준비는 하루 한 번', 'web/wake-multi-test.cjs', [], [/"wakeCount":1/, /"firstTitle":"\[기상/]],
   ['날짜별 버튼·지난 일정 회색 (미래 잠금·지난 날 완료만)', 'web/dayguard-test.cjs', [], [/"F":\{"move":0,"wait":true,"now":true,"pastBanner":false,"gray":0,"staleDone":false\}/, /"P":\{"move":0,"wait":false,"now":false,"pastBanner":true,"gray":2/, /"T":\{"move":1,"wait":false,"now":true,"pastBanner":false,"gray":0/, /그날이 아니에요/, /완료\]만/]],
   ['로드톡에서 나가기 (아래 메뉴·닫기)', 'web/chat-exit-test.cjs', ['$DEMO'], [/"open":true,"navVisible":true,"chatAboveNav":true,"noSideScroll":true,"closeBtn":"44x44","closedByHome":true,"toggleClose":true/]],
+  ['AI 비서 화면 (메뉴 위치·확인 카드·등록 창 채움)', 'web/ai-test.cjs', ['$DEMO'], [/"navOrder":"홈,로드톡,AIAI비서,긴급,내정보"/, /"lockShown":true/, /"fit":true/, /"sent":true,"card":true/, /"place":true/, /"title":"뮤직뱅크 사전녹화","date":"2026-11-08","start":"14:00"/, /"shop":"정샘물 청담"/, /"homeBack":true\} errs \[\]/]],
+  ['AI 비서 서버 (로그인·한도·지난 날짜·실제 장소만)', 'server/ai-test.mts', [], [/"noLogin":401/, /"pastRejected":true/, /"addr":"서울 영등포구 여의공원로 13"/, /"places":"상암 국밥 230"/, /"visionModel":"claude-sonnet-5-5"/, /"limit":"429/]],
   ['경로 함수 (타임머신)', 'server/route-at-test.mts', [], [/predictionType/, /예측할 수 없는 시간/]],
 ];
 

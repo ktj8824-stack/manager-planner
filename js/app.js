@@ -3,7 +3,7 @@
    ========================================= */
 
 const App = {
-  screens: ['home','register','timeline','login','onboarding','profile','upgrade'],
+  screens: ['home','register','timeline','login','onboarding','profile','upgrade','ai'],
 
   async init() {
     // 오프라인 기능(서비스워커)은 맨 먼저 등록 (로그인 확인을 기다리다 load 이벤트를 놓치지 않게)
@@ -224,6 +224,7 @@ const App = {
         case 'onboarding': Onboarding.init(); break;
         case 'profile': Profile.render(); break;
         case 'upgrade': Upgrade.init(); break;
+        case 'ai': if (window.RoadAI) RoadAI.init(); break;
       }
     }
     this.updateNav(name === 'timeline' ? 'home' : name);
@@ -278,7 +279,7 @@ const App = {
     `;
     U.$('#app').prepend(nav);
 
-    // 아래: 한 손 엄지로 누르는 메뉴 4개 (홈·로드톡·긴급·내 정보)
+    // 아래: 한 손 엄지로 누르는 메뉴 5개 (홈·로드톡·AI 비서·긴급·내 정보)
     const bn = U.el('nav', 'bottom-nav');
     bn.id = 'bottom-nav';
     bn.setAttribute('aria-label', '메뉴');
@@ -291,6 +292,10 @@ const App = {
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         <span>로드톡</span>
         <span id="notice-badge" class="notice-badge" hidden>0</span>
+      </button>
+      <button class="bnav-item bnav-ai" data-s="ai" onclick="App.navigate('ai')" aria-label="AI 비서">
+        <span class="bnav-ai-ico">AI</span>
+        <span>AI 비서</span>
       </button>
       <button class="bnav-item bnav-sos" onclick="App.openEmergencyModal()" aria-label="긴급 지원">
         <span class="bnav-sos-ico">🚨</span>
