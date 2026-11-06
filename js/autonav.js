@@ -302,6 +302,8 @@ const AutoNav = {
     const wait = /^\[메인 일정\]/.test(next.label || '') ? Number((String(next.desc || '').match(/(\d+)분 전\(/) || [])[1] || 10) : 0;
     const [h, m] = next.time.split(':').map(Number);
     const target = new Date(); target.setHours(h, m - wait, 0, 0);
+    // 목표 시각이 이미 1시간 넘게 지났으면 '이동중' 표시가 남은 옛 단계 → 지연 계산 안 함 (707분 같은 엉뚱한 값 방지)
+    if (Date.now() - target.getTime() > 60 * 60000) return;
     const pos = await new Promise(res => navigator.geolocation.getCurrentPosition(p => res(p), () => res(null), { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }));
     if (!pos) return;
     const pt = await KakaoAPI.geocode(dest);
@@ -312,6 +314,7 @@ const AutoNav = {
     const late = Math.round((arrive - target) / 60000);
     const key = 'rp_delay_' + sch.id + '_' + idx;
     let prev = 0; try { prev = Number(localStorage.getItem(key) || 0); } catch (e) { }
+    if (late > 180) return;                                  // 3시간 넘는 지연은 계산 오류로 보고 알리지 않음
     if (late < 5 || late < prev + 10 && prev) return;      // 5분 미만이면 조용히, 이미 알린 뒤엔 10분 더 늦어질 때만
     try { localStorage.setItem(key, String(late)); } catch (e) { }
     const hhmm = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');

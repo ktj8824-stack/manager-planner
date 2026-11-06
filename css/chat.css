@@ -11,10 +11,10 @@
 }
 .chat-root[hidden] { display: none; }
 .chat-shell {
-  width: min(980px, 96vw); height: min(680px, 92vh); display: grid; grid-template-columns: 300px 1fr;
+  width: min(980px, 96vw); height: min(680px, 92vh); display: grid; grid-template-columns: 300px minmax(0, 1fr);
   background: var(--c-bg); color: var(--c-text); border-radius: 18px; overflow: hidden; box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
 }
-.chat-list { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--c-line); background: var(--c-panel); }
+.chat-list { display: flex; flex-direction: column; min-height: 0; min-width: 0; border-right: 1px solid var(--c-line); background: var(--c-panel); }
 .chat-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--c-line); background: var(--c-bg); min-height: 56px; box-sizing: border-box; }
 .chat-head h2 { margin: 0; font-size: 16px; font-weight: 800; }
 .chat-iconbtn { width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: var(--c-text); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
@@ -71,7 +71,7 @@
 /* 폰: 목록 → 대화 화면으로 한 장씩 */
 @media (max-width: 760px) {
   .chat-root { background: var(--c-bg); align-items: stretch; }
-  .chat-shell { width: 100%; height: 100%; max-height: none; border-radius: 0; grid-template-columns: 1fr; box-shadow: none; }
+  .chat-shell { width: 100%; max-width: 100vw; height: 100%; max-height: none; border-radius: 0; grid-template-columns: minmax(0, 1fr); box-shadow: none; }
   .chat-conv { display: none; }
   .chat-root.conv-open .chat-list { display: none; }
   .chat-root.conv-open .chat-conv { display: flex; }
@@ -130,3 +130,7 @@
 }
 body.chat-open #bottom-nav { z-index: 99995; }
 body.chat-open.chat-typing #bottom-nav { display: none !important; }
+
+/* 긴 미리보기 글(지연 알림 등)이 화면을 옆으로 밀어 닫기 버튼이 밖으로 나가지 않게 */
+.chat-conv { min-width: 0; }
+.chat-root, .chat-shell { overflow-x: hidden; }
