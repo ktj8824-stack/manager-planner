@@ -437,7 +437,7 @@ const RoadAI = {
       : `[변경 요청] ${this._md(sch.date)} ${sch.startTime} "${sch.title}" → ${a.new_date ? this._md(a.new_date) + ' ' : ''}${a.new_start || sch.startTime}${a.new_end ? '~' + a.new_end : ''}로 바뀌었어요.${a.reason ? ' (' + a.reason + ')' : ''}`;
     if (!this.isHQ()) {
       try { await navigator.clipboard.writeText(req); U.toast('요청 문장을 복사했어요. 로드톡에 붙여 넣어 보내 주세요.'); }
-      catch (e) { U.toast(req); }
+      catch (e) { U.toast(esc(req), 6000); }   // 요청 문장에 스케줄명·AI 글이 들어가서 글자 처리
       if (typeof App !== 'undefined' && App.openMessages) App.openMessages();
       a.status = 'done'; this.save(); this._redraw(m);
       return;
