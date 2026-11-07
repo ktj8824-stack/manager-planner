@@ -249,7 +249,9 @@ const RoadAI = {
       const { data: s } = await SupabaseClient.client.auth.getSession();
       const token = s?.session?.access_token;
       if (!token) throw Object.assign(new Error('login'), { login: true });
-      const body = { message: text || '', history: this.history().slice(0, -1), context: this.context() };
+      const context = this.context();
+      const ids = this._lastIds || [];
+      const body = { message: text || '', history: this.history().slice(0, -1), context };
       if (image) body.image = { media_type: 'image/jpeg', data: image.split(',')[1] };
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), image ? 60000 : 40000);
@@ -266,7 +268,7 @@ const RoadAI = {
         id: 'b' + Date.now(), from: 'bot', time: this.now(), agent: true,
         plain: data.reply || '', html: this.format(data.reply),
         actions: (data.actions || []).map(a => Object.assign({ status: 'pending' }, a)),
-        places: data.places || []
+        places: data.places || [], ids
       };
       this.messages.push(m); this.append(m); this.save();
     } catch (e) {
@@ -306,18 +308,21 @@ const RoadAI = {
     const until = ymd(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 14));
     let list = [];
     try { list = (window.hqStore?.getSchedules?.() || []); } catch (e) { list = []; }
-    const upcoming = list
+    const picked = list
       .filter(s => s && s.date && s.date >= today && s.date <= until && !['취소', 'cancelled'].includes(s.status))
       .sort((a, b) => (a.date + (a.startTime || '')).localeCompare(b.date + (b.startTime || '')))
-      .slice(0, 30)
-      .map(s => {
+      .slice(0, 30);
+    // 목록 순서(idx) ↔ 스케줄 id 짝 — AI가 '변경' 제안을 하면 이 짝으로 어느 스케줄인지 찾음
+    this._lastIds = picked.map(s => s.id);
+    const upcoming = picked
+      .map((s, idx) => {
         const d = new Date(s.date + 'T00:00:00');
         const steps = (Array.isArray(s.timeline) ? s.timeline : [])
           .filter(st => st && st.time && st.label)
           .slice(0, 7)
           .map(st => `${(Number(st.dayOffset) || 0) < 0 ? '전날 ' : ''}${st.time} ${String(st.label).slice(0, 40)}`);
         return {
-          date: `${s.date}(${days[d.getDay()]})`, start: s.startTime || '', end: s.endTime || '',
+          idx, date: s.date, weekday: days[d.getDay()], start: s.startTime || '', end: s.endTime || '',
           title: String(s.title || '').slice(0, 60), artist: String(s.artistName || '').slice(0, 30),
           place: String(s.location || '').slice(0, 60), shop: s.shop?.needed ? String(s.shop.name || '').slice(0, 40) : '',
           departure: String((typeof s.departure === 'object' ? (s.departure?.place || '') : s.departure) || '').slice(0, 60),
@@ -359,6 +364,7 @@ const RoadAI = {
   CAT: { music_show: '음악방송', broadcast: '예능·라디오·인터뷰', shooting: '화보·촬영·광고', event: '행사·콘서트·축제', fansign: '팬미팅·팬사인회', recording: '녹음·연습', overseas: '해외·출국', meeting: '미팅·기타' },
 
   actionHTML(a, msgId, i) {
+    if (a.type === 'update') return this.updateHTML(a, msgId, i);
     if (a.type !== 'schedule') return '';
     const done = a.status !== 'pending';
     const days = ['일', '월', '화', '수', '목', '금', '토'];
@@ -385,6 +391,75 @@ const RoadAI = {
     </div>`;
   },
 
+  isHQ() { const r = localStorage.getItem('bp_user_role') || 'manager'; return r === 'ceo' || r === 'hq_admin'; },
+
+  _md(ymd) {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    try { const d = new Date(ymd + 'T00:00:00'); if (!isNaN(d)) return `${d.getMonth() + 1}/${d.getDate()}(${days[d.getDay()]})`; } catch (e) { }
+    return ymd || '';
+  },
+
+  /** 기존 스케줄 변경·취소 확인 카드 */
+  updateHTML(a, msgId, i) {
+    const b = a.before || {};
+    const done = a.status !== 'pending';
+    const row = (k, v) => v ? `<span>${esc(k)}</span><b>${v}</b>` : '';
+    const arrow = (from, to) => to && to !== from ? `${esc(from || '-')} → <span style="color:#4f46e5">${esc(to)}</span>` : esc(from || '');
+    const hq = this.isHQ();
+    const title = a.cancel ? '🚫 스케줄 취소' : '✏️ 스케줄 변경';
+    const doneLabel = a.status === 'done' ? (hq ? (a.cancel ? '✓ 처리했어요' : '✓ 수정 창을 열었어요') : '✓ 로드톡을 열었어요') : '취소됨';
+    const note = hq
+      ? (a.cancel ? '버튼을 누르면 이 스케줄을 삭제할지 한 번 더 물어봐요.' : '버튼을 누르면 수정 창이 바뀐 값으로 채워져 열려요. 확인 후 저장해 주세요.')
+      : '현장 매니저는 스케줄을 직접 바꿀 수 없어요. 버튼을 누르면 로드톡이 열리고 요청 문장이 복사돼요.';
+    return `<div class="rpai-card">
+      <div class="rpai-card-title">${title}</div>
+      <div class="rpai-kv">
+        ${row('스케줄', esc(b.title))}
+        ${row('장소', esc(b.place))}
+        ${row('날짜', arrow(this._md(b.date), a.new_date ? this._md(a.new_date) : ''))}
+        ${a.cancel ? '' : row('시간', arrow(b.start + (b.end ? ' ~ ' + b.end : ''), (a.new_start || a.new_end) ? (a.new_start || b.start) + ((a.new_end || b.end) ? ' ~ ' + (a.new_end || b.end) : '') : ''))}
+        ${row('이유', esc(a.reason))}
+      </div>
+      ${done ? `<div class="rpai-btns"><button class="rpai-btn done" disabled>${doneLabel}</button></div>`
+        : `<p class="rpai-note">${note}</p>
+           <div class="rpai-btns"><button class="rpai-btn" onclick="RoadAI.confirm('${msgId}',${i})">${hq ? (a.cancel ? '삭제하기' : '수정 창 열기') : '본사에 요청'}</button><button class="rpai-btn ghost" onclick="RoadAI.dismiss('${msgId}',${i})">취소</button></div>`}
+    </div>`;
+  },
+
+  /** 변경 카드 승인: 본사는 기존 수정 창·삭제 흐름, 매니저는 로드톡으로 요청 */
+  async confirmUpdate(m, a) {
+    const id = (m.ids || [])[a.idx];
+    const sch = id && (window.hqStore?.getSchedules?.() || []).find(s => s.id === id);
+    const b = a.before || {};
+    if (!sch || (b.title && sch.title !== b.title)) { U.toast('그 스케줄을 찾지 못했어요. 스케줄 화면에서 직접 확인해 주세요.'); return; }
+    const req = a.cancel
+      ? `[변경 요청] ${this._md(sch.date)} ${sch.startTime} "${sch.title}" 스케줄이 취소됐어요.${a.reason ? ' (' + a.reason + ')' : ''}`
+      : `[변경 요청] ${this._md(sch.date)} ${sch.startTime} "${sch.title}" → ${a.new_date ? this._md(a.new_date) + ' ' : ''}${a.new_start || sch.startTime}${a.new_end ? '~' + a.new_end : ''}로 바뀌었어요.${a.reason ? ' (' + a.reason + ')' : ''}`;
+    if (!this.isHQ()) {
+      try { await navigator.clipboard.writeText(req); U.toast('요청 문장을 복사했어요. 로드톡에 붙여 넣어 보내 주세요.'); }
+      catch (e) { U.toast(req); }
+      if (typeof App !== 'undefined' && App.openMessages) App.openMessages();
+      a.status = 'done'; this.save(); this._redraw(m);
+      return;
+    }
+    if (typeof Home === 'undefined') return;
+    if (a.cancel) {
+      await Home.deleteScheduleFromApp(id);
+      const still = (window.hqStore?.getSchedules?.() || []).some(s => s.id === id);
+      if (!still) { a.status = 'done'; this.save(); this._redraw(m); }
+      return;
+    }
+    Home.openScheduleRegisterModal(id);
+    setTimeout(() => {
+      const g = (x) => document.getElementById(x);
+      if (a.new_date && g('m-sch-date')) g('m-sch-date').value = a.new_date;
+      if (a.new_start && g('m-sch-start')) g('m-sch-start').value = a.new_start;
+      if (a.new_end && g('m-sch-end')) { g('m-sch-end').value = a.new_end; g('m-sch-end').dataset.touched = '1'; }
+      U.toast('바뀐 값을 확인하고 저장해 주세요.');
+      a.status = 'done'; this.save(); this._redraw(m);
+    }, 60);
+  },
+
   _find(msgId, i) {
     const m = this.messages.find(x => x.id === msgId);
     return { m, a: m && m.actions && m.actions[i] };
@@ -406,6 +481,7 @@ const RoadAI = {
   /** 기존 스케줄 등록 창을 AI가 읽은 내용으로 채워서 열기 (저장·동선 계산은 기존 흐름) */
   confirm(msgId, i) {
     const { m, a } = this._find(msgId, i);
+    if (a && a.type === 'update') return this.confirmUpdate(m, a);
     if (!a || typeof Home === 'undefined') return;
     const p = String(a.date || '').split('-').map(Number);
     if (p.length === 3 && p.every(Number.isFinite)) Home.selectedDate = new Date(p[0], p[1] - 1, p[2]);
@@ -472,7 +548,7 @@ const RoadAI = {
         const el = U.$('#rpai-input'); if (el) el.value = t;
         if (ev.results[ev.results.length - 1].isFinal) { this.stopListening(); if (t.trim()) this.sendInput(); }
       };
-      this.recognition.onerror = (e) => { this.stopListening(); if (e.error === 'not-allowed') U.toast('마이크 권한을 허용해 주세요.'); };
+      this.recognition.onerror = (e) => { this.stopListening(); if (e.error === 'not-allowed' || e.error === 'service-not-allowed') U.toast('마이크·음성 인식 권한이 꺼져 있어요. 아이폰 설정 → 로드플래너에서 마이크와 음성 인식을 켜 주세요.'); };
       this.recognition.onend = () => this.micUI(false);
       this.recognition.start();
     } catch (e) { this.micUI(false); U.toast('음성 입력을 시작하지 못했어요.'); }
