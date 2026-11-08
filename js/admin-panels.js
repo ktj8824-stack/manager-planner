@@ -297,3 +297,47 @@ document.addEventListener('DOMContentLoaded', function () {
   setInterval(tick, 1500);
   document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('#btn-open-chat, #chat-root')) setTimeout(tick, 300); });
 });
+
+/* 관리자 설정: 내 휴대폰·PC 푸시 알림 (지연 · 밤 9시 요약) — 서버 notify_prefs 에 저장, 이 기기 알림 켜기 */
+document.addEventListener('DOMContentLoaded', function () {
+  const A = window.Admin; if (!A) return;
+  const $ = (id) => document.getElementById(id);
+  const sc = () => window.SupabaseClient;
+  const online = () => !!(sc()?.isConfigured && sc()?.client && sc()?.currentUser?.id);
+  const STATE = { unsupported: '이 기기·브라우저는 알림을 받을 수 없어요 (아이폰은 홈 화면에 추가한 뒤)', denied: '알림이 차단돼 있어요 · 브라우저 설정에서 허용해 주세요', off: '이 기기는 아직 알림을 안 받아요', on: '이 기기에서 알림을 받고 있어요' };
+  async function showDevice() {
+    const t = $('setting-push-state'), b = $('setting-push-device'); if (!t || !b) return;
+    let st = 'unsupported';
+    try { st = window.Chat && window.Chat.pushState ? await window.Chat.pushState() : 'unsupported'; } catch (e) { }
+    t.textContent = online() ? STATE[st] || STATE.off : '로그인한 회사 계정에서 켤 수 있어요';
+    b.textContent = st === 'on' ? '끄기' : '켜기';
+    b.disabled = !online() || st === 'unsupported' || st === 'denied';
+    b.dataset.st = st;
+  }
+  async function loadPrefs() {
+    const late = $('setting-push-late'), eve = $('setting-push-evening'); if (!late || !eve) return;
+    late.checked = true; eve.checked = true;
+    late.disabled = eve.disabled = !online();
+    if (!online()) return;
+    try {
+      const { data } = await sc().client.from('notify_prefs').select('hq_late, hq_evening').eq('user_id', sc().currentUser.id).maybeSingle();
+      if (data) { late.checked = data.hq_late !== false; eve.checked = data.hq_evening !== false; }
+    } catch (e) { }
+  }
+  const _open = A.openAdminSettingsModal;
+  A.openAdminSettingsModal = function (...a) { const r = _open.apply(this, a); loadPrefs(); showDevice(); return r; };
+  const _save = A.saveAdminSettings;
+  A.saveAdminSettings = async function (...a) {
+    if (online()) {
+      try {
+        await sc().client.from('notify_prefs').upsert({ user_id: sc().currentUser.id, hq_late: !!$('setting-push-late')?.checked, hq_evening: !!$('setting-push-evening')?.checked, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+      } catch (e) { }
+    }
+    return _save.apply(this, a);
+  };
+  $('setting-push-device')?.addEventListener('click', async (e) => {
+    const b = e.currentTarget; b.disabled = true;
+    try { if (b.dataset.st === 'on') await window.Chat.disablePush(); else await window.Chat.enablePush(); } catch (err) { }
+    showDevice();
+  });
+});

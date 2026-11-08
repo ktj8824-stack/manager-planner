@@ -7,6 +7,7 @@
 //     5분 이상 바뀌면 동선을 고치고 담당 매니저에게 알림 + 확인 요청
 //  4) 출발 지연 알림: 출발 시간이 5분 넘게 지났는데 출발/완료 표시가 없으면 매니저와 본사에 알림
 //  - 같은 알림은 reminder_log 로 한 번만 보냅니다.
+//  - 본사 알림은 notify_prefs(본인 설정)에서 끈 사람에게는 보내지 않습니다.
 //  - 호출 확인: 헤더 x-cron-key 가 app_settings('reminder_cron_key') 값과 같아야 함
 // =========================================
 // 순수 로직 (테스트 가능): DB 클라이언트와 푸시 전송 함수를 받아서 실행
@@ -156,6 +157,16 @@ async function push(db: SupabaseClient, send: Sender, userIds: string[], payload
   return { sent, failed };
 }
 
+// 본사(대표·관리자) 받는 사람 — 본인이 설정에서 끈 알림은 빼고
+async function hqIds(db: SupabaseClient, co: string, pref: "hq_late" | "hq_evening"): Promise<string[]> {
+  const { data: hq } = await db.from("profiles").select("id").eq("company_id", co).in("role", ["ceo", "hq_admin"]);
+  const ids = (hq ?? []).map((h: Row) => h.id as string);
+  if (!ids.length) return ids;
+  const { data: off } = await db.from("notify_prefs").select("user_id").in("user_id", ids).eq(pref, false);
+  const offSet = new Set((off ?? []).map((r: Row) => r.user_id));
+  return ids.filter((id) => !offSet.has(id));
+}
+
 export async function run(db: SupabaseClient, send: Sender, nowMs: number, route: Route | null = null) {
   const today = kst(nowMs);
   const tomorrow = kst(nowMs + 24 * 3600e3);
@@ -235,8 +246,7 @@ export async function run(db: SupabaseClient, send: Sender, nowMs: number, route
         const co = s.profiles?.company_id;
         let b = { sent: 0 };
         if (co) {
-          const { data: hq } = await db.from("profiles").select("id").eq("company_id", co).in("role", ["ceo", "hq_admin"]);
-          b = await push(db, send, (hq ?? []).map((h: Row) => h.id), {
+          b = await push(db, send, await hqIds(db, co, "hq_late"), {
             title: `⏰ 출발 지연 ${lateMin}분 · ${s.profiles?.name || "담당 매니저"}`, body: `${who}\n${stepName(st.label)} (${st.time}) — 출발 표시 없음`,
             tag: `late-hq-${s.id}-${i}`, url: HQ_URL, kind: "late",
           }, 1800);
@@ -289,8 +299,7 @@ export async function run(db: SupabaseClient, send: Sender, nowMs: number, route
         return req && !logs.some((l: Row) => l && l.ackOf === req.id);
       }).length;
       const noMgr = items.filter((s) => !s.manager_id).length;
-      const { data: hq } = await db.from("profiles").select("id").eq("company_id", co).in("role", ["ceo", "hq_admin"]);
-      const r = await push(db, send, (hq ?? []).map((h: Row) => h.id), {
+      const r = await push(db, send, await hqIds(db, co, "hq_evening"), {
         title: `📅 내일 ${dateLabel(tomorrow.ymd)} 일정 ${items.length}건`,
         body: [pending ? `매니저 확인 대기 ${pending}건` : "모든 변경 확인 완료", noMgr ? `담당 미지정 ${noMgr}건` : ""].filter(Boolean).join(" · "),
         tag: `eve-hq-${tomorrow.ymd}`, url: HQ_URL, kind: "evening",

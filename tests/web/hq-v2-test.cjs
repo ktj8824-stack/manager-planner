@@ -61,7 +61,7 @@ const { chromium } = require('playwright');
   await p.evaluate(() => document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active')));
   // 설정: 지연 판단 기준
   await p.evaluate(() => Admin.openAdminSettingsModal()); await p.waitForTimeout(300);
-  R.settings = await p.evaluate(() => ({ sel: document.getElementById('setting-late-min')?.value, counts: document.getElementById('setting-count-mgr')?.textContent }));
+  R.settings = await p.evaluate(() => ({ sel: document.getElementById('setting-late-min')?.value, counts: document.getElementById('setting-count-mgr')?.textContent, push: !!document.getElementById('setting-push-late') && !!document.getElementById('setting-push-evening') && !!document.getElementById('setting-push-device') }));
   await p.selectOption('#setting-late-min', '30');
   await p.evaluate(() => { window.location.reload = () => {}; }); // 저장 후 새로고침 막기
   await p.evaluate(() => Admin.saveAdminSettings()).catch(() => {}); await p.waitForTimeout(800);
