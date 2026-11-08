@@ -231,8 +231,11 @@ const Expenses = {
   _lines() {
     const name = localStorage.getItem('bp_user_name') || '';
     const [y, m] = this.month.split('-').map(Number);
-    const total = this.items.reduce((s, x) => s + Number(x.amount || 0), 0);
-    const list = [...this.items].sort((a, b) => a.date.localeCompare(b.date));
+    // 화면(draw)과 같게 내 경비만 — 대표·본사 계정은 회사 전체 경비를 받아 오므로 다른 매니저 것이 섞이지 않게
+    const me = window.SupabaseClient?.currentUser?.id;
+    const mine = this.items.filter(x => !me || !x.user_id || x.user_id === me);
+    const total = mine.reduce((s, x) => s + Number(x.amount || 0), 0);
+    const list = [...mine].sort((a, b) => a.date.localeCompare(b.date));
     return { name, y, m, total, list };
   },
 
@@ -247,7 +250,8 @@ const Expenses = {
 
   csv() {
     const { name, y, m, list } = this._lines();
-    const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    // 엑셀이 =, +, -, @ 로 시작하는 칸을 수식으로 실행하지 않게 앞에 ' 를 붙임 (메모·장소에 수식을 넣어도 글자로만 보임)
+    const cell = (v) => { let s = String(v ?? ''); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return `"${s.replace(/"/g, '""')}"`; };
     const schedules = window.hqStore?.getSchedules?.() || [];
     const rows = [['날짜', '항목', '금액', '메모', '관련 일정', '영수증'],
       ...list.map(x => { const s = schedules.find(z => z.id === x.schedule_id); return [x.date, this.cat(x.category).label, x.amount, x.memo || '', s ? (s.isSecret ? '비공개 일정' : s.title) : '', x.receipt_path || x.receipt_local ? '있음' : '']; })];
