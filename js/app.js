@@ -630,7 +630,7 @@ const App = {
             </button>
           </div>
           
-          <div style="display:flex; flex-direction:column; gap:12px; overflow-y:auto; max-height:65vh;">
+          <div style="display:flex; flex-direction:column; gap:12px; overflow-y:auto; max-height:55vh;">
             ${(!notices || notices.length === 0) ? '<div style="text-align:center;padding:36px 12px;color:var(--text-400);font-size:14px;">등록된 공지가 없습니다.</div>' : ''}
             ${notices.map(n => `
               <div style="background:var(--bg-card); border:1px solid ${n.urgent ? 'rgba(239,68,68,0.35)' : 'var(--border-subtle)'}; border-radius:var(--r-lg); padding:14px; position:relative;">

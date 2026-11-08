@@ -270,7 +270,7 @@ const Profile = {
     siblings.forEach(s => s.classList.remove('active'));
     el.classList.add('active');
     const label = naviType === 'tmap' ? '티맵' : naviType === 'kakao' ? '카카오내비' : '매번 선택';
-    U.toast(`선호 네비게이션이 '${label}'(으)로 설정되었습니다.`);
+    U.toast(naviType === 'ask' || label === '매번 선택' ? '내비를 매번 고르도록 바꿨어요' : `기본 내비를 ${label}(으)로 바꿨어요`);
     U.haptic();
   },
 
@@ -359,6 +359,7 @@ const Profile = {
       localStorage.removeItem('bp_company_name');
       localStorage.removeItem('bp_manager_filter');
       localStorage.removeItem('bp_onboarded');
+      ['rp_default_departure', 'bp_user_phone', 'bp_user_vehicle'].forEach(k => localStorage.removeItem(k));
       U.toast('로그아웃 되었습니다.');
       App.navigate('login');
     }
@@ -549,7 +550,7 @@ const Profile = {
     const veh = prompt('배정 차량 정보를 입력해 주세요 (차종 및 차량번호):', currentVeh);
     if (veh?.trim()) {
       localStorage.setItem('bp_user_vehicle', veh.trim());
-      U.toast(`배정 차량이 '${veh.trim()}'(으)로 등록되었습니다.`);
+      U.toast(`배정 차량을 저장했어요: ${veh.trim()}`);
       U.haptic();
       Profile.render();
     }

@@ -71,6 +71,7 @@ const Login = {
         </div>
 
         <div style="text-align:center; margin-top:auto;">
+          <div style="font-size:13px; color:var(--text-400); margin-bottom:10px;"><a href="terms.html" target="_blank" style="color:inherit;">이용약관</a> · <a href="privacy.html" target="_blank" style="color:inherit;">개인정보처리방침</a></div>
           <a href="${typeof U !== 'undefined' && U.getHQLoginUrl ? U.getHQLoginUrl() : 'admin-login.html'}" style="font-size:14px; color:var(--text-400); text-decoration:underline; font-weight:600;">
             🏢 본사 총괄 관리 포털(HQ) 접속
           </a>
@@ -130,6 +131,7 @@ const Login = {
       else if (/invalid login credentials/i.test(raw)) msg = '이메일 또는 비밀번호가 올바르지 않습니다.';
       else if (/profile|프로필|권한/i.test(raw)) msg = '계정 권한 정보를 확인하지 못했습니다. 관리자에게 문의해주세요.';
       else if (/rate limit|too many/i.test(raw)) msg = '시도 횟수가 많습니다. 잠시 후 다시 시도해주세요.';
+      if (navigator.onLine === false || /failed to fetch|network|load failed/i.test(raw)) msg = '인터넷 연결을 확인해 주세요.';
       console.warn('로그인 실패:', raw);
       errorEl.textContent = msg;
       errorEl.style.display = 'block';
@@ -144,7 +146,7 @@ const Login = {
     if (!wrap) return;
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'btn-social';
+    button.className = 'btn-social btn-google';
     button.style.cssText = 'width:100%;justify-content:center;padding:16px;border-radius:12px;';
     button.textContent = 'Google로 시작하기';
     button.addEventListener('click', () => this.startOAuth('google'));
@@ -161,7 +163,8 @@ const Login = {
       });
       if (error) throw error;
     } catch (error) {
-      U.toast(error.message || '소셜 로그인 설정을 확인해주세요.');
+      console.warn('소셜 로그인 오류:', error?.message);
+      U.toast('소셜 로그인을 지금 쓸 수 없어요. 잠시 후 다시 해 주세요.');
     }
   },
 
@@ -211,6 +214,14 @@ const Login = {
     localStorage.setItem('bp_onboarded', 'true');
     if (window.hqStore) window.hqStore.flushPendingSchedules()
       .then(() => window.hqStore.syncFromSupabase())
+      .then(() => {
+        // 서버 최신 매니저 정보로 담당 아티스트 다시 저장
+        try {
+          const me = (window.hqStore.getManagers() || []).find(x => x.id === mgrId || (x.email && x.email.toLowerCase() === (user.email || '').toLowerCase()));
+          if (user.role === 'ceo' || user.role === 'hq_admin') return;
+          if (me && Array.isArray(me.assignedArtists)) localStorage.setItem('bp_assigned_artists', JSON.stringify(me.assignedArtists));
+        } catch (e) { }
+      })
       .then(() => App.refreshActiveScreens())
       .catch(() => U.toast('기기 저장 데이터를 유지합니다. 서버 동기화를 확인해주세요.'));
     // 화면·실시간 연결에서 오류가 나도 로그인 자체는 성공으로 처리 (로그인 화면에 오류가 남지 않게)

@@ -2145,7 +2145,7 @@ class HQDataStore {
 
       timeline.push({
         time: fmt(departMinutes), dayOffset: Math.floor((departMinutes) / 1440),
-        label: `[현장 이동] ${departurePlace} 출발 및 이동`,
+        label: (typeof schedule.departure === 'object' ? schedule.departure?.place || schedule.departure?.address : schedule.departure) ? `[현장 이동] ${departurePlace} 출발 및 이동` : '[현장 이동] 현장으로 출발',
         desc: `이동 약 ${travelDepartToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToMain + travelBuffer}분 · ${travelDepartToMainInfo.note})`,
         done: false
       });

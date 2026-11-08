@@ -560,18 +560,20 @@
   top: calc(var(--header-h) + var(--sp-4));
   left: 50%;
   transform: translateX(-50%) translateY(-80px);
-  max-width: calc(var(--app-w) - var(--sp-10));
+  width: max-content;
+  max-width: min(calc(var(--app-w) - var(--sp-10)), calc(100vw - 32px));
   padding: var(--sp-3) var(--sp-6);
   background: rgba(30, 30, 30, 0.95);
   color: #ffffff;
-  border-radius: var(--r-full);
+  border-radius: 16px;
+  text-align: center;
   font-size: 15px;
   font-weight: var(--fw-bold);
   z-index: var(--z-toast);
   opacity: 0;
   transition: all var(--dur-slow) var(--ease-spring);
   box-shadow: var(--shadow-lg);
-  white-space: nowrap;
+  white-space: normal; word-break: keep-all;
 }
 
 .toast.show {

@@ -81,7 +81,12 @@ const RoadAI = {
     if (!bar || !lock) return;
     const ok = this.signedIn();
     bar.style.display = ok ? '' : 'none';
-    lock.innerHTML = ok ? '' : `
+    const demo = localStorage.getItem('bp_provider') === 'demo';
+    lock.innerHTML = ok ? '' : demo ? `
+      <div class="rpai-lock">
+        <b>둘러보기에서는 AI를 쓸 수 없어요</b>
+        <span>회사 계정으로 로그인하면 말 한마디로 스케줄 등록, 스케줄표 사진 읽기, 현장 주변 찾기를 할 수 있어요.</span>
+      </div>` : `
       <div class="rpai-lock">
         <b>로그인하면 AI 비서를 쓸 수 있어요</b>
         <span>말 한마디로 스케줄 등록, 스케줄표 사진 읽기, 현장 주변 찾기까지.</span>

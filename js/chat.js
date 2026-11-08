@@ -257,6 +257,7 @@
       } catch (e) { this._listMessage('대화방을 불러오지 못했습니다. ' + esc(e.message || '')); return; }
       if (opts.managerId) this.select({ kind: 'direct', managerId: opts.managerId });
       else if (opts.kind === 'all') this.select({ kind: 'all' });
+      else if (!this.isHq() && !this.st.active && this._items().length === 1) { const one = this._items()[0]; this.select(one.room ? { id: one.room.id } : { kind: one.kind, managerId: one.managerId }); }
       else if (window.innerWidth > 760 && !this.st.active) { const first = this._items()[0]; if (first) this.select(first.room ? { id: first.room.id } : { kind: first.kind, managerId: first.managerId }); }
     },
 
@@ -519,7 +520,7 @@
         if (!this.st.seen.has(m.id)) this._append([m]);
         room.last_message_at = m.created_at; room.last_message_preview = (m.body || '(사진)').slice(0, 80);
         this._renderList();
-      } catch (e) { this._toast('보내지 못했습니다. ' + (e.message || '다시 시도해 주세요.')); }
+      } catch (e) { const off = navigator.onLine === false || /failed to fetch|network|load failed/i.test(String(e?.message || '')); this._toast(off ? '인터넷 연결을 확인하고 다시 보내 주세요.' : '보내지 못했습니다. ' + (e.message || '다시 시도해 주세요.')); }
       finally { this.st.sending = false; btn.disabled = false; btn.textContent = '전송'; if (!isQuick) input.focus(); }
     },
 

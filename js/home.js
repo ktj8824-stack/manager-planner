@@ -116,8 +116,8 @@ const Home = {
             <div id="mini-cal-year" style="font-size:12.5px; font-weight:700; color:#64748b; margin-bottom:2px;">${this.calYear}년</div>
             <div id="mini-cal-title" style="font-size:20px; font-weight:700; color:#0f172a; line-height:1.2; margin-bottom:8px;">${this.calMonth+1}월</div>
             <div style="display:flex; justify-content:center; gap:8px;">
-              <button onclick="Home.prevMonth()" style="background:transparent; border:none; padding:4px 8px; color:#64748b; font-size:14px; font-weight:700; cursor:pointer;">&lt;</button>
-              <button onclick="Home.nextMonth()" style="background:transparent; border:none; padding:4px 8px; color:#64748b; font-size:14px; font-weight:700; cursor:pointer;">&gt;</button>
+              <button onclick="Home.prevMonth()" aria-label="이전 달" style="background:transparent; border:none; padding:4px 8px; min-width:40px; min-height:40px; color:#64748b; font-size:16px; font-weight:700; cursor:pointer;">&lt;</button>
+              <button onclick="Home.nextMonth()" aria-label="다음 달" style="background:transparent; border:none; padding:4px 8px; min-width:40px; min-height:40px; color:#64748b; font-size:16px; font-weight:700; cursor:pointer;">&gt;</button>
             </div>
           </div>
           
@@ -258,6 +258,28 @@ const Home = {
     return html;
   },
   
+  // 오늘 일정이 없을 때 내일 기상·출발 시각을 미리 보여 준다
+  renderTomorrowPeek() {
+    try {
+      const t = new Date(this.selectedDate); t.setDate(t.getDate() + 1);
+      const evs = State.calculateDailyEvents(t.getFullYear(), t.getMonth(), t.getDate()) || [];
+      if (!evs.length) return '';
+      const pick = (re) => evs.find(ev => ev.time && re.test(String(ev.title || '')));
+      const wake = pick(/^\[기상/), go = pick(/출발|이동|픽업/);
+      const when = (ev) => `${(ev.dayOffset || 0) < 0 ? '오늘 ' : ''}${ev.time}`;
+      const parts = [];
+      if (wake) parts.push(`기상 ${when(wake)}`);
+      if (go) parts.push(`출발 ${when(go)}`);
+      if (!parts.length) { const first = evs.find(ev => ev.time); if (first) parts.push(`첫 일정 ${first.time}`); }
+      if (!parts.length) return '';
+      const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      return `<div class="tomorrow-peek" onclick="Home.selectDate && Home.selectDate(${t.getFullYear()}, ${t.getMonth()}, ${t.getDate()})" style="margin-top:12px; display:flex; align-items:center; gap:10px; background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:12px 14px; cursor:pointer;">
+        <span style="font-size:13px; font-weight:800; color:#c2410c; flex-shrink:0;">내일 미리보기</span>
+        <span style="font-size:14px; font-weight:700; color:#7c2d12;">${esc(parts.join(' · '))}</span>
+      </div>`;
+    } catch (e) { return ''; }
+  },
+
   prevMonth() {
     this.calMonth--;
     if(this.calMonth < 0) { this.calMonth = 11; this.calYear--; }
@@ -344,7 +366,7 @@ const Home = {
         }
       } catch(e) {}
     }
-    if (!artistSummary && allArtists.length > 0) {
+    if (!artistSummary && allArtists.length > 0 && userRole !== 'manager') {
       artistSummary = allArtists.map(a => cleanArtName(a.name)).join(', ');
     }
     if (!artistSummary) artistSummary = '아직 담당 아티스트가 없어요';
@@ -406,6 +428,7 @@ const Home = {
            <span style="color:#4f46e5; font-size:14px; font-weight:700; display:inline-flex; align-items:center; gap:4px; margin-top:4px;">+ 새 스케줄 등록하기</span>
         </div>
       `;
+      html += this.renderTomorrowPeek();
       return html;
     }
 
@@ -539,11 +562,11 @@ const Home = {
                       <span>본 일정은 비공개 보안 스케줄로, 담당 배정자 및 경영진 외에는 열람이 제한됩니다.</span>
                     </div>
                   ` : `
-                    <div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <strong>매니저:</strong> ${esc(activeSched.managerName || '미지정')}</div>
-                    ${!isStaff ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg> <strong>배차:</strong> ${esc(activeSched.vehicleName || '미지정')}</div>` : ''}
-                    ${activeSched.shop && activeSched.shop.needed ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2"><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg> <strong>샵:</strong> ${esc(activeSched.shop.name)} (${esc(activeSched.shop.durationMin || 90)}분)</div>` : ''}
-                    ${departureText ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> <strong>픽업:</strong> ${esc(departureText)}</div>` : ''}
-                    ${activeSched.outfit ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg> <strong>의상:</strong> ${esc(activeSched.outfit)}</div>` : ''}
+                    <div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <strong style="white-space:nowrap;flex-shrink:0;">매니저:</strong> ${esc(activeSched.managerName || '미지정')}</div>
+                    ${!isStaff ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg> <strong style="white-space:nowrap;flex-shrink:0;">배차:</strong> ${esc(activeSched.vehicleName || '미지정')}</div>` : ''}
+                    ${activeSched.shop && activeSched.shop.needed ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2"><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg> <strong style="white-space:nowrap;flex-shrink:0;">샵:</strong> ${esc(activeSched.shop.name)} (${esc(activeSched.shop.durationMin || 90)}분)</div>` : ''}
+                    ${departureText ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> <strong style="white-space:nowrap;flex-shrink:0;">픽업:</strong> ${esc(departureText)}</div>` : ''}
+                    ${activeSched.outfit ? `<div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg> <strong style="white-space:nowrap;flex-shrink:0;">의상:</strong> ${esc(activeSched.outfit)}</div>` : ''}
                     ${activeSched.notes ? `<div style="color:#475569; background:#fff; padding:6px 8px; border-radius:4px; border:1px solid #e2e8f0; margin-top:2px; display:flex; align-items:flex-start; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="flex-shrink:0; margin-top:2px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> <span><strong>특이사항:</strong> ${esc(activeSched.notes)}</span></div>` : ''}
                   `}
                 </div>
@@ -857,7 +880,7 @@ const Home = {
                       <!-- 이동중 버튼 (더 진하고 뚜렷하게) -->
                       <button type="button"
                         onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '이동중')"
-                        style="white-space:nowrap; padding:4px 10px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.15s;
+                        style="white-space:nowrap; padding:4px 10px; min-height:36px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.15s;
                                ${isMoving
                                   ? 'border:1.5px solid #f59e0b; background:#fff; color:#b45309;'
                                   : 'border:1px solid #cbd5e1; background:#ffffff; color:#475569;'
@@ -868,7 +891,7 @@ const Home = {
                     <!-- 완료 버튼 (더 진하고 뚜렷하게) -->
                     <button type="button"
                       onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '완료')"
-                      style="white-space:nowrap; padding:4px 10px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.15s;
+                      style="white-space:nowrap; padding:4px 10px; min-height:36px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.15s;
                              ${isDone
                                 ? 'border:1.5px solid #4f46e5; background:#eef2ff; color:#4338ca;'
                                 : 'border:1px solid #cbd5e1; background:#ffffff; color:#475569;'
@@ -1311,6 +1334,7 @@ const Home = {
               <div><label style="${L}">종료 <span style="color:#ef4444;">*</span></label>
                 <input type="time" id="m-sch-end" value="${esc(v.end)}" required oninput="this.dataset.touched='1'" style="${I} padding:10px 8px; font-weight:700;" /></div>
             </div>
+            <div style="font-size:12px; color:#64748b; margin-top:6px;">현장 도착은 시작 ${Number(localStorage.getItem('bp_buffer_wait') ?? 10)}분 전 기준으로 출발·기상 시각을 계산해요.</div>
           </div>
 
           <div style="${BOX}">
@@ -1320,7 +1344,7 @@ const Home = {
             <div style="margin-bottom:10px;"><label style="${L}">상세 주소 (길안내용)</label>
               <input type="text" id="m-sch-addr" value="${esc(v.addr)}" placeholder="예: 서울 마포구 상암산로 82" style="${I}" /></div>
             <div><label style="${L}">출발지 (숙소·사옥 등)</label>
-              <input type="text" id="m-sch-dep" value="${esc(v.dep)}" placeholder="예: 서울 강남구 압구정로79길 19 (비우면 출발지 미정)" style="${I}" />
+              <input type="text" id="m-sch-dep" value="${esc(v.dep)}" placeholder="예: 청담동 숙소 (비우면 미정)" style="${I}" />
               <div style="font-size:12px; color:#64748b; margin-top:4px;">출발 시간을 이 주소 기준으로 계산해요. 다음 등록 때 자동으로 채워져요.</div></div>
           </div>
 
