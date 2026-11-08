@@ -135,6 +135,20 @@ const Login = {
     try {
       if (!window.SupabaseClient?.isConfigured || !['google', 'kakao'].includes(provider)) throw new Error('로그인 서버 연결이 필요합니다.');
       if (!['http:', 'https:'].includes(window.location.protocol)) throw new Error('소셜 로그인은 앱 서버 주소에서 이용해주세요.');
+      // 서버에서 아직 켜지지 않은 로그인이면 오류 화면으로 보내지 않고 안내만
+      try {
+        const sc = window.SupabaseClient;
+        const base = localStorage.getItem(sc.STORAGE_KEY_URL) || sc.DEFAULT_URL;
+        const key = localStorage.getItem(sc.STORAGE_KEY_ANON_KEY) || sc.DEFAULT_KEY;
+        const r = await fetch(base + '/auth/v1/settings', { headers: { apikey: key } });
+        if (r.ok) {
+          const ext = (await r.json())?.external || {};
+          if (ext[provider] === false) {
+            U.toast(`${provider === 'kakao' ? '카카오' : '구글'} 로그인은 아직 준비 중이에요. 곧 열어 드릴게요.`);
+            return;
+          }
+        }
+      } catch (e) { }
       const { error } = await window.SupabaseClient.client.auth.signInWithOAuth({
         provider,
         options: { redirectTo: window.location.origin + window.location.pathname }
