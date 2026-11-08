@@ -112,7 +112,7 @@ const Profile = {
         <section class="me-plan ${paid ? 'paid' : ''}">
           <span class="me-row-txt">
             <span class="me-row-label" style="font-weight:800;">${paid ? `유료 사용 중 ${esc(Plan.untilText())}` : '무료로 쓰는 중'}</span>
-            <span class="me-row-sub">${paid ? 'AI 비서·자동 길안내·교통 예측·아티스트 여러 명·경비 기록' : `월 ${Plan.FEE.toLocaleString()}원이면 AI 비서·자동 길안내·교통 예측·경비 기록을 모두 쓸 수 있어요.`}</span>
+            <span class="me-row-sub">${paid ? '로드비서·자동 길안내·교통 예측·아티스트 여러 명·경비 기록' : `월 ${Plan.FEE.toLocaleString()}원이면 로드비서·자동 길안내·교통 예측·경비 기록을 모두 쓸 수 있어요.`}</span>
           </span>
           <button type="button" onclick="App.navigate('upgrade')">${paid ? '연장하기' : '유료 알아보기'}</button>
         </section>` : ''}
@@ -123,8 +123,8 @@ const Profile = {
           <div class="me-box">
             ${phone ? row('휴대폰 번호', esc(phone), chev, 'Profile.editContact()')
                     : row('휴대폰 번호', indie ? '아직 없어요 · 연락처로 쓰는 번호예요' : '아직 없어요 · 본사가 긴급할 때 연락할 번호예요', '<span class="me-warn-btn">등록</span>', 'Profile.editContact()', 'warn')}
-            ${row('경비 기록', '주유 · 주차 · 식비 영수증, 월별 합계 · 정산', indie && !Plan.can('expenses') ? lock('expenses') : chev, 'Expenses.open()')}
-            ${indie ? row('내 차량', esc(vehicle || '등록 안 됨') + ' · 주유·정비 비용', chev, 'Vehicle.open()') : row('배정 차량', esc(vehicle || '등록 안 됨'), chev, 'Profile.editVehicle()')}
+            ${indie ? row('차량관리 · 경비 기록', esc(vehicle || '차량 등록 안 됨') + (Plan.can('expenses') ? ' · 영수증·월별 정산' : ' · 경비 기록은 유료'), chev, 'Vehicle.open()')
+                    : row('경비 기록', '주유 · 주차 · 식비 영수증, 월별 합계 · 정산', chev, 'Expenses.open()') + row('배정 차량', esc(vehicle || '등록 안 됨'), chev, 'Profile.editVehicle()')}
             ${isHQ ? row('본사 관제 포털 열기', '관리자용 · 새 창', chev, `window.open(${escJs(typeof U !== 'undefined' && U.getHQPortalUrl ? U.getHQPortalUrl() : 'admin.html')}, '_blank', 'noopener')`) : ''}
           </div>
         </section>

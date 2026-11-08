@@ -33,7 +33,7 @@ const { chromium, devices } = require('playwright');
   await p.tap('#bottom-nav [data-s="profile"]'); await p.waitForTimeout(400);
   R.profile = await p.evaluate(() => { const t = document.getElementById('screen-profile').innerText; return { free: t.includes('무료로 쓰는 중'), noSos: !t.includes('긴급 지원'), locks: document.getElementById('screen-profile').innerHTML.split('padding:3px 9px;border-radius:999px').length - 1 }; });
   await p.tap('text=유료 알아보기'); await p.waitForTimeout(400);
-  R.upgrade = await p.evaluate(() => { const t = document.getElementById('screen-upgrade').innerText; return t.includes('20,000') && t.includes('AI 비서 하루 60번') && !t.includes('4,900'); });
+  R.upgrade = await p.evaluate(() => { const t = document.getElementById('screen-upgrade').innerText; return t.includes('20,000') && t.includes('로드비서 하루 60번') && !t.includes('4,900'); });
   // 무료: 자동 길안내·알림·교통 예측 막힘
   R.gates = await p.evaluate(async () => {
     let tmap = 0;

@@ -105,7 +105,7 @@
     .sec-badge { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #475569; }
     .sec-badge span { font-size: 14px; }
   </style>
-<script src="js/icons.js?v=299"></script>
+<script src="js/icons.js?v=300"></script>
 </head>
 <body>
 <div id="test-banner" style="position:sticky;top:0;z-index:9999;background:#f59e0b;color:#1f1300;text-align:center;font:700 13px/1.4 Pretendard,sans-serif;padding:8px 12px;">🧪 테스트 결제 — 실제 결제되지 않습니다 (카드가 청구되지 않아요)</div>
@@ -228,7 +228,7 @@
 
 <script src="https://js.tosspayments.com/v2/standard"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js?v=299"></script>
+<script src="js/supabase-client.js?v=300"></script>
 <script>
   const IS_DEV_HOST = ['localhost','127.0.0.1',''].includes(location.hostname) || location.protocol === 'file:';
   const params      = new URLSearchParams(location.search);
@@ -263,7 +263,7 @@
     // 기본 요금 행
     const firstRow = document.querySelector('.order-row');
     if (firstRow) {
-      firstRow.innerHTML = '<span>개인 매니저 유료 (AI 비서·자동 길안내·교통 예측·아티스트 여러 명·경비 기록)</span><span>20,000원</span>';
+      firstRow.innerHTML = '<span>개인 매니저 유료 (로드비서·자동 길안내·교통 예측·아티스트 여러 명·경비 기록)</span><span>20,000원</span>';
     }
     // 슬롯 행 숨김
     const addRow = document.getElementById('pay-add-slots')?.closest('.order-row');

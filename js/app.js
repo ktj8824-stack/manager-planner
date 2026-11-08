@@ -306,8 +306,8 @@ const App = {
     U.$('#app').prepend(nav);
     this.updateHeaderUser();
 
-    // 아래: 한 손 엄지로 누르는 메뉴 5개 (홈·로드톡·AI 비서·긴급·내 정보)
-    // 개인 매니저는 4개 (홈·아티스트·AI 비서·내 정보) — 로드톡·긴급(본사 보고) 없음
+    // 아래: 한 손 엄지로 누르는 메뉴 5개 (홈·로드톡·로드비서·긴급·내 정보)
+    // 개인 매니저는 5개 (홈·아티스트·로드비서·차량관리·내 정보) — 로드톡·긴급(본사 보고) 없음
     const bn = U.el('nav', 'bottom-nav');
     bn.id = 'bottom-nav';
     bn.setAttribute('aria-label', '메뉴');
@@ -322,9 +322,13 @@ const App = {
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z"/></svg>
         <span>아티스트</span>
       </button>
-      <button class="bnav-item bnav-ai" data-s="ai" onclick="App.navigate('ai')" aria-label="AI 비서">
+      <button class="bnav-item bnav-ai" data-s="ai" onclick="App.navigate('ai')" aria-label="로드비서">
         <span class="bnav-ai-ico">AI</span>
-        <span>AI 비서</span>
+        <span>로드비서</span>
+      </button>
+      <button class="bnav-item" data-s="vehicle" onclick="App.navigate('vehicle')" aria-label="차량관리">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14v-5l-2-5H7l-2 5z"/><path d="M3 12h18"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>
+        <span>차량관리</span>
       </button>
       <button class="bnav-item" data-s="profile" onclick="App.navigate('profile')">
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -340,9 +344,9 @@ const App = {
         <span>로드톡</span>
         <span id="notice-badge" class="notice-badge" hidden>0</span>
       </button>
-      <button class="bnav-item bnav-ai" data-s="ai" onclick="App.navigate('ai')" aria-label="AI 비서">
+      <button class="bnav-item bnav-ai" data-s="ai" onclick="App.navigate('ai')" aria-label="로드비서">
         <span class="bnav-ai-ico">AI</span>
-        <span>AI 비서</span>
+        <span>로드비서</span>
       </button>
       <button class="bnav-item bnav-sos" data-s="sos" onclick="App.openEmergencyModal()" aria-label="긴급 지원">
         <span class="bnav-sos-ico">🚨</span>

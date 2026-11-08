@@ -1,5 +1,5 @@
 /* =========================================
-   로드플래너 — AI 비서 '로디' (버디플래너 AI 비서와 같은 구조)
+   로드플래너 — 로드비서 '로디' (버디플래너 로드비서와 같은 구조)
 
    앱 → 서버 함수(roadplanner-ai, 버디플래너 프로젝트) → Claude
    - 말·글·사진(스케줄표, 콜시트)으로 스케줄 등록을 '제안' → 확인 카드 → 누르면 등록 창이 채워져 열림
@@ -44,7 +44,7 @@ const RoadAI = {
           <div class="rpai-head-l">
             <div class="rpai-ava" aria-hidden="true">🤖</div>
             <div style="min-width:0;">
-              <div class="rpai-title">AI 비서 로디 <span class="rpai-badge">BETA</span></div>
+              <div class="rpai-title">로드비서 로디 <span class="rpai-badge">BETA</span></div>
               <div class="rpai-sub">스케줄 등록 · 스케줄표 사진 · 현장 주변 찾기</div>
             </div>
           </div>
@@ -88,7 +88,7 @@ const RoadAI = {
         <span>회사 계정으로 로그인하면 말 한마디로 스케줄 등록, 스케줄표 사진 읽기, 현장 주변 찾기를 할 수 있어요.</span>
       </div>` : `
       <div class="rpai-lock">
-        <b>로그인하면 AI 비서를 쓸 수 있어요</b>
+        <b>로그인하면 로드비서를 쓸 수 있어요</b>
         <span>말 한마디로 스케줄 등록, 스케줄표 사진 읽기, 현장 주변 찾기까지.</span>
         <button onclick="App.navigate('login')">로그인하기</button>
       </div>`;
@@ -107,7 +107,7 @@ const RoadAI = {
     const name = window.SupabaseClient?.currentProfile?.name || localStorage.getItem('bp_user_name') || '';
     return {
       id: 'welcome', from: 'bot', time: this.now(), chips: true,
-      html: `${name ? esc(name) + '님, ' : ''}안녕하세요! 매니저 업무를 돕는 <b>AI 비서 로디</b>예요.<br><br>
+      html: `${name ? esc(name) + '님, ' : ''}안녕하세요! 매니저 업무를 돕는 <b>로드비서 로디</b>예요.<br><br>
         <b>"내일 2시 KBS 뮤뱅 사녹"</b>처럼 말하면 스케줄 등록 창을 채워 드리고,
         📷 버튼으로 <b>스케줄표·콜시트 사진</b>을 올리면 읽어서 정리해 드려요. 현장 근처 밥집·카페·주차장도 찾아 드릴게요.`
     };

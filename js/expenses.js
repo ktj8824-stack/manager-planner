@@ -36,9 +36,11 @@ const Expenses = {
   },
 
   open() {
+    if (typeof Plan !== 'undefined' && Plan.isIndie() && window.Vehicle) { App.navigate('vehicle'); return; }   // 개인 매니저: 차량관리 화면 안에서
     if (typeof Plan !== 'undefined' && !Plan.require('expenses')) return;
     App.navigate('expenses');
   },
+  rerender() { if (State.screen === 'vehicle' && window.Vehicle) Vehicle.render(); else this.render(); },
 
   async render() {
     const el = U.$('#screen-expenses');
@@ -52,7 +54,6 @@ const Expenses = {
         <div class="header-btn" style="visibility:hidden"></div>
       </div>
       <div class="screen-scroll" style="padding:12px 16px 28px;">
-        ${typeof Plan !== 'undefined' && Plan.isIndie() && window.Vehicle ? `<button type="button" class="exp-car" onclick="Vehicle.open()"><span>🚗</span><span class="exp-car-txt"><b>${esc(Vehicle.title() || '내 차량 등록하기')}</b><small>차량 정보 · 주유·정비 비용 모아 보기</small></span><span aria-hidden="true">›</span></button>` : ''}
         <div class="exp-month">
           <button type="button" aria-label="이전 달" onclick="Expenses.shift(-1)">‹</button>
           <b>${y}년 ${m}월</b>
@@ -67,7 +68,7 @@ const Expenses = {
     const [y, m] = this.month.split('-').map(Number);
     const t = new Date(y, m - 1 + d, 1);
     this.month = this.ymd(t).slice(0, 7);
-    this.render();
+    this.rerender();
   },
 
   async load() {
@@ -199,8 +200,7 @@ const Expenses = {
       App.closeModal();
       U.toast(id ? '경비를 수정했어요' : `${this.cat(category).label} ${this.won(amount)} 기록했어요`);
       if (date.slice(0, 7) !== this.month) this.month = date.slice(0, 7);
-      if (State.screen === 'expenses') this.render();
-      if (State.screen === 'vehicle' && window.Vehicle) Vehicle.render();
+      if (State.screen === 'expenses' || State.screen === 'vehicle') this.rerender();
     } catch (e) {
       const raw = String(e?.message || '');
       if (/PAID_FEATURE/.test(raw)) { App.closeModal(); Plan.upsell('expenses'); }
@@ -217,7 +217,7 @@ const Expenses = {
       else this._saveLocal(this._local().filter(x => x.id !== id));
       App.closeModal();
       U.toast('삭제했어요');
-      if (State.screen === 'vehicle' && window.Vehicle) Vehicle.render(); else this.render();
+      this.rerender();
     } catch (e) { U.toast('삭제하지 못했어요. 잠시 후 다시 해 주세요.'); }
   },
 

@@ -12,7 +12,7 @@ const Plan = {
   FREE_ARTISTS: 1,
   FREE_AI: 3,
   FEATURES: {
-    ai: 'AI 비서 하루 60번',
+    ai: '로드비서 하루 60번',
     autonav: '차 타면 자동 길안내',
     traffic: '교통 예측 출발 시간',
     artists: '아티스트 여러 명',

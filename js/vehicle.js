@@ -1,7 +1,7 @@
 /* =========================================
-   RoadPlanner — 내 차량 (개인 매니저)
-   - 차량 정보(무료): 차종·번호·연료·보험사·긴급출동 번호 → 이 기기 + 내 계정에 저장
-   - 차량 비용(유료, 경비 기록과 같은 데이터): 이번 달 주유·주차·통행료·정비 합계와 최근 기록, 바로 추가
+   RoadPlanner — 차량관리 (개인 매니저 아래 메뉴, 로드비서 오른쪽)
+   - 차량 등록(무료): 차종·번호·연료·보험사·긴급출동 번호 → 이 기기 + 내 계정에 저장
+   - 경비 기록(유료): 경비 화면 전체(달 이동·합계·추가·복사·엑셀)를 이 화면 아래에 그대로 + 주유·주차·통행료·정비 바로 추가
    ========================================= */
 const Vehicle = {
   FUELS: ['휘발유', '경유', 'LPG', '전기', '하이브리드'],
@@ -37,10 +37,11 @@ const Vehicle = {
     const has = !!(v.model || v.plate);
     const tel = String(v.insTel || '').replace(/[^0-9+]/g, '');
     const can = typeof Plan === 'undefined' || Plan.can('expenses');
+    if (!Expenses.month) Expenses.month = Expenses.ymd(new Date()).slice(0, 7);
     el.innerHTML = `
       <div class="header">
-        <button class="header-btn" onclick="App.navigate('profile')" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
-        <h1 class="header-title">내 차량</h1>
+        <div class="header-btn" style="visibility:hidden"></div>
+        <h1 class="header-title">차량관리</h1>
         <div class="header-btn" style="visibility:hidden"></div>
       </div>
       <div class="screen-scroll" style="padding:12px 16px 28px;">
@@ -59,51 +60,24 @@ const Vehicle = {
         </section>
 
         <section class="veh-cost">
-          <div class="veh-cost-h"><h2>이번 달 차량 비용</h2>${can ? '<button type="button" class="exp-link" onclick="Expenses.open()">경비 전체 보기 ›</button>' : ''}</div>
+          <div class="veh-cost-h"><h2>경비 기록</h2>${can ? '' : '<span class="veh-paid">유료</span>'}</div>
           ${can ? `
+            <div class="exp-month">
+              <button type="button" aria-label="이전 달" onclick="Expenses.shift(-1)">‹</button>
+              <b>${+Expenses.month.slice(0, 4)}년 ${+Expenses.month.slice(5)}월</b>
+              <button type="button" aria-label="다음 달" onclick="Expenses.shift(1)">›</button>
+            </div>
             <div class="veh-quick">${this.CAR_CATS.map(id => { const c = Expenses.cat(id); return `<button type="button" onclick="Vehicle.add(${escJs(id)})"><span>${c.icon}</span>${esc(c.label)}</button>`; }).join('')}</div>
-            <div id="veh-cost-body"><div class="exp-empty">불러오는 중...</div></div>`
+            <div id="exp-body"><div class="exp-empty">불러오는 중...</div></div>`
           : `
             <div class="art-add locked" style="display:flex;">
-              <span class="art-lock-t">🔒 주유·정비 비용 기록</span>
-              <span class="art-lock-s">영수증 사진과 함께 남기고, 달마다 차량 비용을 모아 볼 수 있어요</span>
+              <span class="art-lock-t">🔒 경비 기록은 유료예요</span>
+              <span class="art-lock-s">주유·주차·통행료·정비·식비 영수증을 사진과 함께 남기고, 달마다 합계를 정산용으로 받을 수 있어요</span>
               <button type="button" onclick="App.navigate('upgrade')">유료 혜택 보기</button>
             </div>`}
         </section>
       </div>`;
-    if (can) this.load();
-  },
-
-  async load() {
-    const box = U.$('#veh-cost-body');
-    const month = Expenses.ymd(new Date()).slice(0, 7);
-    Expenses.month = month;
-    try {
-      const [from, to] = Expenses.range();
-      Expenses.items = Expenses.online() ? await SupabaseClient.expensesList(from, to)
-        : Expenses._local().filter(x => x.date >= from && x.date <= to).sort((a, b) => b.date.localeCompare(a.date));
-    } catch (e) {
-      if (box) box.innerHTML = `<div class="exp-empty">${navigator.onLine === false ? '인터넷 연결을 확인해 주세요.' : '비용을 불러오지 못했어요.'}</div>`;
-      return;
-    }
-    const me = window.SupabaseClient?.currentUser?.id;
-    this.items = Expenses.items.filter(x => this.CAR_CATS.includes(x.category) && (!me || !x.user_id || x.user_id === me));
-    if (!box || !box.isConnected) return;
-    const total = this.items.reduce((s, x) => s + Number(x.amount || 0), 0);
-    const by = this.CAR_CATS.map(id => ({ c: Expenses.cat(id), sum: this.items.filter(x => x.category === id).reduce((s, x) => s + Number(x.amount || 0), 0) })).filter(x => x.sum > 0);
-    box.innerHTML = `
-      <div class="exp-total">
-        <div class="exp-total-label">${+month.slice(5)}월 차량 비용 · ${this.items.length}건</div>
-        <div class="exp-total-amt">${Expenses.won(total)}</div>
-        ${by.length ? `<div class="exp-cats">${by.map(x => `<span>${x.c.icon} ${esc(x.c.label)} ${Expenses.won(x.sum)}</span>`).join('')}</div>` : ''}
-      </div>
-      ${this.items.length ? `<div class="exp-list">${this.items.slice(0, 6).map(x => { const c = Expenses.cat(x.category); return `
-        <button type="button" class="exp-item" onclick="Expenses.openForm(${escJs(x.id)})">
-          <span class="exp-ico">${c.icon}</span>
-          <span class="exp-info"><b>${esc(c.label)}${x.memo ? ' · ' + esc(x.memo) : ''}</b><small>${+x.date.slice(5, 7)}월 ${+x.date.slice(8, 10)}일</small></span>
-          <span class="exp-amt">${Expenses.won(x.amount)}</span>
-        </button>`; }).join('')}</div>`
-        : '<div class="exp-empty">이번 달 차량 비용 기록이 없어요.<br>위 버튼으로 주유·주차 영수증을 바로 남겨 보세요.</div>'}`;
+    if (can) Expenses.load();
   },
 
   add(category) { Expenses.openForm(null, { category }); },
