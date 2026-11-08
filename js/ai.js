@@ -317,10 +317,13 @@ const RoadAI = {
     const upcoming = picked
       .map((s, idx) => {
         const d = new Date(s.date + 'T00:00:00');
+        // 비공개 일정은 제목·장소·아티스트·샵·출발지를 AI(외부 서버)로 보내지 않음 — 날짜·시각만
+        const secret = s.isSecret === true;
         const steps = (Array.isArray(s.timeline) ? s.timeline : [])
           .filter(st => st && st.time && st.label)
           .slice(0, 7)
-          .map(st => `${(Number(st.dayOffset) || 0) < 0 ? '전날 ' : ''}${st.time} ${String(st.label).slice(0, 40)}`);
+          .map(st => `${(Number(st.dayOffset) || 0) < 0 ? '전날 ' : ''}${st.time} ${secret ? '이동 단계' : String(st.label).slice(0, 40)}`);
+        if (secret) return { idx, date: s.date, weekday: days[d.getDay()], start: s.startTime || '', end: s.endTime || '', title: '비공개 일정', artist: '', place: '', shop: '', departure: '', manager: '', secret: true, steps };
         return {
           idx, date: s.date, weekday: days[d.getDay()], start: s.startTime || '', end: s.endTime || '',
           title: String(s.title || '').slice(0, 60), artist: String(s.artistName || '').slice(0, 30),
@@ -431,7 +434,7 @@ const RoadAI = {
     const id = (m.ids || [])[a.idx];
     const sch = id && (window.hqStore?.getSchedules?.() || []).find(s => s.id === id);
     const b = a.before || {};
-    if (!sch || (b.title && sch.title !== b.title)) { U.toast('그 스케줄을 찾지 못했어요. 스케줄 화면에서 직접 확인해 주세요.'); return; }
+    if (!sch || (b.title && !sch.isSecret && sch.title !== b.title)) { U.toast('그 스케줄을 찾지 못했어요. 스케줄 화면에서 직접 확인해 주세요.'); return; }
     const req = a.cancel
       ? `[변경 요청] ${this._md(sch.date)} ${sch.startTime} "${sch.title}" 스케줄이 취소됐어요.${a.reason ? ' (' + a.reason + ')' : ''}`
       : `[변경 요청] ${this._md(sch.date)} ${sch.startTime} "${sch.title}" → ${a.new_date ? this._md(a.new_date) + ' ' : ''}${a.new_start || sch.startTime}${a.new_end ? '~' + a.new_end : ''}로 바뀌었어요.${a.reason ? ' (' + a.reason + ')' : ''}`;

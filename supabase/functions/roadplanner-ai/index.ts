@@ -120,6 +120,17 @@ export function ambiguousPlace(name: unknown): string | null {
 
 const DOW = ["일", "월", "화", "수", "목", "금", "토"];
 
+/** 지금 한국 날짜·요일·시각 (서버 시계 기준) */
+export function kstNow(nowMs = Date.now()) {
+  const t = new Date(nowMs + 9 * 3600000);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return {
+    today: `${t.getUTCFullYear()}-${p(t.getUTCMonth() + 1)}-${p(t.getUTCDate())}`,
+    weekday: DOW[t.getUTCDay()],
+    now: `${p(t.getUTCHours())}:${p(t.getUTCMinutes())}`,
+  };
+}
+
 /** 오늘부터 3주 날짜표 — 요일·날짜 계산 실수를 막으려고 서버가 미리 계산 (주는 월~일) */
 export function calendarTable(today: string): string {
   if (!/^20\d\d-\d\d-\d\d$/.test(today || "")) return "";
@@ -419,13 +430,13 @@ export function cleanReply(reply: string, actionCount: number): string {
 const NOT_SHOWN = "이 제안은 받아들여지지 않아 사용자에게 카드가 보이지 않았습니다. ";
 
 /** 한 번의 대화 (도구 여러 번) — 결과를 모아 돌려줌 */
-async function converse(env: Env, model: string, ctx: Json, messages: Json[], fromPhoto: boolean, f: Fetch) {
+async function converse(env: Env, model: string, ctx: Json, messages: Json[], fromPhoto: boolean, f: Fetch, textOnly = false) {
   const actions: Json[] = [];
   const places: Json[] = [];
   const seen: Record<string, boolean> = {};
   let reply = "";
   for (let round = 0; round < MAX_ROUNDS; round++) {
-    const resp = await callClaude(env, { model, max_tokens: 1200, system: systemBlocks(ctx), tools: TOOLS, messages }, f);
+    const resp = await callClaude(env, { model, max_tokens: 1200, system: systemBlocks(ctx), tools: TOOLS, ...(textOnly ? { tool_choice: { type: "none" } } : {}), messages }, f);
     const blocks: Json[] = resp.content || [];
     const said = blocks.filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
     if (said) reply = said;
@@ -464,7 +475,7 @@ async function converse(env: Env, model: string, ctx: Json, messages: Json[], fr
 }
 
 // ── 요청 처리 ──────────────────────────────────────────────────────────
-export async function handle(req: Request, env: Env, f: Fetch = fetch): Promise<Response> {
+export async function handle(req: Request, env: Env, f: Fetch = fetch, nowMs = Date.now()): Promise<Response> {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json(405, { error: "method_not_allowed" });
 
@@ -523,7 +534,8 @@ export async function handle(req: Request, env: Env, f: Fetch = fetch): Promise<
   const c0 = body.context && typeof body.context === "object" ? body.context : {};
   const upcoming = (Array.isArray(c0.upcoming) ? c0.upcoming.slice(0, 30) : []).map((u: Json, i: number) => ({ ...u, idx: Number.isInteger(u?.idx) ? u.idx : i }));
   const ctx: Json = {
-    today: String(c0.today || "").slice(0, 10), weekday: String(c0.weekday || "").slice(0, 3), now: String(c0.now || "").slice(0, 5),
+    // 오늘 날짜·시각은 서버가 한국 시간으로 직접 계산 (폰 시계·보낸 값이 틀려도 지난 날짜 검사·날짜표가 맞게)
+    ...kstNow(nowMs),
     userName: String(c0.userName || "").slice(0, 30), role: String(c0.role || "").slice(0, 20), departure: String(c0.departure || "").slice(0, 80),
     artists: Array.isArray(c0.artists) ? c0.artists.slice(0, 40).map((x: Json) => String(x).slice(0, 30)) : [],
     upcoming,
@@ -539,7 +551,8 @@ export async function handle(req: Request, env: Env, f: Fetch = fetch): Promise<
       const last = messages[messages.length - 1];
       if (last && last.role === "user" && Array.isArray(last.content)) last.content.push({ type: "text", text: problem });
       else messages.push({ role: "user", content: [{ type: "text", text: problem }] });
-      const again = await converse(env, model, ctx, messages, !!image, f);
+      // 카드가 이미 나왔으면(한자만 고치는 경우) 글만 다시 받음 → 같은 카드가 두 장 뜨지 않게
+      const again = await converse(env, model, ctx, messages, !!image, f, out.actions.length > 0);
       out = { reply: again.reply || out.reply, actions: [...out.actions, ...again.actions], places: [...out.places, ...again.places.filter((p: Json) => !out.places.some((q: Json) => q.id === p.id))] };
     }
     out.reply = cleanReply(out.reply, out.actions.length);
