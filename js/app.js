@@ -3,7 +3,7 @@
    ========================================= */
 
 const App = {
-  screens: ['home','register','timeline','login','onboarding','profile','upgrade','ai','artists','expenses','sos','talk'],
+  screens: ['home','register','timeline','login','onboarding','profile','upgrade','ai','artists','expenses','vehicle','sos','talk'],
 
   async init() {
     // 오프라인 기능(서비스워커)은 맨 먼저 등록 (로그인 확인을 기다리다 load 이벤트를 놓치지 않게)
@@ -228,6 +228,7 @@ const App = {
         case 'ai': if (window.RoadAI) RoadAI.init(); break;
         case 'artists': if (window.Artists) Artists.render(); break;
         case 'expenses': if (window.Expenses) Expenses.render(); break;
+        case 'vehicle': if (window.Vehicle) Vehicle.render(); break;
         case 'sos': if (window.Sos) Sos.render(); break;
         case 'talk': if (window.Talk) Talk.render(); break;
       }

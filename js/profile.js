@@ -124,7 +124,7 @@ const Profile = {
             ${phone ? row('휴대폰 번호', esc(phone), chev, 'Profile.editContact()')
                     : row('휴대폰 번호', indie ? '아직 없어요 · 연락처로 쓰는 번호예요' : '아직 없어요 · 본사가 긴급할 때 연락할 번호예요', '<span class="me-warn-btn">등록</span>', 'Profile.editContact()', 'warn')}
             ${row('경비 기록', '주유 · 주차 · 식비 영수증, 월별 합계 · 정산', indie && !Plan.can('expenses') ? lock('expenses') : chev, 'Expenses.open()')}
-            ${row(indie ? '내 차량' : '배정 차량', esc(vehicle || '등록 안 됨'), chev, 'Profile.editVehicle()')}
+            ${indie ? row('내 차량', esc(vehicle || '등록 안 됨') + ' · 주유·정비 비용', chev, 'Vehicle.open()') : row('배정 차량', esc(vehicle || '등록 안 됨'), chev, 'Profile.editVehicle()')}
             ${isHQ ? row('본사 관제 포털 열기', '관리자용 · 새 창', chev, `window.open(${escJs(typeof U !== 'undefined' && U.getHQPortalUrl ? U.getHQPortalUrl() : 'admin.html')}, '_blank', 'noopener')`) : ''}
           </div>
         </section>
@@ -319,7 +319,7 @@ const Profile = {
       localStorage.removeItem('bp_company_name');
       localStorage.removeItem('bp_manager_filter');
       localStorage.removeItem('bp_onboarded');
-      ['rp_default_departure', 'bp_user_phone', 'bp_user_vehicle', 'bp_account', 'rp_pro_until'].forEach(k => localStorage.removeItem(k));
+      ['rp_default_departure', 'bp_user_phone', 'bp_user_vehicle', 'rp_vehicle', 'bp_account', 'rp_pro_until'].forEach(k => localStorage.removeItem(k));
       try { Profile._planChecked = false; } catch (e) { }
       U.toast('로그아웃 되었습니다.');
       App.navigate('login');

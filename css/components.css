@@ -1097,3 +1097,30 @@ div.art-add.locked button { margin-top:6px; border:0; background:#4f46e5; color:
 .home-fab { position:fixed; right:max(16px, calc((100vw - var(--app-w, 100vw)) / 2 + 16px)); bottom:calc(var(--bottom-nav-h, 64px) + env(safe-area-inset-bottom) + 16px); width:56px; height:56px; border-radius:50%; border:0; background:#4f46e5; color:#fff; box-shadow:0 8px 20px rgba(79,70,229,0.35); display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:30; }
 .home-fab:active { transform:scale(0.96); }
 .talk-app .chat-root:not(.conv-open) .chat-list { visibility:hidden; }
+/* 내 차량 (개인 매니저) */
+.exp-car { width:100%; display:flex; align-items:center; gap:10px; text-align:left; background:var(--bg-card); border:1px solid var(--border-default); border-radius:14px; padding:12px 14px; margin-bottom:12px; cursor:pointer; font:inherit; color:var(--text-100); }
+.exp-car > span:first-child { font-size:22px; }
+.exp-car-txt { flex:1; min-width:0; display:flex; flex-direction:column; }
+.exp-car-txt b { font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.exp-car-txt small { font-size:12.5px; color:var(--text-400); margin-top:2px; }
+.veh-card { background:var(--bg-card); border:1px solid var(--border-default); border-radius:16px; padding:16px; margin-bottom:16px; }
+.veh-top { display:flex; align-items:center; gap:12px; }
+.veh-ico { font-size:30px; line-height:1; }
+.veh-name { flex:1; min-width:0; display:flex; flex-direction:column; }
+.veh-name b { font-size:18px; color:var(--text-100); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.veh-plate { display:inline-block; align-self:flex-start; margin-top:4px; font-size:14px; font-weight:800; letter-spacing:.5px; color:var(--text-200); background:var(--bg-input); border:1px solid var(--border-default); border-radius:6px; padding:2px 8px; }
+.veh-info { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:14px 0 12px; }
+.veh-info div { background:var(--bg-input); border-radius:10px; padding:8px 12px; }
+.veh-info dt { font-size:12px; color:var(--text-400); }
+.veh-info dd { margin:2px 0 0; font-size:14.5px; font-weight:700; color:var(--text-100); }
+.veh-call { display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap; width:100%; min-height:48px; border-radius:12px; background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; font-size:15px; font-weight:800; text-decoration:none; cursor:pointer; font-family:inherit; }
+.veh-call small { font-weight:600; opacity:.8; }
+.veh-call.none { background:var(--bg-input); border-color:var(--border-default); color:var(--text-400); font-size:13px; font-weight:600; padding:8px 12px; }
+.veh-empty { display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; padding:8px 0; color:var(--text-400); font-size:13.5px; }
+.veh-empty b { color:var(--text-100); font-size:16px; }
+.veh-empty .btn-primary { margin-top:6px; }
+.veh-cost-h { display:flex; align-items:center; justify-content:space-between; margin:0 2px 10px; }
+.veh-cost-h h2 { font-size:16px; font-weight:800; color:var(--text-100); margin:0; }
+.veh-quick { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-bottom:12px; }
+.veh-quick button { display:flex; flex-direction:column; align-items:center; gap:4px; min-height:64px; justify-content:center; background:var(--bg-card); border:1px solid var(--border-default); border-radius:12px; font-size:12.5px; font-weight:700; color:var(--text-200); cursor:pointer; font-family:inherit; }
+.veh-quick button span { font-size:20px; }

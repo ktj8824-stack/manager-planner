@@ -14,13 +14,15 @@ const Expenses = {
     { id: 'meal', label: '식비', icon: '🍚' },
     { id: 'transport', label: '교통', icon: '🚕' },
     { id: 'supplies', label: '소모품', icon: '🧴' },
+    { id: 'repair', label: '정비·세차', icon: '🔧', indie: true },   // 개인 매니저 차량 관리용 (본사 웹에는 안 보이게 회사 매니저는 숨김)
     { id: 'etc', label: '기타', icon: '🧾' },
   ],
+  cats() { const indie = typeof Plan !== 'undefined' && Plan.isIndie(); return this.CATS.filter(c => !c.indie || indie); },
   month: null,          // 'YYYY-MM'
   items: [],
   _receipt: null,       // 등록 창에서 고른 영수증 사진 (Blob)
 
-  cat(id) { return this.CATS.find(c => c.id === id) || this.CATS[this.CATS.length - 1]; },
+  cat(id) { return this.CATS.find(c => c.id === id) || this.CATS.find(c => c.id === 'etc'); },
   won(n) { return (Number(n) || 0).toLocaleString() + '원'; },
   ymd(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; },
   online() { const sc = window.SupabaseClient; return !!(sc?.isConfigured && sc.currentUser?.id); },
@@ -50,6 +52,7 @@ const Expenses = {
         <div class="header-btn" style="visibility:hidden"></div>
       </div>
       <div class="screen-scroll" style="padding:12px 16px 28px;">
+        ${typeof Plan !== 'undefined' && Plan.isIndie() && window.Vehicle ? `<button type="button" class="exp-car" onclick="Vehicle.open()"><span>🚗</span><span class="exp-car-txt"><b>${esc(Vehicle.title() || '내 차량 등록하기')}</b><small>차량 정보 · 주유·정비 비용 모아 보기</small></span><span aria-hidden="true">›</span></button>` : ''}
         <div class="exp-month">
           <button type="button" aria-label="이전 달" onclick="Expenses.shift(-1)">‹</button>
           <b>${y}년 ${m}월</b>
@@ -126,12 +129,12 @@ const Expenses = {
     const cur = id ? this.items.find(x => x.id === id) : null;
     this._receipt = null;
     const date = cur?.date || opts.date || this.ymd(new Date());
-    const catSel = cur?.category || 'parking';
+    const catSel = cur?.category || opts.category || 'parking';
     const mySch = (window.hqStore?.getSchedules?.() || []).filter(s => s.date === date);
     const schSel = cur?.schedule_id || opts.scheduleId || '';
     App.showModal(cur ? '경비 수정' : '경비 추가', `
       <form id="exp-form" onsubmit="event.preventDefault(); if (event.submitter === null) return; Expenses.save(${cur ? escJs(cur.id) : 'null'})" style="display:flex; flex-direction:column; gap:12px; text-align:left;">
-        <div class="exp-cat-pick">${this.CATS.map(c => `<button type="button" data-c="${c.id}" class="${c.id === catSel ? 'on' : ''}" onclick="Expenses._pick(this)">${c.icon} ${c.label}</button>`).join('')}</div>
+        <div class="exp-cat-pick">${this.cats().map(c => `<button type="button" data-c="${c.id}" class="${c.id === catSel ? 'on' : ''}" onclick="Expenses._pick(this)">${c.icon} ${c.label}</button>`).join('')}</div>
         <label class="art-label"><span>금액 (원) <span style="color:#ef4444;">*</span></span>
           <input id="exp-amount" class="art-input" inputmode="numeric" pattern="[0-9,]*" placeholder="예: 5000" value="${cur ? esc(String(cur.amount)) : ''}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" /></label>
         <label class="art-label">날짜
@@ -197,6 +200,7 @@ const Expenses = {
       U.toast(id ? '경비를 수정했어요' : `${this.cat(category).label} ${this.won(amount)} 기록했어요`);
       if (date.slice(0, 7) !== this.month) this.month = date.slice(0, 7);
       if (State.screen === 'expenses') this.render();
+      if (State.screen === 'vehicle' && window.Vehicle) Vehicle.render();
     } catch (e) {
       const raw = String(e?.message || '');
       if (/PAID_FEATURE/.test(raw)) { App.closeModal(); Plan.upsell('expenses'); }
@@ -213,7 +217,7 @@ const Expenses = {
       else this._saveLocal(this._local().filter(x => x.id !== id));
       App.closeModal();
       U.toast('삭제했어요');
-      this.render();
+      if (State.screen === 'vehicle' && window.Vehicle) Vehicle.render(); else this.render();
     } catch (e) { U.toast('삭제하지 못했어요. 잠시 후 다시 해 주세요.'); }
   },
 
