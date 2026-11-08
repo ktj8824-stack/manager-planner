@@ -2231,135 +2231,103 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const weekDays = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i);
-      weekDays.push(d);
-    }
+    for (let i = 0; i < 7; i++) weekDays.push(new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i));
+    if (startY === endY && startM === endM && el.currentDateText) el.currentDateText.textContent = `${startY}년 ${startM}월 ${startD}일 ~ ${endD}일`;
 
-    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-
-    let html = `
-      <div style="display:grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap:12px; min-height:500px; width:100%; box-sizing:border-box;">
-    `;
-
-    weekDays.forEach((d, idx) => {
-      const dateStr = fmtDate(d);
-      const isToday = dateStr === fmtDate(new Date());
-      const daySchedules = allSchedules.filter(s => s.date === dateStr);
-      const monthNum = d.getMonth() + 1;
-      const dayNum = d.getDate();
-
-      html += `
-        <div class="cal-cell week-day-card" data-date="${esc(dateStr)}" style="background:var(--bg-card); border-radius:10px; padding:12px; border:${isToday ? '2px solid var(--primary)' : '1px solid var(--border-color)'}; display:flex; flex-direction:column; gap:10px; min-width:0; box-sizing:border-box; transition:border-color 0.15s ease;">
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:8px; pointer-events:none;">
-            <span style="font-weight:700; color:${idx === 0 ? '#ef4444' : idx === 6 ? '#3b82f6' : '#0f172a'};">${dayNames[idx]}요일 (${esc(monthNum)}/${esc(dayNum)})</span>
-            <span style="font-size:12px; color:#64748b; font-weight:600;">${esc(daySchedules.length)}건</span>
-          </div>
-          <div style="display:flex; flex-direction:column; gap:8px; overflow-y:auto;">
-      `;
-
-      if (daySchedules.length === 0) {
-        html += `<div style="color:#64748b; font-size:12px; text-align:center; padding:20px 0;">일정 없음</div>`;
-      } else {
-        daySchedules.forEach(sch => {
-          const isSec = sch.isSecret === true;
-          const canView = window.AuthPersona ? window.AuthPersona.canViewSecret(sch) : true;
-          const displayTitle = (isSec && !canView) ? '🔒 [극비 보안 스케줄]' : (isSec ? `🔒 [비공개] ${sch.title}` : sch.title);
-
-          const isAll = sch.artistId === 'ALL' || (sch.artistName && (sch.artistName.includes('전원') || sch.artistName.includes('전체')));
-          const art = isAll ? null : artists.find(a => a.id === sch.artistId);
-          const artColor = isAll ? '#0284c7' : (art ? art.color : '#4f46e5');
-          const artistLabel = isAll ? '전체 아티스트' : (sch.artistName || '아티스트');
-          html += `
-            <div class="cal-event-pill" style="--art-color: ${esc(artColor)}; padding:8px; border-radius:6px; cursor:pointer; min-width:0; overflow:hidden;" data-sch-id="${esc(sch.id)}">
-              <div style="font-weight:600; font-size:12px; color:#ffffff;">${esc(sch.startTime)} ~ ${esc(sch.endTime)}</div>
-              <div style="font-size:13px; font-weight:700; color:#ffffff; margin:2px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(displayTitle)}</div>
-              <div style="font-size:11px; color:rgba(255,255,255,0.8); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">👤 ${esc(artistLabel)} | 🚗 ${esc(sch.managerName || '매니저')}</div>
-            </div>
-          `;
-        });
-      }
-
-      html += `
-          </div>
-        </div>
-      `;
-    });
-
-    html += `</div>`;
-    el.scheduleViewport.innerHTML = html;
+    // 시안: 06~24시 시간 격자, 일정은 시작~끝 길이만큼 블록, 겹치면 옆으로 나눔, 오늘은 지금 시각 빨간 선
+    const H0 = 6, H1 = 24, PX = 28;   // 1시간 = 28px
+    const toMin = (t) => { const m = /^(\d{1,2}):(\d{2})/.exec(String(t || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; };
+    const todayStr = fmtDate(new Date());
+    const now = new Date(); const nowMin = now.getHours() * 60 + now.getMinutes();
+    const colorOf = (sch) => { if (sch.isSecret) return '#9333ea'; if (sch.artistId === 'ALL') return '#52525b'; const a = artists.find(x => x.id === sch.artistId); return a ? (a.color || '#6366f1') : '#6366f1'; };
+    const nameOf = (sch) => { if (sch.artistId === 'ALL') return '전원'; const a = artists.find(x => x.id === sch.artistId); return String((a && a.name) || sch.artistName || '').replace(/\s*\([^)]*\)\s*$/, ''); };
+    const WK = ['일', '월', '화', '수', '목', '금', '토'];
+    const perDay = weekDays.map(d => allSchedules.filter(s => s.date === fmtDate(d)).sort((x, y) => String(x.startTime || '').localeCompare(String(y.startTime || ''))));
+    const head = weekDays.map((d, i) => {
+      const isT = fmtDate(d) === todayStr;
+      return `<div class="wv2-dh ${isT ? 'today' : ''}"><span class="wd ${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${WK[i]}</span><b>${d.getDate()}</b><span class="cnt">${perDay[i].length ? perDay[i].length + '건' : ''}</span></div>`;
+    }).join('');
+    const hours = []; for (let h = H0; h < H1; h++) hours.push(`<span style="top:${(h - H0) * PX - 7}px">${String(h).padStart(2, '0')}:00</span>`);
+    const cols = weekDays.map((d, i) => {
+      const isT = fmtDate(d) === todayStr;
+      // 겹침 묶음 → 열 나누기
+      const evs = perDay[i].map(s => { let st = toMin(s.startTime); if (st === null) st = H0 * 60; let en = toMin(s.endTime); if (en === null || en <= st) en = st + 60; return { s, st: Math.max(st, H0 * 60), en: Math.min(en, H1 * 60) }; });
+      const lanes = []; evs.forEach(e => { let k = lanes.findIndex(end => end <= e.st); if (k < 0) { k = lanes.length; lanes.push(0); } lanes[k] = e.en; e.k = k; });
+      const n = Math.max(1, lanes.length);
+      const blocks = evs.map(e => {
+        const top = (e.st - H0 * 60) / 60 * PX, h = Math.max(22, (e.en - e.st) / 60 * PX - 2);
+        const c = colorOf(e.s);
+        return `<div class="cal-event-pill wv2-ev" data-sch-id="${esc(e.s.id)}" title="${esc(nameOf(e.s) + ' · ' + (e.s.startTime || '') + ' ' + (e.s.title || ''))}" style="top:${top}px; height:${h}px; left:calc(${(e.k / n * 100).toFixed(2)}% + 2px); width:calc(${(100 / n).toFixed(2)}% - 4px); --ev-c:${esc(c)};"><span class="an" style="color:${esc(c)}">${esc(nameOf(e.s))}</span><span class="tt">${esc(e.s.title || '')}</span></div>`;
+      }).join('');
+      const line = isT && nowMin >= H0 * 60 && nowMin < H1 * 60 ? `<div class="wv2-now" style="top:${(nowMin - H0 * 60) / 60 * PX}px"></div>` : '';
+      return `<div class="wv2-col ${isT ? 'today' : ''}" data-date="${esc(fmtDate(d))}">${blocks}${line}</div>`;
+    }).join('');
+    el.scheduleViewport.innerHTML = `<div class="wv2"><div class="wv2-in"><div class="wv2-head"><span></span>${head}</div><div class="wv2-body" style="height:${(H1 - H0) * PX}px"><div class="wv2-hours">${hours.join('')}</div>${cols}</div></div></div>`;
   }
 
   // ── 3. 아티스트별 간트/타임라인 뷰 (Gantt View) ──
   async function renderGanttView() {
     const todayStr = fmtDate(state.currentDate);
-    if (el.calendarTitle) el.calendarTitle.textContent = `${todayStr} 아티스트별 타임라인 (Gantt)`;
-    if (el.currentDateText) {
-      const y = state.currentDate.getFullYear();
-      const m = state.currentDate.getMonth() + 1;
-      const d = state.currentDate.getDate();
-      el.currentDateText.textContent = `${y}년 ${m}월 ${d}일`;
-    }
+    const y = state.currentDate.getFullYear(), m = state.currentDate.getMonth() + 1, d = state.currentDate.getDate();
+    const WK = ['일', '월', '화', '수', '목', '금', '토'];
+    if (el.calendarTitle) el.calendarTitle.textContent = `${todayStr} 당일 동선`;
+    if (el.currentDateText) el.currentDateText.textContent = `${y}년 ${m}월 ${d}일 (${WK[state.currentDate.getDay()]})`;
 
     const artists = await window.hqStore.getArtists();
-    const schedules = await window.hqStore.getSchedules({ date: todayStr });
+    let schedules = await window.hqStore.getSchedules({ date: todayStr });
+    if (state.selectedManagerFilter && state.selectedManagerFilter !== 'ALL') schedules = schedules.filter(s => s.managerId === state.selectedManagerFilter);
+    const showArtists = state.selectedArtistFilter && state.selectedArtistFilter !== 'ALL' ? artists.filter(a => a.id === state.selectedArtistFilter) : artists;
 
-    let html = `
-      <div style="display:flex; flex-direction:column; gap:16px;">
-    `;
+    // 시안: 아티스트 한 줄 · 06~24시 막대 (예정 · 진행/이동 중 · 지연 · 완료) · 지금 시각 빨간 선
+    const H0 = 6, H1 = 24, SPAN = (H1 - H0) * 60;
+    const toMin = (t) => { const mm = /^(\d{1,2}):(\d{2})/.exec(String(t || '')); return mm ? (+mm[1]) * 60 + (+mm[2]) : null; };
+    const pct = (min) => Math.max(0, Math.min(100, (min - H0 * 60) / SPAN * 100));
+    const isToday = todayStr === fmtDate(new Date());
+    const now = new Date(); const nowMin = now.getHours() * 60 + now.getMinutes();
+    const thr = lateThreshold();
+    const clean = (l) => String(l || '').replace(/^\[[^\]]+\]\s*/, '');
+    const ticks = []; for (let h = H0; h < H1; h += 2) ticks.push(`<span style="left:${pct(h * 60)}%">${String(h).padStart(2, '0')}시</span>`);
 
-    artists.forEach(art => {
-      const artSch = schedules.filter(s => matchArtistSchedule(s, art.id, artists));
-      html += `
-        <div style="background:#1e293b; border-radius:10px; padding:16px; border:1px solid #334155;">
-          <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-            <span style="width:28px; height:28px; border-radius:8px; background:${esc(art.color || '#6366f1')}; display:flex; align-items:center; justify-content:center; color:#fff;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            </span>
-            <h3 style="margin:0; font-size:16px; color:#fff; font-weight:800;">${esc(art.name)}</h3>
-            <span style="font-size:12px; color:#94a3b8;">(${esc(art.type)})</span>
-            <span style="margin-left:auto; font-size:12px; color:#10b981; font-weight:700;">오늘 일정 ${esc(artSch.length)}건</span>
-          </div>
-          <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:6px;">
-      `;
-
-      if (artSch.length === 0) {
-        html += `<div style="color:#64748b; font-size:13px; padding:6px 0;">오늘 등록된 스케줄이 없습니다.</div>`;
-      } else {
-        artSch.forEach(sch => {
-          const isSec = sch.isSecret === true;
-          const canView = window.AuthPersona ? window.AuthPersona.canViewSecret(sch) : true;
-          const displayTitle = (isSec && !canView) ? '대외비 보안 스케줄' : (isSec ? `[비공개] ${sch.title}` : sch.title);
-          const displayLoc = (isSec && !canView) ? '비공개 장소' : (sch.location || '장소 미지정');
-
-          html += `
-            <div class="cal-event-pill" style="--art-color: ${esc(art.color)}; padding:10px 14px; border-radius:8px; min-width:230px; cursor:pointer;" data-sch-id="${esc(sch.id)}">
-              <div style="font-size:12px; color:#93c5fd; font-weight:700; display:flex; align-items:center; gap:4px;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                ${esc(sch.startTime)} ~ ${esc(sch.endTime)}
-              </div>
-              <div style="font-size:14px; font-weight:800; color:#fff; margin:4px 0;">${esc(displayTitle)}</div>
-              <div style="font-size:12px; color:#cbd5e1; display:flex; align-items:center; gap:4px;">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                ${esc(displayLoc)}
-              </div>
-              <div style="font-size:11px; color:#94a3b8; margin-top:4px; display:flex; align-items:center; gap:4px;">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                담당: ${esc(sch.managerName || '매니저')}
-              </div>
-            </div>
-          `;
+    const rows = showArtists.map(art => {
+      const artSch = schedules.filter(s => matchArtistSchedule(s, art.id, artists)).sort((x, z) => String(x.startTime || '').localeCompare(String(z.startTime || '')));
+      let anyLate = false;
+      const bars = [];
+      artSch.forEach(sch => {
+        const canView = window.AuthPersona ? window.AuthPersona.canViewSecret(sch) : true;
+        const title = sch.isSecret && !canView ? '대외비 일정' : (sch.title || '');
+        const tl = (Array.isArray(sch.timeline) ? sch.timeline : []).filter(t => toMin(t.time) !== null);
+        const st = toMin(sch.startTime), en = toMin(sch.endTime);
+        const firstOpen = tl.find(t => !t.done && !/^\[기상/.test(t.label || ''));
+        tl.forEach((t, i) => {
+          const a0 = toMin(t.time); const nx = tl[i + 1] ? toMin(tl[i + 1].time) : st;
+          const a1 = nx !== null && nx > a0 ? nx : a0 + 30;
+          if (st !== null && a0 >= st) return;                 // 본 일정 시간 안의 단계는 본 막대로
+          let cls = 'plan';
+          if (t.done) cls = 'done';
+          else if (t.moving) cls = 'live';
+          else if (isToday && t === firstOpen && nowMin - a0 >= thr) { cls = 'late'; anyLate = true; }
+          bars.push({ a0, a1, cls, label: clean(t.label) || '이동', id: sch.id });
         });
-      }
-
-      html += `
-          </div>
-        </div>
-      `;
-    });
-
-    html += `</div>`;
-    el.scheduleViewport.innerHTML = html;
+        if (st !== null) {
+          const done = sch.status === '완료' || (tl.length && tl.every(t => t.done));
+          const live = !done && isToday && nowMin >= st && nowMin < (en || st + 60);
+          bars.push({ a0: st, a1: en && en > st ? en : st + 60, cls: done ? 'done' : live ? 'live' : 'plan', label: title, id: sch.id, main: true });
+        }
+      });
+      const mgr = artSch.find(s => s.managerName);
+      const sub = mgr ? (anyLate ? `${mgr.managerName} · 응답 없음` : mgr.managerName) : '';
+      const barHtml = bars.map(b => `<div class="cal-event-pill gv2-bar ${b.cls}${b.main ? ' main' : ''}" data-sch-id="${esc(b.id)}" title="${esc(b.label)}" style="left:${pct(b.a0)}%; width:${Math.max(0.8, pct(b.a1) - pct(b.a0))}%">${esc(b.label)}</div>`).join('');
+      return `<div class="gv2-row${anyLate ? ' late' : ''}">
+        <div class="gv2-who"><span class="gv2-dot" style="background:${esc(art.color || '#6366f1')}"></span><span><b>${esc(String(art.name || '').replace(/\s*\([^)]*\)\s*$/, ''))}</b><small class="${anyLate ? 'bad' : ''}">${esc(sub)}</small></span></div>
+        <div class="gv2-track">${barHtml || '<span class="gv2-none">오늘 일정 없음</span>'}${isToday && nowMin >= H0 * 60 ? `<i class="gv2-now" style="left:${pct(nowMin)}%"></i>` : ''}</div>
+      </div>`;
+    }).join('');
+    const nowTxt = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    el.scheduleViewport.innerHTML = `<div class="gv2"><div class="gv2-in">
+      <div class="gv2-row head"><div class="gv2-who"></div><div class="gv2-ticks">${ticks.join('')}</div></div>
+      ${rows || '<div class="gv2-empty">등록된 아티스트가 없어요.</div>'}
+      <div class="gv2-legend"><span><i class="plan"></i>예정</span><span><i class="live"></i>진행 · 이동 중</span><span><i class="late"></i>지연 · 미확인</span><span><i class="done"></i>완료</span>${isToday ? `<span><i class="nowk"></i>지금 ${nowTxt}</span>` : ''}</div>
+    </div></div>`;
   }
 
   // ── 4. 실시간 관제 칸반 보드 뷰 (Kanban View) ──
@@ -2382,15 +2350,13 @@ document.addEventListener('DOMContentLoaded', () => {
       schedules = schedules.filter(s => s.managerId === state.selectedManagerFilter);
     }
 
-    // 5 Columns with sleek Line SVGs
     const cols = [
-      { key: 'ready', title: '예정 / 출발대기', color: '#60a5fa', iconSvg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:5px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' },
-      { key: 'moving', title: '픽업 / 이동중', color: '#f59e0b', iconSvg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:5px;"><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg>' },
-      { key: 'shop', title: '헤메샵 진행중', color: '#ec4899', iconSvg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:5px;"><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg>' },
-      { key: 'onsite', title: '현장대기 / 진행중', color: '#818cf8', iconSvg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:5px;"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 9 15 12 10 15 10 9"/></svg>' },
-      { key: 'done', title: '일정 완료', color: '#34d399', iconSvg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:5px;"><polyline points="20 6 9 17 4 12"/></svg>' }
+      { key: 'ready', title: '예정 · 출발 대기' },
+      { key: 'moving', title: '픽업 · 이동 중' },
+      { key: 'shop', title: '헤메 · 샵 진행 중' },
+      { key: 'onsite', title: '현장 대기 · 진행 중' },
+      { key: 'done', title: '일정 완료' }
     ];
-
     // Classify schedules
     const categorized = { ready: [], moving: [], shop: [], onsite: [], done: [] };
 
@@ -2413,89 +2379,53 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    let html = `<div class="kanban-board-container">`;
-
+    // 시안: 밝은 5칸, 카드 = 아티스트 · 시각 · 지금 단계 · 담당 · 상태 한 줄 (지연은 빨간 테두리)
+    const isToday = todayStr === fmtDate(new Date());
+    const now = new Date(); const nowMin = now.getHours() * 60 + now.getMinutes();
+    const toMin = (t) => { const mm = /^(\d{1,2}):(\d{2})/.exec(String(t || '')); return mm ? (+mm[1]) * 60 + (+mm[2]) : null; };
+    const clean = (l) => String(l || '').replace(/^\[[^\]]+\]\s*/, '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim();
+    const thr = lateThreshold();
+    const card = (sch, key) => {
+      const canView = window.AuthPersona ? window.AuthPersona.canViewSecret(sch) : true;
+      const hide = sch.isSecret && !canView;
+      const art = artists.find(a => a.id === sch.artistId);
+      const color = art ? (art.color || '#6366f1') : (sch.artistId === 'ALL' ? '#52525b' : '#6366f1');
+      const aname = sch.artistId === 'ALL' ? '전원' : String((art && art.name) || sch.artistName || '아티스트').replace(/\s*\([^)]*\)\s*$/, '');
+      const tl = Array.isArray(sch.timeline) ? sch.timeline : [];
+      const cur = tl.find(t => t.moving && !t.done) || tl.find(t => !t.done && !/^\[기상/.test(t.label || ''));
+      const lastDone = [...tl].reverse().find(t => t.done);
+      let title = hide ? '대외비 일정' : (sch.title || '');
+      let time = sch.startTime || '';
+      let line = '', lineCls = '';
+      if (key === 'done') { line = '완료'; lineCls = 'mute'; time = (lastDone && lastDone.time) || sch.endTime || time; }
+      else if (cur && (key === 'moving' || key === 'shop' || key === 'onsite')) {
+        if (!hide) title = clean(cur.label) || title;
+        time = cur.time || time;
+        const cm = toMin(cur.time);
+        if (key === 'moving') line = cm !== null && isToday ? (nowMin >= cm ? `${nowMin - cm}분 전 출발` : `${cur.time} 출발 예정`) : '이동 중';
+        else line = cm !== null && isToday && nowMin >= cm ? `${nowMin - cm}분째 진행` : '진행 예정';
+      } else if (cur) {
+        const cm = toMin(cur.time);
+        line = `${clean(cur.label) || '다음 단계'} ${cur.time || ''}`.trim();
+        if (cm !== null && isToday && !cur.moving && nowMin - cm >= thr) { line = `응답 없음 ${nowMin - cm}분`; lineCls = 'bad'; }
+      }
+      try { const ack = window.hqStore.ackState && window.hqStore.ackState(sch); if (ack && ack.pending && key !== 'done') { line = '시간 변경 · 확인 대기'; lineCls = 'warn'; } } catch (e) { }
+      const late = lineCls === 'bad';
+      return `<button type="button" class="kb2-card${late ? ' late' : ''}${key === 'done' ? ' done' : ''}" data-sch-id="${esc(sch.id)}" onclick="Admin.openScheduleDetailModal(${escJs(sch.id)})">
+        <span class="kb2-top"><span class="kb2-art"><i style="background:${esc(color)}"></i>${esc(aname)}</span><b>${esc(time)}</b></span>
+        <span class="kb2-title">${esc(title)}</span>
+        <span class="kb2-mgr">${esc(sch.managerName || '담당 미지정')}</span>
+        ${line ? `<span class="kb2-line ${lineCls}">${esc(line)}</span>` : ''}
+      </button>`;
+    };
+    const hm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    let html = `<p class="kb2-note">매니저가 앱에서 상태 버튼을 누르면 카드가 자동으로 다음 칸으로 옮겨져요${isToday ? ` · ${hm} 기준` : ''}</p><div class="kb2">`;
     cols.forEach(col => {
       const list = categorized[col.key];
-      html += `
-        <div class="kanban-column">
-          <div class="kanban-col-header" style="border-top:3px solid ${esc(col.color)}; display:flex; justify-content:space-between; align-items:center;">
-            <span style="display:flex; align-items:center;">${col.iconSvg} ${esc(col.title)}</span>
-            <span class="kanban-col-count" style="color:${esc(col.color)};">${esc(list.length)}</span>
-          </div>
-          <div class="kanban-col-body">
-      `;
-
-      if (list.length === 0) {
-        html += `<div style="text-align:center; padding:30px 10px; color:#64748b; font-size:12px;">일정 없음</div>`;
-      } else {
-        list.forEach(sch => {
-          const isSec = sch.isSecret === true;
-          const canView = window.AuthPersona ? window.AuthPersona.canViewSecret(sch) : true;
-          const displayTitle = (isSec && !canView) ? '대외비 보안 스케줄' : (isSec ? `[비공개] ${sch.title}` : sch.title);
-          const displayLoc = (isSec && !canView) ? '비공개 장소' : (sch.location || '장소 미정');
-
-          const art = artists.find(a => a.id === sch.artistId);
-          const artColor = art ? art.color : '#6366f1';
-          const isMoving = col.key === 'moving';
-          const isDone = col.key === 'done';
-
-          let currentStepText = '대기 중';
-          if (sch.timeline && sch.timeline.length > 0) {
-            const activeStep = sch.timeline.find(t => t.moving) || sch.timeline.find(t => !t.done) || sch.timeline[sch.timeline.length - 1];
-            if (activeStep) currentStepText = (activeStep.label || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '').trim();
-          }
-          const displayStep = (isSec && !canView) ? '비공개 상태' : currentStepText;
-
-          html += `
-            <div class="kanban-card ${isMoving ? 'kanban-card-moving' : ''} ${isDone ? 'kanban-card-done' : ''}" 
-                 style="--accent-theme: ${esc(artColor)};" data-sch-id="${esc(sch.id)}">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <span style="font-size:11px; font-weight:800; color:${esc(artColor)}; background:rgba(255,255,255,0.08); padding:2px 8px; border-radius:4px; display:inline-flex; align-items:center; gap:4px;">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                  ${esc(sch.artistName || '아티스트')}
-                </span>
-                ${getStatusBadge(sch.status)}
-              </div>
-              
-              <div style="font-size:14px; font-weight:800; color:#fff; margin-bottom:6px; line-height:1.3;">
-                ${esc(displayTitle)}
-              </div>
-
-              <div style="font-size:12px; color:#94a3b8; display:flex; flex-direction:column; gap:4px; margin-bottom:10px;">
-                <div style="display:flex; align-items:center; gap:4px;">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  <strong style="color:#f8fafc;">${esc(sch.startTime)} ~ ${esc(sch.endTime || '')}</strong>
-                </div>
-                <div style="display:flex; align-items:center; gap:4px;">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                  <span>${esc(displayLoc)}</span>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; font-size:11px;">
-                  <span style="display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${esc(sch.managerName || '미배정')}</span>
-                  <span>|</span>
-                  <span style="display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg>${esc(sch.vehicleName || '차량 미지정')}</span>
-                </div>
-              </div>
-
-              <div style="background:#1e293b; padding:8px 10px; border-radius:6px; font-size:11px; color:#cbd5e1; display:flex; justify-content:space-between; align-items:center; border:1px solid #334155;">
-                <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:inline-flex; align-items:center; gap:4px;">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
-                  ${esc(displayStep)}
-                </span>
-                <button type="button" onclick="Admin.openScheduleDetailModal(${escJs(sch.id)})" style="background:#4f46e5; color:#fff; border:none; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:700; cursor:pointer; flex-shrink:0;">상세 ↗</button>
-              </div>
-            </div>
-          `;
-        });
-      }
-
-      html += `
-          </div>
-        </div>
-      `;
+      const cards = list.map(sch => card(sch, col.key));
+      const lateN = cards.filter(c => c.includes('kb2-card late')).length;
+      html += `<section class="kb2-col ${col.key}"><header><h3>${esc(col.title)}</h3>${lateN ? `<span class="kb2-late">지연 ${lateN}</span>` : ''}<span class="kb2-n">${list.length}</span></header>${cards.join('') || '<p class="kb2-empty">지금은 없어요</p>'}</section>`;
     });
-
     html += `</div>`;
     el.scheduleViewport.innerHTML = html;
   }
@@ -2521,374 +2451,133 @@ document.addEventListener('DOMContentLoaded', () => {
       schedules = schedules.filter(s => s.managerId === state.selectedManagerFilter);
     }
 
-    // Map control grid
-    let html = `
-      <div class="map-control-grid">
-        <!-- 지도 인터랙티브 관제 영역 -->
-        <div class="map-canvas-card">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #334155; padding-bottom:10px;">
-            <h4 style="color:#fff; font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
-              수도권 주요 방송국/스튜디오 & 실시간 아티스트 동선 관제
-            </h4>
-            <div style="display:flex; gap:8px;">
-              <span class="badge-status moving" style="display:inline-flex; align-items:center; gap:5px;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg>
-                이동중 ${schedules.filter(s => s.status === '이동중' || s.timeline?.some(t => t.moving)).length}대
-              </span>
-              <span class="badge-status done" style="display:inline-flex; align-items:center; gap:5px;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                완료 ${schedules.filter(s => s.status === '완료' || s.status === 'completed').length}건
-              </span>
-            </div>
-          </div>
-
-          <!-- 관제 지도 캔버스 -->
-          <div id="hq-control-map-viewport" style="flex:1; min-height:400px; background:#0f172a; border-radius:10px; border:1px solid #334155; position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; padding:20px; background:radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);">
-            
-            <!-- Map background grid overlay -->
-            <div style="position:absolute; inset:0; background-image:linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px); background-size:40px 40px; pointer-events:none;"></div>
-
-            <!-- Map pins grid -->
-            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:16px; position:relative; z-index:2;">
-              ${schedules.length === 0 ? '<div style="color:#94a3b8; font-size:14px; grid-column:span 3; text-align:center; padding:100px 0;">오늘 예정된 스케줄 및 동선이 없습니다.</div>' : ''}
-              ${schedules.map((sch, i) => {
+    // 시안: 밝은 지도판 위에 아티스트 위치 핀 + 말풍선(장소 · 담당 · 지금 상태), 지연은 빨간 테두리, '전체 보기 / 지연만'
+    const WK = ['일', '월', '화', '수', '목', '금', '토'];
+    const isToday = todayStr === fmtDate(new Date());
+    const now = new Date(); const nowMin = now.getHours() * 60 + now.getMinutes();
+    const hm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    if (el.currentDateText) el.currentDateText.textContent = `${state.currentDate.getFullYear()}년 ${state.currentDate.getMonth() + 1}월 ${state.currentDate.getDate()}일 (${WK[state.currentDate.getDay()]})${isToday ? ' · ' + hm : ''}`;
+    const toMin = (t) => { const mm = /^(\d{1,2}):(\d{2})/.exec(String(t || '')); return mm ? (+mm[1]) * 60 + (+mm[2]) : null; };
+    const clean = (l) => String(l || '').replace(/^\[[^\]]+\]\s*/, '');
+    const thr = lateThreshold();
+    // 서울 근처 고정 범위 (위도 37.42~37.70, 경도 126.80~127.20)
+    const LAT0 = 37.42, LAT1 = 37.70, LNG0 = 126.80, LNG1 = 127.20;
+    const hash = (str) => { let h = 0; for (const c of String(str)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
+    const pins = schedules.map(sch => {
+      const canView = window.AuthPersona ? window.AuthPersona.canViewSecret(sch) : true;
+      const hide = sch.isSecret && !canView;
       const art = artists.find(a => a.id === sch.artistId);
-      const isMoving = sch.status === '이동중' || sch.timeline?.some(t => t.moving);
-      const isDone = sch.status === '완료' || sch.status === 'completed';
-
-      return `
-                  <div onclick="Admin.openScheduleDetailModal(${escJs(sch.id)})" 
-                       style="background:rgba(30,41,59,0.9); border:2px solid ${isMoving ? '#f59e0b' : isDone ? '#10b981' : '#4f46e5'}; border-radius:12px; padding:14px; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 14px rgba(0,0,0,0.3); backdrop-filter:blur(8px);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                      <span style="background:${esc(art?.color || '#4f46e5')}; color:#fff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:4px;">
-                        ${esc(sch.artistName)}
-                      </span>
-                      <span style="font-size:11px; font-weight:700; color:${isMoving ? '#fbbf24' : isDone ? '#34d399' : '#a5b4fc'}; display:inline-flex; align-items:center; gap:4px;">
-                        ${isMoving ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg> 이동 중' : isDone ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 완료' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 대기중'}
-                      </span>
-                    </div>
-
-                    <div style="font-size:13px; font-weight:800; color:#fff; margin-bottom:6px; line-height:1.3; display:flex; align-items:center; gap:6px;">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line></svg>
-                      <span>${esc(sch.title)}</span>
-                    </div>
-
-                    <div style="font-size:12px; color:#cbd5e1; font-weight:600; display:flex; align-items:center; gap:4px;">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                      <span>${esc(sch.location || '장소 미정')}</span>
-                    </div>
-
-                    <div style="font-size:11px; color:#94a3b8; margin-top:8px; padding-top:6px; border-top:1px dashed #334155; display:flex; justify-content:space-between;">
-                      <span style="display:inline-flex; align-items:center; gap:4px;">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                        ${esc(sch.managerName || '매니저')}
-                      </span>
-                      <span style="display:inline-flex; align-items:center; gap:4px;">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg>
-                        ${esc(sch.vehicleName || '배차 차량')}
-                      </span>
-                    </div>
-                  </div>
-                `;
-    }).join('')}
-            </div>
-
-            <!-- Footer status summary inside map canvas -->
-            <div style="position:relative; z-index:2; margin-top:20px; background:rgba(15,23,42,0.85); border:1px solid #334155; padding:12px 16px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:12px; color:#94a3b8; display:inline-flex; align-items:center; gap:6px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg>
-                본사 관제 센터: 현장 로드플래너 앱과 실시간 2-way 데이터 동기화 활성화됨
-              </span>
-              <span style="font-size:12px; font-weight:700; color:#38bdf8;">수도권 주요 방송국/샵 거점 관제 모드</span>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- 우측 차량 / 매니저 현황 패널 -->
-        <div class="map-vehicle-sidebar">
-          <div style="background:#1e293b; border-radius:var(--radius-md); border:1px solid #334155; padding:14px;">
-            <h4 style="color:#fff; font-size:14px; font-weight:800; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2"><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg>
-              전사 배차 현황 (${esc(vehicles.length)}대)
-            </h4>
-            <div style="display:flex; flex-direction:column; gap:8px;">
-              ${vehicles.map(v => {
-      const assignedSched = schedules.find(s => s.vehicleId === v.id || s.vehicleName === v.name);
-      const isBusy = !!assignedSched;
-      const isMoving = assignedSched && (assignedSched.status === '이동중' || assignedSched.timeline?.some(t => t.moving));
-      return `
-                  <div style="background:#0f172a; padding:10px 12px; border-radius:8px; border:1px solid ${isMoving ? '#f59e0b' : isBusy ? '#4f46e5' : '#334155'}; font-size:12px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                      <span style="font-weight:800; color:#fff;">${esc(v.name)}</span>
-                      <span style="font-size:10px; font-weight:800; padding:1px 6px; border-radius:4px; background:${isMoving ? '#f59e0b' : isBusy ? '#4f46e5' : '#334155'}; color:#fff; display:inline-flex; align-items:center; gap:3px;">
-                        ${isMoving ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/></svg> 주행중' : isBusy ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 운행예정' : '차고지 대기'}
-                      </span>
-                    </div>
-                    ${assignedSched ? `
-                      <div style="color:#93c5fd; font-size:11px; font-weight:600;">[${esc(assignedSched.artistName)}] ${esc(assignedSched.title)}</div>
-                      <div style="color:#94a3b8; font-size:11px; display:flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ${esc(assignedSched.location || '현장')}</div>
-                    ` : '<div style="color:#64748b; font-size:11px;">즉시 배차 가능</div>'}
-                  </div>
-                `;
-    }).join('')}
-            </div>
-          </div>
+      const color = art ? (art.color || '#6366f1') : '#52525b';
+      const aname = sch.artistId === 'ALL' ? '전원' : String((art && art.name) || sch.artistName || '').replace(/\s*\([^)]*\)\s*$/, '');
+      const tl = Array.isArray(sch.timeline) ? sch.timeline : [];
+      const done = sch.status === '완료' || (tl.length && tl.every(t => t.done));
+      const mv = tl.find(t => t.moving && !t.done);
+      const next = tl.find(t => !t.done && !/^\[기상/.test(t.label || ''));
+      const nm = next ? toMin(next.time) : null;
+      let place = hide ? '비공개 장소' : (String(sch.location || '장소 미정').replace(/\s*\([^)]*\)\s*$/, '').slice(0, 24));
+      let line = '', cls = 'plan';
+      if (done) { line = '완료'; cls = 'done'; }
+      else if (mv) { line = '이동 중' + (mv.label ? ' · ' + clean(mv.label).slice(0, 14) : ''); cls = 'move'; }
+      else if (next && nm !== null && isToday && nowMin - nm >= thr) { line = `미확인 ${nowMin - nm}분 · ${clean(next.label).slice(0, 12)}`; cls = 'late'; }
+      else if (tl.some(t => t.done)) { const ld = [...tl].reverse().find(t => t.done); line = /샵|헤어|메이크업/.test(ld.label || '') ? '샵 진행 중' : '진행 중'; cls = 'live'; }
+      else if (next) { line = `${next.time} ${clean(next.label).slice(0, 10)} 예정`; }
+      let x = null, y = null;
+      const lat = Number(sch.lat || sch.locationLat), lng = Number(sch.lng || sch.locationLng);
+      if (!hide && lat && lng) { x = Math.max(8, Math.min(92, (lng - LNG0) / (LNG1 - LNG0) * 100)); y = Math.max(14, Math.min(90, (LAT1 - lat) / (LAT1 - LAT0) * 100)); }
+      return { sch, color, aname, place, mgr: sch.managerName || '담당 미지정', line, cls, x, y };
+    });
+    const lateN = pins.filter(p => p.cls === 'late').length;
+    const onlyLate = state.mapOnlyLate === true;
+    const shown = onlyLate ? pins.filter(p => p.cls === 'late') : pins;
+    const noPos = shown.filter(p => p.x === null);
+    const pinHtml = shown.filter(p => p.x !== null).map(p => `
+      <button type="button" class="mp2-pin ${p.cls}" style="left:${p.x.toFixed(1)}%; top:${p.y.toFixed(1)}%" onclick="Admin.openScheduleDetailModal(${escJs(p.sch.id)})" aria-label="${esc(p.aname + ' ' + p.place)}">
+        <span class="mp2-tip"><b style="color:${esc(p.color)}">${esc(p.aname)}</b><span>${esc(p.place)} · ${esc(p.mgr)}</span>${p.line ? `<em>${esc(p.line)}</em>` : ''}</span>
+        <i style="background:${esc(p.color)}"></i>
+      </button>`).join('');
+    const busy = vehicles.filter(v => schedules.some(s => s.vehicleId === v.id || s.vehicleName === v.name)).length;
+    const html = `
+      <div class="mp2">
+        <span class="mp2-lab">서울 · 수도권 (등록된 장소 좌표 기준)</span>
+        <div class="mp2-river" aria-hidden="true"></div>
+        ${pinHtml}
+        ${!pins.length ? '<div class="mp2-empty">이 날은 표시할 일정이 없어요.</div>' : onlyLate && !shown.length ? '<div class="mp2-empty">지연된 일정이 없어요.</div>' : ''}
+        <div class="mp2-ctl">
+          <button type="button" class="${onlyLate ? '' : 'on'}" onclick="Admin.mapFilter(false)">전체 보기 ${pins.length}</button>
+          <button type="button" class="${onlyLate ? 'on' : ''}" onclick="Admin.mapFilter(true)">지연만 ${lateN}</button>
         </div>
       </div>
-    `;
-
+      ${noPos.length ? `<div class="mp2-nopos"><span>지도에 못 올린 일정 (장소 좌표 없음)</span>${noPos.map(p => `<button type="button" class="mp2-chip ${p.cls}" onclick="Admin.openScheduleDetailModal(${escJs(p.sch.id)})"><i style="background:${esc(p.color)}"></i><b>${esc(p.aname)}</b> ${esc(p.place)} · ${esc(p.mgr)}${p.line ? ` <em>${esc(p.line)}</em>` : ''}</button>`).join('')}</div>` : ''}
+      <div class="mp2-foot">차량 ${vehicles.length}대 · 오늘 배차 ${busy}대 · 핀을 누르면 일정 상세가 열려요</div>`;
     el.scheduleViewport.innerHTML = html;
   }
+  Admin.mapFilter = (late) => { state.mapOnlyLate = !!late; renderMapView(); };
 
   // ── 6. 전사 활동 분석 차트 및 리포트 (Analytics View) ──
   async function renderAnalyticsView() {
     const year = state.currentDate.getFullYear();
     const month = state.currentDate.getMonth() + 1;
-    if (el.calendarTitle) el.calendarTitle.textContent = `${year}년 ${month}월 전사 활동 분석 리포트`;
+    if (el.calendarTitle) el.calendarTitle.textContent = `${year}년 ${month}월 활동 분석`;
     if (el.currentDateText) el.currentDateText.textContent = `${year}년 ${month}월`;
 
-    const allSchedules = await window.hqStore.getSchedules();
+    const ym = `${year}-${String(month).padStart(2, '0')}`;
     const artists = await window.hqStore.getArtists();
     const managers = await window.hqStore.getManagers();
     const vehicles = await window.hqStore.getVehicles();
+    let list = (await window.hqStore.getSchedules()).filter(s => String(s.date || '').startsWith(ym));
+    if (state.selectedArtistFilter !== 'ALL') list = list.filter(s => matchArtistSchedule(s, state.selectedArtistFilter, artists));
+    if (state.selectedManagerFilter && state.selectedManagerFilter !== 'ALL') list = list.filter(s => s.managerId === state.selectedManagerFilter);
 
-    // Compute stats
-    const totalCount = allSchedules.length;
-    const doneCount = allSchedules.filter(s => s.status === '완료' || s.status === 'completed' || s.timeline?.every(t => t.done)).length;
-    const completionRate = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 100;
-
-    // 표준 카테고리 정규화 함수
-    const normalizeCategory = (cat) => {
-      if (!cat) return 'meeting';
-      const c = String(cat).toLowerCase().trim();
-      if (c === 'music_show' || c === '음악방송' || c.includes('음악')) return 'music_show';
-      if (c === 'broadcast' || c === '예능' || c === '라디오' || c === '방송') return 'broadcast';
-      if (c === 'shooting' || c === '화보' || c === '광고' || c === '촬영') return 'shooting';
-      if (c === 'event' || c === '행사' || c === '공연' || c === '콘서트') return 'event';
-      if (c === 'fansign' || c === '팬사인회' || c === '팬미팅' || c === '팬싸') return 'fansign';
-      if (c === 'recording' || c === '녹음' || c === '레슨' || c === '연습') return 'recording';
-      if (c === 'overseas' || c === '해외' || c === '투어' || c === '출국') return 'overseas';
+    // 시안: 이번 달 기준 · 밝은 카드 · 많은 순 막대
+    const total = list.length;
+    const isDone = (s) => s.status === '완료' || s.status === 'completed' || (Array.isArray(s.timeline) && s.timeline.length && s.timeline.every(t => t.done));
+    const done = list.filter(isDone).length;
+    const norm = (cat) => {
+      const c = String(cat || '').toLowerCase().trim();
+      if (!c) return 'meeting';
+      if (c === 'music_show' || c.includes('음악')) return 'music_show';
+      if (c === 'broadcast' || /예능|라디오|방송|인터뷰/.test(c)) return 'broadcast';
+      if (c === 'shooting' || /화보|광고|촬영/.test(c)) return 'shooting';
+      if (c === 'event' || /행사|공연|콘서트|페스티벌/.test(c)) return 'event';
+      if (c === 'fansign' || /팬사인|팬미팅|팬싸/.test(c)) return 'fansign';
+      if (c === 'recording' || /녹음|레슨|연습|안무/.test(c)) return 'recording';
+      if (c === 'overseas' || /해외|투어|출국/.test(c)) return 'overseas';
       return 'meeting';
     };
+    const CAT = { music_show: '음악방송 · 생방송', broadcast: '예능 · 라디오 · 인터뷰', shooting: '화보 · 촬영 · 광고', event: '행사 · 콘서트 · 페스티벌', fansign: '팬미팅 · 팬사인회', recording: '녹음 · 안무 · 연습', overseas: '해외 투어 · 출국', meeting: '미팅 · 기획회의' };
+    const catCount = {}; list.forEach(s => { const k = norm(s.category); catCount[k] = (catCount[k] || 0) + 1; });
+    const cats = Object.entries(catCount).sort((x, y) => y[1] - x[1]);
+    const artRows = artists.map(a => ({ name: String(a.name || '').replace(/\s*\([^)]*\)\s*$/, ''), color: a.color || '#6366f1', n: list.filter(s => s.artistId === a.id).length })).filter(r => r.n > 0);
+    const allN = list.filter(s => s.artistId === 'ALL').length;
+    if (allN) artRows.push({ name: '전원', color: '#52525b', n: allN, all: true });
+    artRows.sort((x, y) => y.n - x.n);
+    const maxCat = cats.length ? cats[0][1] : 1, maxArt = artRows.length ? artRows[0].n : 1;
+    const pct = (n) => total ? Math.round(n / total * 100) : 0;
+    const bar = (label, n, max, color) => `<div class="an2-row"><span class="an2-lab">${esc(label)}</span><span class="an2-track"><i style="width:${Math.max(2, n / max * 100)}%; background:${esc(color)}"></i></span><b>${n}건 · ${pct(n)}%</b></div>`;
+    const usedVeh = new Set(list.map(s => s.vehicleId || s.vehicleName).filter(Boolean)).size;
+    const usedMgr = new Set(list.map(s => s.managerId).filter(Boolean)).size;
+    const top = artRows.find(r => !r.all);
+    const locCount = {}; list.forEach(s => { if (s.isSecret) return; const l = String(s.location || '').trim(); if (l) locCount[l] = (locCount[l] || 0) + 1; });
+    const topLoc = Object.entries(locCount).sort((x, y) => y[1] - x[1]).slice(0, 5);
+    const mgrRows = managers.map(m => { const mine = list.filter(s => s.managerId === m.id); return { m, n: mine.length, d: mine.filter(isDone).length }; }).filter(r => r.n > 0).sort((x, y) => y.n - x.n);
 
-    // Categories Breakdown (8대 표준 엔터 카테고리 - 라인 SVG 아이콘 탑재)
-    const catMap = {
-      music_show: { label: '음악방송 / 생방송', count: 0, color: '#6366f1', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>' },
-      broadcast:  { label: '예능 / 라디오 / 인터뷰', count: 0, color: '#3b82f6', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>' },
-      shooting:   { label: '화보 / 촬영 / 광고', count: 0, color: '#ec4899', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>' },
-      event:      { label: '행사 / 콘서트 / 페스티벌', count: 0, color: '#f59e0b', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>' },
-      fansign:    { label: '팬미팅 / 팬사인회', count: 0, color: '#10b981', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>' },
-      recording:  { label: '녹음 / 안무레슨 / 연습', count: 0, color: '#8b5cf6', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>' },
-      overseas:   { label: '해외 투어 / 출국', count: 0, color: '#0ea5e9', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"></path></svg>' },
-      meeting:    { label: '미팅 / 기획회의 / 기타', count: 0, color: '#64748b', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>' }
-    };
-
-    allSchedules.forEach(s => {
-      const catKey = normalizeCategory(s.category);
-      if (catMap[catKey]) catMap[catKey].count++;
-      else catMap.meeting.count++;
-    });
-
-    // Top locations
-    const locCounts = {};
-    allSchedules.forEach(s => {
-      const loc = s.location || '기타 현장';
-      locCounts[loc] = (locCounts[loc] || 0) + 1;
-    });
-    const topLocations = Object.entries(locCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
-
-    // Artist Stats
-    const artistStats = artists.map(a => {
-      const count = allSchedules.filter(s => s.artistId === a.id).length;
-      return { ...a, count };
-    }).sort((a, b) => b.count - a.count);
-
-    let html = `
-      <div class="analytics-dashboard-grid" style="padding: 24px; background: #0f172a; min-height: 100%; box-sizing: border-box;">
-        
-        <!-- Summary Cards Row -->
-        <div class="analytics-cards-row">
-          <div class="analytics-card">
-            <div class="analytics-card-title">
-              <span style="display:inline-flex; align-items:center; gap:6px;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-                누적 총 스케줄
-              </span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            </div>
-            <div class="analytics-card-value">${esc(totalCount)}건</div>
-            <div class="analytics-card-sub">완료 ${esc(doneCount)}건 (${esc(completionRate)}%)</div>
-          </div>
-          <div class="analytics-card">
-            <div class="analytics-card-title">
-              <span style="display:inline-flex; align-items:center; gap:6px;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                활동 아티스트
-              </span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-            </div>
-            <div class="analytics-card-value">${esc(artists.length)}팀</div>
-            <div class="analytics-card-sub">최다 스케줄: ${esc(artistStats[0]?.name || '없음')} (${esc(artistStats[0]?.count || 0)}건)</div>
-          </div>
-          <div class="analytics-card">
-            <div class="analytics-card-title">
-              <span style="display:inline-flex; align-items:center; gap:6px;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2"><path d="M5 11l2-6h10l2 6"></path><rect x="3" y="11" width="18" height="8" rx="2"></rect><circle cx="7.5" cy="15.5" r="1.5"></circle><circle cx="16.5" cy="15.5" r="1.5"></circle></svg>
-                운행 배차 차량
-              </span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M5 11l2-6h10l2 6"></path><rect x="3" y="11" width="18" height="8" rx="2"></rect><circle cx="7.5" cy="15.5" r="1.5"></circle><circle cx="16.5" cy="15.5" r="1.5"></circle></svg>
-            </div>
-            <div class="analytics-card-value">${esc(vehicles.length)}대</div>
-            <div class="analytics-card-sub">평균 가동률 85% 이상</div>
-          </div>
-          <div class="analytics-card">
-            <div class="analytics-card-title">
-              <span style="display:inline-flex; align-items:center; gap:6px;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                현장 지원 매니저
-              </span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-            </div>
-            <div class="analytics-card-value">${esc(managers.length)}명</div>
-            <div class="analytics-card-sub">전원 100% 배치 완료</div>
-          </div>
+    el.scheduleViewport.innerHTML = `
+      <div class="an2">
+        <div class="an2-kpis">
+          <div class="an2-kpi"><span>누적 스케줄</span><b>${total}건</b><small>이번 달 · 완료 ${done}건</small></div>
+          <div class="an2-kpi"><span>활동 아티스트</span><b>${artRows.filter(r => !r.all).length}팀</b><small>${top ? `최다: ${esc(top.name)} ${top.n}건` : '이번 달 일정 없음'}</small></div>
+          <div class="an2-kpi"><span>운영 배차 차량</span><b>${vehicles.length}대</b><small>이번 달 배차된 차량 ${usedVeh}대</small></div>
+          <div class="an2-kpi"><span>현장 지원 매니저</span><b>${managers.length}명</b><small>이번 달 담당 ${usedMgr}명</small></div>
         </div>
-
-        <!-- 2 Column Section: Category Distribution & Artist Ranking -->
-        <div class="analytics-two-col">
-          
-          <!-- Category Distribution -->
-          <div class="analytics-section-card">
-            <div class="analytics-section-header">
-              <h4 style="display:flex; align-items:center; gap:8px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                카테고리별 활동 비율 분포
-              </h4>
-              <span style="font-size:12px; color:#94a3b8;">전체 ${esc(totalCount)}건 기준</span>
-            </div>
-            <div class="category-bar-group">
-              ${Object.values(catMap).map(cat => {
-      const pct = totalCount > 0 ? Math.round((cat.count / totalCount) * 100) : 0;
-      return `
-                  <div class="category-bar-item">
-                    <div class="category-bar-label">
-                      <span style="display:inline-flex; align-items:center; gap:6px; color:#e2e8f0;">
-                        <span style="color:${esc(cat.color)}; display:inline-flex; align-items:center;">${cat.icon}</span>
-                        <span>${esc(cat.label)}</span>
-                      </span>
-                      <span style="font-weight:700; color:#f8fafc;">${esc(cat.count)}건 (${esc(pct)}%)</span>
-                    </div>
-                    <div class="category-bar-track">
-                      <div class="category-bar-fill" style="width:${esc(pct)}%; background:${esc(cat.color)};"></div>
-                    </div>
-                  </div>
-                `;
-    }).join('')}
-            </div>
-          </div>
-
-          <!-- Artist Performance Ranking -->
-          <div class="analytics-section-card">
-            <div class="analytics-section-header">
-              <h4 style="display:flex; align-items:center; gap:8px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2.2"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
-                소속 아티스트별 활동 수행 실적
-              </h4>
-              <span style="font-size:12px; color:#94a3b8;">월간 스케줄 건수</span>
-            </div>
-            <div class="category-bar-group">
-              ${artistStats.map(a => {
-      const pct = totalCount > 0 ? Math.round((a.count / totalCount) * 100) : 0;
-      return `
-                  <div class="category-bar-item">
-                    <div class="category-bar-label">
-                      <span style="display:inline-flex; align-items:center; gap:6px;">
-                        <span style="width:22px; height:22px; border-radius:6px; background:${esc(a.color || '#6366f1')}; color:#fff; display:inline-flex; align-items:center; justify-content:center;">
-                          ${getArtistTypeIcon(a, 12)}
-                        </span>
-                        <strong style="color:#f8fafc;">${esc(a.name)}</strong>
-                        <span style="font-size:11px; color:#94a3b8;">(${esc(a.type)})</span>
-                      </span>
-                      <span style="font-weight:700; color:#f8fafc;">${esc(a.count)}건 (${esc(pct)}%)</span>
-                    </div>
-                    <div class="category-bar-track">
-                      <div class="category-bar-fill" style="width:${esc(pct)}%; background:${esc(a.color || '#6366f1')};"></div>
-                    </div>
-                  </div>
-                `;
-    }).join('')}
-            </div>
-          </div>
-
+        <div class="an2-two">
+          <section class="an2-card"><h3>분야별 스케줄 · ${month}월 ${total}건</h3>${cats.map(([k, n]) => bar(CAT[k], n, maxCat, '#4f46e5')).join('') || '<p class="an2-empty">이번 달 일정이 없어요.</p>'}</section>
+          <section class="an2-card"><h3>아티스트별 스케줄</h3>${artRows.map(r => bar(r.name, r.n, maxArt, r.color)).join('') || '<p class="an2-empty">이번 달 일정이 없어요.</p>'}${allN ? `<p class="an2-note">'전원'은 소속 아티스트 모두가 참여하는 일정이에요</p>` : ''}</section>
         </div>
-
-        <!-- 2 Column Section: Top Destinations & Manager Support Breakdown -->
-        <div class="analytics-two-col">
-          
-          <!-- Top Locations -->
-          <div class="analytics-section-card">
-            <div class="analytics-section-header">
-              <h4 style="display:flex; align-items:center; gap:8px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                최다 출동 현장 거점 Top 5
-              </h4>
-              <span style="font-size:12px; color:#94a3b8;">방송국 및 메인 스튜디오</span>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:10px;">
-              ${topLocations.map(([locName, count], rank) => `
-                <div style="display:flex; justify-content:space-between; align-items:center; background:#0f172a; padding:10px 14px; border-radius:8px; border:1px solid #334155;">
-                  <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="background:${rank === 0 ? '#f59e0b' : rank === 1 ? '#94a3b8' : '#64748b'}; color:#fff; font-size:11px; font-weight:800; width:22px; height:22px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;">${esc(rank + 1)}</span>
-                    <span style="font-size:13px; font-weight:700; color:#f8fafc;">${esc(locName)}</span>
-                  </div>
-                  <span style="font-size:12px; font-weight:800; color:#38bdf8;">${esc(count)}회 방문</span>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-
-          <!-- Manager Support Breakdown -->
-          <div class="analytics-section-card">
-            <div class="analytics-section-header">
-              <h4 style="display:flex; align-items:center; gap:8px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                담당 매니저별 현장 지원 현황
-              </h4>
-              <button type="button" onclick="Admin.exportExcel()" style="background:#10b981; color:#fff; border:none; padding:5px 12px; border-radius:6px; font-size:11px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                엑셀 다운로드
-              </button>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:8px;">
-              ${managers.map(m => {
-      const mScheds = allSchedules.filter(s => s.managerId === m.id || s.managerName === m.name);
-      const mDone = mScheds.filter(s => s.status === '완료' || s.status === 'completed' || s.timeline?.every(t => t.done)).length;
-      return `
-                  <div style="display:flex; justify-content:space-between; align-items:center; background:#0f172a; padding:10px 14px; border-radius:8px; border:1px solid #334155; font-size:12px;">
-                    <div>
-                      <strong style="color:#fff; font-size:13px;">${esc(m.name)}</strong>
-                      <span style="color:#94a3b8; margin-left:6px;">(${esc(m.phone || '로드 매니저')})</span>
-                    </div>
-                    <div style="display:flex; gap:12px; align-items:center;">
-                      <span style="color:#a5b4fc; font-weight:700;">총 ${esc(mScheds.length)}건 수행</span>
-                      <span style="color:#34d399; font-weight:800; background:rgba(16,185,129,0.1); padding:2px 8px; border-radius:10px;">완수율 ${mScheds.length > 0 ? Math.round((mDone / mScheds.length) * 100) : 100}%</span>
-                    </div>
-                  </div>
-                `;
-    }).join('')}
-            </div>
-          </div>
-
+        <div class="an2-two">
+          <section class="an2-card"><h3>많이 간 장소 Top 5</h3>${topLoc.map(([l, n], i) => `<div class="an2-loc"><span class="rk">${i + 1}</span><span class="nm">${esc(l)}</span><b>${n}회</b></div>`).join('') || '<p class="an2-empty">장소 기록이 없어요.</p>'}</section>
+          <section class="an2-card"><div class="an2-h"><h3>매니저별 담당 일정</h3><button type="button" class="an2-xls" onclick="Admin.exportExcel()">엑셀 받기</button></div>${mgrRows.map(r => `<div class="an2-mgr"><span class="nm">${esc(r.m.name)}</span><span class="n">${r.n}건 담당</span><span class="d">완료 ${r.d}건</span></div>`).join('') || '<p class="an2-empty">이번 달 담당 일정이 없어요.</p>'}</section>
         </div>
-
-      </div>
-    `;
-
-    el.scheduleViewport.innerHTML = html;
+      </div>`;
   }
 
   // ── 스케줄 상세 모달 열기 ──
