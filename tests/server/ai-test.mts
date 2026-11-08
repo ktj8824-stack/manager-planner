@@ -125,5 +125,6 @@ used = 999;
 const lim = await H({ message: '또', context: ctx });
 out.limit = lim.status + ' ' + (await lim.json()).message.slice(0, 12);
 out.cal = calendarTable('2026-11-07').split('\n')[0];
+out.noUndefined = ['2026-11-08', '2026-11-09', '2026-11-11', '2026-11-14'].every(d => !calendarTable(d).includes('undefined'));
 out.rulesStable = systemBlocks(ctx)[0].text === systemBlocks({ ...ctx, today: '2026-12-01' })[0].text;
 console.log(JSON.stringify(out));

@@ -143,7 +143,8 @@ export function calendarTable(today: string): string {
     const t = new Date(base.getTime() + i * 86400000);
     const w = DOW[t.getUTCDay()];
     const week = Math.floor((i + mondayOffset) / 7);
-    const tags = [rel[i], ["이번 주", "다음 주", "다다음 주"][week] + " " + w + "요일"].filter(Boolean);
+    const wk = ["이번 주", "다음 주", "다다음 주"][week];   // 오늘이 월요일이 아니면 마지막 며칠은 그다음 주라 이름 없음
+    const tags = [rel[i], wk ? wk + " " + w + "요일" : null].filter(Boolean);
     lines.push(`${t.toISOString().slice(0, 10)}(${w}) ${tags.join(", ")}`);
   }
   return lines.join("\n");
