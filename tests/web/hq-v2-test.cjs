@@ -39,6 +39,21 @@ const { chromium } = require('playwright');
   await p.fill('#msg-title', '<b>x</b> 해외 투어'); await p.fill('#msg-content', '동선 점검'); await p.waitForTimeout(200);
   R.notice = await p.evaluate(() => { const c = document.querySelector('#msg-app-preview .msg-prev-card'); return { card: !!c, urgent: c?.classList.contains('urgent'), noXss: !document.querySelector('#msg-app-preview b b'), btn: document.querySelector('#form-send-message button[type=submit]').textContent }; });
   await p.evaluate(() => document.getElementById('modal-send-message').classList.remove('active'));
+  // 패널 안쪽: 아티스트 줄 · 차량 요약 · 경비 승인 대기 · 아티스트 칩
+  await p.evaluate(() => Admin.openArtistModal()); await p.waitForTimeout(500);
+  R.artists = await p.evaluate(() => ({ rows: document.querySelectorAll('#artist-management-list .p2-row').length, search: !!document.getElementById('p2-artist-q'), title: document.querySelector('#modal-artist-management .p2-title h3')?.textContent }));
+  await p.fill('#p2-artist-q', '루나'); await p.waitForTimeout(300);
+  R.artistSearch = await p.evaluate(() => document.querySelectorAll('#artist-management-list .p2-row').length);
+  await p.click('#artist-management-list .p2-row'); await p.waitForTimeout(500);
+  R.artistDel = await p.evaluate(() => !!document.querySelector('#form-artist-add .p2-del'));
+  await p.evaluate(() => document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active')));
+  await p.evaluate(() => Admin.openVehicleModal()); await p.waitForTimeout(500);
+  R.vehicles = await p.evaluate(() => ({ sum: document.querySelectorAll('#vehicle-management-list .p2-sum > div').length, rows: document.querySelectorAll('#vehicle-management-list .p2-row').length }));
+  await p.evaluate(() => document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active')));
+  R.expenses = await p.evaluate(() => { const H = HqExpenses; H.month = new Date().toISOString().slice(0, 7); H._modal().classList.add('active'); const ms = hqStore.getManagers(); H.items = [{ id: 'a', user_id: ms[2].id, date: H.month + '-02', category: 'fuel', amount: 1000, status: 'pending', memo: '<img src=x onerror=alert(1)>' }, { id: 'b', user_id: ms[3].id, date: H.month + '-03', category: 'meal', amount: 2000, status: 'approved' }]; H.draw(); const b = document.getElementById('hq-exp-body'); const r = { pend: b.querySelectorAll('.ex2-ok').length, done: b.querySelectorAll('.ex2-st.approved').length, noXss: !b.querySelector('img') }; H.close(); return r; });
+  await p.click('#btn-open-add-schedule'); await p.waitForTimeout(500);
+  R.chips = await p.evaluate(() => { const c = document.querySelectorAll('#form-artist-chips button'); c[1] && c[1].click(); return { n: c.length, synced: document.getElementById('form-artist').value === c[1]?.dataset.v }; });
+  await p.evaluate(() => document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active')));
   // 설정: 지연 판단 기준
   await p.evaluate(() => Admin.openAdminSettingsModal()); await p.waitForTimeout(300);
   R.settings = await p.evaluate(() => ({ sel: document.getElementById('setting-late-min')?.value, counts: document.getElementById('setting-count-mgr')?.textContent }));

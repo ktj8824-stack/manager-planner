@@ -1126,3 +1126,6 @@ div.art-add.locked button { margin-top:6px; border:0; background:#4f46e5; color:
 .veh-quick button span { font-size:20px; }
 .veh-paid { font-size:12px; font-weight:800; color:#4f46e5; background:#eef2ff; border-radius:999px; padding:3px 9px; }
 #screen-vehicle .exp-month { margin-bottom:10px; }
+.exp-amt .exp-st { display: block; font-size: 11px; font-weight: 800; text-align: right; margin-top: 2px; }
+.exp-st.ok { color: #047857; } .exp-st.bad { color: #b91c1c; }
+.exp-info small.exp-bad { color: #b91c1c; }

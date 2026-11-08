@@ -102,9 +102,9 @@ const Expenses = {
       return `${head}
         <button type="button" class="exp-item" onclick="Expenses.openForm(${escJs(x.id)})">
           <span class="exp-ico">${c.icon}</span>
-          <span class="exp-info"><b>${esc(c.label)}${x.memo ? ' · ' + esc(x.memo) : ''}</b>${title(x.schedule_id) ? `<small>${esc(title(x.schedule_id))}</small>` : ''}</span>
+          <span class="exp-info"><b>${esc(c.label)}${x.memo ? ' · ' + esc(x.memo) : ''}</b>${title(x.schedule_id) ? `<small>${esc(title(x.schedule_id))}</small>` : ''}${x.status === 'rejected' && x.review_note ? `<small class="exp-bad">반려 사유: ${esc(x.review_note)}</small>` : ''}</span>
           ${x.receipt_path || x.receipt_local ? '<span class="exp-rc" title="영수증 있음">📷</span>' : ''}
-          <span class="exp-amt">${this.won(x.amount)}</span>
+          <span class="exp-amt">${this.won(x.amount)}${x.status === 'approved' ? '<small class="exp-st ok">승인</small>' : x.status === 'rejected' ? '<small class="exp-st bad">반려</small>' : ''}</span>
         </button>`;
     }).join('');
     box.innerHTML = `

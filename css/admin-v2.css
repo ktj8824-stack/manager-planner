@@ -245,7 +245,7 @@
   width: min(640px, 100%) !important; max-width: none !important; height: 100vh !important; max-height: 100vh !important; margin: 0 !important;
   border-radius: 0 !important; border: 0 !important; box-shadow: -12px 0 32px rgba(0, 0, 0, .18) !important; transform: translateX(40px); background: #fff !important;
 }
-#modal-hq-expenses > .modal-content { width: min(900px, 100%) !important; }
+#modal-hq-expenses > .modal-content { width: min(640px, 100%) !important; }
 .modal-overlay.active > .modal-content { transform: none !important; }
 #modal-schedule-form .modal-header, #modal-artist-management .modal-header, #modal-manager-management .modal-header, #modal-vehicle-management .modal-header,
 #modal-send-message .modal-header, #modal-admin-settings .modal-header, #modal-hq-expenses .modal-header, #modal-artist-form .modal-header, #modal-manager-edit .modal-header, #modal-vehicle-form .modal-header, #modal-settings .modal-header, #modal-place-management .modal-header { border-radius: 0 !important; background: #fff !important; }
@@ -298,3 +298,102 @@
 .set2-note { margin: 8px 0 0; font-size: 12px; color: #52525b; }
 .mgr2-st { font-size: 12px; font-weight: 800; color: #52525b; }
 .mgr2-st.late { color: #b91c1c; } .mgr2-st.move, .mgr2-st.live { color: #4338ca; } .mgr2-st.done { color: #047857; }
+
+/* ===== 패널 안쪽 (아티스트 · 차량 · 경비 · 매니저 공통) ===== */
+.modal-header.p2-head { padding: 18px 20px !important; background: #fff !important; border-bottom: 1px solid #e4e4e7 !important; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.p2-title { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.p2-title h3 { margin: 0; font-size: 20px; font-weight: 800; color: #0f172a; }
+.p2-title small { font-size: 13px; color: #52525b; }
+.p2-x { width: 44px; height: 44px; border: 1px solid #e4e4e7; border-radius: 12px; background: #fff; color: #27272a; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+.p2-x:hover { background: #f4f4f5; }
+.p2-tools { display: flex; gap: 8px; margin-bottom: 12px; }
+.p2-search { flex: 1; min-width: 0; height: 44px; border: 1px solid #e4e4e7; border-radius: 12px; padding: 0 14px; font-size: 14px; background: #fff; color: #0f172a; }
+.p2-search:focus { outline: 2px solid #c7d2fe; border-color: #4f46e5; }
+.p2-primary { height: 44px; padding: 0 16px; border: 0; border-radius: 12px; background: #4f46e5; color: #fff; font-size: 14px; font-weight: 800; cursor: pointer; white-space: nowrap; font-family: inherit; }
+.p2-primary:hover { background: #4338ca; }
+#artist-management-list, #vehicle-management-list { max-height: none !important; overflow: visible !important; gap: 12px !important; display: flex; flex-direction: column; }
+.p2-row { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid #e4e4e7; border-radius: 14px; padding: 14px; cursor: pointer; }
+.p2-row:hover { border-color: #a5b4fc; }
+.p2-row:focus-visible { outline: 2px solid #4f46e5; outline-offset: 1px; }
+.p2-av { width: 44px; height: 44px; border-radius: 12px; color: #fff; font-size: 18px; font-weight: 900; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.p2-ico { width: 44px; height: 44px; border-radius: 12px; background: #f4f4f5; color: #27272a; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.p2-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.p2-main .l1 { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.p2-main .l1 b { font-size: 16px; font-weight: 800; color: #0f172a; }
+.p2-main .l1 small { font-size: 12.5px; color: #52525b; font-weight: 700; }
+.p2-main .l1 em { font-style: normal; font-size: 11.5px; font-weight: 800; border-radius: 6px; padding: 1px 7px; background: #f4f4f5; color: #3f3f46; }
+.p2-main .l1 em.ok { background: #ecfdf5; color: #047857; }
+.p2-main .l1 em.v-run, .p2-main .l1 em.v-set { background: #eef2ff; color: #3730a3; }
+.p2-main .l1 em.v-late { background: #fee2e2; color: #b91c1c; }
+.p2-main .l1 em.v-fix { background: #fef3c7; color: #92400e; }
+.p2-main .l2 { font-size: 13px; color: #3f3f46; }
+.p2-main .l3 { font-size: 12.5px; color: #52525b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p2-main .l3.strong { color: #0f172a; font-weight: 700; }
+.p2-chev { font-size: 22px; color: #a1a1aa; flex-shrink: 0; }
+.p2-foot { margin: 4px 0 0; font-size: 12.5px; color: #52525b; }
+.p2-empty { display: flex; flex-direction: column; gap: 4px; align-items: center; text-align: center; padding: 30px 12px; color: #52525b; font-size: 13.5px; border: 1px dashed #e4e4e7; border-radius: 14px; }
+.p2-empty b { color: #0f172a; font-size: 15px; }
+.p2-sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.p2-sum > div { border: 1px solid #e4e4e7; border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; background: #fff; }
+.p2-sum span { font-size: 13px; color: #3f3f46; font-weight: 700; }
+.p2-sum b { font-size: 24px; font-weight: 900; color: #0f172a; }
+.p2-sum > div.bad { border: 2px solid #dc2626; } .p2-sum > div.bad span { color: #b91c1c; }
+.p2-bottom { display: flex; justify-content: flex-end; padding-top: 6px; }
+.p2-del { margin-top: 14px; width: 100%; height: 44px; border: 1px solid #fca5a5; background: #fff; color: #b91c1c; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; }
+.p2-del:hover { background: #fef2f2; }
+#modal-artist-management .modal-body, #modal-vehicle-management .modal-body, #modal-hq-expenses .modal-body, #modal-manager-management .modal-body { padding: 18px 20px !important; overflow-y: auto; flex: 1; background: #fff; }
+
+/* 경비 정산 */
+.ex2-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.ex2-tabs { display: flex; gap: 2px; background: #f4f4f5; border-radius: 12px; padding: 3px; }
+.ex2-tabs button { height: 36px; padding: 0 14px; border: 0; border-radius: 9px; background: transparent; font-size: 13.5px; font-weight: 600; color: #3f3f46; cursor: pointer; font-family: inherit; }
+.ex2-tabs button.on { background: #fff; color: #0f172a; font-weight: 800; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+.ex2-xls { height: 40px; padding: 0 14px; border: 1px solid #e4e4e7; border-radius: 12px; background: #fff; font-size: 13.5px; font-weight: 800; color: #0f172a; cursor: pointer; font-family: inherit; }
+.ex2-xls:disabled { opacity: .5; cursor: default; }
+.ex2-kpi { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 6px; }
+.ex2-kpi > div { border: 1px solid #e4e4e7; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 2px; }
+.ex2-kpi span { font-size: 13px; color: #3f3f46; font-weight: 700; }
+.ex2-kpi b { font-size: 26px; font-weight: 900; color: #0f172a; }
+.ex2-kpi > div.warn { background: #fefce8; border-color: #fde68a; } .ex2-kpi > div.warn span, .ex2-kpi > div.warn b { color: #92400e; }
+#hq-exp-body h4 { margin: 18px 0 8px; font-size: 15px; font-weight: 800; color: #0f172a; }
+.ex2-row { display: flex; align-items: center; gap: 12px; border: 1px solid #e4e4e7; border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; background: #fff; }
+.ex2-rc { width: 48px; height: 48px; border-radius: 10px; border: 0; background: #f4f4f5; font-size: 11px; font-weight: 700; color: #3730a3; cursor: pointer; flex-shrink: 0; line-height: 1.2; font-family: inherit; display: flex; align-items: center; justify-content: center; text-align: center; }
+.ex2-rc.none { color: #71717a; cursor: default; }
+.ex2-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ex2-main b { font-size: 15px; font-weight: 800; color: #0f172a; }
+.ex2-main small { font-size: 12.5px; color: #52525b; }
+.ex2-main small.bad { color: #b91c1c; }
+.ex2-act { display: flex; gap: 6px; flex-shrink: 0; }
+.ex2-no, .ex2-ok { height: 40px; padding: 0 14px; border-radius: 10px; font-size: 13.5px; font-weight: 800; cursor: pointer; font-family: inherit; }
+.ex2-no { border: 1px solid #e4e4e7; background: #fff; color: #0f172a; }
+.ex2-ok { border: 0; background: #4f46e5; color: #fff; }
+.ex2-st { font-size: 12.5px; font-weight: 800; border-radius: 8px; padding: 3px 9px; flex-shrink: 0; }
+.ex2-st.approved { background: #ecfdf5; color: #047857; } .ex2-st.rejected { background: #fee2e2; color: #b91c1c; }
+.ex2-mgr { border: 1px solid #e4e4e7; border-radius: 14px; padding: 4px 14px; }
+.ex2-mgr > div { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #f4f4f5; font-size: 13.5px; color: #27272a; }
+.ex2-mgr > div:last-child { border-bottom: 0; } .ex2-mgr b { color: #0f172a; }
+
+/* 매니저 카드: 시안처럼 흰 카드 · 칩 */
+#manager-mgmt-list .mgr2-card button { font-family: inherit; }
+
+.p2-x svg { width: 18px !important; height: 18px !important; min-width: 18px !important; max-width: none !important; flex-shrink: 0 !important; }
+
+/* 신규 스케줄 패널: 흰 카드 · 검정 제목 · 아티스트 색 칩 */
+#modal-schedule-form .modal-header { padding: 18px 20px !important; border-bottom: 1px solid #e4e4e7 !important; }
+#modal-schedule-form #schedule-form-title { font-size: 20px !important; font-weight: 800 !important; color: #0f172a; }
+#modal-schedule-form #schedule-form-title svg { display: none; }
+#form-schedule > div[style*="var(--bg-card)"], #form-schedule > details.sch-more { background: #fff !important; border: 1px solid #e4e4e7 !important; border-radius: 14px !important; }
+#form-schedule > div[style*="var(--bg-card)"] > div:first-child { color: #0f172a !important; font-size: 15px !important; font-weight: 800 !important; }
+#form-schedule > div[style*="var(--bg-card)"] > div:first-child svg { display: none; }
+#form-schedule .form-input, #form-schedule .form-select { border-radius: 10px !important; border-color: #e4e4e7 !important; min-height: 42px; }
+.sch-chip-group { margin-bottom: 12px; }
+.sch-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.sch-chips button { height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid #e4e4e7; background: #fff; color: #27272a; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.sch-chips button.all { border-style: dashed; }
+.sch-chips button.on { background: var(--c); border-color: var(--c); color: #fff; }
+.sch-chips button:focus-visible { outline: 2px solid #4f46e5; outline-offset: 2px; }
+#modal-admin-settings .modal-body { background: #fff !important; }
+#modal-admin-settings .modal-body > div:not(.set2-card) { border: 1px solid #e4e4e7 !important; border-radius: 12px !important; box-shadow: none !important; }
+#modal-admin-settings .modal-body > div:not(.set2-card) > div:first-child { font-size: 14px !important; color: #0f172a !important; }
+#modal-admin-settings .modal-body input:not([type=checkbox]) { border-color: #e4e4e7 !important; background: #fff !important; border-radius: 10px !important; height: 42px; }
+#modal-admin-settings .modal-footer button:last-child { background: #4f46e5 !important; }

@@ -59,9 +59,9 @@ const { chromium, devices } = require('playwright');
       { id: 'e3', user_id: 'other', date: '2026-11-06', category: 'meal', amount: 12000, memo: '', receipt_path: null }];
   });
   await h.click('#btn-open-expenses'); await h.waitForTimeout(500);
-  R.hq = await h.evaluate(() => { const t = document.getElementById('hq-exp-body').innerText; return { open: document.getElementById('modal-hq-expenses').classList.contains('active'), total: t.includes('77,000원'), rows: document.querySelectorAll('#hq-exp-body tbody tr').length, noXss: !document.querySelector('#hq-exp-body tbody b') }; });
-  await h.evaluate(() => HqExpenses.setFilter(window.__m)); await h.waitForTimeout(200);
-  R.hqFilter = await h.evaluate(() => document.querySelectorAll('#hq-exp-body tbody tr').length + ' ' + document.getElementById('hq-exp-body').innerText.includes('65,000원'));
+  R.hq = await h.evaluate(() => { const t = document.getElementById('hq-exp-body').innerText; return { open: document.getElementById('modal-hq-expenses').classList.contains('active'), total: t.includes('77,000원'), rows: document.querySelectorAll('#hq-exp-body .ex2-row').length, noXss: !document.querySelector('#hq-exp-body .ex2-main small b') }; });
+  // 매니저별 합계 (같은 매니저 2건 = 65,000원)
+  R.hqFilter = await h.evaluate(() => document.querySelectorAll('#hq-exp-body .ex2-mgr > div').length + ' ' + document.querySelector('#hq-exp-body .ex2-mgr').innerText.includes('65,000원'));
   await h.keyboard.press('Escape'); await h.waitForTimeout(200);
   R.hqClosed = await h.evaluate(() => !document.getElementById('modal-hq-expenses').classList.contains('active'));
   console.log(JSON.stringify(R), 'errs', errs.slice(0, 3));
