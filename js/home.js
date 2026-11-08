@@ -1353,7 +1353,7 @@ const Home = {
           <div style="${BOX}">
             <div style="font-size:14px; font-weight:700; color:#2563eb; margin-bottom:10px;">장소 · 출발지</div>
             <div style="margin-bottom:10px;"><label style="${L}">행사장 / 촬영 위치 <span style="color:#ef4444;">*</span></label>
-              <input type="text" id="m-sch-loc" required value="${esc(v.loc)}" placeholder="예: 상암 SBS 프리즘타워" style="${I}" /></div>
+              <input type="text" id="m-sch-loc" required value="${esc(v.loc)}" placeholder="이름을 치면 검색돼요 (예: SBS 프리즘타워)" style="${I}" /></div>
             <div style="margin-bottom:10px;"><label style="${L}">상세 주소 (길안내용)</label>
               <input type="text" id="m-sch-addr" value="${esc(v.addr)}" placeholder="예: 서울 마포구 상암산로 82" style="${I}" /></div>
             <div><label style="${L}">출발지 (숙소·사옥 등)</label>
@@ -1392,6 +1392,64 @@ const Home = {
         </form>
       </div>`;
     App.showModal(edit ? '✏️ 스케줄 수정' : '📅 신규 스케줄 등록', modalHtml);
+    // 장소 이름을 치면 카카오 장소 검색 → 고르면 이름·주소 채움
+    this._placeSuggest('m-sch-loc', 'm-sch-addr');
+    this._placeSuggest('m-sch-shop-name', 'm-sch-shop-addr');
+    this._placeSuggest('m-sch-dep', null);
+  },
+
+  // 입력칸 아래 장소 검색 목록 (nameId: 이름 칸, addrId: 주소 칸 — 없으면 '이름 (주소)'로 한 칸에)
+  _placeSuggest(nameId, addrId) {
+    const input = document.getElementById(nameId);
+    if (!input || input.dataset.suggest) return;
+    input.dataset.suggest = '1';
+    input.setAttribute('autocomplete', 'off');
+    const wrap = document.createElement('div');
+    wrap.style.position = 'relative';
+    input.parentElement.insertBefore(wrap, input);
+    wrap.appendChild(input);
+    const list = document.createElement('div');
+    list.className = 'place-suggest';
+    list.hidden = true;
+    wrap.appendChild(list);
+    let timer = null, seq = 0, items = [];
+    const close = () => { list.hidden = true; };
+    const run = async () => {
+      const q = input.value.trim();
+      if (q.length < 2 || typeof KakaoAPI === 'undefined') { close(); return; }
+      const my = ++seq;
+      list.hidden = false;
+      list.innerHTML = '<div class="ps-msg">검색 중...</div>';
+      let docs = [];
+      try { docs = await KakaoAPI.searchPlace(q); } catch (e) { docs = []; }
+      if (my !== seq || document.activeElement !== input) return;
+      items = (docs || []).slice(0, 6);
+      list.innerHTML = items.length ? items.map((d, i) => `
+        <button type="button" class="ps-item" data-i="${i}">
+          <b>${esc(d.place_name || '')}</b>
+          <span>${esc(d.road_address_name || d.address_name || '')}</span>
+        </button>`).join('')
+        : `<div class="ps-msg">${navigator.onLine === false ? '인터넷 연결을 확인해 주세요.' : '검색 결과가 없어요. 직접 입력해도 돼요.'}</div>`;
+    };
+    input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(run, 350); });
+    input.addEventListener('blur', () => setTimeout(close, 200));
+    list.addEventListener('mousedown', (e) => e.preventDefault());   // 고르기 전에 입력칸 포커스가 빠지지 않게
+    list.addEventListener('click', (e) => {
+      const btn = e.target.closest('.ps-item');
+      if (!btn) return;
+      const d = items[Number(btn.dataset.i)];
+      if (!d) return;
+      const addr = d.road_address_name || d.address_name || '';
+      if (addrId) {
+        input.value = d.place_name || '';
+        const a = document.getElementById(addrId);
+        if (a) a.value = addr;
+      } else {
+        input.value = addr && addr !== d.place_name ? `${d.place_name} (${addr})` : (d.place_name || '');
+      }
+      seq++; close();
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    });
   },
 
   // 시작 시간을 바꾸면 (종료를 직접 고치지 않았을 때) 종료 = 시작 + 2시간

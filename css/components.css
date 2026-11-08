@@ -891,3 +891,12 @@ body.has-bottom-nav #app { padding-bottom: calc(var(--bottom-nav-h) + env(safe-a
 .art-colors { display:flex; gap:8px; flex-wrap:wrap; }
 .art-color { width:34px; height:34px; border-radius:50%; border:3px solid transparent; cursor:pointer; }
 .art-color.on { border-color:var(--text-100); box-shadow:0 0 0 2px var(--bg-card) inset; }
+
+/* ── 장소 검색 목록 (스케줄 등록 창) ── */
+.place-suggest { position:absolute; left:0; right:0; top:100%; margin-top:4px; z-index:30; background:#fff; border:1px solid #cbd5e1; border-radius:10px; box-shadow:0 8px 24px rgba(15,23,42,0.15); max-height:260px; overflow-y:auto; }
+.place-suggest .ps-item { display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; text-align:left; border:0; border-bottom:1px solid #f1f5f9; background:#fff; padding:10px 12px; min-height:44px; cursor:pointer; }
+.place-suggest .ps-item:last-child { border-bottom:0; }
+.place-suggest .ps-item:active, .place-suggest .ps-item:hover { background:#eef2ff; }
+.place-suggest .ps-item b { font-size:14.5px; color:#0f172a; }
+.place-suggest .ps-item span { font-size:12.5px; color:#64748b; }
+.place-suggest .ps-msg { padding:12px; font-size:13.5px; color:#64748b; text-align:center; }
