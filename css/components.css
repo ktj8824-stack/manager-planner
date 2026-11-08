@@ -1096,3 +1096,4 @@ div.art-add.locked button { margin-top:6px; border:0; background:#4f46e5; color:
 .hf-pick.on { border-color:#4f46e5; background:#eef2ff; color:#3730a3; }
 .home-fab { position:fixed; right:max(16px, calc((100vw - var(--app-w, 100vw)) / 2 + 16px)); bottom:calc(var(--bottom-nav-h, 64px) + env(safe-area-inset-bottom) + 16px); width:56px; height:56px; border-radius:50%; border:0; background:#4f46e5; color:#fff; box-shadow:0 8px 20px rgba(79,70,229,0.35); display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:30; }
 .home-fab:active { transform:scale(0.96); }
+.talk-app .chat-root:not(.conv-open) .chat-list { visibility:hidden; }

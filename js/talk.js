@@ -154,15 +154,40 @@ const Talk = {
     }).join('')}</ul>`;
   },
 
+  // 옛 대화방 목록 화면은 앱에서 쓰지 않는다 → 항상 대화방으로 바로 들어가고, 뒤로 가면 로드톡으로
   async openRoom(target) {
     if (!this.online()) return;
-    await window.Chat.open();
-    window.Chat.select(target);
+    let opts = target || {};
+    if (opts.id) {
+      const r = (window.Chat.st.rooms || []).find(x => x.id === opts.id);
+      opts = r && r.kind === 'all' ? { kind: 'all' } : { managerId: (r && r.manager_id) || window.SupabaseClient?.currentUser?.id };
+    } else if (opts.kind !== 'all') opts = { managerId: opts.managerId || window.SupabaseClient?.currentUser?.id };
+    await this._openDirect(opts);
   },
 
   async openChat(kind) {
     if (!this.online()) { U.toast('회사 계정으로 로그인하면 본사와 대화할 수 있어요.'); return; }
-    await window.Chat.open(kind === 'all' ? { kind: 'all' } : {});
+    await this._openDirect(kind === 'all' ? { kind: 'all' } : { managerId: window.SupabaseClient?.currentUser?.id });
+  },
+
+  async _openDirect(opts) {
+    document.body.classList.add('talk-app');
+    await window.Chat.open(opts);
+    // 방을 못 열었으면 빈 목록을 남기지 않고 닫는다
+    setTimeout(() => {
+      const root = document.getElementById('chat-root');
+      if (window.Chat.st.open && root && !root.classList.contains('conv-open')) { window.Chat.close(); this.render(); }
+    }, 2500);
   },
 };
 window.Talk = Talk;
+
+// 대화방의 '뒤로'·'닫기' → 옛 목록 대신 로드톡 화면으로 (chat.js는 웹과 같이 쓰므로 여기서 가로챔)
+document.addEventListener('click', (e) => {
+  if (!document.body.classList.contains('talk-app')) return;
+  const b = e.target.closest && e.target.closest('#chat-root [data-act="back"], #chat-root [data-act="close"]');
+  if (!b) return;
+  e.stopPropagation(); e.preventDefault();
+  try { window.Chat.close(); } catch (err) { }
+  if (State.screen === 'talk') Talk.render(); else Talk.open();
+}, true);
