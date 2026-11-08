@@ -13,102 +13,80 @@ const Login = {
     const el = U.$('#screen-login');
     const isCloud = window.SupabaseClient && window.SupabaseClient.isConfigured;
 
+    const chev = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+    const back = `<button type="button" class="lg-back" onclick="Login.setTab('choose')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>다른 방법 고르기</button>`;
+    const inputStyle = 'background:#efeff4; border:1px solid transparent; color:var(--text-100); height:50px; padding:0 14px; border-radius:12px; font-size:15px; width:100%; outline:none;';
     el.innerHTML = `
-      <div class="login-container" style="max-width:420px; margin:0 auto; padding:40px 24px; min-height:100vh; display:flex; flex-direction:column; justify-content:center; background:var(--bg-app);">
-        <div class="login-logo" style="text-align:center; margin-bottom:30px;">
-          <img src="img/logo.jpg" alt="Logo" style="display:block; margin:0 auto 16px auto; width:80px; height:80px; border-radius:20px; box-shadow:0 8px 16px rgba(0,0,0,0.2);">
-          <h1 class="login-title" style="font-size:26px; font-weight:700; margin:16px 0 8px 0; letter-spacing:-0.5px; color:var(--text-100);">로드플래너</h1>
-          <p class="login-subtitle" style="font-size:14px; color:var(--text-400);">
-            현장 매니저 및 스태프 전용 앱
-          </p>
+      <div class="login-container lg-wrap">
+        <div class="lg-head">
+          <img src="img/logo.jpg" alt="" class="lg-logo">
+          <h1 class="login-title">로드플래너</h1>
+          <p class="login-subtitle">현장 매니저를 위한 스케줄 · 동선 앱</p>
         </div>
 
-        <div style="display:flex; margin-bottom:24px; border-radius:12px; background:var(--bg-card); padding:4px; box-shadow:var(--shadow-sm); border:1px solid var(--border-default);">
-          <button onclick="Login.setTab('b2b')" id="tab-b2b" style="flex:1; padding:12px 6px; white-space:nowrap; font-weight:700; font-size:14px; border-radius:10px; border:none; background:var(--accent); color:#fff; cursor:pointer; transition:all 0.2s;">소속 매니저 로그인</button>
-          <button onclick="Login.setTab('b2c')" id="tab-b2c" style="flex:1; padding:12px 6px; white-space:nowrap; font-weight:700; font-size:14px; border-radius:10px; border:none; background:transparent; color:var(--text-400); cursor:pointer; transition:all 0.2s;">개인 매니저 시작</button>
-        </div>
-
-        <!-- B2B 로그인 폼 -->
-        <div id="login-b2b-section" style="background:var(--bg-card); border-radius:16px; padding:24px; margin-bottom:24px; border:1px solid var(--border-default); box-shadow:var(--shadow-md); display:block;">
-          <form id="form-supabase-login" onsubmit="Login.handleEmailLogin(event)" style="display:flex; flex-direction:column; gap:14px;">
-            <input type="email" id="login-email" class="form-input" placeholder="사내 이메일 (ID)" aria-label="사내 이메일" autocomplete="${Login._fresh() ? 'off' : 'username'}" required 
-              style="background:var(--bg-input); border:1px solid transparent; color:var(--text-100); padding:16px; border-radius:12px; font-size:15px; width:100%; transition:all 0.2s; outline:none;" 
-              onfocus="this.style.background='var(--bg-input-focus)'; this.style.borderColor='var(--accent)';" 
-              onblur="this.style.background='var(--bg-input)'; this.style.borderColor='transparent';" />
-            <input type="password" id="login-pw" class="form-input" placeholder="비밀번호" aria-label="비밀번호" autocomplete="${Login._fresh() ? 'new-password' : 'current-password'}" required 
-              style="background:var(--bg-input); border:1px solid transparent; color:var(--text-100); padding:16px; border-radius:12px; font-size:15px; width:100%; transition:all 0.2s; outline:none;" 
-              onfocus="this.style.background='var(--bg-input-focus)'; this.style.borderColor='var(--accent)';" 
-              onblur="this.style.background='var(--bg-input)'; this.style.borderColor='transparent';" />
-            <button type="submit" class="btn-social" 
-              style="background:var(--accent); color:#fff; font-weight:700; font-size:16px; justify-content:center; padding:16px; border-radius:12px; margin-top:8px; border:none; box-shadow:0 4px 12px rgba(0,122,255,0.3); cursor:pointer;">
-              로그인
-            </button>
-            <button type="button" id="demo-login-btn" ${Login.isDevHost() ? '' : 'hidden'} onclick="Login.demoLogin('ceo')" 
-              style="width:100%; margin-top:10px; padding:13px; border-radius:12px; border:1px dashed rgba(99,102,241,0.5); background:rgba(99,102,241,0.08); color:var(--accent); font-weight:700; font-size:14px; cursor:pointer; transition:all 0.2s;">
-              ⚡ 테스트 대표 계정 1초 둘러보기 (데모)
-            </button>
-          </form>
-          <p id="login-auth-error" role="alert" aria-live="polite" style="display:none;color:#ef4444;font-size:14px;margin-top:14px;"></p>
-          <div style="font-size:13px; color:var(--text-400); text-align:center; margin-top:16px;">
-            ※ 본사에서 발급받은 계정으로 로그인해주세요.
-          </div>
-        </div>
-
-        <!-- B2C 소셜 로그인 폼 -->
-        <div id="login-b2c-section" style="display:none; background:var(--bg-card); border-radius:16px; padding:24px; margin-bottom:24px; border:1px solid var(--border-default); box-shadow:var(--shadow-md);">
-          <div style="font-size:14px; color:var(--text-300); text-align:center; margin-bottom:20px; font-weight:600;">
-            본사 없이 혼자 쓰는 개인 매니저용이에요.<br>무료로 시작하고, 필요하면 월 2만원 유료로 바꿀 수 있어요.
-          </div>
-          
-          <div id="google_btn_wrapper" style="display:flex; justify-content:center; margin-bottom:12px;"></div>
-          
-          <button class="btn-social btn-kakao" onclick="Login.doKakaoLogin()" style="background:#FEE500; color:#000000; border-radius:12px; padding:16px; font-weight:700; font-size:15px; justify-content:center; border:none; width:100%; display:flex; align-items:center; gap:8px;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#000000">
-              <path d="M12 3C6.48 3 2 6.47 2 10.75c0 2.76 1.84 5.17 4.67 6.49-.15.54-.53 1.96-.6 2.27-.08.35.12.35.3.23.14-.09 1.94-1.32 2.75-1.89.92.26 1.88.4 2.88.4 5.52 0 10-3.47 10-7.75S17.52 3 12 3z"/>
-            </svg>
-            카카오로 시작하기
+        <!-- 1) 어떻게 쓰시나요? -->
+        <div id="login-choose" class="lg-step">
+          <h2 class="lg-h2">어떻게 쓰시나요?</h2>
+          <button type="button" id="tab-b2b" class="lg-card" onclick="Login.setTab('b2b')">
+            <span class="lg-ico" style="background:#eef2ff; color:#4f46e5;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M16 9h2a2 2 0 0 1 2 2v10M8 7h4M8 11h4M8 15h4M2 21h20"/></svg></span>
+            <span class="lg-txt"><b>회사에서 계정을 받았어요</b><small>소속 매니저 · 본사 일정과 로드톡이 연결돼요</small></span>${chev}
           </button>
+          <button type="button" id="tab-b2c" class="lg-card" onclick="Login.setTab('b2c')">
+            <span class="lg-ico" style="background:#ecfdf5; color:#047857;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span>
+            <span class="lg-txt"><b>혼자 일하는 매니저예요</b><small>개인 매니저 · 무료로 바로 시작해요</small></span>${chev}
+          </button>
+          <button type="button" id="demo-login-btn" ${Login.isDevHost() ? '' : 'hidden'} onclick="Login.demoLogin('ceo')" class="lg-demo">⚡ 테스트 대표 계정 1초 둘러보기 (데모)</button>
         </div>
 
-        <div style="text-align:center; margin-top:auto;">
-          <div style="font-size:13px; color:var(--text-400); margin-bottom:10px;"><a href="terms.html" target="_blank" style="color:inherit;">이용약관</a> · <a href="privacy.html" target="_blank" style="color:inherit;">개인정보처리방침</a></div>
-          <a href="${typeof U !== 'undefined' && U.getHQLoginUrl ? U.getHQLoginUrl() : 'admin-login.html'}" style="font-size:14px; color:var(--text-400); text-decoration:underline; font-weight:600;">
-            🏢 본사 총괄 관리 포털(HQ) 접속
+        <!-- 2-1) 소속 매니저: 사내 계정 -->
+        <div id="login-b2b-section" class="lg-step" style="display:none;">
+          ${back}
+          <h2 class="lg-h2">사내 계정으로 로그인</h2>
+          <div class="lg-box">
+            <form id="form-supabase-login" onsubmit="Login.handleEmailLogin(event)" style="display:flex; flex-direction:column; gap:12px;">
+              <label class="lg-label">사내 이메일
+                <input type="email" id="login-email" class="form-input" placeholder="name@company.com" autocomplete="${Login._fresh() ? 'off' : 'username'}" required style="${inputStyle}" /></label>
+              <label class="lg-label">비밀번호
+                <input type="password" id="login-pw" class="form-input" placeholder="비밀번호" autocomplete="${Login._fresh() ? 'new-password' : 'current-password'}" required style="${inputStyle}" /></label>
+              <button type="submit" class="btn-social lg-primary">로그인</button>
+            </form>
+            <p id="login-auth-error" role="alert" aria-live="polite" style="display:none;color:#dc2626;font-size:14px;margin:4px 0 0;"></p>
+            <div class="lg-hint">계정이 없다면 본사 담당자에게 요청하세요</div>
+          </div>
+        </div>
+
+        <!-- 2-2) 개인 매니저: 카카오·구글 -->
+        <div id="login-b2c-section" class="lg-step" style="display:none;">
+          ${back}
+          <h2 class="lg-h2">개인 매니저로 시작</h2>
+          <div class="lg-box" style="gap:10px;">
+            <button class="btn-social btn-kakao lg-primary" onclick="Login.doKakaoLogin()" style="background:#FEE500; color:#191600; box-shadow:none;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#191600" aria-hidden="true"><path d="M12 3C6.48 3 2 6.47 2 10.75c0 2.76 1.84 5.17 4.67 6.49-.15.54-.53 1.96-.6 2.27-.08.35.12.35.3.23.14-.09 1.94-1.32 2.75-1.89.92.26 1.88.4 2.88.4 5.52 0 10-3.47 10-7.75S17.52 3 12 3z"/></svg>
+              카카오로 시작하기
+            </button>
+            <div id="google_btn_wrapper"></div>
+            <div class="lg-hint">아티스트 1명까지 무료예요</div>
+          </div>
+        </div>
+
+        <div class="lg-foot">
+          <a href="${typeof U !== 'undefined' && U.getHQLoginUrl ? U.getHQLoginUrl() : 'admin-login.html'}" class="lg-hq">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
+            본사 관리자라면 관제 포털로
           </a>
+          <div class="lg-legal"><a href="terms.html" target="_blank">이용약관</a> · <a href="privacy.html" target="_blank">개인정보처리방침</a></div>
         </div>
       </div>
     `;
   },
 
+  // 'choose' → 두 카드 / 'b2b' → 사내 계정 / 'b2c' → 카카오·구글
   setTab(tab) {
-    const btnB2B = document.getElementById('tab-b2b');
-    const btnB2C = document.getElementById('tab-b2c');
-    const secB2B = document.getElementById('login-b2b-section');
-    const secB2C = document.getElementById('login-b2c-section');
-    
-    if (tab === 'b2b') {
-      btnB2B.style.background = 'var(--accent)';
-      btnB2B.style.color = '#fff';
-      btnB2B.style.fontWeight = '800';
-      
-      btnB2C.style.background = 'transparent';
-      btnB2C.style.color = 'var(--text-400)';
-      btnB2C.style.fontWeight = '700';
-      
-      secB2B.style.display = 'block';
-      secB2C.style.display = 'none';
-    } else {
-      btnB2C.style.background = 'var(--accent)';
-      btnB2C.style.color = '#fff';
-      btnB2C.style.fontWeight = '800';
-      
-      btnB2B.style.background = 'transparent';
-      btnB2B.style.color = 'var(--text-400)';
-      btnB2B.style.fontWeight = '700';
-      
-      secB2C.style.display = 'block';
-      secB2B.style.display = 'none';
-    }
+    const show = (id, on) => { const e = document.getElementById(id); if (e) e.style.display = on ? 'flex' : 'none'; };
+    show('login-choose', tab === 'choose');
+    show('login-b2b-section', tab === 'b2b');
+    show('login-b2c-section', tab === 'b2c');
+    if (tab === 'b2b') setTimeout(() => { try { document.getElementById('login-email')?.focus(); } catch (e) { } }, 50);
   },
 
   async handleEmailLogin(e) {
@@ -146,8 +124,8 @@ const Login = {
     if (!wrap) return;
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'btn-social btn-google';
-    button.style.cssText = 'width:100%;justify-content:center;padding:16px;border-radius:12px;';
+    button.className = 'btn-social btn-google lg-primary';
+    button.style.cssText = 'background:#fff; color:#0f172a; border:1px solid #d1d1d6; box-shadow:none;';
     button.textContent = 'Google로 시작하기';
     button.addEventListener('click', () => this.startOAuth('google'));
     wrap.replaceChildren(button);

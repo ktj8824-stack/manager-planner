@@ -271,13 +271,18 @@ const App = {
   },
 
   // 위 막대 오른쪽: 내 이름 + 로그아웃
+  // 위 막대 아래 줄: '이름님 · 회사 · 본사 연결됨' (개인 매니저는 '이름님 · 개인 매니저') — 로그아웃은 내 정보에만
   updateHeaderUser() {
     const el = U.$('#top-user-name');
     if (!el) return;
-    let name = window.SupabaseClient?.currentProfile?.name || '';
-    try { name = name || localStorage.getItem('bp_user_name') || ''; } catch (e) { }
-    el.textContent = name ? name + '님' : '';
-    el.title = name;
+    let name = window.SupabaseClient?.currentProfile?.name || '', company = '';
+    try { name = name || localStorage.getItem('bp_user_name') || ''; company = localStorage.getItem('bp_company_name') || ''; } catch (e) { }
+    const indie = typeof Plan !== 'undefined' && Plan.isIndie();
+    const parts = [name ? name + '님' : '', indie ? '개인 매니저' : company, indie ? '' : '본사 연결됨'].filter(Boolean);
+    el.textContent = parts.join(' · ');
+    el.title = parts.join(' · ');
+    el.classList.toggle('hq-ok', !indie);
+    const bell = U.$('#top-bell'); if (bell) bell.hidden = indie;
   },
 
   renderNav() {
@@ -288,12 +293,12 @@ const App = {
     nav.id = 'top-header';
     nav.innerHTML = `
       <div class="top-brand">
-        <span class="top-brand-icon">🎬</span><span class="top-brand-text">로드플래너</span>
+        <span class="top-brand-icon">🎬</span>
+        <span class="top-brand-stack"><span class="top-brand-text">로드플래너</span><span class="top-user-name" id="top-user-name"></span></span>
       </div>
-      <div class="top-user">
-        <span class="top-user-name" id="top-user-name"></span>
-        <button class="top-logout" onclick="Profile.logout()" aria-label="로그아웃">로그아웃</button>
-      </div>
+      <button id="top-bell" class="top-bell" onclick="App.openMessages()" aria-label="로드톡 공지·메시지">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      </button>
     `;
     U.$('#app').prepend(nav);
     this.updateHeaderUser();

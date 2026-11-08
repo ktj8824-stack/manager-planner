@@ -1,4 +1,4 @@
-// 위 막대 오른쪽: 이름 + 로그아웃 (아이폰 14·작은 폰에서 겹치지 않음, 누르면 로그인 화면)
+// 위 막대: 로드플래너 + 아래 줄 '이름님 · 회사 · 본사 연결됨' (작은 폰에서도 안 넘침) · 로그아웃은 내 정보에만 → 누르면 로그인 화면
 const { chromium, devices } = require('playwright');
 (async () => {
   const b = await chromium.launch(); const R = {}; const errs = [];
@@ -9,17 +9,18 @@ const { chromium, devices } = require('playwright');
     await p.addInitScript(() => sessionStorage.setItem('rp_splash_shown', '1'));
     await p.goto(process.argv[2] + '/index.html'); await p.waitForTimeout(900);
     await p.tap('text=1초 둘러보기'); await p.waitForTimeout(1200);
-    await p.evaluate(() => { localStorage.setItem('bp_user_name', '박진우 팀장'); App.navigate('home'); });
+    await p.evaluate(() => { localStorage.setItem('bp_user_name', '박진우 팀장'); localStorage.setItem('bp_company_name', 'KJM 엔터테인먼트'); App.navigate('home'); });
     await p.waitForTimeout(200);
     R[label] = await p.evaluate(() => {
-      const n = document.getElementById('top-user-name'), btn = document.querySelector('.top-logout'), brand = document.querySelector('.top-brand-text');
-      const nb = n.getBoundingClientRect(), bb = btn.getBoundingClientRect(), tb = brand.getBoundingClientRect();
-      return { name: n.textContent, btnVisible: bb.width > 0 && bb.right <= innerWidth, noOverlap: tb.right <= nb.left + 1 && nb.right <= bb.left, noHScroll: document.documentElement.scrollWidth <= innerWidth };
+      const n = document.getElementById('top-user-name'), bell = document.getElementById('top-bell');
+      const nb = n.getBoundingClientRect(), bb = bell.getBoundingClientRect();
+      return { name: n.textContent, noLogoutInHeader: !document.querySelector('#top-header .top-logout'), fits: nb.right <= bb.left + 1 && bb.right <= innerWidth, noHScroll: document.documentElement.scrollWidth <= innerWidth };
     });
     if (label === 'i14') {
       await p.screenshot({ path: process.env.SHOT || '/dev/null', clip: { x: 0, y: 0, width: 390, height: 120 } }).catch(() => {});
       p.once('dialog', d => d.accept());
-      await p.tap('.top-logout'); await p.waitForTimeout(800);
+      await p.tap('#bottom-nav [data-s="profile"]'); await p.waitForTimeout(400);
+      await p.tap('.me-logout'); await p.waitForTimeout(800);
       R.loggedOut = await p.evaluate(() => document.getElementById('screen-login').classList.contains('active') && !localStorage.getItem('bp_user_name'));
     }
   }

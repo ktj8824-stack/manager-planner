@@ -8,7 +8,7 @@ const { chromium, devices } = require('playwright');
   await p.route(/^https?:\/\/(?!127\.0\.0\.1|localhost|0\.0\.0\.0)/, r => r.request().url().endsWith('.js') ? r.fulfill({ status: 200, contentType: 'application/javascript', body: '' }) : r.abort());
   await p.goto(process.argv[2] + '/index.html'); await p.waitForTimeout(1000);
   const R = {};
-  R.loginText = await p.evaluate(() => document.getElementById('login-b2c-section')?.innerText.includes('월 2만원'));
+  R.loginText = await p.evaluate(() => document.getElementById('login-b2c-section')?.textContent.includes('아티스트 1명까지 무료') && !!document.getElementById('tab-b2b') && !!document.getElementById('tab-b2c'));
   await p.tap('text=1초 둘러보기'); await p.waitForTimeout(1500);
   await p.evaluate(() => { localStorage.setItem('bp_account', 'indie'); localStorage.removeItem('rp_pro_until'); App.renderNav(); App.navigate('home'); });
   await p.waitForTimeout(400);

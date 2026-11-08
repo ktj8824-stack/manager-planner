@@ -66,157 +66,102 @@ const Profile = {
       return ids.map(id => (all.find(a => a.id === id)?.name || '').replace(/\s*\([^)]*\)/g, '').trim()).filter(Boolean);
     })();
 
-    // 이니셜 아바타
-    const initials = userName.length >= 2 ? userName.slice(0, 2) : userName;
+    const allArtists = window.hqStore?.getArtists?.() || [];
+    const artistChips = (() => {
+      let ids = [];
+      try { ids = JSON.parse(localStorage.getItem('bp_assigned_artists') || '[]') || []; } catch (e) { }
+      if (indie) ids = allArtists.map(a => a.id);
+      return ids.map(id => allArtists.find(a => a.id === id)).filter(Boolean)
+        .map(a => `<span class="me-chip" style="--c:${esc(a.color || '#6366f1')}">${esc(String(a.name || '').replace(/\s*\([^)]*\)/g, '').trim())}</span>`).join('');
+    })();
+    const phone = window.SupabaseClient?.currentProfile?.phone || localStorage.getItem('bp_user_phone') || '';
+    const vehicle = localStorage.getItem('bp_user_vehicle') || '';
+    const prep = localStorage.getItem('bp_buffer_prep') ?? '60';
+    const isHQ = ['ceo', 'hq_admin'].includes(localStorage.getItem('bp_user_role'));
+    const chev = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+    const row = (label, sub, right, action, extra = '') => `
+      <button type="button" class="me-row ${extra}" onclick="${action}">
+        <span class="me-row-txt"><span class="me-row-label">${label}</span>${sub ? `<span class="me-row-sub">${sub}</span>` : ''}</span>
+        <span class="me-row-right">${right}</span>
+      </button>`;
 
     app.innerHTML = `
-      <div class="header">
-        <button class="header-btn" onclick="App.navigate('home')">
-          <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-        </button>
-        <h1 class="header-title">마이페이지</h1>
-        <div class="header-btn" style="visibility:hidden"></div>
+      <div class="header me-header">
+        <h1 class="header-title">내 정보</h1>
       </div>
 
-      <div class="screen-scroll" style="padding-top:12px;">
+      <div class="screen-scroll me-wrap">
 
-        <!-- ── 프로필 히어로 ── -->
-        <div style="margin:0 var(--sp-5) var(--sp-5); background:linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#1e3a5f 100%); border-radius:20px; padding:20px; position:relative; overflow:hidden; box-shadow:0 8px 32px rgba(99,102,241,0.25);">
-          <!-- 배경 패턴 -->
-          <div style="position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,rgba(255,255,255,0.05) 0%,transparent 60%);pointer-events:none;"></div>
-          <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;border:1px solid rgba(255,255,255,0.06);pointer-events:none;"></div>
-          <div style="position:absolute;top:10px;right:10px;width:60px;height:60px;border-radius:50%;border:1px solid rgba(255,255,255,0.04);pointer-events:none;"></div>
-
-          <div style="display:flex;align-items:center;gap:14px;position:relative;">
-            <!-- 아바타 -->
-            <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:-1px;">${esc(initials)}</div>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:17px;font-weight:700;color:#fff;letter-spacing:-0.4px;margin-bottom:3px;">${esc(userName)}</div>
-              <div style="font-size:12.5px;color:rgba(255,255,255,0.55);margin-bottom:2px;">${esc(userEmail)}</div>
-              <div style="font-size:12px;color:rgba(255,255,255,0.4);">${indie ? `개인 매니저 · ${paid ? '유료' : '무료'}` : `${esc(userCompany)} · ${esc(userDept)}`}</div>
-            </div>
-            <button type="button" onclick="Profile.switchAccount()" style="flex-shrink:0;align-self:center;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.28);color:#fff;font-size:12.5px;font-weight:700;padding:7px 10px;border-radius:9px;cursor:pointer;white-space:nowrap;">계정 전환</button>
+        <!-- 프로필 -->
+        <section class="me-card">
+          <div class="me-prof">
+            <span class="me-avatar">${esc(userName.slice(0, 1) || '나')}</span>
+            <span class="me-prof-txt">
+              <span class="me-name">${esc(userName)}</span>
+              <span class="me-sub">${indie ? `개인 매니저 · ${paid ? '유료' : '무료'}` : esc([userCompany, userDept].filter(Boolean).join(' · '))}</span>
+              ${userEmail ? `<span class="me-sub" style="font-size:12px;">${esc(userEmail)}</span>` : ''}
+            </span>
           </div>
-
-          <!-- 담당 아티스트 태그 -->
-          <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:space-between;position:relative;">
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-              <span style="font-size:12px;color:rgba(255,255,255,0.4);font-weight:500;">담당 아티스트</span>
-              ${assignedArtists.map(a => `<span style="background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9);font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);">${esc(a)}</span>`).join('')}
-            </div>
+          <div class="me-artists">
+            <span class="me-sub">${indie ? '내 아티스트' : '담당 아티스트 · 본사에서 배정'}</span>
+            <div class="me-chips">${artistChips || `<span class="me-sub">${indie ? '아직 등록한 아티스트가 없어요' : '아직 배정된 아티스트가 없어요'}</span>`}${indie ? `<button type="button" class="me-chip-add" onclick="App.navigate('artists')">관리</button>` : ''}</div>
           </div>
-        </div>
+        </section>
 
-        <!-- ── 인증 상태 배너 (개인 매니저는 요금 카드) ── -->
         ${indie ? `
-        <div style="margin:0 var(--sp-5) var(--sp-4);background:${paid ? '#ecfdf5' : '#eef2ff'};border:1px solid ${paid ? '#a7f3d0' : '#c7d2fe'};border-radius:14px;padding:14px 16px;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:15px;font-weight:800;color:${paid ? '#047857' : '#3730a3'};">${paid ? `유료 사용 중 ${esc(Plan.untilText())}` : '무료로 쓰는 중'}</div>
-              <div style="font-size:12.5px;color:#475569;margin-top:3px;line-height:1.5;">${paid ? 'AI 비서·자동 길안내·교통 예측·아티스트 여러 명·경비 기록' : `월 ${Plan.FEE.toLocaleString()}원이면 AI 비서·자동 길안내·교통 예측·경비 기록을 모두 쓸 수 있어요.`}</div>
-            </div>
-            <button type="button" onclick="App.navigate('upgrade')" style="flex-shrink:0;border:0;background:${paid ? '#10b981' : '#4f46e5'};color:#fff;font-size:13px;font-weight:800;padding:9px 12px;border-radius:10px;cursor:pointer;">${paid ? '연장하기' : '유료 알아보기'}</button>
+        <section class="me-plan ${paid ? 'paid' : ''}">
+          <span class="me-row-txt">
+            <span class="me-row-label" style="font-weight:800;">${paid ? `유료 사용 중 ${esc(Plan.untilText())}` : '무료로 쓰는 중'}</span>
+            <span class="me-row-sub">${paid ? 'AI 비서·자동 길안내·교통 예측·아티스트 여러 명·경비 기록' : `월 ${Plan.FEE.toLocaleString()}원이면 AI 비서·자동 길안내·교통 예측·경비 기록을 모두 쓸 수 있어요.`}</span>
+          </span>
+          <button type="button" onclick="App.navigate('upgrade')">${paid ? '연장하기' : '유료 알아보기'}</button>
+        </section>` : ''}
+
+        <!-- 업무 -->
+        <section class="me-group">
+          <h2>업무</h2>
+          <div class="me-box">
+            ${phone ? row('휴대폰 번호', esc(phone), chev, 'Profile.editContact()')
+                    : row('휴대폰 번호', indie ? '아직 없어요 · 연락처로 쓰는 번호예요' : '아직 없어요 · 본사가 긴급할 때 연락할 번호예요', '<span class="me-warn-btn">등록</span>', 'Profile.editContact()', 'warn')}
+            ${row('경비 기록', '주유 · 주차 · 식비 영수증, 월별 합계 · 정산', indie && !Plan.can('expenses') ? lock('expenses') : chev, 'Expenses.open()')}
+            ${row(indie ? '내 차량' : '배정 차량', esc(vehicle || '등록 안 됨'), chev, 'Profile.editVehicle()')}
+            ${isHQ ? row('본사 관제 포털 열기', '관리자용 · 새 창', chev, `window.open(${escJs(typeof U !== 'undefined' && U.getHQPortalUrl ? U.getHQPortalUrl() : 'admin.html')}, '_blank', 'noopener')`) : ''}
           </div>
-        </div>` : `
-        <div style="margin:0 var(--sp-5) var(--sp-4);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:14px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
-          <div>
-            <div style="font-size:12px;color:var(--primary-400);font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:5px;">
-              <span style="display:inline-block;width:6px;height:6px;background:#4ade80;border-radius:50%;box-shadow:0 0 6px #4ade80;"></span>
-              사내 전용 매니지먼트 플래너
+        </section>
+
+        <!-- 알림 · 길안내 -->
+        <section class="me-group">
+          <h2>알림 · 길안내</h2>
+          <div class="me-box">
+            <div class="me-row me-row-static">
+              <span class="me-row-txt" style="gap:8px; width:100%;">
+                <span class="me-row-label">기본 내비</span>
+                <span class="me-seg" role="group" aria-label="기본 내비">
+                  <button class="setting-opt-btn${currentNavi === 'tmap' ? ' active' : ''}" aria-pressed="${currentNavi === 'tmap'}" onclick="Profile.setNavi('tmap',this)">티맵</button>
+                  <button class="setting-opt-btn${currentNavi === 'kakao' ? ' active' : ''}" aria-pressed="${currentNavi === 'kakao'}" onclick="Profile.setNavi('kakao',this)">카카오내비</button>
+                  <button class="setting-opt-btn${currentNavi === 'choice' ? ' active' : ''}" aria-pressed="${currentNavi === 'choice'}" onclick="Profile.setNavi('choice',this)">매번 선택</button>
+                </span>
+              </span>
             </div>
-            <div style="font-size:14px;font-weight:700;color:var(--text-100);">동선·스케줄 최적화 가동 중</div>
+            ${row('기상 · 준비 알림', '첫 출발 전에 미리 알려 드려요', `<span class="me-val">${Number(prep) > 0 ? esc(prep) + '분 전' : '끔'}</span>`, 'Profile.editPrep()')}
+            ${row('차에 타면 자동 길안내', '차와 연결되면 다음 일정으로 내비를 켜요', lock('autonav'), indie ? "Plan.require('autonav') && AutoNav.openGuide()" : 'AutoNav.openGuide()')}
+            ${row('알림 받기', indie ? '기상 · 출발 15분 전 · 내일 일정(밤 9시)' : '출발 15분 전 · 내일 일정(밤 9시) · 일정 변경 · 로드톡', '<span id="push-state-badge" class="me-badge">확인 중</span>', 'Profile.togglePush()')}
           </div>
-          <div style="background:rgba(34,197,94,0.12);color:#4ade80;border:1px solid rgba(34,197,94,0.25);padding:5px 11px;border-radius:var(--r-full);font-size:12px;font-weight:700;white-space:nowrap;">인증 완료</div>
-        </div>`}
+        </section>
 
-        <!-- ── 내 정보 관리 ── -->
-        ${Profile._section('내 정보 관리', 'normal', [
-          { icon: ProfileIcons.phone, label: '휴대폰 번호',      sub: (window.SupabaseClient?.currentProfile?.phone || localStorage.getItem('bp_user_phone') || '등록 안 됨'), badge: ProfileIcons.chevron, action: 'Profile.editContact()' },
-          { icon: ProfileIcons.car,   label: '배정 차량 정보 관리',   sub: '', badge: ProfileIcons.chevron, action: 'Profile.editVehicle()' },
-          { icon: '💳', label: '경비 기록', sub: '주유·주차·식비 영수증 · 월별 합계·정산', badge: indie && !Plan.can('expenses') ? lock('expenses') : ProfileIcons.chevron, action: 'Expenses.open()' },
-        ])}
-
-        <!-- ── 기본 설정 ── -->
-        <div style="margin:0 var(--sp-5) var(--sp-4);">
-          <div class="profile-section-title" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">${ProfileIcons.moon}<span>기본 설정</span></div>
-          <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:16px;overflow:hidden;">
-
-            <!-- 기본 내비 -->
-            <div style="padding:14px 16px;border-bottom:1px solid var(--border-subtle);">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-                <span style="font-size:15px;">🧭</span>
-                <span style="font-size:14px;font-weight:700;color:var(--text-100);">기본 내비</span>
-              </div>
-              <div class="setting-options" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
-                <button class="setting-opt-btn${currentNavi === 'tmap' ? ' active' : ''}" onclick="Profile.setNavi('tmap',this)">티맵</button>
-                <button class="setting-opt-btn${currentNavi === 'kakao' ? ' active' : ''}" onclick="Profile.setNavi('kakao',this)">카카오내비</button>
-                <button class="setting-opt-btn${currentNavi === 'choice' ? ' active' : ''}" onclick="Profile.setNavi('choice',this)">매번 선택</button>
-              </div>
-            </div>
-
-            <!-- 기상·준비 시간 -->
-            <div onclick="Profile.editPrep()" style="padding:14px 16px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:12px;cursor:pointer;">
-              <span style="font-size:18px;">⏰</span>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:14px;font-weight:700;color:var(--text-100);">기상·준비 시간</div>
-                <div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">첫 출발 ${esc(localStorage.getItem('bp_buffer_prep') ?? '60')}분 전에 기상·준비 알림 (0이면 끔)</div>
-              </div>
-              ${ProfileIcons.chevron}
-            </div>
-
-            <!-- 차에 타면 자동 길안내 -->
-            <div onclick="${indie ? "Plan.require('autonav') && AutoNav.openGuide()" : 'AutoNav.openGuide()'}" style="padding:14px 16px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:12px;cursor:pointer;">
-              <span style="font-size:15px;flex-shrink:0;">🚗</span>
-              <div style="flex:1;">
-                <div style="font-size:14px;font-weight:700;color:var(--text-100);">차에 타면 자동 길안내</div>
-                <div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">차와 연결되면 다음 일정으로 내비 자동 실행</div>
-              </div>
-              ${lock('autonav')}
-            </div>
-
-            <!-- 푸시 알림 -->
-            <div onclick="${indie ? "Plan.require('alerts') && Profile.togglePush()" : 'Profile.togglePush()'}" style="padding:14px 16px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:12px;cursor:pointer;">
-              <span style="color:var(--primary-400);flex-shrink:0;">${ProfileIcons.bell}</span>
-              <div style="flex:1;">
-                <div style="font-size:14px;font-weight:700;color:var(--text-100);">알림 받기 (푸시)</div>
-                <div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">${indie ? '기상 · 출발 15분 전 · 내일 일정(밤 9시)' : '출발 15분 전 · 내일 일정(밤 9시) · 일정 변경 · 로드톡'}</div>
-              </div>
-              ${indie && !Plan.can('alerts') ? lock('alerts') : ''}<span id="push-state-badge" ${indie && !Plan.can('alerts') ? 'hidden' : ''} style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;font-size:12px;font-weight:700;padding:3px 10px;border-radius:var(--r-full);">확인 중</span>
-            </div>
-
-
+        <!-- 계정 -->
+        <section class="me-group">
+          <h2>계정</h2>
+          <div class="me-box">
+            ${row('계정 전환', '', chev, 'Profile.switchAccount()')}
+            ${row('<span style="color:#dc2626;">로그아웃</span>', '', '', 'Profile.logout()', 'me-logout')}
           </div>
-        </div>
-
-
-        <!-- ── HQ 관리자 포털 (CEO/HQ만) ── -->
-        ${(localStorage.getItem('bp_user_role') === 'ceo' || localStorage.getItem('bp_user_role') === 'hq_admin') ? `
-        <div style="margin:0 var(--sp-5) var(--sp-4);">
-          <div class="profile-section-title" style="margin-bottom:10px;">🏢 HQ 엔터테인먼트 마스터 포털</div>
-          <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:16px;overflow:hidden;">
-            <a href="${typeof U !== 'undefined' && U.getHQPortalUrl ? U.getHQPortalUrl() : 'admin.html'}" target="_blank" style="display:flex;align-items:center;gap:12px;padding:14px 16px;text-decoration:none;cursor:pointer;">
-              <span style="color:var(--primary-400);">${ProfileIcons.building}</span>
-              <span style="font-size:14px;font-weight:700;color:var(--text-100);flex:1;">본사 마스터 스케줄러 열기 (관리자용)</span>
-              ${ProfileIcons.chevron}
-            </a>
+          <div class="me-foot">
+            <button type="button" onclick="Profile.showVersion()">v1.0.0</button> ·
+            <button type="button" onclick="window.open('./terms.html', '_blank', 'noopener')">이용약관</button> ·
+            <button type="button" onclick="window.open('./privacy.html', '_blank', 'noopener')">개인정보처리방침</button>
           </div>
-        </div>` : ''}
-
-        <!-- ── 고객지원 / 앱 정보 ── -->
-        ${Profile._section('고객지원 / 앱 정보', 'normal', [
-          ...(indie ? [] : [{ icon: '🚨',        label: '긴급 지원 / 현장 긴급보고', sub: '본사 연락처 · 긴급 보고(위치·사진)', badge: ProfileIcons.chevron, action: 'App.openEmergencyModal()' }]),
-          { icon: ProfileIcons.info,        label: '앱 버전 정보',             sub: '', badge: '<span style="font-size:12.5px;color:var(--text-400);">v1.0.0 (최신)</span>', action: 'Profile.showVersion()' },
-          { icon: ProfileIcons.file,        label: '이용약관 및 개인정보처리방침', sub: '', badge: ProfileIcons.chevron, action: "window.open('./terms.html', '_blank', 'noopener')" },
-        ])}
-
-        <!-- ── 로그아웃 ── -->
-        <div style="margin:var(--sp-2) var(--sp-5) var(--sp-8);">
-          <button onclick="Profile.logout()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:14px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#f87171;font-size:14px;font-weight:700;cursor:pointer;transition:background 0.15s;">
-            ${ProfileIcons.logOut}
-            로그아웃
-          </button>
-        </div>
-
+        </section>
       </div>
     `;
     setTimeout(() => this._renderPushBadge(), 0);
