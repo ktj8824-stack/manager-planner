@@ -27,7 +27,7 @@ const TESTS = [
   ['자동 길안내 (?go=next)', 'web/autonav-test.cjs', [], [/navs \["서울 강남구 압구정로79길 19"\]/, /profileRow true/]],
   ['출발 15분 전 화면 알림', 'web/dep-alert-test.cjs', [], [/13분 뒤 출발/, /"fireAt"/]],
   ['이동 중 지연 예상', 'web/delay-test.cjs', [], [/지연 예상 약 15분/, /"log": "\[지연 예상\]/]],
-  ['길안내 좌표 (이름+주소)', 'web/nav-fix-test.cjs', [], [/tmap:\/\/route\?rGoName=/, /kakaomap:\/\/route\?ep=/]],
+  ['길안내 좌표 (이름+주소)', 'web/nav-fix-test.cjs', [], [/tmap:\/\/route\?goalname=/, /kakaomap:\/\/route\?ep=/, /goalname=%EA%B0%95%EB%82%A8%EC%95%84%EB%A5%B4%EB%88%84%EB%B3%B4%EC%94%A8%ED%8B%B0&goalx=127.0281&goaly=37.4934/]],
   ['그날 교통 예측 동선', 'web/tm-test.cjs', [], [/도착 기준 교통 예측/, /현재 교통 기준/]],
   ['완료 단계 접기', 'web/fold-test.cjs', [], [/완료된 단계 2개/]],
   ['현장 메모', 'web/venue-test.cjs', [], [/현장 메모 2/, /지하 2층 B구역 주차/]],

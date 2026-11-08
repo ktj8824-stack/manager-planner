@@ -11,6 +11,12 @@ const { chromium } = require('playwright');
     const urls = []; U._go = (u) => urls.push(u); U._launchApp = (u) => urls.push(u);
     await U.openNavigation('MBC 상암 신사옥 (서울 마포구 성암로 267)', '', 'tmap');
     await U.openNavigation('MBC 상암 신사옥 (서울 마포구 성암로 267)', '', 'kakao');
+    // 같은 건물에 가게가 여러 개: 주소로 찾으면 다른 가게가 먼저 나와도 이름이 같은 곳으로
+    RouteProxy.call = async (svc, params) => svc === 'kakao_keyword' && /서초대로74길/.test(params.query)
+      ? { documents: [{ place_name: 'Tesla 강남 스토어', road_address_name: '서울 서초구 서초대로74길 49', x: '127.1111', y: '37.1111' }, { place_name: '강남아르누보씨티', road_address_name: '서울 서초구 서초대로74길 49', x: '127.0281', y: '37.4934' }] }
+      : { documents: [] };
+    U._navCache = {};
+    await U.openNavigation('강남아르누보씨티 (서울 서초구 서초대로74길 49)', '', 'tmap');
     return { urls, seen: seen.length };
   });
   console.log(JSON.stringify(r, null, 1), errs); await b.close();

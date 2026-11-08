@@ -321,12 +321,22 @@ const U = {
     if (typeof KakaoAPI === 'undefined' || !KakaoAPI.searchPlace) return null;
     const parts = this._splitPlace(raw);
     const label = parts.name || destName || parts.addr || raw;
-    // 주소가 있으면 주소로, 이름이 있으면 이름으로 동시에 찾고 먼저 나온 결과를 쓴다 (괄호가 섞인 긴 문자열은 검색이 안 됨)
+    // 이름·주소를 동시에 찾되, 이름이 같은(또는 주소가 같은) 장소를 우선 — 같은 건물의 다른 가게로 안내되지 않게
+    // (괄호가 섞인 긴 문자열은 검색이 안 되므로 나눠서 찾음)
     const queries = [...new Set([parts.addr, parts.name, raw].filter(Boolean))];
+    const norm = (v) => String(v || '').replace(/\s+/g, '').toLowerCase();
+    const want = norm(parts.name), wantAddr = norm(parts.addr);
+    const pick = (docs) => {
+      const list = (Array.isArray(docs) ? docs : []).filter(d => d && d.x && d.y);
+      if (!list.length) return null;
+      return (want && list.find(d => norm(d.place_name) === want))
+        || (want && list.find(d => norm(d.place_name).includes(want) || want.includes(norm(d.place_name))))
+        || (wantAddr && list.find(d => norm(d.road_address_name).includes(wantAddr) || norm(d.address_name).includes(wantAddr)))
+        || list[0];
+    };
     const find = async (q) => {
-      const docs = await KakaoAPI.searchPlace(q);
-      const d = Array.isArray(docs) && docs[0];
-      if (!d || !d.x || !d.y) throw new Error('none');
+      const d = pick(await KakaoAPI.searchPlace(q));
+      if (!d) throw new Error('none');
       return { name: parts.name || d.place_name || label, lat: String(d.y), lng: String(d.x) };
     };
     try {
@@ -378,7 +388,8 @@ const U = {
         this.toast('PC에서는 티맵 앱을 열 수 없어 카카오맵 웹 길찾기로 엽니다.');
         return;
       }
-      const path = pt ? `route?rGoName=${enc(name)}&rGoX=${pt.lng}&rGoY=${pt.lat}` : `search?name=${enc(label)}`;
+      // 티맵 앱 주소 형식: route?goalname=&goalx=(경도)&goaly=(위도) — 이름을 같이 넘겨야 티맵이 근처 다른 가게 이름으로 바꾸지 않음
+      const path = pt ? `route?goalname=${enc(name)}&goalx=${pt.lng}&goaly=${pt.lat}` : `search?name=${enc(label)}`;
       if (isAndroid) this._go(`intent://${path}#Intent;scheme=tmap;package=com.skt.tmap.ku;end`);
       else this._launchApp(`tmap://${path}`, 'https://apps.apple.com/kr/app/id431589174');
       this.toast(`🚗 티맵으로 [${name}] 길안내를 엽니다.`);
