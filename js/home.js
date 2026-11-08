@@ -126,10 +126,6 @@ const Home = {
             ${this.renderMiniCal()}
           </div>
           
-          <!-- Footer (본사 포털 — 개인 매니저는 본사가 없어 숨김) -->
-          ${typeof Plan !== 'undefined' && Plan.isIndie() ? '' : `<div style="padding:10px 6px; flex-shrink:0; border-top:1px solid rgba(0,0,0,0.05); display:flex; flex-direction:column; gap:6px;">
-             <a href="${typeof U !== 'undefined' && U.getHQPortalUrl ? U.getHQPortalUrl() : 'admin.html'}" target="_blank" style="display:inline-flex; align-items:center; justify-content:center; gap:5px; width:100%; padding:8px 0; border-radius:8px; background:linear-gradient(135deg, #4f46e5, #7c3aed); color:#fff; font-weight:700; font-size:12px; text-align:center; text-decoration:none; box-shadow:0 2px 8px rgba(79,70,229,0.3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="12" y1="22" x2="12" y2="22.01"/><line x1="8" y1="6" x2="8" y2="6.01"/><line x1="16" y1="6" x2="16" y2="6.01"/><line x1="8" y1="10" x2="8" y2="10.01"/><line x1="16" y1="10" x2="16" y2="10.01"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="16" y1="14" x2="16" y2="14.01"/></svg> 본사</a>
-          </div>`}
         </div>
 
         <!-- RIGHT: Timeline -->
@@ -139,6 +135,9 @@ const Home = {
           </div>
         </div>
       </div>
+      <button type="button" class="home-fab" onclick="Home.openScheduleRegisterModal()" aria-label="스케줄 추가">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
     `;
 
     setTimeout(() => {
@@ -207,7 +206,7 @@ const Home = {
       let dot = hasSched ? `<div style="width:5px; height:5px; background:${isSelected?'#fff':(isPast?'#cbd5e1':'#4f46e5')}; border-radius:50%; margin-left:auto;"></div>` : '';
       
       html += `
-        <div class="${esc(cls)}" onclick="Home.selectDate(${y},${m},${d})" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 4px; cursor:pointer; border-radius:12px; margin-bottom:4px; transition:all 0.15s; ${isSelected ? 'background:#1e293b; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.12);' : isToday ? 'background:rgba(79,70,229,0.08);' : ''}">
+        <div class="${esc(cls)}" onclick="Home.selectDate(${y},${m},${d})" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 4px; cursor:pointer; border-radius:12px; margin-bottom:4px; transition:all 0.15s; ${isSelected ? 'background:#4f46e5; color:#fff; box-shadow:0 4px 12px rgba(79,70,229,0.25);' : isToday ? 'background:rgba(79,70,229,0.08);' : ''}">
           <div style="font-size:14px; font-weight:700; ${esc(isSelected ? 'color:rgba(255,255,255,0.8);' : dayColor)}">${esc(dayName)}</div>
           <div style="font-size:17px; font-weight:700; width:26px; text-align:center; letter-spacing:-0.5px; ${isSelected ? 'color:#fff;' : isPast ? 'color:#94a3b8;' : 'color:#0f172a;'}">${esc(d)}</div>
           <div style="width:4px; height:4px; display:flex; align-items:center; justify-content:center;">${dot}</div>
@@ -247,7 +246,7 @@ const Home = {
       let dot = hasSched ? `<div style="width:5px; height:5px; background:${isSelected?'#fff':'#4f46e5'}; border-radius:50%; margin-left:auto;"></div>` : '';
       
       html += `
-        <div class="${esc(cls)}" onclick="Home.selectDate(${nextY},${nextM},${d})" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 4px; cursor:pointer; border-radius:12px; margin-bottom:4px; transition:all 0.15s; ${isSelected ? 'background:#1e293b; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.12);' : isToday ? 'background:rgba(79,70,229,0.08);' : ''}">
+        <div class="${esc(cls)}" onclick="Home.selectDate(${nextY},${nextM},${d})" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 4px; cursor:pointer; border-radius:12px; margin-bottom:4px; transition:all 0.15s; ${isSelected ? 'background:#4f46e5; color:#fff; box-shadow:0 4px 12px rgba(79,70,229,0.25);' : isToday ? 'background:rgba(79,70,229,0.08);' : ''}">
           <div style="font-size:14px; font-weight:700; ${esc(isSelected ? 'color:rgba(255,255,255,0.8);' : dayColor)}">${esc(dayName)}</div>
           <div style="font-size:17px; font-weight:700; width:26px; text-align:center; letter-spacing:-0.5px; ${isSelected ? 'color:#fff;' : 'color:#0f172a;'}">${esc(d)}</div>
           <div style="width:4px; height:4px; display:flex; align-items:center; justify-content:center;">${dot}</div>
@@ -342,6 +341,45 @@ const Home = {
     this.updateRightTimeline();
   },
 
+  // ── 홈 보기 필터: 담당 아티스트 한 팀 / (소속 매니저) 내 일정·본사 전체 ──
+  artistFilter: 'ALL',
+  scope() {
+    try { return localStorage.getItem('rp_home_scope') === 'all' ? 'all' : 'mine'; } catch (e) { return 'mine'; }
+  },
+  setScope(v) {
+    try { localStorage.setItem('rp_home_scope', v === 'all' ? 'all' : 'mine'); } catch (e) { }
+    this.updateRightTimeline();
+  },
+  _passFilter(s) {
+    if (!s) return true;
+    const role = localStorage.getItem('bp_user_role') || 'manager';
+    const indie = typeof Plan !== 'undefined' && Plan.isIndie();
+    if (role === 'manager' && !indie && this.scope() === 'mine') {
+      const me = localStorage.getItem('bp_manager_id');
+      if (me && s.managerId && s.managerId !== me) return false;
+    }
+    const a = this.artistFilter;
+    if (a && a !== 'ALL' && s.artistId !== a && !(Array.isArray(s.artistIds) && s.artistIds.includes(a))) return false;
+    return true;
+  },
+  openArtistPicker() {
+    const all = window.hqStore?.getArtists?.() || [];
+    const role = localStorage.getItem('bp_user_role') || 'manager';
+    const indie = typeof Plan !== 'undefined' && Plan.isIndie();
+    let ids = []; try { ids = JSON.parse(localStorage.getItem('bp_assigned_artists') || '[]') || []; } catch (e) { }
+    let list = all.filter(a => ids.includes(a.id));
+    if (!list.length && (role !== 'manager' || indie)) list = all;
+    const clean = (n) => String(n || '').replace(/\s*\([^)]*\)/g, '').trim();
+    const cur = this.artistFilter || 'ALL';
+    const item = (id, name, color) => `<button type="button" class="hf-pick${cur === id ? ' on' : ''}" onclick="Home.pickArtist(${escJs(id)})"><span class="hf-dot" style="background:${esc(color)}"></span><span style="flex:1;">${esc(name)}</span>${cur === id ? '✓' : ''}</button>`;
+    App.showModal(indie ? '내 아티스트' : '담당 아티스트', `<div style="display:flex; flex-direction:column; gap:6px;">${item('ALL', `전체 (${list.length}팀)`, '#94a3b8')}${list.map(a => item(a.id, clean(a.name), a.color || '#4f46e5')).join('')}</div>`);
+  },
+  pickArtist(id) {
+    this.artistFilter = id || 'ALL';
+    App.closeModal();
+    this.updateRightTimeline();
+  },
+
   renderTimeline() {
     const y = this.selectedDate.getFullYear();
     const m = this.selectedDate.getMonth();
@@ -371,8 +409,8 @@ const Home = {
     }
     if (!artistSummary) artistSummary = '아직 담당 아티스트가 없어요';
 
-    const events = State.calculateDailyEvents(y, m, d);
-    const rawSchedules = State.getSchedulesForDate(y, m, d);
+    const events = State.calculateDailyEvents(y, m, d).filter(ev => !ev || !ev.hqScheduleId || this._passFilter((window.hqStore?.getSchedules?.() || []).find(s => s.id === ev.hqScheduleId)));
+    const rawSchedules = State.getSchedulesForDate(y, m, d).filter(s => this._passFilter(s));
 
     // 배차 차량 정보 추출 (당일 일정의 차량 -> 사용자 지정 차량 -> 기본값)
     const foundVehicle = events.find(e => e.vehicleName)?.vehicleName || 
@@ -381,23 +419,30 @@ const Home = {
                          '';
     const vehicleSummary = foundVehicle;
 
+    const indieMode = typeof Plan !== 'undefined' && Plan.isIndie();
+    const companyMgr = userRole === 'manager' && !indieMode;
+    const myArts = (() => { try { const ids = JSON.parse(assignedJson || '[]') || []; const l = allArtists.filter(a => ids.includes(a.id)); return l.length ? l : (userRole === 'manager' && !indieMode ? [] : allArtists); } catch (e) { return allArtists; } })();
+    const selArt = this.artistFilter && this.artistFilter !== 'ALL' ? allArtists.find(a => a.id === this.artistFilter) : null;
+    const pillLabel = selArt ? cleanArtName(selArt.name) : (myArts.length === 1 ? cleanArtName(myArts[0].name) : `${indieMode ? '내 아티스트' : '담당'} ${myArts.length}팀`);
+    const scope = this.scope();
     let html = `
-      <!-- 상단: 담당 아티스트 안내 -->
-      <div style="margin-bottom:10px; padding:2px 2px;">
-        <div style="font-size:14px; font-weight:700; color:#0f172a; display:flex; align-items:center; gap:5px;">
-          <span style="color:#4f46e5; flex-shrink:0;">★</span>
-          <span style="color:#4f46e5; flex-shrink:0;">담당:</span>
-          ${typeof Plan !== 'undefined' && Plan.isIndie() && artistSummary === '아직 담당 아티스트가 없어요'
-            ? `<button type="button" onclick="App.navigate('artists'); setTimeout(() => Artists.openForm(), 350);" style="border:0; background:#4f46e5; color:#fff; font-size:13px; font-weight:800; padding:6px 10px; border-radius:8px; cursor:pointer;">+ 아티스트 등록하기</button>`
-            : `<span style="color:#1e293b;">${esc(artistSummary)}</span>`}
-        </div>
+      <!-- 상단: 담당 아티스트 버튼 + (소속 매니저) 내 일정 / 본사 전체 -->
+      <div class="home-filters">
+        ${indieMode && !myArts.length
+          ? `<button type="button" class="hf-add" onclick="App.navigate('artists'); setTimeout(() => Artists.openForm(), 350);">+ 아티스트 등록하기</button>`
+          : myArts.length ? `<button type="button" class="hf-artist" onclick="Home.openArtistPicker()" aria-label="담당 아티스트 고르기"><span class="hf-dot" style="background:${esc(selArt?.color || '#4f46e5')}"></span>${esc(pillLabel)}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>`
+          : `<span class="hf-none">${esc(artistSummary)}</span>`}
+        ${companyMgr ? `<div class="hf-scope" role="group" aria-label="보기 범위">
+          <button type="button" aria-pressed="${scope === 'mine'}" class="${scope === 'mine' ? 'on' : ''}" onclick="Home.setScope('mine')">내 일정</button>
+          <button type="button" aria-pressed="${scope === 'all'}" class="${scope === 'all' ? 'on' : ''}" onclick="Home.setScope('all')">본사 전체</button>
+        </div>` : ''}
       </div>
 
       <!-- 3. 탭 버튼 -->
       <div style="display:flex; background:rgba(0,0,0,0.04); border-radius:14px; padding:4px; margin-bottom:12px; gap:4px;">
         <div onclick="Home.setTab('schedule')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:12px 0; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; transition:all 0.2s; ${this.currentTab === 'schedule' ? 'background:#ffffff; color:#4f46e5; box-shadow:0 2px 8px rgba(0,0,0,0.06);' : 'color:#64748b; background:transparent;'}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          회사 스케줄표
+          ${indieMode ? '내 스케줄표' : '회사 스케줄표'}
         </div>
         <div onclick="Home.setTab('timeline')" style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:12px 0; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; transition:all 0.2s; ${this.currentTab === 'timeline' ? 'background:#ffffff; color:#4f46e5; box-shadow:0 2px 8px rgba(0,0,0,0.06);' : 'color:#64748b; background:transparent;'}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
@@ -533,7 +578,7 @@ const Home = {
                     ${getArtistTypeIcon(artObj, 11)}
                     <span>${esc(activeSched.artistName || '아티스트')}</span>
                   </span>
-                  ${isHQ ? '<span style="background:rgba(79,70,229,0.1); color:#4f46e5; font-size:12px; font-weight:700; padding:1px 6px; border-radius:4px; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="12" y1="22" x2="12" y2="22.01"/></svg>HQ연동</span>' : ''}
+                  ${isHQ && !(typeof Plan !== 'undefined' && Plan.isIndie()) ? '<span style="background:rgba(79,70,229,0.1); color:#4f46e5; font-size:12px; font-weight:700; padding:1px 6px; border-radius:4px; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="12" y1="22" x2="12" y2="22.01"/></svg>HQ연동</span>' : ''}
                   ${isSecret ? '<span style="background:#f3e8ff; color:#9333ea; font-size:12px; font-weight:700; padding:1px 6px; border-radius:4px; border:1px solid #d8b4fe; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Secret</span>' : ''}
                 </div>
               </div>
@@ -619,6 +664,13 @@ const Home = {
           return sHour < currentHour && currentHour < eHour;
         });
 
+        // 남은 스케줄이 없으면 빈 시간은 한 줄로 접는다
+        const anyLater = sortedSchedules.some(s => timeToHour(s.teeOff || s.startTime) >= currentHour);
+        if (!isCovered && !anyLater) {
+          const lastEnd = sortedSchedules.reduce((mx, s) => (s.endTime || '') > mx ? (s.endTime || '') : mx, '');
+          html += `<div class="grid-rest" style="font-size:13px; color:#3c3c43; padding:6px 2px 4px; border-top:1px dashed #e2e8f0;">${esc(lastEnd || hourStr)} 이후 일정 없음</div>`;
+          break;
+        }
         // 진행 중인 스케줄이 없을 때만 빈 시간 표시선 렌더링
         if (!isCovered) {
           html += `
@@ -642,12 +694,7 @@ const Home = {
       }
     });
 
-    html += `
-      <div onclick="Home.openScheduleRegisterModal()" style="text-align:center; padding:13px; background:#ffffff; border:2px dashed #4f46e5; border-radius:12px; color:#4f46e5; font-size:14px; font-weight:700; cursor:pointer; margin-top:16px; box-shadow:0 2px 6px rgba(79,70,229,0.06); display:flex; align-items:center; justify-content:center; gap:6px;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        스케줄 등록
-      </div>
-    </div>`;
+    html += `</div>`;
 
     return html;
   },
@@ -691,7 +738,6 @@ const Home = {
     try {
       const pending = uniqueEvents.filter(e => !e.done && e.stepCategory !== 'rest');
       const nowEv = allPast ? null : (pending.find(e => e.moving === true) || pending[0]);
-      if (!nowEv) html += addRow;
       if (allPast) {
         const d = this.selectedDate;
         html += `<div style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:14px; padding:12px 14px; margin-bottom:14px; font-size:15px; font-weight:700; color:#64748b; display:flex; align-items:center; gap:8px;">
@@ -720,16 +766,30 @@ const Home = {
         } catch (e) { }
         const B = 'min-height:40px; border-radius:10px; font-size:14.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; border:0;';
         const idx = nowEv.timelineIdx;
+        // 시간이 지났는데 아직 출발(이동중)·완료를 안 눌렀으면 빨간 'N분 지남'
+        let lateMin = 0;
+        try {
+          const mm = /^(\d{1,2}):(\d{2})/.exec(String(nowEv.time || ''));
+          if (mm && !nowEv.moving && !nowEv.forNextDay && nowDay !== 'future') {
+            const base = new Date(this.selectedDate); base.setHours(+mm[1], +mm[2], 0, 0);
+            base.setDate(base.getDate() + (nowEv.dayOffset || 0));
+            lateMin = Math.floor((Date.now() - base.getTime()) / 60000);
+            if (lateMin > 600 || lateMin < 1) lateMin = 0;   // 하루 넘게 지난 기록은 표시 안 함
+          }
+        } catch (e) { lateMin = 0; }
+        const lateTxt = lateMin >= 60 ? `${Math.floor(lateMin / 60)}시간 ${lateMin % 60}분 지남` : `${lateMin}분 지남`;
+        // 제목은 장소 이름만, 주소는 아래 줄로
+        const shortName = String(name).replace(/\s*\((?=[^)]*\d)[^)]*\)\s*/g, ' ').replace(/\s{2,}/g, ' ').trim() || name;
         html += `
-          <div style="background:#fff; color:#111827; border:1.5px solid #c7d2fe; border-radius:16px; padding:12px 13px; margin-bottom:12px; box-shadow:0 4px 14px rgba(79,70,229,.10);">
+          <div class="now-card${lateMin ? ' late' : ''}" style="background:#fff; color:#111827; border:${lateMin ? '2px solid #dc2626' : '1.5px solid #c7d2fe'}; border-radius:16px; padding:12px 13px; margin-bottom:12px; box-shadow:0 4px 14px rgba(79,70,229,.10);">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px;">
-              <span style="font-size:12px; font-weight:700; color:#4f46e5; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">지금 할 일 · ${esc(tag)}</span>
+              <span style="font-size:12px; font-weight:700; color:${lateMin ? '#3c3c43' : '#4f46e5'}; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">지금 할 일 · ${esc(tag)}</span>
               <span style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-                <span style="font-size:12.5px; font-weight:700; background:#eef2ff; color:#4338ca; padding:4px 9px; border-radius:8px;">${nowEv.forNextDay ? '내일 일정 · ' : nowEv.dayOffset === -1 ? '전날 ' : nowEv.dayOffset === 1 ? '다음날 ' : ''}${esc(nowEv.time || '')}</span>
-                <button type="button" onclick="Home.openScheduleRegisterModal()" style="font-size:12.5px; font-weight:800; background:#4f46e5; color:#fff; border:0; padding:4px 9px; border-radius:8px; cursor:pointer; white-space:nowrap;">+ 스케줄 추가</button>
+                ${lateMin ? `<span class="now-late" style="font-size:12.5px; font-weight:700; background:#dc2626; color:#fff; padding:4px 9px; border-radius:999px;">${esc(lateTxt)}</span>` : ''}
+                <span style="font-size:12.5px; font-weight:700; background:${lateMin ? '#fef2f2' : '#eef2ff'}; color:${lateMin ? '#b91c1c' : '#4338ca'}; padding:4px 9px; border-radius:8px;">${nowEv.forNextDay ? '내일 일정 · ' : nowEv.dayOffset === -1 ? '전날 ' : nowEv.dayOffset === 1 ? '다음날 ' : ''}${esc(nowEv.time || '')}</span>
               </span>
             </div>
-            <div style="font-size:17px; font-weight:700; line-height:1.3; margin-bottom:2px;">${esc(name)}</div>
+            <div style="font-size:17px; font-weight:700; line-height:1.3; margin-bottom:2px;">${esc(shortName)}</div>
             ${dest ? `<div style="font-size:12.5px; color:#6b7280; margin-bottom:9px;">${esc(dest)}</div><div data-venue="${esc(dest)}" data-venue-compact style="margin:-4px 0 9px;"></div>` : '<div style="height:8px;"></div>'}
             ${dest ? `<div style="display:flex; gap:6px; margin-bottom:6px;">
               <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'tmap')" style="${B} flex:1; background:#f8fafc; border:1px solid #e2e8f0; color:#111827;"><span style="width:10px;height:10px;border-radius:3px;background:#111;display:inline-block"></span>TMAP</button>

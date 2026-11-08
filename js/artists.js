@@ -35,24 +35,70 @@ const Artists = {
           ${paid ? `유료 사용 중 · 아티스트 여러 명 등록 가능 ${Plan.untilText() ? `(${Plan.untilText()})` : ''}`
                  : `무료는 아티스트 ${Plan.FREE_ARTISTS}명까지예요. <button type="button" onclick="App.navigate('upgrade')">유료 알아보기</button>`}
         </div>
-        ${items.length ? items.map(a => `
-          <div class="art-card">
+        <div class="art-count">등록 <b>${items.length}${paid ? '' : ` / ${Plan.FREE_ARTISTS}`}명</b> · ${paid ? '유료' : '무료'}</div>
+        ${items.length ? items.map(a => {
+          const nx = this.nextOf(a.id);
+          return `
+          <button type="button" class="art-card" onclick="Artists.openDetail(${escJs(a.id)})">
             <span class="art-dot" style="background:${esc(a.color || '#ec4899')}"></span>
-            <div class="art-info">
-              <div class="art-name">${esc(a.name)}</div>
-              <div class="art-type">${esc(a.type || '기타')}</div>
-            </div>
-            <button type="button" class="art-btn" onclick="Artists.openForm(${escJs(a.id)})">수정</button>
-            <button type="button" class="art-btn danger" onclick="Artists.remove(${escJs(a.id)})">삭제</button>
-          </div>`).join('') : `
+            <span class="art-info">
+              <span class="art-name">${esc(a.name)} <small class="art-type">${esc(a.type || '기타')}</small></span>
+              <span class="art-next${nx ? '' : ' none'}">${nx ? esc(nx.text) : '다가오는 일정 없음'}</span>
+            </span>
+            <svg class="art-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>`;
+        }).join('') : `
           <div class="art-empty">
             <b>아직 등록한 아티스트가 없어요</b>
             <span>담당 아티스트를 먼저 등록하면 일정을 넣을 수 있어요.</span>
           </div>`}
-        <button type="button" class="art-add ${full ? 'locked' : ''}" onclick="Artists.openForm()">
-          ${full ? '🔒 ' : '+ '}아티스트 추가
-        </button>
+        ${full ? `
+          <div class="art-add locked">
+            <span class="art-lock-t">🔒 아티스트 더 추가하기</span>
+            <span class="art-lock-s">유료로 바꾸면 여러 명을 함께 관리할 수 있어요</span>
+            <button type="button" onclick="App.navigate('upgrade')">유료 혜택 보기</button>
+          </div>` : `<button type="button" class="art-add" onclick="Artists.openForm()">+ 아티스트 추가</button>`}
       </div>`;
+  },
+
+  // 이 아티스트의 다음(오늘 남은 것 포함) 일정 한 줄
+  _ymd(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; },
+  upcoming(artistId, max = 3) {
+    try {
+      const now = new Date(), today = this._ymd(now);
+      const hm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      return (window.hqStore?.getSchedules?.() || [])
+        .filter(s => s.artistId === artistId && s.date && (s.date > today || (s.date === today && (s.endTime || s.startTime || '23:59') >= hm)))
+        .sort((a, b) => (a.date + (a.startTime || '')).localeCompare(b.date + (b.startTime || '')))
+        .slice(0, max);
+    } catch (e) { return []; }
+  },
+  _label(s) {
+    const now = new Date(), today = this._ymd(now);
+    const t = new Date(now); t.setDate(now.getDate() + 1);
+    const day = s.date === today ? '오늘' : s.date === this._ymd(t) ? '내일' : `${+s.date.slice(5, 7)}/${+s.date.slice(8, 10)}`;
+    return `${day}${s.startTime ? ' ' + s.startTime : ''} · ${s.isSecret ? '비공개 일정' : (s.title || '일정')}`;
+  },
+  nextOf(artistId) {
+    const s = this.upcoming(artistId, 1)[0];
+    return s ? { text: this._label(s), s } : null;
+  },
+
+  openDetail(id) {
+    const a = this.list().find(x => x.id === id);
+    if (!a) return;
+    const up = this.upcoming(id, 3);
+    App.showModal(a.name, `
+      <div class="art-detail">
+        <div class="art-detail-top"><span class="art-dot" style="background:${esc(a.color || '#ec4899')}"></span><span class="art-type">${esc(a.type || '기타')}</span></div>
+        <div class="art-detail-h">다가오는 일정</div>
+        ${up.length ? `<ul class="art-up">${up.map(s => `<li>${esc(this._label(s))}${s.location && !s.isSecret ? `<small>${esc(s.location)}</small>` : ''}</li>`).join('')}</ul>`
+                    : '<div class="art-up-none">다가오는 일정이 없어요</div>'}
+        <div class="art-detail-btns">
+          <button type="button" class="art-btn" onclick="App.closeModal(); setTimeout(() => Artists.openForm(${escJs(id)}), 320)">정보 수정</button>
+          <button type="button" class="art-btn danger" onclick="App.closeModal(); setTimeout(() => Artists.remove(${escJs(id)}), 320)">삭제</button>
+        </div>
+      </div>`);
   },
 
   openForm(id) {

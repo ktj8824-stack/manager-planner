@@ -17,8 +17,17 @@ const { chromium, devices } = require('playwright');
   // 아티스트 화면: 무료 1명 제한
   await p.tap('#bottom-nav [data-s="artists"]'); await p.waitForTimeout(300);
   R.artists = await p.evaluate(() => ({ cards: document.querySelectorAll('.art-card').length, free: document.querySelector('.art-plan')?.innerText.includes('1명까지'), active: document.querySelector('#bottom-nav [data-s="artists"]').classList.contains('active') }));
-  await p.tap('.art-add'); await p.waitForTimeout(400);
-  R.upsell = await p.evaluate(() => document.querySelector('#app-modal')?.innerText.includes('유료 기능이에요') && document.querySelector('#app-modal').innerText.includes('20,000'));
+  R.artUI = await p.evaluate(() => {
+    const n = Artists.list().length, lock = document.querySelector('div.art-add.locked');
+    return { count: document.querySelector('.art-count')?.innerText.includes('/ 1명'), lockedOk: n >= 1 ? !!lock && lock.innerText.includes('유료 혜택 보기') : !lock, noRowBtns: !document.querySelector('.art-card .art-btn') };
+  });
+  if (await p.$('.art-card')) {
+    await p.tap('.art-card'); await p.waitForTimeout(400);
+    R.detail = await p.evaluate(() => { const t = document.querySelector('#app-modal')?.innerText || ''; return t.includes('다가오는 일정') && t.includes('정보 수정') && t.includes('삭제'); });
+    await p.evaluate(() => App.closeModal()); await p.waitForTimeout(350);
+  }
+  await p.evaluate(() => Artists.openForm()); await p.waitForTimeout(400);
+  R.upsell = await p.evaluate(() => Artists.list().length < 1 || (document.querySelector('#app-modal')?.innerText.includes('유료 기능이에요') && document.querySelector('#app-modal').innerText.includes('20,000')));
   await p.evaluate(() => App.closeModal()); await p.waitForTimeout(350);
   // 내 정보: 요금 카드, 긴급 없음, 잠금 표시
   await p.tap('#bottom-nav [data-s="profile"]'); await p.waitForTimeout(400);
