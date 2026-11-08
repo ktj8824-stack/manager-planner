@@ -233,7 +233,7 @@ for (const [sub, dest] of [['app', DIST_APP], ['web', DIST_WEB]]) {
   fs.writeFileSync(path.join(dest, '.nojekyll'), '', 'utf8');
 }
 
-for (const f of ['icon.svg', 'icon-192.png', 'icon-512.png', 'privacy.html', 'terms.html', 'share.html']) {
+for (const f of ['icon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'privacy.html', 'terms.html', 'share.html']) {
   copyFile(path.join(ROOT, f), path.join(DIST_APP, f));
   copyFile(path.join(ROOT, f), path.join(DIST_WEB, f));
 }
