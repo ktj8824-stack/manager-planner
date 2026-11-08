@@ -1,7 +1,7 @@
 // 로드플래너 결제 로직 (서버) — 금액은 서버가 정하고, 토스 승인 결과를 서버가 확인한 뒤에만 요금제를 바꿉니다.
 export const PRICING = {
   standard: { base: 100000, baseSlots: 2, perSlot: 20000, maxAdd: 50 },
-  pro: { amount: 4900 },
+  pro: { amount: 20000 }, // 개인 매니저 유료 (월)
 };
 export const DOCS_TEST_SECRET = "test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6"; // 토스 문서 공개 테스트 키 (실제 돈 안 나감)
 
@@ -9,10 +9,10 @@ export class PayError extends Error {
   status: number; code: string;
   constructor(status: number, code: string, message: string) { super(message); this.status = status; this.code = code; }
 }
-export type Caller = { id: string; company_id: string; role: string };
+export type Caller = { id: string; company_id: string | null; role: string };
 
 export function quote(plan: unknown, addSlots: unknown) {
-  if (plan === "pro") return { plan: "pro", addSlots: 0, amount: PRICING.pro.amount, orderName: "로드플래너 PRO (1개월)" };
+  if (plan === "pro") return { plan: "pro", addSlots: 0, amount: PRICING.pro.amount, orderName: "로드플래너 개인 매니저 (1개월)" };
   if (plan !== "standard") throw new PayError(400, "INVALID_PLAN", "알 수 없는 요금제입니다.");
   const n = Number(addSlots ?? 0);
   if (!Number.isInteger(n) || n < 0 || n > PRICING.standard.maxAdd) throw new PayError(400, "INVALID_SLOTS", "추가 인원 수가 올바르지 않습니다.");
@@ -33,6 +33,7 @@ export async function handle(action: string, body: Record<string, unknown>, call
 
   if (action === "prepare") {
     const q = quote(body.plan, body.addSlots);
+    if (q.plan === "pro" && caller.role !== "indie_manager") throw new PayError(403, "FORBIDDEN", "개인 매니저 요금제는 개인 매니저 계정만 결제할 수 있습니다.");
     if (q.plan === "standard" && !isHQ) throw new PayError(403, "FORBIDDEN", "회사 요금제는 대표·본사 관리자만 결제할 수 있습니다.");
     const orderId = `RP-${q.plan === "pro" ? "PRO" : "ENT"}-${now.getTime()}-${crypto.randomUUID().slice(0, 8)}`;
     await db.insertPayment({ order_id: orderId, company_id: caller.company_id, user_id: caller.id, plan: q.plan, add_slots: q.addSlots, amount: q.amount, order_name: q.orderName, status: "READY", mode });
@@ -75,6 +76,7 @@ export async function handle(action: string, body: Record<string, unknown>, call
   }
 
   if (action === "status") {
+    if (!caller.company_id) return { company: null, proUntil: await db.proUntil(caller.id), proFee: PRICING.pro.amount, payments: [], mode };
     const c = await db.getCompany(caller.company_id);
     const used = await db.countManagers(caller.company_id);
     const paidUntil = c?.paid_until || null;

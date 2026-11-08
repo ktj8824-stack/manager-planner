@@ -172,7 +172,17 @@ export async function run(db: SupabaseClient, send: Sender, nowMs: number, route
     .select("id, title, date, start_time, location, manager_id, timeline_items, is_secret, status, status_logs, departure_info, shop_info, artists(name), vehicles(name), profiles!schedules_manager_id_fkey(name, company_id)")
     .in("date", [today.ymd, tomorrow.ymd]).not("status", "in", "(cancelled,completed)");
   if (error) throw error;
-  const list = (rows ?? []) as Row[];
+  const all = (rows ?? []) as Row[];
+  // 개인 매니저(회사 없음)는 알림·아침 재계산이 유료 기능 → 무료 사용자는 빼기
+  const indieIds = [...new Set(all.filter((s) => s.manager_id && s.profiles && !s.profiles.company_id).map((s) => s.manager_id as string))];
+  const unpaid = new Set<string>();
+  for (const id of indieIds) {
+    try {
+      const { data } = await db.rpc("indie_pro_until", { p_user: id });
+      if (!data || !(Date.parse(String(data)) > nowMs)) unpaid.add(id);
+    } catch (_e) { unpaid.add(id); }
+  }
+  const list = all.filter((s) => !unpaid.has(s.manager_id));
 
   // 3) 아침 동선 재계산 (05:30~06:00)
   if (route && today.hh === 5 && today.mm >= 30) {

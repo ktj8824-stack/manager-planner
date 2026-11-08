@@ -267,7 +267,13 @@ const RoadAI = {
       }).finally(() => clearTimeout(timer));
       const data = await res.json().catch(() => ({}));
       this.hideTyping();
-      if (!res.ok) { this.botSay(esc(data.message || 'AI가 잠시 대답하지 못했어요. 조금 뒤에 다시 말씀해 주세요.')); return; }
+      if (!res.ok) {
+        const up = data.error === 'daily_limit' && data.indie && !data.paid
+          ? `<br><button type="button" class="rpai-btn" style="margin-top:8px;" onclick="App.navigate('upgrade')">유료 알아보기 (월 2만원)</button>` : '';
+        if (data.error === 'daily_limit') this.remaining = 0;
+        this.botSay(esc(data.message || 'AI가 잠시 대답하지 못했어요. 조금 뒤에 다시 말씀해 주세요.') + up);
+        return;
+      }
       if (typeof data.remaining === 'number') this.remaining = data.remaining;
       const m = {
         id: 'b' + Date.now(), from: 'bot', time: this.now(), agent: true,
@@ -344,7 +350,7 @@ const RoadAI = {
     return {
       today, weekday: days[now.getDay()], now: `${pad(now.getHours())}:${pad(now.getMinutes())}`,
       userName: window.SupabaseClient?.currentProfile?.name || '',
-      role: localStorage.getItem('bp_user_role') || 'manager',
+      role: typeof Plan !== 'undefined' && Plan.isIndie() ? 'indie' : (localStorage.getItem('bp_user_role') || 'manager'),
       departure: dep, artists, upcoming
     };
   },
@@ -400,6 +406,8 @@ const RoadAI = {
   },
 
   isHQ() { const r = localStorage.getItem('bp_user_role') || 'manager'; return r === 'ceo' || r === 'hq_admin'; },
+  // 스케줄을 직접 고칠 수 있는 사람: 본사, 그리고 자기 일정만 있는 개인 매니저
+  canEdit() { return this.isHQ() || (typeof Plan !== 'undefined' && Plan.isIndie()); },
 
   _md(ymd) {
     const days = ['일', '월', '화', '수', '목', '금', '토'];
@@ -413,7 +421,7 @@ const RoadAI = {
     const done = a.status !== 'pending';
     const row = (k, v) => v ? `<span>${esc(k)}</span><b>${v}</b>` : '';
     const arrow = (from, to) => to && to !== from ? `${esc(from || '-')} → <span style="color:#4f46e5">${esc(to)}</span>` : esc(from || '');
-    const hq = this.isHQ();
+    const hq = this.canEdit();
     const title = a.cancel ? '🚫 스케줄 취소' : '✏️ 스케줄 변경';
     const doneLabel = a.status === 'done' ? (hq ? (a.cancel ? '✓ 처리했어요' : '✓ 수정 창을 열었어요') : '✓ 로드톡을 열었어요') : '취소됨';
     const note = hq
@@ -443,7 +451,7 @@ const RoadAI = {
     const req = a.cancel
       ? `[변경 요청] ${this._md(sch.date)} ${sch.startTime} "${sch.title}" 스케줄이 취소됐어요.${a.reason ? ' (' + a.reason + ')' : ''}`
       : `[변경 요청] ${this._md(sch.date)} ${sch.startTime} "${sch.title}" → ${a.new_date ? this._md(a.new_date) + ' ' : ''}${a.new_start || sch.startTime}${a.new_end ? '~' + a.new_end : ''}로 바뀌었어요.${a.reason ? ' (' + a.reason + ')' : ''}`;
-    if (!this.isHQ()) {
+    if (!this.canEdit()) {
       try { await navigator.clipboard.writeText(req); U.toast('요청 문장을 복사했어요. 로드톡에 붙여 넣어 보내 주세요.'); }
       catch (e) { U.toast(esc(req), 6000); }   // 요청 문장에 스케줄명·AI 글이 들어가서 글자 처리
       if (typeof App !== 'undefined' && App.openMessages) App.openMessages();

@@ -126,10 +126,10 @@ const Home = {
             ${this.renderMiniCal()}
           </div>
           
-          <!-- Footer -->
-          <div style="padding:10px 6px; flex-shrink:0; border-top:1px solid rgba(0,0,0,0.05); display:flex; flex-direction:column; gap:6px;">
+          <!-- Footer (본사 포털 — 개인 매니저는 본사가 없어 숨김) -->
+          ${typeof Plan !== 'undefined' && Plan.isIndie() ? '' : `<div style="padding:10px 6px; flex-shrink:0; border-top:1px solid rgba(0,0,0,0.05); display:flex; flex-direction:column; gap:6px;">
              <a href="${typeof U !== 'undefined' && U.getHQPortalUrl ? U.getHQPortalUrl() : 'admin.html'}" target="_blank" style="display:inline-flex; align-items:center; justify-content:center; gap:5px; width:100%; padding:8px 0; border-radius:8px; background:linear-gradient(135deg, #4f46e5, #7c3aed); color:#fff; font-weight:700; font-size:12px; text-align:center; text-decoration:none; box-shadow:0 2px 8px rgba(79,70,229,0.3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="12" y1="22" x2="12" y2="22.01"/><line x1="8" y1="6" x2="8" y2="6.01"/><line x1="16" y1="6" x2="16" y2="6.01"/><line x1="8" y1="10" x2="8" y2="10.01"/><line x1="16" y1="10" x2="16" y2="10.01"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="16" y1="14" x2="16" y2="14.01"/></svg> 본사</a>
-          </div>
+          </div>`}
         </div>
 
         <!-- RIGHT: Timeline -->
@@ -387,7 +387,9 @@ const Home = {
         <div style="font-size:14px; font-weight:700; color:#0f172a; display:flex; align-items:center; gap:5px;">
           <span style="color:#4f46e5; flex-shrink:0;">★</span>
           <span style="color:#4f46e5; flex-shrink:0;">담당:</span>
-          <span style="color:#1e293b;">${esc(artistSummary)}</span>
+          ${typeof Plan !== 'undefined' && Plan.isIndie() && artistSummary === '아직 담당 아티스트가 없어요'
+            ? `<button type="button" onclick="App.navigate('artists'); setTimeout(() => Artists.openForm(), 350);" style="border:0; background:#4f46e5; color:#fff; font-size:13px; font-weight:800; padding:6px 10px; border-radius:8px; cursor:pointer;">+ 아티스트 등록하기</button>`
+            : `<span style="color:#1e293b;">${esc(artistSummary)}</span>`}
         </div>
       </div>
 
@@ -570,11 +572,11 @@ const Home = {
                     ${activeSched.notes ? `<div style="color:#475569; background:#fff; padding:6px 8px; border-radius:4px; border:1px solid #e2e8f0; margin-top:2px; display:flex; align-items:flex-start; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="flex-shrink:0; margin-top:2px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> <span><strong>특이사항:</strong> ${esc(activeSched.notes)}</span></div>` : ''}
                   `}
                 </div>
-                ${!isSecret && isHQ ? `<button type="button" onclick="event.stopPropagation(); window.ScheduleShare && ScheduleShare.open(${escJs(activeSched.id)})" style="margin-top:8px; width:100%; height:38px; border-radius:10px; border:1px solid #e2e8f0; background:#f8fafc; color:#334155; font-size:13.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+                ${!isSecret && (isHQ || (typeof Plan !== 'undefined' && Plan.isIndie())) ? `<button type="button" onclick="event.stopPropagation(); window.ScheduleShare && ScheduleShare.open(${escJs(activeSched.id)})" style="margin-top:8px; width:100%; height:38px; border-radius:10px; border:1px solid #e2e8f0; background:#f8fafc; color:#334155; font-size:13.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                   메이크업·스타일리스트에게 일정 공유
                 </button>` : ''}
-                ${['ceo', 'hq_admin'].includes(currentRole) ? `<div style="display:flex; gap:8px; margin-top:8px;">
+                ${['ceo', 'hq_admin'].includes(currentRole) || (typeof Plan !== 'undefined' && Plan.isIndie()) ? `<div style="display:flex; gap:8px; margin-top:8px;">
                   <button type="button" onclick="event.stopPropagation(); Home.openScheduleRegisterModal(${escJs(activeSched.id)})" style="flex:1; height:40px; border-radius:10px; border:1px solid #c7d2fe; background:#eef2ff; color:#4338ca; font-size:14px; font-weight:700;">✏️ 수정</button>
                   <button type="button" onclick="event.stopPropagation(); Home.deleteScheduleFromApp(${escJs(activeSched.id)})" style="flex:1; height:40px; border-radius:10px; border:1px solid #fecaca; background:#fef2f2; color:#dc2626; font-size:14px; font-weight:700;">🗑️ 삭제</button>
                 </div>` : `<div style="margin-top:8px; font-size:12.5px; color:#64748b; text-align:center;">일정 수정·삭제는 본사에 요청해 주세요 (로드톡)</div>`}
@@ -993,13 +995,15 @@ const Home = {
       // 아이폰·안드로이드 앱은 앱이 직접 알림을 예약하므로 안내 불필요
       if (window.webkit?.messageHandlers?.roadplanner || window.RoadPlannerAndroid) return;
       if (!window.SupabaseClient?.currentUser || !window.Chat?.pushState) return;
+      const indie = typeof Plan !== 'undefined' && Plan.isIndie();
+      if (indie && !Plan.can('alerts')) return;   // 개인 매니저 무료: 알림은 유료 기능
       try { if (Date.now() - Number(localStorage.getItem('rp_push_card_later') || 0) < 3 * 86400e3) return; } catch (e) { }
       const st = await window.Chat.pushState();
       const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
       const standalone = window.navigator.standalone === true || window.matchMedia?.('(display-mode: standalone)').matches;
       let body = '', btn = '';
       if (st === 'off') {
-        body = '출발 15분 전·본사 일정 변경·로드톡 메시지를 앱을 닫아도 알려 드려요.';
+        body = indie ? '기상·출발 15분 전 알림을 앱을 닫아도 알려 드려요.' : '출발 15분 전·본사 일정 변경·로드톡 메시지를 앱을 닫아도 알려 드려요.';
         btn = '<button type="button" onclick="Home.enablePushFromCard(this)" style="flex:1; min-height:42px; border:0; border-radius:10px; background:#4f46e5; color:#fff; font-size:15px; font-weight:800;">알림 켜기</button>';
       } else if (st === 'unsupported' && ios && !standalone) {
         body = '아이폰은 사파리 아래쪽 <b>공유 버튼 → 홈 화면에 추가</b>로 설치한 뒤, 그 앱에서 알림을 켤 수 있어요.';
@@ -1290,6 +1294,15 @@ const Home = {
     const me = window.SupabaseClient?.currentUser?.id || '';
 
     const artists = (window.hqStore ? window.hqStore.getArtists() : []) || [];
+    const indie = typeof Plan !== 'undefined' && Plan.isIndie();
+    if (indie && !artists.length && !edit) {
+      App.showModal('아티스트를 먼저 등록해 주세요', `
+        <div style="text-align:center; padding:4px 0;">
+          <p style="font-size:15px; color:var(--text-200); margin-bottom:16px; line-height:1.6;">일정은 담당 아티스트별로 저장돼요.<br>아티스트를 등록한 뒤 다시 눌러 주세요.</p>
+          <button class="btn-primary" style="width:100%; padding:14px; font-weight:800;" onclick="App.closeModal(); App.navigate('artists'); setTimeout(() => Artists.openForm(), 350);">아티스트 등록하기</button>
+        </div>`);
+      return;
+    }
     const vehicles = (window.hqStore ? window.hqStore.getVehicles() : []) || [];
     const managers = (window.hqStore ? window.hqStore.getManagers() : []) || [];
     const meMgr = managers.find(m => m.id === me);
@@ -1308,7 +1321,7 @@ const Home = {
       veh: edit?.vehicleId || '', mgr: edit?.managerId || (meMgr ? me : (managers[0]?.id || '')), secret: !!edit?.isSecret,
     };
     const opt = (val, label, sel) => `<option value="${esc(val)}"${sel ? ' selected' : ''}>${esc(label)}</option>`;
-    const artistOptions = (isHQRole || myArtists === artists ? opt('ALL', '전체 아티스트 (전원)', v.artistId === 'ALL') : '') + myArtists.map(a => opt(a.id, a.name, a.id === v.artistId)).join('');
+    const artistOptions = (!indie && (isHQRole || myArtists === artists) ? opt('ALL', '전체 아티스트 (전원)', v.artistId === 'ALL') : '') + myArtists.map(a => opt(a.id, a.name, a.id === v.artistId)).join('');
     const vehicleOptions = opt('', '선택 안 함', !v.veh) + vehicles.map(x => opt(x.id, `${x.name}${x.number ? ' (' + x.number + ')' : ''}`, x.id === v.veh)).join('');
     const managerOptions = managers.map(m => opt(m.id, `${m.name}${m.id === me ? ' (나)' : ''}`, m.id === v.mgr)).join('');
     const cats = [['music_show', '음악방송 / 생방송'], ['broadcast', '예능 / 라디오 / 인터뷰'], ['shooting', '화보 / 촬영 / 광고'], ['event', '행사 / 콘서트 / 페스티벌'], ['fansign', '팬미팅 / 팬사인회'], ['recording', '녹음 / 안무레슨 / 연습'], ['overseas', '해외 투어 / 출국'], ['meeting', '미팅 / 기획회의 / 기타']];

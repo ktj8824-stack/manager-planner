@@ -1904,7 +1904,10 @@ class HQDataStore {
   async getTravelDuration(originText, destText, fallbackMin = 45, targetDateStr = null, arriveTimeStr = null) {
     if (!originText || !destText) return { minutes: fallbackMin, isRealtime: false, note: '기본값' };
     const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+    // 개인 매니저 무료: 교통 예측(티맵) 없이 거리·시간대 추정만 (유료 기능)
+    const trafficOk = typeof Plan === 'undefined' || Plan.can('traffic');
     try {
+      if (!trafficOk) throw new Error('traffic_locked');
       const [a, b] = (typeof KakaoAPI !== 'undefined' && KakaoAPI.geocode)
         ? await Promise.all([KakaoAPI.geocode(originText), KakaoAPI.geocode(destText)]) : [null, null];
       if (a && b) {
@@ -1921,7 +1924,7 @@ class HQDataStore {
         if (!m && typeof KakaoAPI !== 'undefined' && KakaoAPI.getRouteTime) m = await KakaoAPI.getRouteTime(a.x, a.y, b.x, b.y);
         if (m) return { minutes: m, isRealtime: true, predicted: false, note: '현재 교통 기준', provider: 'realtime' };
       }
-    } catch (e) { console.warn('예측 소요시간 조회 실패, 추정값 사용:', e); }
+    } catch (e) { if (trafficOk) console.warn('예측 소요시간 조회 실패, 추정값 사용:', e); }
     const est = await this._estimateTravelDuration(originText, destText, fallbackMin, targetDateStr, arriveTimeStr);
     return { ...est, predicted: false, note: '거리·시간대 기준 추정' };
   }

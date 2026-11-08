@@ -12,7 +12,7 @@
 //  6) AI 크레딧 부족·키 오류는 운영자(대표)에게 따로 알림 (로드플래너 ops-alert 함수 → 기록 + 푸시)
 //
 // 비밀값 (이 프로젝트에 이미 있음): ANTHROPIC_API_KEY, MANAGER_KAKAO_REST_KEY (없으면 KAKAO_REST_API_KEY)
-// 선택: RP_AI_ALLOW_ALL=true (출시 전 시험: 모두 유료 취급), RP_AI_FREE_DAILY(10), RP_AI_PAID_DAILY(60),
+// 선택: RP_AI_ALLOW_ALL=true (출시 전 시험: 회사 계정 모두 유료 취급), RP_AI_FREE_DAILY(10), RP_AI_INDIE_FREE_DAILY(3), RP_AI_PAID_DAILY(60),
 //       RP_AI_FREE_IMAGE(3), RP_AI_PAID_IMAGE(15)
 // 표: rp_ai_usage + rp_ai_try_use (사용량), rp_settings.ops_alert_key (운영 알림 열쇠)
 // 자동 제공: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
@@ -151,7 +151,7 @@ export function calendarTable(today: string): string {
 }
 
 /** 바뀌지 않는 규칙 (캐시됨) */
-export const RULES = `당신은 연예인 매니저용 스케줄·이동 앱 '로드플래너'의 AI 비서 '로디'입니다. 사용자는 현장 매니저와 본사 관리자입니다.
+export const RULES = `당신은 연예인 매니저용 스케줄·이동 앱 '로드플래너'의 AI 비서 '로디'입니다. 사용자는 현장 매니저, 본사 관리자, 그리고 본사 없이 혼자 쓰는 개인 매니저입니다.
 
 [말투]
 - 존댓말로 짧고 또렷하게 (보통 1~5문장). 현장에서 운전·대기 중에 읽으므로 핵심부터 말합니다.
@@ -172,7 +172,7 @@ export const RULES = `당신은 연예인 매니저용 스케줄·이동 앱 '�
 - 저장은 사용자가 카드 버튼을 눌러야 됩니다. "등록했어요/바꿨어요"가 아니라 "아래 카드에서 확인해 주세요"라고 말합니다. 도구를 쓰지 않았으면 '카드'라는 말을 하지 않습니다.
 - 출발·기상 시각은 앱이 경로를 찾아 계산하므로 미리 말하지 않습니다.
 - 꼭 필요한 정보(날짜, 시각, 장소)가 없으면 추측하지 말고 한 가지만 짧게 물어봅니다. 아티스트·분류·종료 시각은 모르면 묻지 말고 생략합니다(사용자가 창에서 고름).
-- 현장 매니저는 기존 스케줄을 직접 바꿀 수 없습니다. 그래도 propose_update로 제안하면 카드에서 본사에 요청하도록 안내됩니다.
+- 현장 매니저는 기존 스케줄을 직접 바꿀 수 없습니다. 그래도 propose_update로 제안하면 카드에서 본사에 요청하도록 안내됩니다. 개인 매니저는 본사·로드톡이 없고 자기 스케줄을 카드에서 직접 고칩니다.
 - 업무와 무관한 요청(투자, 정치, 숙제, 코딩 등)은 "저는 스케줄과 이동을 돕는 비서라서요"처럼 정중히 짧게 돌려 말합니다.
 - 아티스트의 집 주소, 개인 연락처, 주민번호, 건강·연애 같은 사생활 정보는 묻거나 알려 주지 않고 정중히 거절합니다.
 
@@ -208,7 +208,7 @@ export const RULES = `당신은 연예인 매니저용 스케줄·이동 앱 '�
 export function contextPrompt(ctx: Json): string {
   return `[사용자 정보]
 - 지금: ${ctx.today || ""} (${ctx.weekday || ""}) ${ctx.now || ""}
-- 이름: ${ctx.userName || ""} / 역할: ${ctx.role === "manager" ? "현장 매니저 (기존 스케줄은 직접 못 바꾸고 본사에 요청)" : (ctx.role ? "본사 관리자" : "")} / 기본 출발지: ${ctx.departure || "미등록"}
+- 이름: ${ctx.userName || ""} / 역할: ${ctx.role === "manager" ? "현장 매니저 (기존 스케줄은 직접 못 바꾸고 본사에 요청)" : ctx.role === "indie" ? "개인 매니저 (본사 없음, 자기 스케줄 직접 수정)" : (ctx.role ? "본사 관리자" : "")} / 기본 출발지: ${ctx.departure || "미등록"}
 - 아티스트: ${JSON.stringify(ctx.artists || [])}
 - 앞으로 2주 스케줄 목록(idx, 계산된 출발 시각 포함): ${JSON.stringify(ctx.upcoming || [])}
 
@@ -234,20 +234,22 @@ async function getUser(auth: string, f: Fetch) {
   return u && u.id ? u : null;
 }
 
-/** 로드플래너 결제 서버에 '이 사람 유료인가'를 물어봄 (PRO 개인 결제 또는 회사 요금제 사용 중) */
-async function isPaid(env: Env, auth: string, f: Fetch): Promise<boolean> {
-  if (env.RP_AI_ALLOW_ALL === "true") return true;
+/** 로드플래너 결제 서버에 '이 사람 유료인가'를 물어봄 (개인 매니저 유료 결제 또는 회사 요금제 사용 중)
+ *  indie: 회사 없는 개인 매니저 (무료는 하루 3번). RP_AI_ALLOW_ALL(출시 전 시험)은 회사 계정에만 적용 */
+async function planOf(env: Env, auth: string, f: Fetch): Promise<{ paid: boolean; indie: boolean }> {
+  const all = env.RP_AI_ALLOW_ALL === "true";
   try {
     const res = await f(`${RP_URL}/functions/v1/payments`, {
       method: "POST",
       headers: { Authorization: auth, apikey: RP_PUBLISHABLE, "Content-Type": "application/json" },
       body: JSON.stringify({ action: "status" }),
     });
-    if (!res.ok) return false;
+    if (!res.ok) return { paid: all, indie: false };
     const s = await res.json();
-    const pro = s?.proUntil && Date.parse(s.proUntil) > Date.now();
-    return !!(pro || s?.company?.active);
-  } catch { return false; }
+    const indie = s?.company === null;
+    const pro = !!(s?.proUntil && Date.parse(s.proUntil) > Date.now());
+    return { paid: pro || !!s?.company?.active || (all && !indie), indie };
+  } catch { return { paid: all, indie: false }; }
 }
 
 async function tryUse(env: Env, userId: string, kind: string, limit: number, f: Fetch): Promise<number> {
@@ -491,8 +493,8 @@ export async function handle(req: Request, env: Env, f: Fetch = fetch, nowMs = D
     body = JSON.parse(raw);
   } catch { return json(400, { error: "bad_request" }); }
 
-  const paid = await isPaid(env, auth, f);
-  if (body && body.probe === true) return json(200, { ok: true, paid });
+  const { paid, indie } = await planOf(env, auth, f);
+  if (body && body.probe === true) return json(200, { ok: true, paid, indie });
 
   const text = String(body.message || "").trim().slice(0, 1500);
   const image = body.image && typeof body.image.data === "string" ? body.image : null;
@@ -501,17 +503,18 @@ export async function handle(req: Request, env: Env, f: Fetch = fetch, nowMs = D
   const mediaType = ["image/jpeg", "image/png", "image/webp"].includes(image?.media_type) ? image.media_type : "image/jpeg";
 
   const n = (k: string, d: number) => { const v = parseInt(env[k] || "", 10); return Number.isFinite(v) && v > 0 ? v : d; };
-  const chatLimit = paid ? n("RP_AI_PAID_DAILY", 60) : n("RP_AI_FREE_DAILY", 10);
-  const imageLimit = paid ? n("RP_AI_PAID_IMAGE", 15) : n("RP_AI_FREE_IMAGE", 3);
+  const chatLimit = paid ? n("RP_AI_PAID_DAILY", 60) : indie ? n("RP_AI_INDIE_FREE_DAILY", 3) : n("RP_AI_FREE_DAILY", 10);
+  const imageLimit = paid ? n("RP_AI_PAID_IMAGE", 15) : indie ? n("RP_AI_INDIE_FREE_IMAGE", 1) : n("RP_AI_FREE_IMAGE", 3);
+  const upsell = indie ? `개인 매니저 유료(월 2만원)를 쓰면 하루 ${n("RP_AI_PAID_DAILY", 60)}번까지 대화할 수 있어요.` : `회사 요금제를 쓰면 하루 ${n("RP_AI_PAID_DAILY", 60)}번까지 대화할 수 있어요.`;
   let remaining: number;
   try {
     remaining = await tryUse(env, user.id, "chat", chatLimit, f);
     if (remaining < 0) {
       return json(429, { error: "daily_limit", paid, message: paid ? `오늘 AI 비서를 ${chatLimit}번 모두 쓰셨어요. 내일 다시 이용해 주세요.`
-        : `무료로는 하루 ${chatLimit}번까지 쓸 수 있어요. PRO나 회사 요금제를 쓰면 하루 ${n("RP_AI_PAID_DAILY", 60)}번까지 대화할 수 있어요.` });
+        : `무료로는 하루 ${chatLimit}번까지 쓸 수 있어요. ${upsell}`, indie });
     }
     if (image && (await tryUse(env, user.id, "image", imageLimit, f)) < 0) {
-      return json(429, { error: "daily_limit", paid, message: `오늘 사진 읽기 한도(${imageLimit}장)를 모두 썼어요.` });
+      return json(429, { error: "daily_limit", paid, indie, message: `오늘 사진 읽기 한도(${imageLimit}장)를 모두 썼어요.` });
     }
   } catch { return json(503, { error: "server_not_ready", message: "AI 비서 서버를 준비하고 있어요. 잠시 후 다시 써 주세요." }); }
 

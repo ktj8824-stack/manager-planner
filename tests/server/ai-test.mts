@@ -3,12 +3,13 @@
 import { handle, calendarTable, TOOLS, systemBlocks, checkSchedule, checkUpdate, replyProblem, cleanReply, claudeErrorKind } from '../../supabase/functions/roadplanner-ai/index.ts';
 
 const env: Record<string, string> = { SUPABASE_URL: 'https://buddy.test', SUPABASE_SERVICE_ROLE_KEY: 'svc', ANTHROPIC_API_KEY: 'k', MANAGER_KAKAO_REST_KEY: 'kk' };
+let payStatus: any = { company: { active: false }, proUntil: null };
 const usedBy: Record<string, number> = {}; let used = 0; let claudeTurn = 0; const sent: any[] = [];
 let script: any[] = []; let claudeFail: string | null = null; const opsCalls: any[] = [];
 const f = async (url: string, init: any = {}) => {
   const J = (b: any, s = 200) => new Response(JSON.stringify(b), { status: s });
   if (url.includes('/auth/v1/user')) return init.headers.Authorization === 'Bearer good' ? J({ id: '11111111-1111-1111-1111-111111111111' }) : J({}, 401);
-  if (url.includes('/functions/v1/payments')) return J({ company: { active: false }, proUntil: null });
+  if (url.includes('/functions/v1/payments')) return J(payStatus);
   if (url.includes('/functions/v1/ops-alert')) { opsCalls.push({ key: init.headers['x-alert-key'], body: JSON.parse(init.body) }); return J({ ok: true }); }
   if (url.includes('rp_settings')) return J([{ value: 'opskey-1234567890-abcdefgh' }]);
   if (url.includes('rp_ai_try_use')) { const b = JSON.parse(init.body); const n = used >= 999 ? 999 : (usedBy[b.p_kind] = (usedBy[b.p_kind] || 0) + 1); return J(n > b.p_limit ? -1 : b.p_limit - n); }
@@ -124,6 +125,14 @@ out.noDupCard = r.actions.length === 1 && sent.length === 3 && sent[2].tool_choi
 used = 999;
 const lim = await H({ message: '또', context: ctx });
 out.limit = lim.status + ' ' + (await lim.json()).message.slice(0, 12);
+// 개인 매니저 무료: 하루 3번, 안내에 월 2만원
+used = 0; usedBy.chat = 0; payStatus = { company: null, proUntil: null };
+const probe = await (await H({ probe: true })).json();
+let st = 0; for (let i = 0; i < 4; i++) { reset([say('네')]); st = (await H({ message: '안녕', context: ctx })).status; }
+const il = await (await H({ message: '또', context: ctx })).json();
+out.indie = `${probe.indie}/${probe.paid} ${st} ${il.message.includes('2만원')}`;
+payStatus = { company: null, proUntil: '2099-01-01T00:00:00Z' };
+out.indiePaid = (await (await H({ probe: true })).json()).paid;
 out.cal = calendarTable('2026-11-07').split('\n')[0];
 out.noUndefined = ['2026-11-08', '2026-11-09', '2026-11-11', '2026-11-14'].every(d => !calendarTable(d).includes('undefined'));
 out.rulesStable = systemBlocks(ctx)[0].text === systemBlocks({ ...ctx, today: '2026-12-01' })[0].text;

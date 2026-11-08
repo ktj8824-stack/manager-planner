@@ -105,7 +105,7 @@
     .sec-badge { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #475569; }
     .sec-badge span { font-size: 14px; }
   </style>
-<script src="js/icons.js?v=287"></script>
+<script src="js/icons.js?v=288"></script>
 </head>
 <body>
 <div id="test-banner" style="position:sticky;top:0;z-index:9999;background:#f59e0b;color:#1f1300;text-align:center;font:700 13px/1.4 Pretendard,sans-serif;padding:8px 12px;">🧪 테스트 결제 — 실제 결제되지 않습니다 (카드가 청구되지 않아요)</div>
@@ -228,7 +228,7 @@
 
 <script src="https://js.tosspayments.com/v2/standard"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js?v=287"></script>
+<script src="js/supabase-client.js?v=288"></script>
 <script>
   const IS_DEV_HOST = ['localhost','127.0.0.1',''].includes(location.hostname) || location.protocol === 'file:';
   const params      = new URLSearchParams(location.search);
@@ -236,7 +236,7 @@
   const isProPlan   = (plan === 'pro');
   const addSlots    = parseInt(params.get('addSlots') || '0');
   const totalSlots  = parseInt(params.get('totalSlots') || (isProPlan ? '1' : '2'));
-  const totalFee    = parseInt(params.get('totalFee') || params.get('fee') || (isProPlan ? '4900' : '100000'));
+  const totalFee    = parseInt(params.get('totalFee') || params.get('fee') || (isProPlan ? '20000' : '100000'));
   const addFee      = addSlots * 20000;
   // URLSearchParams 가 이미 풀어 준 값 (한 번 더 풀면 % 들어간 이름에서 멈춤)
   const companyName = params.get('company') || localStorage.getItem('bp_company_name') || localStorage.getItem('hq_company_name') || '';
@@ -254,16 +254,16 @@
   document.getElementById('buyer-phone').value = ceoPhone;
 
   if (isProPlan) {
-    // PRO 플랜 (모바일 4,900원) UI 세팅
-    document.querySelector('.pay-header-sub').textContent = '로드플래너 PRO 플랜';
-    document.querySelector('.order-plan').textContent     = '로드플래너 PRO';
+    // 개인 매니저 유료 (월 20,000원) UI 세팅
+    document.querySelector('.pay-header-sub').textContent = '로드플래너 개인 매니저 유료';
+    document.querySelector('.order-plan').textContent     = '개인 매니저 유료';
     document.querySelector('.order-plan').style.background = 'rgba(99,102,241,0.2)';
     document.querySelector('.order-plan').style.color      = '#a5b4fc';
 
     // 기본 요금 행
     const firstRow = document.querySelector('.order-row');
     if (firstRow) {
-      firstRow.innerHTML = '<span>PRO 멤버십 (1인 무제한 스케줄/날씨)</span><span>4,900원</span>';
+      firstRow.innerHTML = '<span>개인 매니저 유료 (AI 비서·알림·자동 길안내·교통 예측·아티스트 여러 명)</span><span>20,000원</span>';
     }
     // 슬롯 행 숨김
     const addRow = document.getElementById('pay-add-slots')?.closest('.order-row');

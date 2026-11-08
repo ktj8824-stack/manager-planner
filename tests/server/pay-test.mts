@@ -23,7 +23,13 @@ const again = await handle('confirm', { orderId: p2.orderId, paymentKey: 'k', am
 out.idempotent = again.status;
 const st = await handle('status', {}, ceo, db, okToss, 'test', now);
 out.total = st.company.totalSlots; out.active = st.company.active;
-const p3 = await handle('prepare', { plan: 'pro' }, mgr, db, okToss, 'test', now);
+try { await handle('prepare', { plan: 'pro' }, mgr, db, okToss, 'test', now); } catch (e: any) { out.companyMgrPro = e.code; }
+const indie = { id: 'u9', company_id: null, role: 'indie_manager' };
+const p3 = await handle('prepare', { plan: 'pro' }, indie, db, okToss, 'test', now);
+out.indieAmount = p3.amount; out.indieRowCompany = rows[p3.orderId].company_id;
+const ist = await handle('status', {}, indie, db, okToss, 'test', now);
+out.indieStatus = ist.company === null && ist.proFee === 20000;
+try { await handle('prepare', { plan: 'standard', addSlots: 0 }, indie, db, okToss, 'test', now); } catch (e: any) { out.indieStd = e.code; }
 const badToss = async () => ({ ok: false, status: 400, body: { code: 'REJECT_CARD_COMPANY', message: '카드사 거절' } });
-try { await handle('confirm', { orderId: p3.orderId, paymentKey: 'k', amount: 4900 }, mgr, db, badToss, 'test', now); } catch (e: any) { out.rejected = e.code; }
+try { await handle('confirm', { orderId: p3.orderId, paymentKey: 'k', amount: 20000 }, indie, db, badToss, 'test', now); } catch (e: any) { out.rejected = e.code; }
 console.log(JSON.stringify(out));

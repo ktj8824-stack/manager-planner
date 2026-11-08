@@ -10,6 +10,14 @@ const Upgrade = {
   render() {
     const el = U.$('#screen-upgrade');
     if (!el) return;
+    const fee = Plan.FEE.toLocaleString();
+    const paid = Plan.isIndie() && Plan.isPaid();
+    // 회사 계정은 회사 요금제(본사 웹에서 결제)
+    if (!Plan.isIndie()) {
+      el.innerHTML = `<div class="header"><button class="header-btn" onclick="App.navigate('profile')"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button><h1 class="header-title">요금제</h1><div class="header-btn" style="visibility:hidden"></div></div>
+        <div class="screen-scroll" style="padding:24px 20px; text-align:center; font-size:15px; color:var(--text-300); line-height:1.7;">회사 계정은 회사 요금제를 써요.<br>결제·인원 추가는 본사(대표·관리자)가 본사 웹에서 할 수 있어요.</div>`;
+      return;
+    }
 
     el.innerHTML = `
       <div class="header" style="background:transparent; border-bottom:none; position:absolute; width:100%; z-index:10;">
@@ -23,53 +31,62 @@ const Upgrade = {
           <div class="upg-crown">
             <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M2 19h20v2H2v-2zm19-11c-.55 0-1 .45-1 1v4l-3-2-2 3-3-4-3 4-2-3-3 2v-4c0-.55-.45-1-1-1s-1 .45-1 1v7h20V9c0-.55-.45-1-1-1zM7 6c.83 0 1.5-.67 1.5-1.5S7.83 3 7 3s-1.5.67-1.5 1.5S6.17 6 7 6zm10 0c.83 0 1.5-.67 1.5-1.5S17.83 3 17 3s-1.5.67-1.5 1.5S16.17 6 17 6zm-5-2c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>
           </div>
-          <h2 class="upg-title">로드플래너 PRO</h2>
-          <p class="upg-subtitle">빈틈없는 아티스트 케어와 완벽한 동선 관리</p>
+          <h2 class="upg-title">개인 매니저 유료</h2>
+          <p class="upg-subtitle">혼자서도 빈틈없는 동선 관리</p>
           <div class="upg-price-box">
-            <div class="upg-price">₩4,900 <span>/ 월</span></div>
+            <div class="upg-price">₩${fee} <span>/ 월</span></div>
           </div>
         </div>
 
         <div class="upg-content">
-          <h3 class="upg-feature-title">PRO 멤버십 혜택</h3>
+          <h3 class="upg-feature-title">유료로 쓸 수 있는 기능</h3>
           <div class="feat-list">
             <div class="feat-item stag">
-              <div class="feat-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
+              <div class="feat-icon "><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12h8M12 8v8"/></svg></div>
               <div class="feat-text">
-                <h4>무제한 아티스트 & 스케줄</h4>
-                <p>등록 개수 제한 없이 담당 아티스트의 모든 스케줄을 계획하세요.</p>
+                <h4>AI 비서 하루 60번</h4>
+                <p>말 한마디로 일정 등록·변경, 스케줄표 사진 읽기, 현장 주변 찾기 (무료는 하루 3번)</p>
               </div>
             </div>
             <div class="feat-item stag">
-              <div class="feat-icon blue"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19c-2.485 0-4.5-2.015-4.5-4.5v-1.043c0-1.802 1.34-3.327 3.125-3.488A4.502 4.502 0 0 1 22 14.5c0 2.485-2.015 4.5-4.5 4.5zM2 14.5c0 2.485 2.015 4.5 4.5 4.5h.5A4.5 4.5 0 0 0 11.5 14.5v-1.043C11.5 11.655 10.16 10.13 8.375 9.97A4.502 4.502 0 0 0 2 14.5z"></path></svg></div>
+              <div class="feat-icon blue"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
               <div class="feat-text">
-                <h4>야외 촬영/공연 초정밀 날씨</h4>
-                <p>야외 세트장, 뮤비, 페스티벌 현장의 시간대별 실시간 기상과 미세먼지 예보를 제공합니다.</p>
+                <h4>기상·출발 알림</h4>
+                <p>앱을 닫아도 기상 시간과 출발 15분 전에 알려 드려요. 전날 밤 9시 내일 일정 요약까지.</p>
               </div>
             </div>
             <div class="feat-item stag">
-              <div class="feat-icon purple"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div>
+              <div class="feat-icon purple"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17h14M6 17l1.5-6h9L18 17"/><circle cx="8" cy="19" r="1.5"/><circle cx="16" cy="19" r="1.5"/></svg></div>
               <div class="feat-text">
-                <h4>단톡방 스케줄 브리핑 원클릭 생성</h4>
-                <p>아티스트 및 스태프 공지용 맞춤 텍스트(시간/픽업/장소/의상)를 자동 완성합니다.</p>
+                <h4>차 타면 자동 길안내</h4>
+                <p>CarPlay·블루투스에 연결되면 다음 일정 목적지로 내비가 바로 켜져요.</p>
               </div>
             </div>
             <div class="feat-item stag">
-              <div class="feat-icon green"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
+              <div class="feat-icon green"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
               <div class="feat-text">
-                <h4>광고 완벽 제거 & 긴급 관제 알림</h4>
-                <p>모든 화면에서 광고가 제거되며 본사 긴급 스케줄 및 배차 알림을 최우선 수신합니다.</p>
+                <h4>교통 예측 출발 시간</h4>
+                <p>일정 날짜·시간대의 실제 교통 예측(티맵)으로 출발·기상 시간을 계산해요. (무료는 거리 기준 추정)</p>
+              </div>
+            </div>
+            <div class="feat-item stag">
+              <div class="feat-icon "><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z"/></svg></div>
+              <div class="feat-text">
+                <h4>아티스트 여러 명</h4>
+                <p>담당 아티스트를 제한 없이 등록하세요. (무료는 1명)</p>
               </div>
             </div>
           </div>
+          <p style="font-size:13px; color:var(--text-400); margin-top:14px; line-height:1.6;">일정 등록·동선 계산·길안내 버튼은 무료로 계속 쓸 수 있어요.</p>
         </div>
 
         <div class="upg-action">
+          ${paid ? `<div style="text-align:center; font-size:14px; font-weight:800; color:#047857; margin-bottom:10px;">유료 사용 중 · ${esc(Plan.untilText())}</div>` : ''}
           <button class="btn-upg" onclick="Upgrade.startPayment()">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-            월 4,900원 결제하기
+            ${paid ? '1개월 연장하기' : `월 ${fee}원 결제하기`}
           </button>
-          <p style="text-align:center; font-size:var(--fs-xs); color:var(--text-400); margin-top:var(--sp-4);">결제 후 즉시 프리미엄 혜택이 적용됩니다.<br>언제든 구독을 해지할 수 있습니다.</p>
+          <p style="text-align:center; font-size:var(--fs-xs); color:var(--text-400); margin-top:var(--sp-4);">결제하면 바로 1개월 동안 적용돼요.<br>자동으로 다시 결제되지 않아요.</p>
         </div>
       </div>
     `;
@@ -79,46 +96,23 @@ const Upgrade = {
   },
 
   startPayment() {
-    const userName = encodeURIComponent(localStorage.getItem('bp_user_name') || '담당 매니저');
+    const fee = Plan.FEE;
+    const userName = encodeURIComponent(localStorage.getItem('bp_user_name') || '개인 매니저');
     const userEmail = encodeURIComponent(localStorage.getItem('bp_user_email') || '');
-    const company = encodeURIComponent(localStorage.getItem('bp_company_name') || 'HQ 엔터테인먼트');
-    const payUrl = `payment.html?plan=pro&totalFee=4900&company=${company}&ceo=${userName}&email=${userEmail}&return=mobile`;
+    const company = encodeURIComponent('개인 매니저');
+    const payUrl = `payment.html?plan=pro&totalFee=${fee}&company=${company}&ceo=${userName}&email=${userEmail}&return=mobile`;
 
-    App.showModal('구독 결제 수단 선택', `
+    App.showModal('결제', `
       <div style="padding:4px 0; text-align:center;">
         <div style="font-size:36px; margin-bottom:12px;">💳</div>
-        <h3 style="font-size:17px; font-weight:700; margin-bottom:6px; color:var(--text-100);">로드플래너 PRO 구독</h3>
+        <h3 style="font-size:17px; font-weight:700; margin-bottom:6px; color:var(--text-100);">개인 매니저 유료 (1개월)</h3>
         <p style="font-size:14px; color:var(--text-400); margin-bottom:20px; line-height:1.5;">
-          월 <strong>4,900원</strong> (부가세 포함)<br>
-          토스페이먼츠 금융 보안 결제망으로 안전하게 결제됩니다.
+          <strong>${fee.toLocaleString()}원</strong> (부가세 포함)<br>
+          토스페이먼츠로 안전하게 결제돼요.
         </p>
-
         <button class="btn-primary" style="width:100%; padding:14px; margin-bottom:10px; font-weight:700; font-size:14px; background:linear-gradient(135deg, #6366f1, #8b5cf6);" onclick="location.href=${escJs(payUrl)}">
-          신용카드 / 간편결제 진행
+          카드 / 간편결제로 결제
         </button>
-
-        ${window.SITE?.isDev ? `<button class="btn-secondary" style="width:100%; padding:12px; font-size:14px; border:1px dashed rgba(255,255,255,0.2); background:transparent; color:var(--text-300);" onclick="Upgrade.completePayment()">
-          ⚡ (개발용) 테스트 즉시 활성화
-        </button>` : ''}
-      </div>
-    `);
-  },
-
-  completePayment() {
-    if (!window.SITE?.isDev) return;   // 개발 주소에서만
-    // 1. Mark user as PRO in localStorage
-    localStorage.setItem('bp_pro', 'true');
-    State.isPro = true;
-
-    // 2. Show Success Modal
-    App.showModal('결제 완료', `
-      <div class="pay-success">
-        <div class="pay-success-icon">
-          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        </div>
-        <h3>결제 성공!</h3>
-        <p>이제 로드플래너 PRO 회원이십니다.<br>모든 프리미엄 혜택을 누려보세요.</p>
-        <button class="btn-primary" style="width:100%; margin-top:var(--sp-4);" onclick="App.closeModal(); App.navigate('profile');">확인</button>
       </div>
     `);
   }

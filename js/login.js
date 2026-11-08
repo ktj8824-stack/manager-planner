@@ -57,7 +57,7 @@ const Login = {
         <!-- B2C 소셜 로그인 폼 -->
         <div id="login-b2c-section" style="display:none; background:var(--bg-card); border-radius:16px; padding:24px; margin-bottom:24px; border:1px solid var(--border-default); box-shadow:var(--shadow-md);">
           <div style="font-size:14px; color:var(--text-300); text-align:center; margin-bottom:20px; font-weight:600;">
-            개인 매니저를 위한 맞춤 스케줄러를<br>간편하게 시작해보세요.
+            본사 없이 혼자 쓰는 개인 매니저용이에요.<br>무료로 시작하고, 필요하면 월 2만원 유료로 바꿀 수 있어요.
           </div>
           
           <div id="google_btn_wrapper" style="display:flex; justify-content:center; margin-bottom:12px;"></div>
@@ -185,14 +185,19 @@ const Login = {
     localStorage.setItem('bp_user_name', user.name);
     localStorage.setItem('bp_user_email', user.email);
     localStorage.setItem('bp_user_role', user.role === 'indie_manager' ? 'manager' : user.role);
+    // 개인 매니저(회사 없음): 로드톡·본사 연동 없이 혼자 쓰는 앱
+    const indie = user.role === 'indie_manager' && !user.company_id;
+    localStorage.setItem('bp_account', indie ? 'indie' : 'company');
+    if (indie) { localStorage.removeItem('bp_company_name'); localStorage.removeItem('admin_bp_company_name'); }
+    else localStorage.removeItem('rp_pro_until');
 
     // 매니저에 배정된 아티스트 목록 조회 및 세팅
     const managers = (typeof window.hqStore !== 'undefined') ? window.hqStore.getManagers() : [];
     const foundMgr = managers.find(m => m.id === mgrId || (m.email && m.email.toLowerCase() === (user.email || '').toLowerCase()));
     
     let assigned = [];
-    if (user.role === 'ceo' || user.role === 'hq_admin') {
-      // 본사 대표 및 총괄 관리자는 전사 소속 아티스트 전체 열람
+    if (user.role === 'ceo' || user.role === 'hq_admin' || indie) {
+      // 본사 대표·총괄 관리자는 전사 아티스트 전체, 개인 매니저는 내가 등록한 아티스트 전체
       const allArtists = (typeof window.hqStore !== 'undefined') ? window.hqStore.getArtists() : [];
       assigned = allArtists.map(a => a.id);
     } else if (foundMgr && Array.isArray(foundMgr.assignedArtists) && foundMgr.assignedArtists.length > 0) {
@@ -218,10 +223,12 @@ const Login = {
         // 서버 최신 매니저 정보로 담당 아티스트 다시 저장
         try {
           const me = (window.hqStore.getManagers() || []).find(x => x.id === mgrId || (x.email && x.email.toLowerCase() === (user.email || '').toLowerCase()));
+          if (indie) { localStorage.setItem('bp_assigned_artists', JSON.stringify((window.hqStore.getArtists() || []).map(a => a.id))); return; }
           if (user.role === 'ceo' || user.role === 'hq_admin') return;
           if (me && Array.isArray(me.assignedArtists)) localStorage.setItem('bp_assigned_artists', JSON.stringify(me.assignedArtists));
         } catch (e) { }
       })
+      .then(() => indie && window.Plan ? Plan.refresh() : null)
       .then(() => App.refreshActiveScreens())
       .catch(() => U.toast('기기 저장 데이터를 유지합니다. 서버 동기화를 확인해주세요.'));
     // 화면·실시간 연결에서 오류가 나도 로그인 자체는 성공으로 처리 (로그인 화면에 오류가 남지 않게)

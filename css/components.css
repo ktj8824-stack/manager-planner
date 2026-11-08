@@ -870,3 +870,24 @@
 .bnav-sos-ico { font-size: 22px; line-height: 24px; height: 24px; }
 .bnav-item .notice-badge { top: 6px; right: calc(50% - 22px); }
 body.has-bottom-nav #app { padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom)); }
+
+/* ── 개인 매니저: 내 아티스트 ── */
+.art-plan { background:#eef2ff; border:1px solid #c7d2fe; color:#3730a3; border-radius:12px; padding:10px 12px; font-size:13.5px; font-weight:700; margin-bottom:12px; line-height:1.5; }
+.art-plan.paid { background:#ecfdf5; border-color:#a7f3d0; color:#047857; }
+.art-plan button { border:0; background:#4f46e5; color:#fff; font-size:12.5px; font-weight:800; padding:5px 10px; border-radius:8px; margin-left:4px; cursor:pointer; }
+.art-card { display:flex; align-items:center; gap:10px; background:var(--bg-card); border:1px solid var(--border-default); border-radius:14px; padding:12px 14px; margin-bottom:10px; }
+.art-dot { width:14px; height:14px; border-radius:50%; flex-shrink:0; }
+.art-info { flex:1; min-width:0; }
+.art-name { font-size:16px; font-weight:800; color:var(--text-100); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.art-type { font-size:12.5px; color:var(--text-400); margin-top:2px; }
+.art-btn { flex-shrink:0; min-height:36px; border:1px solid var(--border-default); background:var(--bg-input); color:var(--text-200); font-size:13px; font-weight:700; padding:6px 12px; border-radius:9px; cursor:pointer; }
+.art-btn.danger { color:#dc2626; border-color:#fecaca; background:#fef2f2; }
+.art-empty { display:flex; flex-direction:column; gap:6px; text-align:center; padding:28px 12px; color:var(--text-400); font-size:14px; }
+.art-empty b { color:var(--text-100); font-size:16px; }
+.art-add { width:100%; margin-top:6px; min-height:48px; border:1.5px dashed #a5b4fc; background:rgba(99,102,241,0.06); color:#4f46e5; font-size:15px; font-weight:800; border-radius:14px; cursor:pointer; }
+.art-add.locked { border-color:var(--border-default); color:var(--text-400); background:var(--bg-input); }
+.art-label { display:flex; flex-direction:column; gap:6px; font-size:13.5px; font-weight:700; color:var(--text-300); }
+.art-input { width:100%; padding:12px; border-radius:10px; border:1px solid var(--border-default); background:var(--bg-input); color:var(--text-100); font-size:15px; }
+.art-colors { display:flex; gap:8px; flex-wrap:wrap; }
+.art-color { width:34px; height:34px; border-radius:50%; border:3px solid transparent; cursor:pointer; }
+.art-color.on { border-color:var(--text-100); box-shadow:0 0 0 2px var(--bg-card) inset; }

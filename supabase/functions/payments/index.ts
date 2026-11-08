@@ -33,7 +33,8 @@ Deno.serve(async (req) => {
     const { data: u, error: ue } = await db.auth.getUser(token);
     if (ue || !u?.user) throw new PayError(401, "UNAUTHORIZED", "로그인이 필요합니다.");
     const { data: p } = await db.from("profiles").select("id, role, company_id").eq("id", u.user.id).maybeSingle();
-    if (!p?.company_id) throw new PayError(403, "NO_COMPANY", "회사 정보가 없는 계정입니다.");
+    if (!p) throw new PayError(403, "NO_PROFILE", "계정 정보를 찾을 수 없습니다.");
+    if (!p.company_id && p.role !== "indie_manager") throw new PayError(403, "NO_COMPANY", "회사 정보가 없는 계정입니다.");
     const caller = p as Caller;
 
     const text = await req.text();

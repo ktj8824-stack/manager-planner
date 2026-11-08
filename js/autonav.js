@@ -32,6 +32,9 @@ const AutoNav = {
     this.start();
   },
 
+  // 개인 매니저 무료: 알림·자동 길안내 없음 (회사 계정은 항상 true)
+  _can(feature) { return typeof Plan === 'undefined' || Plan.can(feature); },
+
   // 오늘 다음 단계 찾기 — 홈 '지금 할 일' 카드와 같은 규칙
   nextStep() {
     if (typeof State === 'undefined' || !State.calculateDailyEvents) return null;
@@ -67,6 +70,9 @@ const AutoNav = {
     this._overlay('<div class="an-t">오늘 일정을 확인하는 중…</div>', false);
     const began = Date.now();
     const tick = () => {
+      if (this._loggedIn() && !this._can('autonav')) {
+        return this._message('자동 길안내는 유료 기능이에요', '앱의 내 정보 → 유료 알아보기에서 시작할 수 있어요. 홈의 길안내 버튼은 무료로 쓸 수 있어요.');
+      }
       const r = this._loggedIn() ? this.nextStep() : null;
       if (r && r.ev) return this._ready(r);
       if (Date.now() - began < this.WAIT_MS) { this._timer = setTimeout(tick, 500); return; }
@@ -239,7 +245,7 @@ const AutoNav = {
 
   _watchTick() {
     if (document.hidden) return;
-    const steps = this._myDriveSteps();
+    const steps = this._can('alerts') ? this._myDriveSteps() : [];
     this._sendNative(steps);
     const now = Date.now();
     const due = steps.find(s => !s.wake && (s.at - now) / 60000 <= 15 && (s.at - now) / 60000 > -5);
@@ -283,6 +289,7 @@ const AutoNav = {
   //   목표 도착(다음 단계 시각)보다 5분 이상 늦을 것 같으면 알려 주고, 버튼 하나로 본사에 지연 보고
   async _delayCheck() {
     if (document.hidden || !navigator.geolocation || typeof TmapAPI === 'undefined') return;
+    if (typeof Plan !== 'undefined' && Plan.isIndie()) return;   // 본사 지연 보고 기능 → 개인 매니저는 없음
     if (Date.now() - (this._lastDelayCheck || 0) < 110000) return;
     const me = window.SupabaseClient?.currentUser?.id;
     if (!me) return;
@@ -352,7 +359,7 @@ const AutoNav = {
     setTimeout(() => this._watchTick(), 4000);
     setInterval(() => { this._watchTick(); this._delayCheck().catch(() => { }); }, 30000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(() => this._watchTick(), 1500); });
-    window.addEventListener('hq-store-change', () => { clearTimeout(this._wt); this._wt = setTimeout(() => this._sendNative(this._myDriveSteps()), 1500); });
+    window.addEventListener('hq-store-change', () => { clearTimeout(this._wt); this._wt = setTimeout(() => this._sendNative(this._can('alerts') ? this._myDriveSteps() : []), 1500); });
   },
 };
 

@@ -52,9 +52,9 @@
     .btn-secondary:hover { border-color: #6366f1; color: #f8fafc; }
     .confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
   </style>
-<script src="js/icons.js?v=287"></script>
+<script src="js/icons.js?v=288"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js?v=287"></script>
+<script src="js/supabase-client.js?v=288"></script>
 </head>
 <body>
 <div id="test-banner" style="position:sticky;top:0;z-index:9999;background:#f59e0b;color:#1f1300;text-align:center;font:700 13px/1.4 Pretendard,sans-serif;padding:8px 12px;">🧪 테스트 결제 — 실제 결제되지 않습니다 (카드가 청구되지 않아요)</div>
@@ -91,7 +91,7 @@
   const orderId      = params.get('orderId') || '';
   const addSlots     = parseInt(params.get('addSlots') || '0');
   const totalSlots   = parseInt(params.get('totalSlots') || (isProPlan ? '1' : '2'));
-  const totalFee     = parseInt(params.get('amount') || params.get('totalFee') || (isProPlan ? '4900' : '100000'));
+  const totalFee     = parseInt(params.get('amount') || params.get('totalFee') || (isProPlan ? '20000' : '100000'));
 
   const iconEl    = document.getElementById('result-icon');
   const titleEl   = document.getElementById('result-title');
@@ -164,7 +164,7 @@
     const va = payData.virtualAccount || {};
     document.getElementById('r-order-id').textContent = orderId || '—';
     document.getElementById('r-amount').textContent   = totalFee.toLocaleString() + '원';
-    document.getElementById('r-slots').textContent    = isProPlan ? 'PRO 멤버십 (1인 무제한)' : (totalSlots + '명 (추가 ' + addSlots + '명)');
+    document.getElementById('r-slots').textContent    = isProPlan ? '개인 매니저 유료 (1개월)' : (totalSlots + '명 (추가 ' + addSlots + '명)');
     document.getElementById('r-date').textContent     = new Date().toLocaleString('ko-KR');
 
     // 결제 수단
@@ -218,7 +218,7 @@
     titleEl.style.color = '#a5f3fc';
 
     if (isProPlan) {
-      subEl.innerHTML = '로드플래너 PRO 멤버십이 성공적으로 활성화되었습니다.<br>이제 모든 프리미엄 기능을 자유롭게 이용하실 수 있습니다.';
+      subEl.innerHTML = '개인 매니저 유료가 시작됐어요.<br>앱으로 돌아가면 바로 적용돼요.';
       localStorage.setItem('bp_pro', 'true');
     } else {
       subEl.innerHTML = '구독이 성공적으로 활성화되었습니다.<br>이제 매니저 계정을 추가하여 협업할 수 있습니다.';
@@ -228,7 +228,7 @@
     const now = new Date();
     document.getElementById('r-order-id').textContent = orderId || '—';
     document.getElementById('r-amount').textContent   = totalFee.toLocaleString() + '원 / 월';
-    document.getElementById('r-slots').textContent    = isProPlan ? 'PRO 멤버십 (1인 무제한)' : (totalSlots + '명 (추가 ' + addSlots + '명)');
+    document.getElementById('r-slots').textContent    = isProPlan ? '개인 매니저 유료 (1개월)' : (totalSlots + '명 (추가 ' + addSlots + '명)');
     document.getElementById('r-date').textContent     = now.toLocaleString('ko-KR');
 
     // 결제 수단 및 영수증 처리

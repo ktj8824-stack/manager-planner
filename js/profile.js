@@ -54,6 +54,10 @@ const Profile = {
     const userEmail      = localStorage.getItem('bp_user_email')   || '';
     const userCompany    = localStorage.getItem('bp_company_name') || '';
     const userDept       = localStorage.getItem('bp_dept_name')    || '';
+    const indie = typeof Plan !== 'undefined' && Plan.isIndie();   // 개인 매니저 (본사 없음)
+    const paid = !indie || Plan.isPaid();
+    const lock = (f) => (indie && !Plan.can(f)) ? '<span style="font-size:12px;font-weight:800;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;padding:3px 9px;border-radius:999px;white-space:nowrap;">🔒 유료</span>' : ProfileIcons.chevron;
+    if (indie && !this._planChecked) { this._planChecked = true; Plan.refresh().then(() => { if (State.screen === 'profile') this.render(); }); }
     // 담당 아티스트: 본사가 지정한 아티스트 ID → 이름
     const assignedArtists = (() => {
       let ids = [];
@@ -89,7 +93,7 @@ const Profile = {
             <div style="flex:1;min-width:0;">
               <div style="font-size:17px;font-weight:700;color:#fff;letter-spacing:-0.4px;margin-bottom:3px;">${esc(userName)}</div>
               <div style="font-size:12.5px;color:rgba(255,255,255,0.55);margin-bottom:2px;">${esc(userEmail)}</div>
-              <div style="font-size:12px;color:rgba(255,255,255,0.4);">${esc(userCompany)} · ${esc(userDept)}</div>
+              <div style="font-size:12px;color:rgba(255,255,255,0.4);">${indie ? `개인 매니저 · ${paid ? '유료' : '무료'}` : `${esc(userCompany)} · ${esc(userDept)}`}</div>
             </div>
             <button type="button" onclick="Profile.switchAccount()" style="flex-shrink:0;align-self:center;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.28);color:#fff;font-size:12.5px;font-weight:700;padding:7px 10px;border-radius:9px;cursor:pointer;white-space:nowrap;">계정 전환</button>
           </div>
@@ -103,7 +107,17 @@ const Profile = {
           </div>
         </div>
 
-        <!-- ── 인증 상태 배너 ── -->
+        <!-- ── 인증 상태 배너 (개인 매니저는 요금 카드) ── -->
+        ${indie ? `
+        <div style="margin:0 var(--sp-5) var(--sp-4);background:${paid ? '#ecfdf5' : '#eef2ff'};border:1px solid ${paid ? '#a7f3d0' : '#c7d2fe'};border-radius:14px;padding:14px 16px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:15px;font-weight:800;color:${paid ? '#047857' : '#3730a3'};">${paid ? `유료 사용 중 ${esc(Plan.untilText())}` : '무료로 쓰는 중'}</div>
+              <div style="font-size:12.5px;color:#475569;margin-top:3px;line-height:1.5;">${paid ? 'AI 비서·알림·자동 길안내·교통 예측·아티스트 여러 명' : `월 ${Plan.FEE.toLocaleString()}원이면 AI 비서·알림·자동 길안내·교통 예측을 모두 쓸 수 있어요.`}</div>
+            </div>
+            <button type="button" onclick="App.navigate('upgrade')" style="flex-shrink:0;border:0;background:${paid ? '#10b981' : '#4f46e5'};color:#fff;font-size:13px;font-weight:800;padding:9px 12px;border-radius:10px;cursor:pointer;">${paid ? '연장하기' : '유료 알아보기'}</button>
+          </div>
+        </div>` : `
         <div style="margin:0 var(--sp-5) var(--sp-4);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:14px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
           <div>
             <div style="font-size:12px;color:var(--primary-400);font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:5px;">
@@ -113,7 +127,7 @@ const Profile = {
             <div style="font-size:14px;font-weight:700;color:var(--text-100);">동선·스케줄 최적화 가동 중</div>
           </div>
           <div style="background:rgba(34,197,94,0.12);color:#4ade80;border:1px solid rgba(34,197,94,0.25);padding:5px 11px;border-radius:var(--r-full);font-size:12px;font-weight:700;white-space:nowrap;">인증 완료</div>
-        </div>
+        </div>`}
 
         <!-- ── 내 정보 관리 ── -->
         ${Profile._section('내 정보 관리', 'normal', [
@@ -150,23 +164,23 @@ const Profile = {
             </div>
 
             <!-- 차에 타면 자동 길안내 -->
-            <div onclick="AutoNav.openGuide()" style="padding:14px 16px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:12px;cursor:pointer;">
+            <div onclick="${indie ? "Plan.require('autonav') && AutoNav.openGuide()" : 'AutoNav.openGuide()'}" style="padding:14px 16px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:12px;cursor:pointer;">
               <span style="font-size:15px;flex-shrink:0;">🚗</span>
               <div style="flex:1;">
                 <div style="font-size:14px;font-weight:700;color:var(--text-100);">차에 타면 자동 길안내</div>
                 <div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">차와 연결되면 다음 일정으로 내비 자동 실행</div>
               </div>
-              ${ProfileIcons.chevron}
+              ${lock('autonav')}
             </div>
 
             <!-- 푸시 알림 -->
-            <div onclick="Profile.togglePush()" style="padding:14px 16px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:12px;cursor:pointer;">
+            <div onclick="${indie ? "Plan.require('alerts') && Profile.togglePush()" : 'Profile.togglePush()'}" style="padding:14px 16px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:12px;cursor:pointer;">
               <span style="color:var(--primary-400);flex-shrink:0;">${ProfileIcons.bell}</span>
               <div style="flex:1;">
                 <div style="font-size:14px;font-weight:700;color:var(--text-100);">알림 받기 (푸시)</div>
-                <div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">출발 15분 전 · 내일 일정(밤 9시) · 일정 변경 · 로드톡</div>
+                <div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">${indie ? '기상 · 출발 15분 전 · 내일 일정(밤 9시)' : '출발 15분 전 · 내일 일정(밤 9시) · 일정 변경 · 로드톡'}</div>
               </div>
-              <span id="push-state-badge" style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;font-size:12px;font-weight:700;padding:3px 10px;border-radius:var(--r-full);">확인 중</span>
+              ${indie && !Plan.can('alerts') ? lock('alerts') : ''}<span id="push-state-badge" ${indie && !Plan.can('alerts') ? 'hidden' : ''} style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;font-size:12px;font-weight:700;padding:3px 10px;border-radius:var(--r-full);">확인 중</span>
             </div>
 
 
@@ -189,7 +203,7 @@ const Profile = {
 
         <!-- ── 고객지원 / 앱 정보 ── -->
         ${Profile._section('고객지원 / 앱 정보', 'normal', [
-          { icon: '🚨',        label: '긴급 지원 / 현장 긴급보고', sub: '본사 연락처 · 긴급 보고(위치·사진)', badge: ProfileIcons.chevron, action: 'App.openEmergencyModal()' },
+          ...(indie ? [] : [{ icon: '🚨',        label: '긴급 지원 / 현장 긴급보고', sub: '본사 연락처 · 긴급 보고(위치·사진)', badge: ProfileIcons.chevron, action: 'App.openEmergencyModal()' }]),
           { icon: ProfileIcons.info,        label: '앱 버전 정보',             sub: '', badge: '<span style="font-size:12.5px;color:var(--text-400);">v1.0.0 (최신)</span>', action: 'Profile.showVersion()' },
           { icon: ProfileIcons.file,        label: '이용약관 및 개인정보처리방침', sub: '', badge: ProfileIcons.chevron, action: "window.open('./terms.html', '_blank', 'noopener')" },
         ])}
@@ -359,7 +373,8 @@ const Profile = {
       localStorage.removeItem('bp_company_name');
       localStorage.removeItem('bp_manager_filter');
       localStorage.removeItem('bp_onboarded');
-      ['rp_default_departure', 'bp_user_phone', 'bp_user_vehicle'].forEach(k => localStorage.removeItem(k));
+      ['rp_default_departure', 'bp_user_phone', 'bp_user_vehicle', 'bp_account', 'rp_pro_until'].forEach(k => localStorage.removeItem(k));
+      try { Profile._planChecked = false; } catch (e) { }
       U.toast('로그아웃 되었습니다.');
       App.navigate('login');
     }

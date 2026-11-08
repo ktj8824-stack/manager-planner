@@ -3,7 +3,7 @@
    ========================================= */
 
 const App = {
-  screens: ['home','register','timeline','login','onboarding','profile','upgrade','ai'],
+  screens: ['home','register','timeline','login','onboarding','profile','upgrade','ai','artists'],
 
   async init() {
     // 오프라인 기능(서비스워커)은 맨 먼저 등록 (로그인 확인을 기다리다 load 이벤트를 놓치지 않게)
@@ -121,7 +121,8 @@ const App = {
 
   initRealtimeSync() {
     this.startAutoSync();
-    if (window.Chat) {
+    const indie = typeof Plan !== 'undefined' && Plan.isIndie();   // 개인 매니저: 로드톡·본사 공지 없음
+    if (window.Chat && !indie) {
       window.Chat.onUnreadChange = () => { try { this.updateNoticeBadge(); } catch (e) { } };
       window.Chat.onIncoming = (m, room, name) => {
         this.showHqToast({ id: 'chat_' + m.id, title: (m.is_urgent ? '🚨 ' : '💬 ') + (name || '본사'), content: m.body || '(사진)', isUrgent: !!m.is_urgent, targetId: 'ALL' });
@@ -225,6 +226,7 @@ const App = {
         case 'profile': Profile.render(); break;
         case 'upgrade': Upgrade.init(); break;
         case 'ai': if (window.RoadAI) RoadAI.init(); break;
+        case 'artists': if (window.Artists) Artists.render(); break;
       }
     }
     this.updateNav(name === 'timeline' ? 'home' : name);
@@ -296,10 +298,30 @@ const App = {
     this.updateHeaderUser();
 
     // 아래: 한 손 엄지로 누르는 메뉴 5개 (홈·로드톡·AI 비서·긴급·내 정보)
+    // 개인 매니저는 4개 (홈·아티스트·AI 비서·내 정보) — 로드톡·긴급(본사 보고) 없음
     const bn = U.el('nav', 'bottom-nav');
     bn.id = 'bottom-nav';
     bn.setAttribute('aria-label', '메뉴');
-    bn.innerHTML = `
+    const indie = typeof Plan !== 'undefined' && Plan.isIndie();
+    bn.classList.toggle('bnav-indie', indie);
+    bn.innerHTML = indie ? `
+      <button class="bnav-item active" data-s="home" onclick="App.navigate('home')">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <span>홈</span>
+      </button>
+      <button class="bnav-item" data-s="artists" onclick="App.navigate('artists')" aria-label="아티스트 관리">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z"/></svg>
+        <span>아티스트</span>
+      </button>
+      <button class="bnav-item bnav-ai" data-s="ai" onclick="App.navigate('ai')" aria-label="AI 비서">
+        <span class="bnav-ai-ico">AI</span>
+        <span>AI 비서</span>
+      </button>
+      <button class="bnav-item" data-s="profile" onclick="App.navigate('profile')">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <span>내 정보</span>
+      </button>
+    ` : `
       <button class="bnav-item active" data-s="home" onclick="App.navigate('home')">
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
         <span>홈</span>
