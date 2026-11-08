@@ -1888,73 +1888,71 @@ document.addEventListener('DOMContentLoaded', () => {
     const managers = await window.hqStore.getManagers();
     const schedules = await window.hqStore.getSchedules();
 
-    // 1. 아티스트 칩 목록
+    // 1. 아티스트: 색 점 한 줄 (이름 · 구분 · 일정 수)
+    const allSel = state.selectedArtistFilter === 'ALL';
     let artistHtml = `
-      <div class="artist-chip ${state.selectedArtistFilter === 'ALL' ? 'active' : ''}" data-artist-id="ALL">
-        <div class="artist-avatar" style="background:#6366f1; color:#fff; display:flex; align-items:center; justify-content:center;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="22.01"></line><line x1="15" y1="22" x2="15" y2="22.01"></line><line x1="12" y1="22" x2="12" y2="22.01"></line><line x1="8" y1="6" x2="8" y2="6.01"></line><line x1="16" y1="6" x2="16" y2="6.01"></line><line x1="8" y1="10" x2="8" y2="10.01"></line><line x1="16" y1="10" x2="16" y2="10.01"></line><line x1="8" y1="14" x2="8" y2="14.01"></line><line x1="16" y1="14" x2="16" y2="14.01"></line><line x1="8" y1="18" x2="8" y2="18.01"></line><line x1="16" y1="18" x2="16" y2="18.01"></line></svg>
-        </div>
-        <div class="artist-meta">
-          <div class="name">전체 소속 아티스트</div>
-          <div class="sub">통합 캘린더 모드</div>
-        </div>
-        <span class="count-badge">${esc(schedules.length)}</span>
-      </div>
-    `;
-
+      <button type="button" class="artist-chip v2 ${allSel ? 'active' : ''}" data-artist-id="ALL" aria-pressed="${allSel}">
+        <span class="sb-dot all" aria-hidden="true"></span>
+        <span class="artist-meta"><span class="name">전체 아티스트</span><span class="sub">통합 캘린더</span></span>
+        <span class="sb-count">${esc(schedules.length)}</span>
+      </button>`;
     artists.forEach(art => {
       const count = schedules.filter(s => s.artistId === art.id).length;
       const isSel = state.selectedArtistFilter === art.id;
       artistHtml += `
-        <div class="artist-chip ${isSel ? 'active' : ''}" data-artist-id="${esc(art.id)}">
-          <div class="artist-avatar" style="background:${esc(art.color)}; color:#fff; display:flex; align-items:center; justify-content:center;">
-            ${getArtistTypeIcon(art, 15)}
-          </div>
-          <div class="artist-meta">
-            <div class="name">${esc(art.name)}</div>
-            <div class="sub">${esc(art.type)} · ${esc(art.status || '활동중')}</div>
-          </div>
-          <span class="count-badge">${esc(count)}</span>
-        </div>
-      `;
+        <button type="button" class="artist-chip v2 ${isSel ? 'active' : ''}" data-artist-id="${esc(art.id)}" aria-pressed="${isSel}">
+          <span class="sb-dot" style="background:${esc(art.color || '#6366f1')}" aria-hidden="true"></span>
+          <span class="artist-meta"><span class="name">${esc(String(art.name || '').replace(/\s*\([^)]*\)\s*$/, ''))}</span><span class="sub">${esc(art.type || '')}</span></span>
+          <span class="sb-count">${esc(count)}</span>
+        </button>`;
     });
     if (el.artistFilterList) el.artistFilterList.innerHTML = artistHtml;
 
-    // 2. 매니저 칩 목록
+    // 2. 매니저: 이름 아래 '지금 상태' (응답 없음 n분 · 이동 중 · 샵 진행 중 · 대기)
     if (el.managerStatusList) {
-      let managerHtml = `
-        <div class="artist-chip ${state.selectedManagerFilter === 'ALL' ? 'active' : ''}" data-manager-id="ALL">
-          <div class="artist-avatar" style="background:#10b981; color:#fff; display:flex; align-items:center; justify-content:center;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-          </div>
-          <div class="artist-meta">
-            <div class="name">전체 매니저</div>
-            <div class="sub">전사 통합 모드</div>
-          </div>
-          <span class="count-badge">${esc(schedules.length)}</span>
-        </div>
-      `;
-
+      const now = managerNowMap(schedules);
+      let managerHtml = '';
+      if (state.selectedManagerFilter && state.selectedManagerFilter !== 'ALL') {
+        managerHtml += `<button type="button" class="artist-chip v2 sb-clear" data-manager-id="ALL">전체 매니저 보기</button>`;
+      }
       managers.forEach(mgr => {
-        const count = schedules.filter(s => s.managerId === mgr.id).length;
         const isSel = state.selectedManagerFilter === mgr.id;
-        const avatarColor = mgr.color || '#3b82f6';
+        const st = now[mgr.id] || { cls: 'idle', text: '대기' };
         managerHtml += `
-          <div class="artist-chip ${isSel ? 'active' : ''}" data-manager-id="${esc(mgr.id)}">
-            <div class="artist-avatar" style="background:${esc(avatarColor)}; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px;">
-              ${mgr.role === 'hq_admin' ? '👑' : '👔'}
-            </div>
-            <div class="artist-meta">
-              <div class="name">${esc(mgr.name)}</div>
-              <div class="sub">${esc(mgr.title || (mgr.role === 'hq_admin' ? '총괄 관리자' : '현장 매니저'))}</div>
-            </div>
-            <span class="count-badge">${esc(count)}</span>
-          </div>
-        `;
+          <button type="button" class="artist-chip v2 mgr ${isSel ? 'active' : ''}" data-manager-id="${esc(isSel ? 'ALL' : mgr.id)}" aria-pressed="${isSel}">
+            <span class="sb-av" style="background:${esc(mgr.color || '#52525b')}" aria-hidden="true">${esc(String(mgr.name || '?').trim().slice(0, 1))}</span>
+            <span class="artist-meta"><span class="name">${esc(mgr.name)}</span><span class="sub sb-st ${st.cls}">${esc(st.text)}</span></span>
+          </button>`;
       });
       el.managerStatusList.innerHTML = managerHtml;
     }
   }
+
+  // 매니저별 지금 상태: 오늘 일정의 진행 단계로 계산 (지연 > 이동 중 > 진행 중 > 대기)
+  function managerNowMap(schedules) {
+    const out = {};
+    const today = fmtDate(new Date());
+    const now = new Date(); const nowMin = now.getHours() * 60 + now.getMinutes();
+    const toMin = (hhmm) => { const m = /^(\d{1,2}):(\d{2})/.exec(String(hhmm || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; };
+    const rank = { late: 4, move: 3, live: 2, done: 1, idle: 0 };
+    const put = (id, v) => { if (!id) return; if (!out[id] || rank[v.cls] > rank[out[id].cls]) out[id] = v; };
+    (schedules || []).filter(s => s.date === today).forEach(s => {
+      const tl = Array.isArray(s.timeline) ? s.timeline : [];
+      const clean = (l) => String(l || '').replace(/^\[[^\]]+\]\s*/, '').slice(0, 14);
+      if (s.status === '완료' || (tl.length && tl.every(t => t.done))) { put(s.managerId, { cls: 'done', text: '오늘 일정 완료' }); return; }
+      const mv = tl.find(t => t.moving && !t.done);
+      if (mv) { put(s.managerId, { cls: 'move', text: '이동 중' + (mv.label ? ' · ' + clean(mv.label) : '') }); return; }
+      const next = tl.find(t => !t.done && !/^\[기상/.test(t.label || ''));
+      const nm = next ? toMin(next.time) : null;
+      if (next && nm !== null && nowMin - nm >= lateThreshold()) { put(s.managerId, { cls: 'late', text: `응답 없음 ${nowMin - nm}분` }); return; }
+      const doneAny = tl.some(t => t.done);
+      if (doneAny) put(s.managerId, { cls: 'live', text: /샵|헤어|메이크업/.test((tl.filter(t => t.done).pop() || {}).label || '') ? '샵 진행 중' : '현장 진행 중' });
+      else put(s.managerId, { cls: 'idle', text: s.startTime ? `대기 · ${s.startTime} 일정` : '대기' });
+    });
+    return out;
+  }
+  // 지연 판단 기준 (관리자 설정에서 바꿀 수 있음, 기본 10분)
+  function lateThreshold() { const v = parseInt(localStorage.getItem('hq_late_minutes') || '10', 10); return v >= 5 && v <= 60 ? v : 10; }
 
   // ── KPI 통계 렌더링 ──
   async function renderKPI() {
@@ -2009,7 +2007,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // 지연: 아직 안 끝난 첫 단계의 시간이 10분 넘게 지났는데 이동중/완료 표시가 없음
       const next = tl.find(t => !t.done && !/^\[기상/.test(t.label || ''));   // 기상·준비는 본사 지연 판단에서 제외
       const nm = next ? toMin(next.time) : null;
-      if (next && !next.moving && nm !== null && nowMin - nm >= 10) lists.late.push({ s, note: `${next.label || '다음 단계'} 미확인`, late: nowMin - nm });
+      if (next && !next.moving && nm !== null && nowMin - nm >= lateThreshold()) lists.late.push({ s, note: `${next.label || '다음 단계'} 미확인`, late: nowMin - nm });
     });
     lists.late.sort((x, y) => y.late - x.late);
     Object.assign(briefLists, lists);
@@ -2023,24 +2021,25 @@ document.addEventListener('DOMContentLoaded', () => {
       active: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
       ack: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="m9 10 2 2 4-4"/>'
     };
+    // 시안: 지연·미확인이 맨 앞 (있으면 빨간 칸 + 누구인지 한 줄), 큰 숫자 + 작은 설명
+    const who = (r) => [r && r.s && r.s.managerName, r && r.s && String(r.s.artistName || '').replace(/\s*\([^)]*\)\s*$/, '')].filter(Boolean).join(' · ');
+    const lateSub = lists.late.length ? (who(lists.late[0]) + (lists.late[0].note ? ' · ' + String(lists.late[0].note).replace(/^\[[^\]]+\]\s*/, '').replace(/ 미확인$/, '') : '')) + (lists.late.length > 1 ? ` 외 ${lists.late.length - 1}` : '') : '문제 없음';
+    const teams = new Set(lists.all.map(r => r.s.artistId).filter(Boolean)).size;
     const TILES = [
-      ['all', '오늘 전체', 'tb-indigo'], ['done', '완료', 'tb-green'], ['moving', '이동중', 'tb-amber'],
-      ['late', '지연·미확인', 'tb-red'], ['ack', '변경 확인 대기', 'tb-orange'], ['active', '가동 차량/팀', 'tb-cyan']
+      ['late', '지연 · 미확인', lateSub],
+      ['all', '오늘 전체', teams ? `아티스트 ${teams}팀` : ''],
+      ['moving', '이동 중', lists.moving.length ? who(lists.moving[0]) + (lists.moving.length > 1 ? ` 외 ${lists.moving.length - 1}` : '') : ''],
+      ['done', '완료', ''],
+      ['ack', '변경 확인 대기', lists.ack.length ? who(lists.ack[0]) + (lists.ack.length > 1 ? ` 외 ${lists.ack.length - 1}` : '') : ''],
+      ['active', '가동 차량 · 팀', '']
     ];
-    const hh = String(now.getHours()).padStart(2, '0'), mm = String(now.getMinutes()).padStart(2, '0');
-    const tiles = TILES.map(([k, label, cls]) => `
-      <div class="tb-tile ${cls}${(k === 'late' || k === 'ack') && lists[k].length ? ' alert' : ''}" data-k="${k}" tabindex="0">
-        <span class="tb-txt"><em>${label}</em><b>${lists[k].length}</b></span>
-        <span class="tb-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg></span>
-      </div>`).join('');
-    const rows = [
-      ...lists.late.map(r => `<div class="tb-row late"><span class="tag">지연 ${r.late}분</span><span class="who">${esc(r.s.managerName || '담당 미지정')}</span><span>${esc(r.s.artistName || r.s.title || '')}</span><span class="sub">${esc(r.note)}</span></div>`),
-      ...lists.moving.map(r => `<div class="tb-row moving"><span class="tag">이동중</span><span class="who">${esc(r.s.managerName || '담당 미지정')}</span><span>${esc(r.s.artistName || r.s.title || '')}</span><span class="sub">${esc(r.note)}</span></div>`)
-    ].join('');
-    box.innerHTML = `
-      <div class="tb-head"><div class="tb-title">오늘 현황</div><div class="tb-time"><span class="tb-live"></span>${hh}:${mm} 기준 · 항목에 마우스를 올려 보세요</div></div>
-      <div class="tb-tiles">${tiles}</div>
-      ${rows ? `<div class="tb-list">${rows}</div>` : ''}`;
+    const tiles = TILES.map(([k, label, sub]) => `
+      <button type="button" class="tb-tile v2${k === 'late' && lists.late.length ? ' hot' : ''}${k === 'ack' && lists.ack.length ? ' warn' : ''}" data-k="${k}">
+        <span class="tb-l">${label}</span>
+        <b class="tb-n">${lists[k].length}</b>
+        ${sub ? `<span class="tb-s">${esc(sub)}</span>` : ''}
+      </button>`).join('');
+    box.innerHTML = `<div class="tb-tiles v2">${tiles}</div>`;
     bindBriefHover(box);
   }
 
@@ -2157,82 +2156,39 @@ document.addEventListener('DOMContentLoaded', () => {
       allSchedules = allSchedules.filter(s => s.managerId === state.selectedManagerFilter);
     }
 
-    let html = `
-      <!-- 요일 헤더 (컴팩트 슬림 바) -->
-      <div style="display:grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap:8px; width:100%; box-sizing:border-box; margin-bottom:8px;">
-        <div style="text-align:center; padding:6px 0; font-size:12.5px; font-weight:800; color:#ef4444; background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">일</div>
-        <div style="text-align:center; padding:6px 0; font-size:12.5px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">월</div>
-        <div style="text-align:center; padding:6px 0; font-size:12.5px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">화</div>
-        <div style="text-align:center; padding:6px 0; font-size:12.5px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">수</div>
-        <div style="text-align:center; padding:6px 0; font-size:12.5px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">목</div>
-        <div style="text-align:center; padding:6px 0; font-size:12.5px; font-weight:700; color:var(--text-dim); background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">금</div>
-        <div style="text-align:center; padding:6px 0; font-size:12.5px; font-weight:800; color:#3b82f6; background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); min-width:0; box-sizing:border-box;">토</div>
-      </div>
-      <!-- 월간 날짜 그리드 -->
-      <div style="display:grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-auto-rows: minmax(110px, auto); gap:8px; width:100%; box-sizing:border-box;">
-    `;
-
-    // 이전 달 빈 칸 (기본 min-height 110px, 그리드 행 높이에 자동 동기화)
-    for (let i = 0; i < startDayOfWeek; i++) {
-      html += `<div class="cal-empty-slot" style="background:transparent; border:1px dashed rgba(0,0,0,0.08); border-radius:8px; min-height:110px; height:100%; min-width:0; box-sizing:border-box; padding:0; margin:0;"></div>`;
-    }
-
+    const WK = ['일', '월', '화', '수', '목', '금', '토'];
+    let html = `<div class="mv2"><div class="mv2-head">${WK.map((w, i) => `<span class="${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${w}</span>`).join('')}</div><div class="mv2-grid">`;
+    for (let i = 0; i < startDayOfWeek; i++) html += `<div class="mv2-empty cal-empty-slot"></div>`;
     const todayStr = fmtDate(new Date());
-
-    // 이번 달 날짜들 (기본 110px, 일정 3~5건 시 해당 주만 자연스럽게 자동 확장)
+    const artColorOf = (sch) => {
+      const isAll = sch.artistId === 'ALL' || (sch.artistName && (sch.artistName.includes('전원') || sch.artistName.includes('전체')));
+      if (isAll) return { color: '#52525b', all: true };
+      let art = artists.find(a => a.id === sch.artistId);
+      if (!art && (sch.artistName || sch.artist)) { const n = sch.artistName || sch.artist || ''; art = artists.find(a => n.includes(a.name.split(' ')[0]) || a.name.includes(n)); }
+      return { color: art ? (art.color || '#6366f1') : '#6366f1', all: false };
+    };
     for (let day = 1; day <= totalDays; day++) {
       const d = new Date(year, month, day);
       const dateStr = fmtDate(d);
       const isToday = dateStr === todayStr;
-      const dayOfWeek = d.getDay();
-      let dayColor = dayOfWeek === 0 ? '#ef4444' : dayOfWeek === 6 ? '#3b82f6' : '#0f172a';
-
-      // 해당 날짜 스케줄 필터
-      const daySchedules = allSchedules.filter(s => s.date === dateStr);
-
-      html += `
-        <div class="cal-cell ${isToday ? 'today' : ''}" data-date="${esc(dateStr)}" 
-          style="background:var(--bg-card); border:${isToday ? '2px solid var(--primary)' : '1px solid var(--border-color)'}; border-radius:8px; min-height:110px; height:100%; min-width:0; box-sizing:border-box; padding:8px 10px; display:flex; flex-direction:column; gap:4px; cursor:pointer; transition:all 0.2s; overflow:hidden; position:relative;" onmouseenter="this.style.background='var(--bg-card-hover)'" onmouseleave="this.style.background='var(--bg-card)'">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
-            <span style="font-size:14px; font-weight:800; color:${esc(dayColor)};">${esc(day)}</span>
-            ${daySchedules.length > 0 ? `<span style="font-size:10px; background:rgba(79,70,229,0.1); color:#4f46e5; padding:1px 6px; border-radius:10px; font-weight:700;">${esc(daySchedules.length)}건</span>` : ''}
-          </div>
-          <div class="cell-events" style="display:flex; flex-direction:column; gap:3px; flex:1; min-width:0;">
-      `;
-
-      // 최대 5개까지 일정 뱃지로 직접 노출 (일정이 많아지면 셀이 아래로 자동 확장됨)
-      daySchedules.slice(0, 5).forEach(sch => {
-        const isAll = sch.artistId === 'ALL' || (sch.artistName && (sch.artistName.includes('전원') || sch.artistName.includes('전체')));
-        let art = isAll ? null : artists.find(a => a.id === sch.artistId);
-        if (!art && !isAll && (sch.artistName || sch.artist)) {
-          const sName = sch.artistName || sch.artist || '';
-          art = artists.find(a => sName.includes(a.name.split(' ')[0]) || a.name.includes(sName));
-        }
-        const isSec = sch.isSecret === true;
-        const artColor = isSec ? '#9333ea' : (isAll ? '#0284c7' : (art ? (art.color || '#f59e0b') : '#4f46e5'));
-        const lockPrefix = isSec ? '🔒 ' : '';
-        const memberTag = (sch.targetMembers && sch.targetMembers !== 'ALL' && Array.isArray(sch.targetMembers)) ? ` (${sch.targetMembers.join('/')})` : '';
-        const badgeText = isAll ? '전원' : (art ? `${art.name.split(' ')[0]}${memberTag}` : (sch.artistName || '아티스트'));
-        html += `
-          <div class="cal-event-pill" style="background:#e2e8f0; border:1px solid #cbd5e1; border-left:3px solid ${esc(artColor)}; color:#0f172a; padding:0 6px; height:23px; line-height:21px; border-radius:5px; font-size:11px; font-weight:600; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.04); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; min-width:0; display:flex; align-items:center; gap:4px;" data-sch-id="${esc(sch.id)}">
-            ${lockPrefix ? `<span style="flex-shrink:0;">${lockPrefix}</span>` : ''}
-            <span style="background:${esc(artColor)}; color:#ffffff; font-size:10px; font-weight:700; padding:1px 5px; border-radius:3px; flex-shrink:0; line-height:1.2;">${esc(badgeText)}</span>
-            <span style="color:#0f172a; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(sch.title)}</span>
-          </div>
-        `;
-      });
-
-      if (daySchedules.length > 5) {
-        html += `<div style="font-size:10px; color:#4f46e5; text-align:right; font-weight:800; margin-top:1px;">+${daySchedules.length - 5}개 더보기 🔍</div>`;
-      }
-
-      html += `
-          </div>
-        </div>
-      `;
+      const dow = d.getDay();
+      const daySchedules = allSchedules.filter(s => s.date === dateStr).sort((x, y) => String(x.startTime || '').localeCompare(String(y.startTime || '')));
+      const rows = daySchedules.slice(0, 3).map(sch => {
+        const c = artColorOf(sch);
+        const t = (c.all ? '[전원] ' : '') + (sch.title || '');
+        const full = `${sch.artistName || ''} · ${sch.startTime || ''} ${sch.title || ''}`;
+        return `<div class="cal-event-pill mv2-ev" data-sch-id="${esc(sch.id)}" title="${esc(full)}"><span class="mv2-dot" style="background:${esc(sch.isSecret ? '#9333ea' : c.color)}"></span><span class="mv2-tm">${esc(sch.startTime || '')}</span><span class="mv2-tt">${esc(t)}</span></div>`;
+      }).join('');
+      const more = daySchedules.length > 3 ? `<div class="mv2-more">+${daySchedules.length - 3}개 더</div>` : '';
+      html += `<div class="cal-cell mv2-cell ${isToday ? 'today' : ''}" data-date="${esc(dateStr)}"><span class="mv2-num ${dow === 0 ? 'sun' : dow === 6 ? 'sat' : ''}">${esc(day)}</span><div class="cell-events">${rows}${more}</div></div>`;
     }
-
-    html += `</div>`;
+    const used = new Map();
+    allSchedules.filter(s => s.date && s.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).forEach(s => {
+      const c = artColorOf(s);
+      if (c.all) used.set('전원', '#52525b');
+      else { const a = artists.find(x => x.id === s.artistId); if (a) used.set(String(a.name).replace(/\s*\([^)]*\)\s*$/, ''), a.color || '#6366f1'); }
+    });
+    html += `</div>${used.size ? `<div class="mv2-legend">${[...used].map(([n, c]) => `<span><i style="background:${esc(c)}"></i>${esc(n)}</span>`).join('')}</div>` : ''}</div>`;
     el.scheduleViewport.innerHTML = html;
   }
 

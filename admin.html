@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/calendar.css">
   <link rel="stylesheet" href="css/admin.css?v=2">
+  <link rel="stylesheet" href="css/admin-v2.css?v=1">
   <link rel="stylesheet" href="css/chat.css?v=11">
   <link rel="stylesheet" href="css/timeline.css">
   <style>
@@ -304,22 +305,17 @@
       border-color: #6366f1;
     }
   </style>
-<script src="js/site-config.js?v=300"></script>
-<script src="js/icons.js?v=300"></script>
+<script src="js/site-config.js?v=301"></script>
+<script src="js/icons.js?v=301"></script>
 </head>
 
 <body>
-<script src="js/splash.js?v=300"></script>
+<script src="js/splash.js?v=301"></script>
   <div class="app-container">
     <aside class="hq-sidebar">
       <div class="brand-box">
-        <div class="brand-icon"
-          style="display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, #6366f1, #8b5cf6); border-radius:10px; width:34px; height:34px; color:#fff;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path
-              d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-          </svg>
+        <div class="brand-icon" id="hq-brand-initial" aria-hidden="true"
+          style="display:flex; align-items:center; justify-content:center; background:#4f46e5; border-radius:10px; width:36px; height:36px; color:#fff; font-weight:900; font-size:16px;">K
         </div>
         <div class="brand-text">
           <h1 id="hq-brand-title">SCHEDULER</h1>
@@ -328,7 +324,7 @@
       </div>
       <nav class="sidebar-section">
         <div class="sidebar-title" style="display:flex; justify-content:space-between; align-items:center;">
-          <span>전체 소속 아티스트</span>
+          <span>소속 아티스트</span>
           <button type="button" onclick="Admin.openArtistModal()"
             style="background:transparent; border:1px solid #334155; color:#818cf8; font-size:11px; cursor:pointer; font-weight:700; padding:2px 8px; border-radius:4px; transition:all 0.15s;"
             onmouseover="this.style.background='#334155'; this.style.color='#fff';"
@@ -340,7 +336,7 @@
       </nav>
       <nav class="sidebar-section" style="margin-top:10px;">
         <div class="sidebar-title" style="display:flex; justify-content:space-between; align-items:center;">
-          <span>전체 매니저</span>
+          <span>매니저 · 지금 상태</span>
           <button type="button" onclick="Admin.openManagerModal()"
             style="background:transparent; border:1px solid #334155; color:#818cf8; font-size:11px; cursor:pointer; font-weight:700; padding:2px 8px; border-radius:4px; transition:all 0.15s;"
             onmouseover="this.style.background='#334155'; this.style.color='#fff';"
@@ -371,18 +367,23 @@
           <p id="header-company-sub">엔터테인먼트 통합 스케줄 관리</p>
         </div>
         <div class="header-actions">
+          <div class="hq-tools" role="group" aria-label="관리">
+            <button id="btn-header-settings" type="button" onclick="Admin.openAdminSettingsModal()" title="소속사/관리자 프로필 및 스케줄 역산 동선 설정">설정</button>
+            <button id="btn-open-add-artist" type="button" onclick="Admin.openArtistModal()">아티스트</button>
+            <button id="btn-open-add-manager" type="button" onclick="Admin.openManagerModal()">매니저</button>
+            <button id="btn-open-add-vehicle" type="button" onclick="Admin.openVehicleModal()">차량</button>
+            <button id="btn-open-expenses" type="button" onclick="HqExpenses.open()">경비 정산</button>
+          </div>
+          <button id="btn-open-chat" type="button" class="hq-act hq-act-talk" onclick="Chat.open()">로드톡<span id="chat-badge" hidden>0</span></button>
+          <button id="btn-open-send-message" type="button" class="hq-act hq-act-urgent" onclick="Admin.openSendMsgModal()">긴급 공지</button>
+          <button id="btn-open-add-schedule" type="button" class="hq-act hq-act-new">+ 신규 스케줄</button>
           <div class="user-dropdown-wrap" id="user-dropdown-wrap">
-            <div class="user-chip">
-              <span style="display:inline-flex; align-items:center; color:#f59e0b;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
-                </svg>
-              </span>
+            <button type="button" class="user-chip" aria-label="계정 메뉴">
+              <span class="user-chip-av" id="header-user-av" aria-hidden="true">대</span>
               <span class="user-chip-name" id="header-user-name">대표님</span>
               <span class="user-chip-role" id="header-user-role" style="display:none;"></span>
-              <span class="user-chip-arrow">▼</span>
-            </div>
+              <span class="user-chip-arrow" aria-hidden="true">▾</span>
+            </button>
             <div class="user-dropdown-menu" id="user-dropdown-menu">
               <div class="dropdown-user-info">
                 <div class="d-company" id="dropdown-user-company">소속사 정보</div>
@@ -409,83 +410,6 @@
               </button>
             </div>
           </div>
-          <button id="btn-header-settings" class="btn-secondary" onclick="Admin.openAdminSettingsModal()"
-            style="display:inline-flex; align-items:center; gap:6px;" title="소속사/관리자 프로필 및 스케줄 역산 동선 설정">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path
-                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-              </path>
-            </svg>
-            설정
-          </button>
-          <button id="btn-open-add-artist" class="btn-secondary" onclick="Admin.openArtistModal()"
-            style="display:inline-flex; align-items:center; gap:6px;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polygon
-                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
-            아티스트 관리
-          </button>
-          <button id="btn-open-add-manager" class="btn-secondary" onclick="Admin.openManagerModal()"
-            style="display:inline-flex; align-items:center; gap:6px;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6d28d9" stroke-width="2.2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-            매니저 관리
-          </button>
-          <button id="btn-open-add-vehicle" class="btn-secondary" onclick="Admin.openVehicleModal()"
-            style="display:inline-flex; align-items:center; gap:6px;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path
-                d="M7.5 7.5 C8.2 4.5 15.8 4.5 16.5 7.5 L17.5 10.8 C19.5 10.5 20.5 11.2 20.5 12.2 C20.5 13.2 19.5 13.8 18 13.8 V18 C18 18.8 17.5 19.5 16.5 19.5 H15.2 C14.5 19.5 14.2 19 14.2 18.2 V16.2 H9.8 V18.2 C9.8 19 9.5 19.5 8.8 19.5 H7.5 C6.5 19.5 6 18.8 6 18 V13.8 C4.5 13.8 3.5 13.2 3.5 12.2 C3.5 11.2 4.5 10.5 6.5 10.8 Z" />
-              <path d="M6.2 11.8 C9 12.6 15 12.6 17.8 11.8" />
-              <path
-                d="M7.2 14.2 C8.6 13.8 9.8 14.3 9.8 15.4 C9.8 16.5 8.5 16.8 7.2 16.2 C6.8 15.6 6.8 14.8 7.2 14.2 Z" />
-              <path
-                d="M16.8 14.2 C15.4 13.8 14.2 14.3 14.2 15.4 C14.2 16.5 15.5 16.8 16.8 16.2 C17.2 15.6 17.2 14.8 16.8 14.2 Z" />
-            </svg>
-            차량 관리
-          </button>
-          <button id="btn-open-expenses" class="btn-secondary" onclick="HqExpenses.open()"
-            style="display:inline-flex; align-items:center; gap:6px; color:#047857; border-color:#a7f3d0; background:#ecfdf5;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-            경비 정산
-          </button>
-          <button id="btn-open-chat" class="btn-secondary" onclick="Chat.open()" style="position:relative; display:inline-flex; align-items:center; gap:6px; color:#2563eb; border-color:#bfdbfe; background:#eff6ff;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            로드톡<span id="chat-badge" hidden style="background:#ef4444;color:#fff;border-radius:999px;font-size:11px;font-weight:800;padding:1px 6px;margin-left:2px;">0</span>
-          </button>
-          <button id="btn-open-send-message" class="btn-secondary" onclick="Admin.openSendMsgModal()"
-            style="display:inline-flex; align-items:center; gap:6px; color:#ea580c; border-color:#fed7aa; background:#fff7ed;"
-            onmouseover="this.style.background='#ffedd5'" onmouseout="this.style.background='#fff7ed'">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2.2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            </svg>
-            긴급 공지 발송
-          </button>
-          <button id="btn-open-add-schedule" class="btn-primary"
-            style="width:auto; display:inline-flex; align-items:center; gap:6px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="16" y1="2" x2="16" y2="6"></line>
-              <line x1="8" y1="2" x2="8" y2="6"></line>
-              <line x1="3" y1="10" x2="21" y2="10"></line>
-              <line x1="12" y1="13" x2="12" y2="17"></line>
-              <line x1="10" y1="15" x2="14" y2="15"></line>
-            </svg>
-            신규 스케줄 등록
-          </button>
           <span id="calendar-title" style="display:none;"></span>
         </div>
       </header>
@@ -496,19 +420,19 @@
         <div class="calendar-toolbar">
           <div class="date-nav-group">
             <div class="nav-btn-box">
-              <button id="btn-nav-prev" class="nav-arrow-btn">◀</button>
+              <button id="btn-nav-prev" class="nav-arrow-btn" aria-label="이전">‹</button>
               <button id="btn-nav-today" class="today-btn">오늘</button>
-              <button id="btn-nav-next" class="nav-arrow-btn">▶</button>
+              <button id="btn-nav-next" class="nav-arrow-btn" aria-label="다음">›</button>
             </div>
             <h3 id="current-date-text">2026년 9월</h3>
           </div>
           <div class="view-tabs">
             <button id="btn-view-month" class="view-tab-btn active" data-view="month">월간 캘린더</button>
             <button id="btn-view-week" class="view-tab-btn" data-view="week">주간 시간표</button>
-            <button id="btn-view-day" class="view-tab-btn" data-view="gantt">당일 동선 간트차트</button>
+            <button id="btn-view-day" class="view-tab-btn" data-view="gantt">당일 동선</button>
             <button id="btn-view-timeline" class="view-tab-btn" data-view="kanban">실시간 상황판</button>
-            <button id="btn-view-map" class="view-tab-btn" data-view="map">종합 관제 지도</button>
-            <button id="btn-view-kpi" class="view-tab-btn" data-view="analytics">전사 활동 분석</button>
+            <button id="btn-view-map" class="view-tab-btn" data-view="map">관제 지도</button>
+            <button id="btn-view-kpi" class="view-tab-btn" data-view="analytics">활동 분석</button>
           </div>
         </div>
 
@@ -1717,17 +1641,18 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/notify.js?v=300"></script>
-  <script src="js/supabase-client.js?v=300"></script>
-  <script src="js/share.js?v=300"></script>
-  <script src="js/chat.js?v=300"></script>
-  <script src="js/schedule-notify.js?v=300"></script>
-  <script src="js/api.js?v=300"></script>
-  <script src="js/venue.js?v=300"></script>
-  <script src="js/admin-data.js?v=300"></script>
-  <script src="js/admin.js?v=300"></script>
-  <script src="js/hq-expenses.js?v=300"></script>
-  <script src="js/timeline.js?v=300"></script>
+  <script src="js/notify.js?v=301"></script>
+  <script src="js/supabase-client.js?v=301"></script>
+  <script src="js/share.js?v=301"></script>
+  <script src="js/chat.js?v=301"></script>
+  <script src="js/schedule-notify.js?v=301"></script>
+  <script src="js/api.js?v=301"></script>
+  <script src="js/venue.js?v=301"></script>
+  <script src="js/admin-data.js?v=301"></script>
+  <script src="js/admin.js?v=301"></script>
+  <script src="js/admin-v2.js?v=1"></script>
+  <script src="js/hq-expenses.js?v=301"></script>
+  <script src="js/timeline.js?v=301"></script>
 
 
 
