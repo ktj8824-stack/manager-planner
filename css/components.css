@@ -1001,3 +1001,64 @@ body.has-bottom-nav #app { padding-bottom: calc(var(--bottom-nav-h) + env(safe-a
 .me-logout { min-height:56px; }
 .me-foot { text-align:center; font-size:12px; color:#3c3c43; padding-top:6px; }
 .me-foot button { border:0; background:none; color:inherit; font-size:12px; padding:6px 2px; cursor:pointer; }
+
+/* ── 긴급 지원 (전체 화면) ── */
+.sos-header { justify-content:space-between; padding-left:16px; }
+.sos-wrap { padding:14px 16px 28px; display:flex; flex-direction:column; gap:14px; background:#f2f2f7; }
+.sos-info { background:#fff; border-radius:16px; padding:14px 16px; display:flex; flex-direction:column; gap:4px; }
+.sos-info-h { font-size:12.5px; font-weight:700; color:#3c3c43; }
+.sos-info-main { font-size:15px; font-weight:700; color:#0f172a; }
+.sos-info-sub { font-size:13px; color:#3c3c43; }
+#sos-call { display:flex; flex-direction:column; gap:8px; }
+.sos-call { min-height:64px; border:0; border-radius:18px; background:#dc2626; color:#fff; font-size:18px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:10px; text-decoration:none; box-shadow:0 8px 20px rgba(220,38,38,0.28); padding:0 16px; text-align:center; }
+.sos-call.sub { min-height:50px; font-size:15px; background:#fff; color:#b91c1c; border:1px solid #fecaca; box-shadow:none; }
+.sos-call.none, .sos-call:disabled { background:#fff; color:#3c3c43; border:1px solid #e5e5ea; box-shadow:none; font-size:14px; font-weight:600; line-height:1.5; padding:14px 16px; }
+.sos-box { background:#fff; border-radius:18px; padding:16px; display:flex; flex-direction:column; gap:12px; }
+.sos-box h2 { margin:0; font-size:17px; font-weight:800; color:#0f172a; }
+.sos-hint { font-size:13px; color:#3c3c43; margin-top:-6px; }
+.sos-types { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; }
+.sos-types button { min-height:48px; border:1px solid #e5e5ea; background:#fff; color:#0f172a; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; }
+.sos-types button.on { border:2px solid #dc2626; background:#fef2f2; color:#991b1b; }
+.sos-label { display:flex; flex-direction:column; gap:6px; font-size:13px; color:#3c3c43; }
+.sos-label textarea { border:0; border-radius:12px; background:#efeff4; padding:12px; font-size:15px; color:#0f172a; resize:none; font-family:inherit; }
+.sos-photo { min-height:46px; border:1.5px dashed #d1d1d6; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:#3c3c43; cursor:pointer; }
+.sos-send { min-height:56px; border:0; border-radius:14px; font-size:16px; font-weight:800; cursor:pointer; font-family:inherit; }
+.sos-send.idle { background:#e5e5ea; color:#3c3c43; }
+.sos-send.ready { background:#1c1c1e; color:#fff; }
+.sos-send.confirm { background:#dc2626; color:#fff; }
+.sos-send.sent { background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-size:15px; }
+.sos-119 { display:flex; align-items:center; justify-content:center; gap:10px; font-size:14px; color:#3c3c43; }
+.sos-119 a { min-width:64px; min-height:44px; border-radius:12px; background:#fff; border:1px solid #fecaca; color:#b91c1c; font-weight:800; display:flex; align-items:center; justify-content:center; text-decoration:none; }
+
+/* ── 로드톡 (공지 | 대화) ── */
+.talk-head { background:#fff; border-bottom:1px solid #e5e5ea; padding:8px 16px 0; margin-top:var(--header-h); position:sticky; top:var(--header-h); z-index:calc(var(--z-sticky) - 1); }
+.talk-title-row { display:flex; align-items:center; justify-content:space-between; min-height:48px; }
+.talk-title-row h1 { margin:0; font-size:22px; font-weight:900; color:#0f172a; }
+.talk-new { width:44px; height:44px; border:0; background:transparent; color:#4f46e5; display:flex; align-items:center; justify-content:center; cursor:pointer; border-radius:12px; }
+.talk-tabs { display:flex; gap:22px; }
+.talk-tabs button { height:44px; border:0; background:transparent; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:15px; padding:0 2px; border-bottom:3px solid transparent; color:#3c3c43; font-weight:500; font-family:inherit; }
+.talk-tabs button.on { border-bottom-color:#4f46e5; color:#0f172a; font-weight:700; }
+.talk-badge { min-width:20px; height:20px; border-radius:10px; background:#dc2626; color:#fff; font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; padding:0 5px; box-sizing:border-box; flex-shrink:0; }
+.talk-body { padding:14px 16px 28px; display:flex; flex-direction:column; gap:12px; background:#f2f2f7; }
+.talk-card { background:#fff; border-radius:16px; padding:14px 16px; display:flex; flex-direction:column; gap:6px; }
+.talk-card.urgent.need { border:2px solid #dc2626; background:#fff; }
+.talk-card-top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.talk-tag { font-size:12px; font-weight:700; padding:2px 8px; border-radius:6px; background:#eef2ff; color:#4338ca; }
+.talk-card.urgent .talk-tag { background:#dc2626; color:#fff; }
+.talk-when { font-size:12.5px; color:#3c3c43; }
+.talk-card h2 { margin:2px 0 0; font-size:16px; font-weight:800; color:#0f172a; }
+.talk-card p { margin:0; font-size:14px; color:#3c3c43; line-height:1.55; word-break:break-word; }
+.talk-card-foot { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:4px; font-size:12.5px; color:#3c3c43; }
+.talk-ack { min-height:40px; padding:0 14px; border:0; border-radius:10px; background:#dc2626; color:#fff; font-size:14px; font-weight:700; cursor:pointer; flex-shrink:0; }
+.talk-acked { font-size:12.5px; font-weight:700; color:#047857; background:#ecfdf5; border:1px solid #a7f3d0; padding:4px 10px; border-radius:8px; }
+.talk-more { min-height:46px; border:1px solid #e5e5ea; background:#fff; border-radius:12px; font-size:14px; font-weight:700; color:#4338ca; cursor:pointer; }
+.talk-empty { text-align:center; color:#3c3c43; font-size:14px; padding:36px 12px; line-height:1.6; }
+.talk-rooms { list-style:none; margin:0; padding:0; background:#fff; border-radius:16px; overflow:hidden; }
+.talk-room { width:100%; min-height:72px; border:0; border-bottom:1px solid #f2f2f7; background:#fff; padding:12px 14px; display:flex; align-items:center; gap:12px; cursor:pointer; text-align:left; font-family:inherit; }
+.talk-rooms li:last-child .talk-room { border-bottom:0; }
+.talk-av { width:44px; height:44px; border-radius:14px; color:#fff; font-size:16px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.talk-room-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+.talk-room-top { display:flex; justify-content:space-between; gap:8px; }
+.talk-room-top b { font-size:15px; color:#0f172a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.talk-room-top small { font-size:12px; color:#3c3c43; flex-shrink:0; }
+.talk-room-prev { font-size:13.5px; color:#3c3c43; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }

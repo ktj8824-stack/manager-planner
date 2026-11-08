@@ -1,4 +1,4 @@
-// 로드톡을 열어도 아래 메뉴가 보이고, 홈을 누르면 로드톡이 닫힘 (아이폰 크기)
+// 로드톡: 아래 메뉴 → 공지|대화 화면 → 대화방을 열어도 아래 메뉴가 보이고, 홈을 누르면 대화창이 닫힘 (아이폰 크기)
 const { chromium, devices } = require('playwright');
 (async () => {
   const b = await chromium.launch(); const p = await (await b.newContext({ ...devices['iPhone 14'] })).newPage();
@@ -10,8 +10,13 @@ const { chromium, devices } = require('playwright');
   await p.evaluate(() => {
     const C = window.Chat; C.available = () => true; C.isHq = () => false; C.refreshList = async () => { }; C._ensureMyRoom = async () => { }; C._askNotifyPermission = () => { }; C._items = () => [{ key: 'all', kind: 'all', room: null, name: '전체 공지방', sub: '모든 매니저가 함께 보는 대화', avatar: '전' }, { key: 'd', kind: 'direct', room: null, name: '본사 (대표)', sub: '[지연 예상 약 707분] 루나스 (LUNAS) · 컴백 기념 팬사인회 청담동 아주 긴 미리보기 글이 이어집니다 아주 아주 길게 계속', avatar: '본' }];
   });
-  await p.tap('#notice-bell'); await p.waitForTimeout(500);
+  const openRoom = async () => { await p.tap('#notice-bell'); await p.waitForTimeout(400); await p.tap('.talk-tabs >> text=대화'); await p.waitForTimeout(300); await p.tap('.talk-room >> nth=0'); await p.waitForTimeout(500); };
+  await p.tap('#notice-bell'); await p.waitForTimeout(400);
   const R = {};
+  R.talkScreen = await p.evaluate(() => document.getElementById('screen-talk').classList.contains('active') && document.querySelector('.talk-tabs').innerText.replace(/\s+/g, ''));
+  await p.tap('.talk-tabs >> text=대화'); await p.waitForTimeout(300);
+  R.rooms = await p.evaluate(() => document.querySelectorAll('.talk-room').length);
+  await p.tap('.talk-room >> nth=0'); await p.waitForTimeout(500);
   R.open = await p.evaluate(() => !document.getElementById('chat-root').hidden);
   R.navVisible = await p.evaluate(() => { const n = document.getElementById('bottom-nav').getBoundingClientRect(); const el = document.elementFromPoint(n.left + 30, n.top + 30); return !!(el && el.closest('#bottom-nav')); });
   R.chatAboveNav = await p.evaluate(() => Math.round(document.getElementById('chat-root').getBoundingClientRect().bottom) <= Math.round(document.getElementById('bottom-nav').getBoundingClientRect().top) + 1);
@@ -19,10 +24,10 @@ const { chromium, devices } = require('playwright');
   R.closeBtn = await p.evaluate(() => { const b = document.querySelector('.chat-list [data-act="close"]').getBoundingClientRect(); return `${Math.round(b.width)}x${Math.round(b.height)}`; });
   await p.tap('#bottom-nav [data-s="home"]'); await p.waitForTimeout(400);
   R.closedByHome = await p.evaluate(() => document.getElementById('chat-root').hidden);
+  await openRoom();
   await p.tap('#notice-bell'); await p.waitForTimeout(300);
-  await p.tap('#notice-bell'); await p.waitForTimeout(300);
-  R.toggleClose = await p.evaluate(() => document.getElementById('chat-root').hidden);
-  await p.tap('#notice-bell'); await p.waitForTimeout(300);
+  R.toggleClose = await p.evaluate(() => document.getElementById('chat-root').hidden && document.getElementById('screen-talk').classList.contains('active'));
+  await openRoom();
   await p.goBack().catch(() => { }); await p.waitForTimeout(400);
   R.backClose = await p.evaluate(() => document.getElementById('chat-root').hidden);
   console.log(JSON.stringify(R), 'errs', errs.slice(0, 3));

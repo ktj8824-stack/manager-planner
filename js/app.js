@@ -3,7 +3,7 @@
    ========================================= */
 
 const App = {
-  screens: ['home','register','timeline','login','onboarding','profile','upgrade','ai','artists','expenses'],
+  screens: ['home','register','timeline','login','onboarding','profile','upgrade','ai','artists','expenses','sos','talk'],
 
   async init() {
     // 오프라인 기능(서비스워커)은 맨 먼저 등록 (로그인 확인을 기다리다 load 이벤트를 놓치지 않게)
@@ -228,6 +228,8 @@ const App = {
         case 'ai': if (window.RoadAI) RoadAI.init(); break;
         case 'artists': if (window.Artists) Artists.render(); break;
         case 'expenses': if (window.Expenses) Expenses.render(); break;
+        case 'sos': if (window.Sos) Sos.render(); break;
+        case 'talk': if (window.Talk) Talk.render(); break;
       }
     }
     this.updateNav(name === 'timeline' ? 'home' : name);
@@ -296,7 +298,7 @@ const App = {
         <span class="top-brand-icon">🎬</span>
         <span class="top-brand-stack"><span class="top-brand-text">로드플래너</span><span class="top-user-name" id="top-user-name"></span></span>
       </div>
-      <button id="top-bell" class="top-bell" onclick="App.openMessages()" aria-label="로드톡 공지·메시지">
+      <button id="top-bell" class="top-bell" onclick="window.Talk ? Talk.open('공지') : App.openMessages()" aria-label="로드톡 공지">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
       </button>
     `;
@@ -332,7 +334,7 @@ const App = {
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
         <span>홈</span>
       </button>
-      <button id="notice-bell" class="bnav-item" onclick="App.openMessages()" aria-label="로드톡">
+      <button id="notice-bell" class="bnav-item" data-s="talk" onclick="App.openMessages()" aria-label="로드톡">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         <span>로드톡</span>
         <span id="notice-badge" class="notice-badge" hidden>0</span>
@@ -341,7 +343,7 @@ const App = {
         <span class="bnav-ai-ico">AI</span>
         <span>AI 비서</span>
       </button>
-      <button class="bnav-item bnav-sos" onclick="App.openEmergencyModal()" aria-label="긴급 지원">
+      <button class="bnav-item bnav-sos" data-s="sos" onclick="App.openEmergencyModal()" aria-label="긴급 지원">
         <span class="bnav-sos-ico">🚨</span>
         <span>긴급</span>
       </button>
@@ -620,6 +622,7 @@ const App = {
 
   // 종 버튼: 서버 연결 시 대화창, 아니면 기존 공지함
   openMessages() {
+    if (window.Talk) { Talk.open(); return; }   // 앱: 로드톡 전체 화면 (공지 | 대화)
     if (window.Chat && window.Chat.st && window.Chat.st.open) { window.Chat.close(); return; }   // 로드톡을 다시 누르면 닫기
     if (window.Chat && window.Chat.available()) window.Chat.open();
     else this.openNoticeModal();
@@ -680,7 +683,9 @@ const App = {
     document.body.insertAdjacentHTML('beforeend', html);
   },
 
+  // 긴급 지원: 전체 화면(js/sos.js). 예전 팝업은 Sos가 없을 때만
   openEmergencyModal() {
+    if (window.Sos) { Sos.open(); return; }
     try { if (window.Chat && window.Chat.st && window.Chat.st.open) window.Chat.close(); } catch (e) { }
     const html = `
       <div class="modal-bg center open" id="hq-emergency-modal" onclick="if(event.target===this)this.remove()">
