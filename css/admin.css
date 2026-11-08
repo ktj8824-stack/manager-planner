@@ -661,6 +661,14 @@ body {
   pointer-events: auto;
 }
 
+/* 창(모달)이 떠 있는 동안 뒤 화면은 움직이지 않게 — 마우스 휠·손가락 스크롤이 창 안에서만 */
+.modal-overlay { overscroll-behavior: contain; }
+.modal-overlay .modal-body,
+.modal-overlay .modal-content { overscroll-behavior: contain; }
+html:has(.modal-overlay.active),
+html:has(.modal-overlay.active) body,
+body.modal-lock { overflow: hidden !important; }
+
 .modal-content {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
