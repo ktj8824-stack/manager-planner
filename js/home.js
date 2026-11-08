@@ -1330,7 +1330,7 @@ const Home = {
     const BOX = 'background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;';
     const modalHtml = `
       <div id="app-schedule-form-container" style="padding:4px 0 20px; max-height:75vh; overflow-y:auto; -webkit-overflow-scrolling:touch;">
-        <form id="app-schedule-form" onsubmit="event.preventDefault(); Home.submitScheduleFromModal(${edit ? escJs(edit.id) : 'null'});" style="display:flex; flex-direction:column; gap:14px;">
+        <form id="app-schedule-form" onsubmit="event.preventDefault(); if (event.submitter === null) return; Home.submitScheduleFromModal(${edit ? escJs(edit.id) : 'null'});" style="display:flex; flex-direction:column; gap:14px;">
           <div style="${BOX}">
             <div style="font-size:14px; font-weight:700; color:#4f46e5; margin-bottom:10px;">기본 스케줄 정보</div>
             <div style="margin-bottom:12px;"><label style="${L}">스케줄명 <span style="color:#ef4444;">*</span></label>
@@ -1392,6 +1392,12 @@ const Home = {
         </form>
       </div>`;
     App.showModal(edit ? '✏️ 스케줄 수정' : '📅 신규 스케줄 등록', modalHtml);
+    // 폰 키보드의 엔터(이동/완료)를 눌러도 창이 저장·닫히지 않게 — 저장은 아래 저장 버튼으로만
+    document.getElementById('app-schedule-form')?.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' || e.isComposing || e.target.tagName === 'TEXTAREA' || e.target.type === 'submit') return;
+      e.preventDefault();
+      if (!e.target.dataset.suggest) e.target.blur();
+    });
     // 장소 이름을 치면 카카오 장소 검색 → 고르면 이름·주소 채움
     this._placeSuggest('m-sch-loc', 'm-sch-addr');
     this._placeSuggest('m-sch-shop-name', 'm-sch-shop-addr');
@@ -1432,6 +1438,14 @@ const Home = {
         : `<div class="ps-msg">${navigator.onLine === false ? '인터넷 연결을 확인해 주세요.' : '검색 결과가 없어요. 직접 입력해도 돼요.'}</div>`;
     };
     input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(run, 350); });
+    // 엔터: 바로 검색 (목록이 이미 있으면 첫 번째를 고름)
+    input.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' || e.isComposing) return;
+      e.preventDefault();
+      const first = !list.hidden && list.querySelector('.ps-item');
+      if (first) { first.click(); return; }
+      clearTimeout(timer); run();
+    });
     input.addEventListener('blur', () => setTimeout(close, 200));
     list.addEventListener('mousedown', (e) => e.preventDefault());   // 고르기 전에 입력칸 포커스가 빠지지 않게
     list.addEventListener('click', (e) => {

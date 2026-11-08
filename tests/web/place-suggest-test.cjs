@@ -28,6 +28,13 @@ const { chromium, devices } = require('playwright');
   await p.fill('#m-sch-loc', '없는장소'); await p.waitForTimeout(900);
   R.empty = await p.evaluate(() => document.querySelector('#m-sch-loc + .place-suggest').innerText.includes('검색 결과가 없어요'));
   R.calls = calls > 0;
+  // 폰 키보드 엔터: 창이 닫히지 않고 바로 검색, 한 번 더 누르면 첫 번째 고름
+  await p.fill('#m-sch-loc', ''); await p.type('#m-sch-loc', '프리즘', { delay: 10 }); await p.press('#m-sch-loc', 'Enter'); await p.waitForTimeout(500);
+  R.enterSearch = await p.evaluate(() => !!document.getElementById('app-modal') && document.querySelector('#m-sch-loc + .place-suggest').innerText.includes('SBS프리즘타워'));
+  await p.press('#m-sch-loc', 'Enter'); await p.waitForTimeout(300);
+  R.enterPick = await p.evaluate(() => !!document.getElementById('app-modal') && document.getElementById('m-sch-addr').value === '서울 마포구 상암산로 82');
+  await p.press('#m-sch-title', 'Enter'); await p.waitForTimeout(400);
+  R.enterOther = await p.evaluate(() => !!document.getElementById('app-modal') && document.getElementById('app-modal').classList.contains('open'));
   console.log(JSON.stringify(R), 'errs', errs.slice(0, 3));
   await b.close();
 })();
