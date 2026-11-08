@@ -62,7 +62,7 @@ const Artists = {
     const color = cur?.color || this.COLORS[items.length % this.COLORS.length];
     App.showModal(cur ? '아티스트 수정' : '아티스트 추가', `
       <div style="display:flex; flex-direction:column; gap:12px; text-align:left;">
-        <label class="art-label">이름 <span style="color:#ef4444;">*</span>
+        <label class="art-label"><span>이름 <span style="color:#ef4444;">*</span></span>
           <input id="art-name" class="form-input art-input" maxlength="40" value="${esc(cur?.name || '')}" placeholder="예: 김하늘" /></label>
         <label class="art-label">구분
           <select id="art-type" class="form-input art-input">${this.TYPES.map(t => `<option ${t === (cur?.type || '솔로') ? 'selected' : ''}>${t}</option>`).join('')}</select></label>

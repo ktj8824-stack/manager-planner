@@ -576,6 +576,7 @@ const Home = {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                   메이크업·스타일리스트에게 일정 공유
                 </button>` : ''}
+                <button type="button" onclick="event.stopPropagation(); window.Expenses && Expenses.openForm(null, { scheduleId: ${escJs(activeSched.id)}, date: ${escJs(activeSched.date || '')} })" style="margin-top:8px; width:100%; height:38px; border-radius:10px; border:1px dashed #cbd5e1; background:#fff; color:#475569; font-size:13.5px; font-weight:700; cursor:pointer;">💳 이 일정 경비 기록 (주유·주차·식비)</button>
                 ${['ceo', 'hq_admin'].includes(currentRole) || (typeof Plan !== 'undefined' && Plan.isIndie()) ? `<div style="display:flex; gap:8px; margin-top:8px;">
                   <button type="button" onclick="event.stopPropagation(); Home.openScheduleRegisterModal(${escJs(activeSched.id)})" style="flex:1; height:40px; border-radius:10px; border:1px solid #c7d2fe; background:#eef2ff; color:#4338ca; font-size:14px; font-weight:700;">✏️ 수정</button>
                   <button type="button" onclick="event.stopPropagation(); Home.deleteScheduleFromApp(${escJs(activeSched.id)})" style="flex:1; height:40px; border-radius:10px; border:1px solid #fecaca; background:#fef2f2; color:#dc2626; font-size:14px; font-weight:700;">🗑️ 삭제</button>

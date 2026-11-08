@@ -69,6 +69,13 @@ const Upgrade = {
                 <p>담당 아티스트를 제한 없이 등록하세요. (무료는 1명)</p>
               </div>
             </div>
+            <div class="feat-item stag">
+              <div class="feat-icon green"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
+              <div class="feat-text">
+                <h4>경비 기록·정산</h4>
+                <p>주유·주차·식비 영수증을 찍어 두면 월별 합계와 청구용 내역·엑셀이 바로 나와요.</p>
+              </div>
+            </div>
           </div>
           <p style="font-size:13px; color:var(--text-400); margin-top:14px; line-height:1.6;">일정 등록·동선 계산·길안내 버튼·기상·출발 알림은 무료로 계속 쓸 수 있어요.</p>
         </div>

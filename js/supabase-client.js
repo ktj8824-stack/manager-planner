@@ -644,6 +644,46 @@ const SupabaseClient = {
     return out;
   },
 
+  // ── 경비 기록 (매니저 본인 / 본사는 같은 회사 전체를 읽기만) ──
+  async expensesList(from, to) {
+    if (!this.isConfigured || !this.currentUser) throw new Error('로그인이 필요합니다.');
+    const { data, error } = await this.client.from('expenses').select('*')
+      .gte('date', from).lte('date', to).order('date', { ascending: false }).order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+  async expenseSave(row) {
+    if (!this.isConfigured || !this.currentUser) throw new Error('로그인이 필요합니다.');
+    const clean = {
+      date: row.date, category: row.category, amount: Math.round(Number(row.amount) || 0),
+      memo: row.memo || null, schedule_id: row.schedule_id || null, artist_id: row.artist_id || null,
+      receipt_path: row.receipt_path || null,
+    };
+    const q = row.id ? this.client.from('expenses').update(clean).eq('id', row.id) : this.client.from('expenses').insert([clean]);
+    const { data, error } = await q.select().single();
+    if (error) throw error;
+    return data;
+  },
+  async expenseDelete(id, receiptPath) {
+    const { error } = await this.client.from('expenses').delete().eq('id', id);
+    if (error) throw error;
+    if (receiptPath) await this.client.storage.from('expense-receipts').remove([receiptPath]).catch(() => { });
+  },
+  async expenseUploadReceipt(blob) {
+    const uid = this.currentUser?.id;
+    if (!uid) throw new Error('로그인이 필요합니다.');
+    const id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+    const path = uid + '/' + id + '.jpg';
+    const up = await this.client.storage.from('expense-receipts').upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+    if (up.error) throw up.error;
+    return path;
+  },
+  async expenseReceiptUrl(path) {
+    const { data, error } = await this.client.storage.from('expense-receipts').createSignedUrl(path, 600);
+    if (error) throw error;
+    return data?.signedUrl || '';
+  },
+
   async chatMarkRead(roomId) {
     this._chatReady();
     const { error } = await this.client.from('chat_reads')

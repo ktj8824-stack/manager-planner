@@ -900,3 +900,31 @@ body.has-bottom-nav #app { padding-bottom: calc(var(--bottom-nav-h) + env(safe-a
 .place-suggest .ps-item b { font-size:14.5px; color:#0f172a; }
 .place-suggest .ps-item span { font-size:12.5px; color:#64748b; }
 .place-suggest .ps-msg { padding:12px; font-size:13.5px; color:#64748b; text-align:center; }
+
+/* ── 경비 기록 ── */
+.exp-month { display:flex; align-items:center; justify-content:center; gap:18px; margin-bottom:12px; }
+.exp-month b { font-size:18px; color:var(--text-100); }
+.exp-month button { min-width:44px; min-height:44px; border:1px solid var(--border-default); background:var(--bg-card); border-radius:12px; font-size:22px; color:var(--text-300); cursor:pointer; }
+.exp-total { background:linear-gradient(135deg,#1e1b4b,#312e81); color:#fff; border-radius:16px; padding:16px; margin-bottom:12px; }
+.exp-total-label { font-size:13px; opacity:.7; font-weight:700; }
+.exp-total-amt { font-size:28px; font-weight:800; margin-top:4px; letter-spacing:-0.5px; }
+.exp-cats { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.exp-cats span { background:rgba(255,255,255,0.14); border-radius:999px; padding:4px 10px; font-size:12.5px; font-weight:700; }
+.exp-add { width:100%; min-height:50px; border:0; border-radius:14px; background:#4f46e5; color:#fff; font-size:16px; font-weight:800; cursor:pointer; margin-bottom:10px; }
+.exp-tools { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+.exp-tools button { min-height:42px; border:1px solid var(--border-default); background:var(--bg-card); border-radius:12px; font-size:13.5px; font-weight:700; color:var(--text-200); cursor:pointer; }
+.exp-date { font-size:13px; font-weight:800; color:var(--text-400); margin:12px 2px 6px; }
+.exp-item { display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:var(--bg-card); border:1px solid var(--border-default); border-radius:12px; padding:12px; margin-bottom:8px; min-height:52px; cursor:pointer; }
+.exp-ico { font-size:20px; flex-shrink:0; }
+.exp-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.exp-info b { font-size:14.5px; color:var(--text-100); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.exp-info small { font-size:12px; color:var(--text-400); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.exp-rc { flex-shrink:0; font-size:14px; }
+.exp-amt { flex-shrink:0; font-size:15px; font-weight:800; color:var(--text-100); }
+.exp-empty { text-align:center; color:var(--text-400); font-size:14px; padding:28px 8px; line-height:1.6; }
+.exp-note { text-align:center; font-size:12.5px; color:var(--text-400); margin-top:10px; }
+.exp-cat-pick { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.exp-cat-pick button { min-height:42px; border:1px solid var(--border-default); background:var(--bg-input); border-radius:10px; font-size:13px; font-weight:700; color:var(--text-200); cursor:pointer; padding:4px; }
+.exp-cat-pick button.on { background:#4f46e5; border-color:#4f46e5; color:#fff; }
+.exp-photo { display:flex; align-items:center; justify-content:center; min-height:46px; border:1.5px dashed #a5b4fc; border-radius:10px; background:rgba(99,102,241,0.06); color:#4f46e5; font-weight:700; font-size:14px; cursor:pointer; }
+.exp-link { border:0; background:none; color:#4f46e5; font-weight:700; font-size:13px; text-decoration:underline; padding:6px 0; cursor:pointer; align-self:flex-start; }
