@@ -397,3 +397,25 @@
 #modal-admin-settings .modal-body > div:not(.set2-card) > div:first-child { font-size: 14px !important; color: #0f172a !important; }
 #modal-admin-settings .modal-body input:not([type=checkbox]) { border-color: #e4e4e7 !important; background: #fff !important; border-radius: 10px !important; height: 42px; }
 #modal-admin-settings .modal-footer button:last-child { background: #4f46e5 !important; }
+
+/* 로드톡 (본사 웹): 오른쪽 패널 · 밝은 색 고정 */
+.chat-root.hq-talk { --c-bg: #ffffff; --c-panel: #fafafa; --c-line: #e4e4e7; --c-text: #0f172a; --c-sub: #52525b; --c-other: #f4f4f5; --c-mine: #4f46e5; --c-mine-text: #fff; --c-accent: #4f46e5;
+  justify-content: flex-end; align-items: stretch; background: rgba(15, 23, 42, .32); }
+@media (min-width: 761px) {
+  .chat-root.hq-talk .chat-shell { width: min(780px, 100%); height: 100vh; max-height: none; border-radius: 0; box-shadow: -12px 0 32px rgba(0,0,0,.18); grid-template-columns: 260px minmax(0, 1fr); }
+}
+.chat-root.hq-talk .chat-list { background: #fff; }
+.chat-root.hq-talk .chat-list .chat-head h2 { font-size: 20px; display: flex; flex-direction: column; }
+.chat-root.hq-talk .chat-list .chat-head h2 small { font-size: 12px; font-weight: 500; color: #52525b; margin-top: 2px; }
+.chat-root.hq-talk .chat-head { min-height: 72px; }
+.chat-root.hq-talk .chat-room { border-bottom: 0; border-radius: 12px; margin: 2px 8px; width: calc(100% - 16px); }
+.chat-root.hq-talk .chat-room.active { background: #eef2ff; }
+.chat-root.hq-talk .chat-unread { background: #4f46e5; }
+.chat-root.hq-talk .chat-msgs { background: #fff; }
+.hq-talk-notice { height: 38px; padding: 0 12px; border: 1px solid #e4e4e7; border-radius: 10px; background: #fff; color: #0f172a; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; font-family: inherit; }
+.hq-talk-notice:hover { background: #f4f4f5; }
+.hq-talk-late { margin: 10px 14px 0; align-self: center; background: #fef2f2; color: #b91c1c; border-radius: 999px; padding: 6px 14px; font-size: 12.5px; font-weight: 800; text-align: center; }
+.mgr2-chip { height: 32px; padding: 0 12px; border-radius: 999px; border: 1px dashed #d4d4d8; background: #fff; color: #3f3f46; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.mgr2-chip.on { background: var(--c); border: 1px solid var(--c); color: #fff; }
+.mgr2-chip:hover { border-color: var(--c); }
+.mgr2-chip:focus-visible { outline: 2px solid #4f46e5; outline-offset: 2px; }

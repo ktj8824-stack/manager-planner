@@ -1360,17 +1360,11 @@ window.Admin = {
               </div>
             </div>
           </div>
-          <div style="font-size:12px; color:#475569; margin-bottom:6px; font-weight:700;">담당 아티스트 선택:</div>
-          <div style="display:flex; flex-wrap:wrap; gap:6px;">
+          <div style="display:flex; flex-wrap:wrap; gap:6px;" role="group" aria-label="${esc(mgr.name)} 담당 아티스트">
             ${artists.map(art => {
         const isChecked = assigned.includes(art.id);
-        return `
-                <button type="button" 
-                  onclick="Admin.toggleArtistAssignment(${escJs(mgr.id)}, ${escJs(art.id)})"
-                  style="padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; transition:all 0.2s; border:1px solid ${esc(isChecked ? art.color : '#cbd5e1')}; background:${esc(isChecked ? art.color : '#ffffff')}; color:${isChecked ? '#ffffff' : '#475569'}; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
-                  ${esc(art.name)} ${isChecked ? '✓' : '+'}
-                </button>
-              `;
+        const nm = String(art.name || '').replace(/\s*\([^)]*\)\s*$/, '');
+        return `<button type="button" class="mgr2-chip ${isChecked ? 'on' : ''}" aria-pressed="${isChecked}" onclick="Admin.toggleArtistAssignment(${escJs(mgr.id)}, ${escJs(art.id)})" style="--c:${esc(art.color || '#4f46e5')}">${isChecked ? '' : '+ '}${esc(nm)}</button>`;
       }).join('')}
           </div>
         </div>
@@ -2001,6 +1995,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── 오늘 현황 요약: 완료/이동중/예정/지연 + 이동 중·지연된 매니저 목록 ──
   const briefLists = { all: [], done: [], moving: [], late: [], active: [] };
+  Admin._lateList = () => briefLists.late || [];
 
   function renderTodayBrief(todaySchedules, activeSchedules) {
     const box = document.getElementById('today-brief');

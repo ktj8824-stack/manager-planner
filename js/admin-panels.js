@@ -261,3 +261,39 @@ document.addEventListener('DOMContentLoaded', function () {
   h.classList.add('p2-head');
   h.innerHTML = '<div class="p2-title"><h3>관리자 설정</h3><small>회사 정보 · 동선 계산 · 지연 판단 기준 · 알림 · 권한</small></div><button type="button" class="p2-x" onclick="Admin.closeAdminSettingsModal()" aria-label="닫기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>';
 });
+
+/* 로드톡(본사 웹): 오른쪽 패널 · 지연 알림 띠 · '공지로 올리기' (chat.js는 앱과 같이 쓰므로 건드리지 않고 겉만) */
+document.addEventListener('DOMContentLoaded', function () {
+  const E = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const deco = () => {
+    const root = document.getElementById('chat-root'); if (!root) return false;
+    root.classList.add('hq-talk');
+    const conv = root.querySelector('.chat-conv'); const head = conv && conv.querySelector('.chat-head');
+    if (head && !head.querySelector('.hq-talk-notice')) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'hq-talk-notice'; b.textContent = '공지로 올리기';
+      b.onclick = () => { try { window.Chat.close(); } catch (e) { } window.Admin && Admin.openSendMsgModal(); };
+      head.insertBefore(b, head.lastElementChild);
+    }
+    const listHead = root.querySelector('.chat-list .chat-head h2');
+    if (listHead && !listHead.dataset.v2) { listHead.dataset.v2 = '1'; listHead.innerHTML = '로드톡<small>매니저 대화 · 공지</small>'; }
+    // 지연 알림 띠: 지금 지연 중인 첫 일정
+    let band = root.querySelector('.hq-talk-late');
+    const msgs = root.querySelector('#chat-msgs');
+    const late = (window.Admin && Admin._lateList && Admin._lateList()) || [];
+    if (!late.length) { band && band.remove(); return true; }
+    if (!band && msgs) { band = document.createElement('div'); band.className = 'hq-talk-late'; band.setAttribute('role', 'status'); msgs.parentElement.insertBefore(band, msgs); }
+    if (band) {
+      const r = late[0]; const s = r.s || {};
+      band.innerHTML = `${E(s.managerName || '담당 미지정')} · ${E(String(s.artistName || '').replace(/\s*\([^)]*\)\s*$/, ''))} · ${E(String(r.note || '').replace(/^\[[^\]]+\]\s*/, '').replace(/ 미확인$/, ''))} 확인 안 됨 (지연 ${E(r.late)}분)${late.length > 1 ? ` 외 ${late.length - 1}건` : ''}`;
+    }
+    return true;
+  };
+  const tick = () => { const root = document.getElementById('chat-root'); if (root && !root.hidden) deco(); };
+  if (window.Chat && typeof window.Chat.open === 'function') {
+    const _open = window.Chat.open;
+    window.Chat.open = function (...args) { const r = _open.apply(this, args); try { deco(); } catch (e) { } return r; };
+  }
+  setInterval(tick, 1500);
+  document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('#btn-open-chat, #chat-root')) setTimeout(tick, 300); });
+});

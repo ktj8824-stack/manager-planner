@@ -54,6 +54,11 @@ const { chromium } = require('playwright');
   await p.click('#btn-open-add-schedule'); await p.waitForTimeout(500);
   R.chips = await p.evaluate(() => { const c = document.querySelectorAll('#form-artist-chips button'); c[1] && c[1].click(); return { n: c.length, synced: document.getElementById('form-artist').value === c[1]?.dataset.v }; });
   await p.evaluate(() => document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active')));
+  // 로드톡: 오른쪽 패널 + 지연 띠 + 공지로 올리기 / 매니저 칩
+  R.talk = await p.evaluate(async () => { const C = window.Chat; C.available = () => true; C.isHq = () => true; C.refreshList = async () => { }; C._ensureAllRoom = async () => { }; C._askNotifyPermission = () => { }; C.st.rooms = []; await C.open(); await new Promise(r => setTimeout(r, 200)); const root = document.getElementById('chat-root'); const r = { panel: root.classList.contains('hq-talk'), notice: !!root.querySelector('.hq-talk-notice'), late: !!root.querySelector('.hq-talk-late') }; C.close(); return r; });
+  await p.evaluate(() => Admin.openManagerModal()); await p.waitForTimeout(400);
+  R.mgrChips = await p.evaluate(() => document.querySelectorAll('#manager-mgmt-list .mgr2-chip').length > 0 && !!document.querySelector('#manager-mgmt-list .mgr2-st.late'));
+  await p.evaluate(() => document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active')));
   // 설정: 지연 판단 기준
   await p.evaluate(() => Admin.openAdminSettingsModal()); await p.waitForTimeout(300);
   R.settings = await p.evaluate(() => ({ sel: document.getElementById('setting-late-min')?.value, counts: document.getElementById('setting-count-mgr')?.textContent }));
