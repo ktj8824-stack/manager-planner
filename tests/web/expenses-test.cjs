@@ -41,7 +41,7 @@ const { chromium, devices } = require('playwright');
   // 개인 매니저 무료: 잠금
   await p.evaluate(() => { localStorage.setItem('bp_account', 'indie'); localStorage.removeItem('rp_pro_until'); Expenses.open(); });
   await p.waitForTimeout(400);
-  R.indieLocked = await p.evaluate(() => !!document.querySelector('#app-modal') && document.querySelector('#app-modal').innerText.includes('경비 기록'));
+  R.indieLocked = await p.evaluate(() => State.screen === 'vehicle' && !!document.querySelector('#screen-vehicle .art-add.locked') && !document.querySelector('#screen-vehicle #exp-body'));
   await ctx.close();
   // ── 본사 웹 ──
   const h = await (await b.newContext({ viewport: { width: 1400, height: 900 } })).newPage();
