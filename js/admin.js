@@ -223,6 +223,18 @@ window.Admin = {
     if (travelInput) travelInput.value = travelBuf;
     if (waitInput) waitInput.value = waitBuf;
 
+    // 3. 지연 판단 · 알림 / 4. 권한 인원
+    const lateSel = document.getElementById('setting-late-min');
+    if (lateSel) { const v = localStorage.getItem('hq_late_minutes') || '10'; lateSel.value = ['5', '10', '15', '20', '30'].includes(v) ? v : '10'; }
+    const lateAlert = document.getElementById('setting-late-alert');
+    if (lateAlert) lateAlert.checked = localStorage.getItem('hq_late_alert') !== '0';
+    try {
+      const mgrs = window.hqStore.getManagers() || [];
+      const hq = mgrs.filter(m => ['ceo', 'hq_admin'].includes(m.role)).length;
+      const c1 = document.getElementById('setting-count-hq'); if (c1) c1.textContent = hq + '명';
+      const c2 = document.getElementById('setting-count-mgr'); if (c2) c2.textContent = (mgrs.length - hq) + '명';
+    } catch (e) { }
+
     modal.classList.add('active');
   },
 
@@ -258,12 +270,18 @@ window.Admin = {
     localStorage.setItem('bp_buffer_shop', shopVal);
     localStorage.setItem('bp_buffer_travel', travelVal);
     localStorage.setItem('bp_buffer_wait', waitVal);
+    const lateSel = document.getElementById('setting-late-min');
+    if (lateSel) localStorage.setItem('hq_late_minutes', lateSel.value);
+    const lateAlert = document.getElementById('setting-late-alert');
+    if (lateAlert) localStorage.setItem('hq_late_alert', lateAlert.checked ? '1' : '0');
 
     // 저장된 버퍼값으로 기존 스케줄들의 역산 타임라인 일괄 재계산
     if (window.hqStore && window.hqStore.getSchedules) {
       const schedules = window.hqStore.getSchedules();
       let updated = false;
+      const _d = new Date(); const todayKey = `${_d.getFullYear()}-${String(_d.getMonth() + 1).padStart(2, '0')}-${String(_d.getDate()).padStart(2, '0')}`;
       for (const sch of schedules) {
+        if (String(sch.date || '') < todayKey || (Array.isArray(sch.timeline) && sch.timeline.some(t => t.done || t.moving))) continue;
         if (sch.shop && sch.shop.needed) {
           sch.shop.durationMin = Number(shopVal) || 90;
         }
@@ -1317,16 +1335,20 @@ window.Admin = {
 
     const managers = await window.hqStore.getManagers();
     const artists = await window.hqStore.getArtists();
+    let nowMap = {};
+    try { nowMap = Admin._managerNow ? Admin._managerNow(await window.hqStore.getSchedules()) : {}; } catch (e) { }
 
     container.innerHTML = managers.map(mgr => {
       const assigned = mgr.assignedArtists || [];
       const emailDisplay = mgr.email || mgr.id || '아이디 없음';
+      const st = nowMap[mgr.id] || { cls: 'idle', text: '대기' };
       return `
-        <div style="background:#e2e8f0; border-radius:10px; padding:14px; border:1px solid #cbd5e1; margin-bottom:10px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
+        <div class="mgr2-card ${st.cls === 'late' ? 'late' : ''}" style="background:#fff; border-radius:12px; padding:14px; border:${st.cls === 'late' ? '2px solid #dc2626' : '1px solid #e4e4e7'}; margin-bottom:10px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
             <div style="display:flex; align-items:center; gap:8px;">
               <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:${esc(mgr.color || '#6366f1')}; box-shadow:0 0 6px ${esc(mgr.color || '#6366f1')}60;"></span>
               <strong style="color:#0f172a; font-size:15px; font-weight:800;">${esc(mgr.name)}</strong>
+              <span class="mgr2-st ${esc(st.cls)}">${esc(st.text)}</span>
               <span style="font-size:11px; background:#ffffff; color:#475569; border:1px solid #cbd5e1; padding:2px 8px; border-radius:4px; font-weight:700;">${mgr.role === 'hq_admin' ? '본사 관리자' : '현장 매니저'}</span>
             </div>
             <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
@@ -1951,6 +1973,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     return out;
   }
+  Admin._managerNow = (list) => managerNowMap(list);
   // 지연 판단 기준 (관리자 설정에서 바꿀 수 있음, 기본 10분)
   function lateThreshold() { const v = parseInt(localStorage.getItem('hq_late_minutes') || '10', 10); return v >= 5 && v <= 60 ? v : 10; }
 
@@ -2050,7 +2073,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fresh = late.filter(r => !lateAlerted.has(r.s.id + '|' + r.note));
     fresh.forEach(r => lateAlerted.add(r.s.id + '|' + r.note));
     if (lateFirstRun) { lateFirstRun = false; return; }   // 처음 열었을 때 이미 있던 지연은 패널로만 표시
-    if (!fresh.length) return;
+    if (!fresh.length || localStorage.getItem('hq_late_alert') === '0') return;
     const r = fresh[0];
     const msg = `⏰ 지연 ${r.late}분 · ${r.s.managerName || '담당 미지정'} · ${r.s.artistName || r.s.title || ''} (${r.note})` + (fresh.length > 1 ? ` 외 ${fresh.length - 1}건` : '');
     try {
@@ -2357,26 +2380,19 @@ document.addEventListener('DOMContentLoaded', () => {
       { key: 'onsite', title: '현장 대기 · 진행 중' },
       { key: 'done', title: '일정 완료' }
     ];
-    // Classify schedules
+    // 칸 나누기: 지금 단계 기준 (아직 아무 단계도 안 했으면 '예정·출발 대기')
     const categorized = { ready: [], moving: [], shop: [], onsite: [], done: [] };
-
     schedules.forEach(s => {
       const st = s.status || '';
-      const tl = s.timeline || [];
-      const hasMovingStep = tl.some(t => t.moving);
-      const allDone = tl.length > 0 && tl.every(t => t.done);
-
-      if (st === '완료' || st === 'completed' || allDone) {
-        categorized.done.push(s);
-      } else if (st === '이동중' || hasMovingStep) {
-        categorized.moving.push(s);
-      } else if (st === '샵진행' || tl.some(t => !t.done && (t.label.includes('샵') || t.label.includes('메이크업')))) {
-        categorized.shop.push(s);
-      } else if (st === 'in_progress' || st === '진행중' || tl.some(t => !t.done && (t.label.includes('현장') || t.label.includes('메인') || t.label.includes('녹화')))) {
-        categorized.onsite.push(s);
-      } else {
-        categorized.ready.push(s);
-      }
+      const tl = (Array.isArray(s.timeline) ? s.timeline : []).filter(t => !/^\[기상/.test(t.label || ''));
+      if (st === '완료' || st === 'completed' || (tl.length && tl.every(t => t.done))) { categorized.done.push(s); return; }
+      if (st === '이동중' || tl.some(t => t.moving && !t.done)) { categorized.moving.push(s); return; }
+      const started = tl.some(t => t.done);
+      if (!started) { categorized.ready.push(s); return; }
+      const cur = tl.find(t => !t.done);
+      const lastDone = [...tl].reverse().find(t => t.done);
+      if (st === '샵진행' || /샵|헤어|메이크업/.test((lastDone && lastDone.label) || '')) categorized.shop.push(s);
+      else categorized.onsite.push(s);
     });
 
     // 시안: 밝은 5칸, 카드 = 아티스트 · 시각 · 지금 단계 · 담당 · 상태 한 줄 (지연은 빨간 테두리)

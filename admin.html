@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/calendar.css">
   <link rel="stylesheet" href="css/admin.css?v=2">
-  <link rel="stylesheet" href="css/admin-v2.css?v=2">
+  <link rel="stylesheet" href="css/admin-v2.css?v=3">
   <link rel="stylesheet" href="css/chat.css?v=11">
   <link rel="stylesheet" href="css/timeline.css">
   <style>
@@ -305,12 +305,12 @@
       border-color: #6366f1;
     }
   </style>
-<script src="js/site-config.js?v=302"></script>
-<script src="js/icons.js?v=302"></script>
+<script src="js/site-config.js?v=303"></script>
+<script src="js/icons.js?v=303"></script>
 </head>
 
 <body>
-<script src="js/splash.js?v=302"></script>
+<script src="js/splash.js?v=303"></script>
   <div class="app-container">
     <aside class="hq-sidebar">
       <div class="brand-box">
@@ -823,11 +823,13 @@
             </label>
           </div>
 
+          <!-- 입력하면서 매니저 동선 미리 계산 -->
+          <section id="sch-route-preview" class="sch-route" aria-live="polite" hidden></section>
+
           <!-- 하단 버튼 -->
           <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
             <button type="button" class="btn-secondary" data-close="modal-schedule-form">취소</button>
-            <button type="submit" class="btn-primary" style="padding: 10px 24px; font-size: 14px; font-weight: 700;">스케줄
-              저장</button>
+            <button type="submit" class="btn-primary" style="padding: 10px 24px; font-size: 14px; font-weight: 700;">저장하고 매니저에게 알림</button>
           </div>
         </form>
       </div>
@@ -1641,18 +1643,18 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/notify.js?v=302"></script>
-  <script src="js/supabase-client.js?v=302"></script>
-  <script src="js/share.js?v=302"></script>
-  <script src="js/chat.js?v=302"></script>
-  <script src="js/schedule-notify.js?v=302"></script>
-  <script src="js/api.js?v=302"></script>
-  <script src="js/venue.js?v=302"></script>
-  <script src="js/admin-data.js?v=302"></script>
-  <script src="js/admin.js?v=302"></script>
-  <script src="js/admin-v2.js?v=2"></script>
-  <script src="js/hq-expenses.js?v=302"></script>
-  <script src="js/timeline.js?v=302"></script>
+  <script src="js/notify.js?v=303"></script>
+  <script src="js/supabase-client.js?v=303"></script>
+  <script src="js/share.js?v=303"></script>
+  <script src="js/chat.js?v=303"></script>
+  <script src="js/schedule-notify.js?v=303"></script>
+  <script src="js/api.js?v=303"></script>
+  <script src="js/venue.js?v=303"></script>
+  <script src="js/admin-data.js?v=303"></script>
+  <script src="js/admin.js?v=303"></script>
+  <script src="js/admin-v2.js?v=3"></script>
+  <script src="js/hq-expenses.js?v=303"></script>
+  <script src="js/timeline.js?v=303"></script>
 
 
 
@@ -1916,6 +1918,24 @@
           </div>
         </div>
 
+        <!-- 3. 지연 판단 · 알림 -->
+        <div class="set2-card">
+          <div class="set2-h">3. 지연 판단 · 알림</div>
+          <label class="set2-row"><span><b>출발 미확인 판단</b><small>예정 시간이 이만큼 지나도 매니저가 '출발'을 안 누르면 지연으로 표시해요</small></span>
+            <select id="setting-late-min" class="set2-sel"><option value="5">5분</option><option value="10">10분</option><option value="15">15분</option><option value="20">20분</option><option value="30">30분</option></select></label>
+          <label class="set2-row"><span><b>지연이 생기면 바로 알림</b><small>이 화면이 뒤에 있어도 PC 알림으로 알려 드려요</small></span>
+            <input type="checkbox" id="setting-late-alert" class="set2-sw"></label>
+          <div class="set2-row"><span><b>일정 변경 시 매니저 확인 요청</b><small>매니저가 확인하기 전까지 '변경 확인 대기'에 표시돼요</small></span><em class="set2-on">항상 켜짐</em></div>
+          <p class="set2-note">대표님 휴대폰 문자 알림은 문자 발송 서비스 계약이 필요해 아직 없어요.</p>
+        </div>
+
+        <!-- 4. 권한 -->
+        <div class="set2-card">
+          <div class="set2-h">4. 권한</div>
+          <div class="set2-row"><span><b>대표 · 관리자</b><small>모든 아티스트 일정 보기 · 수정 · 경비 정산</small></span><em id="setting-count-hq">-</em></div>
+          <div class="set2-row"><span><b>현장 매니저</b><small>배정된 아티스트만 보기 · 상태 변경 · 경비 기록</small></span><em id="setting-count-mgr">-</em></div>
+          <p class="set2-note">본사 연락처는 대표·관리자 프로필의 전화번호가 매니저 앱 긴급 화면 '본사에 전화'로 연결돼요.</p>
+        </div>
       </div>
 
       <div class="modal-footer"

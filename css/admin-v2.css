@@ -234,3 +234,67 @@
 .an2-loc b, .an2-mgr .n { font-weight: 800; color: #3730a3; }
 .an2-mgr .d { font-size: 12px; color: #52525b; }
 .an2-xls { height: 34px; padding: 0 12px; border: 1px solid #a7f3d0; background: #ecfdf5; color: #047857; border-radius: 9px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+/* 상단 기능 창 → 오른쪽에서 열리는 패널 (뒤 캘린더를 보면서 작업) */
+#modal-schedule-form, #modal-artist-management, #modal-artist-form, #modal-manager-management, #modal-manager-edit,
+#modal-vehicle-management, #modal-vehicle-form, #modal-send-message, #modal-admin-settings, #modal-settings, #modal-hq-expenses, #modal-place-management {
+  justify-content: flex-end !important; align-items: stretch !important; backdrop-filter: none !important; background: rgba(15, 23, 42, .32) !important;
+}
+#modal-schedule-form > .modal-content, #modal-artist-management > .modal-content, #modal-artist-form > .modal-content, #modal-manager-management > .modal-content, #modal-manager-edit > .modal-content,
+#modal-vehicle-management > .modal-content, #modal-vehicle-form > .modal-content, #modal-send-message > .modal-content, #modal-admin-settings > .modal-content, #modal-settings > .modal-content, #modal-hq-expenses > .modal-content, #modal-place-management > .modal-content {
+  width: min(640px, 100%) !important; max-width: none !important; height: 100vh !important; max-height: 100vh !important; margin: 0 !important;
+  border-radius: 0 !important; border: 0 !important; box-shadow: -12px 0 32px rgba(0, 0, 0, .18) !important; transform: translateX(40px); background: #fff !important;
+}
+#modal-hq-expenses > .modal-content { width: min(900px, 100%) !important; }
+.modal-overlay.active > .modal-content { transform: none !important; }
+#modal-schedule-form .modal-header, #modal-artist-management .modal-header, #modal-manager-management .modal-header, #modal-vehicle-management .modal-header,
+#modal-send-message .modal-header, #modal-admin-settings .modal-header, #modal-hq-expenses .modal-header, #modal-artist-form .modal-header, #modal-manager-edit .modal-header, #modal-vehicle-form .modal-header, #modal-settings .modal-header, #modal-place-management .modal-header { border-radius: 0 !important; background: #fff !important; }
+#modal-schedule-form .modal-body, #modal-schedule-form form { flex: 1; min-height: 0; }
+
+/* 자동 동선 미리보기 */
+.sch-route { background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 14px; padding: 14px 16px; }
+.sch-route h4 { margin: 0 0 10px; font-size: 15px; font-weight: 800; color: #312e81; }
+.sch-route ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.sch-route li { display: grid; grid-template-columns: 52px 10px 1fr; align-items: center; gap: 10px; font-size: 13.5px; color: #1e1b4b; }
+.sch-route li b { font-weight: 800; }
+.sch-route li i { width: 8px; height: 8px; border-radius: 50%; background: #4f46e5; }
+.sch-route li i.k-기상 { background: #a5b4fc; } .sch-route li i.k-현장 { background: #db2777; } .sch-route li i.k-종료 { background: #94a3b8; }
+.sch-route p { margin: 10px 0 0; font-size: 12.5px; color: #4338ca; }
+
+/* 공지 미리보기 */
+.msg-h { display: flex; flex-direction: column; font-size: 18px; font-weight: 800; color: #0f172a; }
+.msg-h small { font-size: 12.5px; font-weight: 500; color: #52525b; margin-top: 2px; }
+.msg-prev { margin: 12px 0 4px; }
+.msg-prev h4 { margin: 0 0 8px; font-size: 13px; font-weight: 800; color: #27272a; }
+.msg-prev-phone { background: #f4f4f7; border-radius: 22px; padding: 14px; max-width: 340px; margin: 0 auto; }
+.msg-prev-card { background: #fff; border: 1px solid #e4e4e7; border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.msg-prev-card.urgent { border: 2px solid #dc2626; }
+.msg-prev-card .tag { align-self: flex-start; font-size: 11px; font-weight: 800; color: #3730a3; background: #eef2ff; border-radius: 6px; padding: 2px 8px; }
+.msg-prev-card.urgent .tag { background: #dc2626; color: #fff; }
+.msg-prev-card b { font-size: 15px; color: #0f172a; }
+.msg-prev-card p { margin: 0; font-size: 13px; color: #3f3f46; line-height: 1.5; white-space: pre-wrap; }
+.msg-prev-card .ack { align-self: flex-end; background: #dc2626; color: #fff; font-size: 12.5px; font-weight: 800; border-radius: 9px; padding: 6px 12px; }
+.msg-prev-note { margin: 8px 0 0; font-size: 12.5px; color: #52525b; text-align: center; }
+#form-send-message .msg-send-urgent { background: #dc2626 !important; box-shadow: none !important; }
+
+/* 관리자 설정 */
+#modal-admin-settings { justify-content: flex-end !important; align-items: stretch !important; backdrop-filter: none !important; background: rgba(15, 23, 42, .32) !important; }
+#modal-admin-settings > .modal-card { width: min(600px, 100%) !important; max-width: none !important; height: 100vh !important; max-height: 100vh !important; border-radius: 0 !important; border: 0 !important; box-shadow: -12px 0 32px rgba(0,0,0,.18) !important; }
+#modal-admin-settings .modal-body { flex: 1; }
+.set2-card { background: #fff; border: 1px solid #e4e4e7; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; }
+.set2-h { font-size: 14px; font-weight: 800; color: #0f172a; padding-bottom: 8px; border-bottom: 1px solid #f0f0f2; }
+.set2-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f4f4f5; cursor: default; }
+.set2-row:last-of-type { border-bottom: 0; }
+.set2-row > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.set2-row b { font-size: 13.5px; color: #0f172a; }
+.set2-row small { font-size: 12px; color: #52525b; }
+.set2-row em { font-style: normal; font-size: 13px; font-weight: 800; color: #0f172a; white-space: nowrap; }
+.set2-row em.set2-on { color: #047857; }
+.set2-sel { height: 38px; border: 1px solid #e4e4e7; border-radius: 10px; padding: 0 10px; font-size: 13px; font-weight: 700; background: #fff; }
+.set2-sw { appearance: none; width: 48px; height: 28px; border-radius: 999px; background: #d4d4d8; position: relative; cursor: pointer; flex-shrink: 0; transition: background .15s; }
+.set2-sw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: left .15s; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+.set2-sw:checked { background: #10b981; } .set2-sw:checked::after { left: 23px; }
+.set2-sw:focus-visible { outline: 2px solid #4f46e5; outline-offset: 2px; }
+.set2-note { margin: 8px 0 0; font-size: 12px; color: #52525b; }
+.mgr2-st { font-size: 12px; font-weight: 800; color: #52525b; }
+.mgr2-st.late { color: #b91c1c; } .mgr2-st.move, .mgr2-st.live { color: #4338ca; } .mgr2-st.done { color: #047857; }
