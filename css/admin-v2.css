@@ -422,3 +422,13 @@
 .set2-btn { height: 38px; padding: 0 14px; border: 1px solid #c7d2fe; border-radius: 10px; background: #eef2ff; color: #3730a3; font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; white-space: nowrap; }
 .set2-btn:disabled { opacity: .5; cursor: default; }
 .set2-sw:disabled { opacity: .5; cursor: default; }
+
+/* 관제 지도: 오픈스트리트맵 */
+.mp2 { background-image: none; background-color: #e5e7eb; }
+.mp2-map { position: absolute; inset: 0; z-index: 0; }
+.mp2 .mp2-ctl { z-index: 1000; }
+.mp2 .mp2-empty { z-index: 900; pointer-events: none; background: rgba(255,255,255,.6); }
+.leaflet-div-icon.mp2-dicon, .mp2-dicon { background: none !important; border: 0 !important; width: 0 !important; height: 0 !important; }
+.mp2-dicon .mp2-pin { position: absolute; left: 0; top: 0; }
+.leaflet-container { font-family: inherit; }
+.mp2 .mp2-ctl { bottom: 26px; }

@@ -2471,9 +2471,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const toMin = (t) => { const mm = /^(\d{1,2}):(\d{2})/.exec(String(t || '')); return mm ? (+mm[1]) * 60 + (+mm[2]) : null; };
     const clean = (l) => String(l || '').replace(/^\[[^\]]+\]\s*/, '');
     const thr = lateThreshold();
-    // 서울 근처 고정 범위 (위도 37.42~37.70, 경도 126.80~127.20)
-    const LAT0 = 37.42, LAT1 = 37.70, LNG0 = 126.80, LNG1 = 127.20;
-    const hash = (str) => { let h = 0; for (const c of String(str)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
+    // 오픈스트리트맵(Leaflet) 위에 일정 핀 · 좌표가 없으면 장소 이름으로 찾아서 표시
     const pins = schedules.map(sch => {
       const canView = window.AuthPersona ? window.AuthPersona.canViewSecret(sch) : true;
       const hide = sch.isSecret && !canView;
@@ -2492,35 +2490,71 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (next && nm !== null && isToday && nowMin - nm >= thr) { line = `미확인 ${nowMin - nm}분 · ${clean(next.label).slice(0, 12)}`; cls = 'late'; }
       else if (tl.some(t => t.done)) { const ld = [...tl].reverse().find(t => t.done); line = /샵|헤어|메이크업/.test(ld.label || '') ? '샵 진행 중' : '진행 중'; cls = 'live'; }
       else if (next) { line = `${next.time} ${clean(next.label).slice(0, 10)} 예정`; }
-      let x = null, y = null;
       const lat = Number(sch.lat || sch.locationLat), lng = Number(sch.lng || sch.locationLng);
-      if (!hide && lat && lng) { x = Math.max(8, Math.min(92, (lng - LNG0) / (LNG1 - LNG0) * 100)); y = Math.max(14, Math.min(90, (LAT1 - lat) / (LAT1 - LAT0) * 100)); }
-      return { sch, color, aname, place, mgr: sch.managerName || '담당 미지정', line, cls, x, y };
+      return { sch, color, aname, place, mgr: sch.managerName || '담당 미지정', line, cls, hide, lat: !hide && lat ? lat : null, lng: !hide && lng ? lng : null, where: hide ? '' : String(sch.locationAddress || sch.location || '') };
     });
     const lateN = pins.filter(p => p.cls === 'late').length;
     const onlyLate = state.mapOnlyLate === true;
     const shown = onlyLate ? pins.filter(p => p.cls === 'late') : pins;
-    const noPos = shown.filter(p => p.x === null);
-    const pinHtml = shown.filter(p => p.x !== null).map(p => `
-      <button type="button" class="mp2-pin ${p.cls}" style="left:${p.x.toFixed(1)}%; top:${p.y.toFixed(1)}%" onclick="Admin.openScheduleDetailModal(${escJs(p.sch.id)})" aria-label="${esc(p.aname + ' ' + p.place)}">
-        <span class="mp2-tip"><b style="color:${esc(p.color)}">${esc(p.aname)}</b><span>${esc(p.place)} · ${esc(p.mgr)}</span>${p.line ? `<em>${esc(p.line)}</em>` : ''}</span>
-        <i style="background:${esc(p.color)}"></i>
-      </button>`).join('');
     const busy = vehicles.filter(v => schedules.some(s => s.vehicleId === v.id || s.vehicleName === v.name)).length;
-    const html = `
+    el.scheduleViewport.innerHTML = `
       <div class="mp2">
-        <span class="mp2-lab">서울 · 수도권 (등록된 장소 좌표 기준)</span>
-        <div class="mp2-river" aria-hidden="true"></div>
-        ${pinHtml}
+        <div id="mp2-map" class="mp2-map" aria-label="관제 지도"></div>
         ${!pins.length ? '<div class="mp2-empty">이 날은 표시할 일정이 없어요.</div>' : onlyLate && !shown.length ? '<div class="mp2-empty">지연된 일정이 없어요.</div>' : ''}
         <div class="mp2-ctl">
           <button type="button" class="${onlyLate ? '' : 'on'}" onclick="Admin.mapFilter(false)">전체 보기 ${pins.length}</button>
           <button type="button" class="${onlyLate ? 'on' : ''}" onclick="Admin.mapFilter(true)">지연만 ${lateN}</button>
         </div>
       </div>
-      ${noPos.length ? `<div class="mp2-nopos"><span>지도에 못 올린 일정 (장소 좌표 없음)</span>${noPos.map(p => `<button type="button" class="mp2-chip ${p.cls}" onclick="Admin.openScheduleDetailModal(${escJs(p.sch.id)})"><i style="background:${esc(p.color)}"></i><b>${esc(p.aname)}</b> ${esc(p.place)} · ${esc(p.mgr)}${p.line ? ` <em>${esc(p.line)}</em>` : ''}</button>`).join('')}</div>` : ''}
-      <div class="mp2-foot">차량 ${vehicles.length}대 · 오늘 배차 ${busy}대 · 핀을 누르면 일정 상세가 열려요</div>`;
-    el.scheduleViewport.innerHTML = html;
+      <div id="mp2-nopos"></div>
+      <div class="mp2-foot">차량 ${vehicles.length}대 · 오늘 배차 ${busy}대 · 핀을 누르면 일정 상세가 열려요 · 지도 © OpenStreetMap</div>`;
+    const myRun = ++mapRun;
+    const chip = (p) => `<button type="button" class="mp2-chip ${p.cls}" onclick="Admin.openScheduleDetailModal(${escJs(p.sch.id)})"><i style="background:${esc(p.color)}"></i><b>${esc(p.aname)}</b> ${esc(p.place)} · ${esc(p.mgr)}${p.line ? ` <em>${esc(p.line)}</em>` : ''}</button>`;
+    const showNoPos = (list, why) => { const box = document.getElementById('mp2-nopos'); if (box) box.innerHTML = list.length ? `<div class="mp2-nopos"><span>${why}</span>${list.map(chip).join('')}</div>` : ''; };
+    // 좌표 채우기: 저장된 좌표 → 이 PC에 기억해 둔 좌표 → 장소 이름 검색
+    const geoKey = (t) => 'hq_geo_' + t.slice(0, 80);
+    await Promise.all(shown.map(async (p) => {
+      if (p.lat || p.hide || !p.where) return;
+      try { const c = JSON.parse(localStorage.getItem(geoKey(p.where)) || 'null'); if (c && c.lat) { p.lat = c.lat; p.lng = c.lng; return; } } catch (e) { }
+      try {
+        const pt = typeof KakaoAPI !== 'undefined' && KakaoAPI.geocode ? await Promise.race([KakaoAPI.geocode(p.where), new Promise(r => setTimeout(() => r(null), 6000))]) : null;
+        if (pt && pt.x && pt.y) { p.lat = Number(pt.y); p.lng = Number(pt.x); try { localStorage.setItem(geoKey(p.where), JSON.stringify({ lat: p.lat, lng: p.lng })); } catch (e) { } }
+      } catch (e) { }
+    }));
+    if (myRun !== mapRun || !document.getElementById('mp2-map')) return;
+    const L = await loadLeaflet();
+    if (myRun !== mapRun || !document.getElementById('mp2-map')) return;
+    if (!L) {
+      document.getElementById('mp2-map').innerHTML = '<div class="mp2-empty">지도를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.</div>';
+      showNoPos(shown, '오늘 일정');
+      return;
+    }
+    if (hqMap) { try { hqMap.remove(); } catch (e) { } hqMap = null; }
+    hqMap = L.map('mp2-map', { zoomControl: true, attributionControl: true }).setView([37.55, 126.98], 11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(hqMap);
+    const placed = shown.filter(p => p.lat && p.lng);
+    placed.forEach(p => {
+      const icon = L.divIcon({ className: 'mp2-dicon', iconSize: null, iconAnchor: [0, 0],
+        html: `<span class="mp2-pin ${p.cls}"><span class="mp2-tip"><b style="color:${esc(p.color)}">${esc(p.aname)}</b><span>${esc(p.place)} · ${esc(p.mgr)}</span>${p.line ? `<em>${esc(p.line)}</em>` : ''}</span><i style="background:${esc(p.color)}"></i></span>` });
+      L.marker([p.lat, p.lng], { icon, title: p.aname + ' ' + p.place, keyboard: true, riseOnHover: true }).addTo(hqMap).on('click', () => Admin.openScheduleDetailModal(p.sch.id));
+    });
+    if (placed.length === 1) hqMap.setView([placed[0].lat, placed[0].lng], 13);
+    else if (placed.length > 1) hqMap.fitBounds(placed.map(p => [p.lat, p.lng]), { padding: [80, 60], maxZoom: 14 });
+    showNoPos(shown.filter(p => !(p.lat && p.lng)), '지도에 못 올린 일정 (장소를 찾지 못함)');
+  }
+  let hqMap = null, mapRun = 0, leafletP = null;
+  function loadLeaflet() {
+    if (window.L && window.L.map) return Promise.resolve(window.L);
+    if (leafletP) return leafletP;
+    leafletP = new Promise((resolve) => {
+      const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(css);
+      const js = document.createElement('script'); js.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+      const t = setTimeout(() => resolve(null), 10000);
+      js.onload = () => { clearTimeout(t); resolve(window.L && window.L.map ? window.L : null); };
+      js.onerror = () => { clearTimeout(t); leafletP = null; resolve(null); };
+      document.head.appendChild(js);
+    });
+    return leafletP;
   }
   Admin.mapFilter = (late) => { state.mapOnlyLate = !!late; renderMapView(); };
 
