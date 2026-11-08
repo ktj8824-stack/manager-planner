@@ -49,13 +49,6 @@ const Upgrade = {
               </div>
             </div>
             <div class="feat-item stag">
-              <div class="feat-icon blue"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
-              <div class="feat-text">
-                <h4>기상·출발 알림</h4>
-                <p>앱을 닫아도 기상 시간과 출발 15분 전에 알려 드려요. 전날 밤 9시 내일 일정 요약까지.</p>
-              </div>
-            </div>
-            <div class="feat-item stag">
               <div class="feat-icon purple"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17h14M6 17l1.5-6h9L18 17"/><circle cx="8" cy="19" r="1.5"/><circle cx="16" cy="19" r="1.5"/></svg></div>
               <div class="feat-text">
                 <h4>차 타면 자동 길안내</h4>
@@ -77,7 +70,7 @@ const Upgrade = {
               </div>
             </div>
           </div>
-          <p style="font-size:13px; color:var(--text-400); margin-top:14px; line-height:1.6;">일정 등록·동선 계산·길안내 버튼은 무료로 계속 쓸 수 있어요.</p>
+          <p style="font-size:13px; color:var(--text-400); margin-top:14px; line-height:1.6;">일정 등록·동선 계산·길안내 버튼·기상·출발 알림은 무료로 계속 쓸 수 있어요.</p>
         </div>
 
         <div class="upg-action">

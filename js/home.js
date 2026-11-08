@@ -996,7 +996,6 @@ const Home = {
       if (window.webkit?.messageHandlers?.roadplanner || window.RoadPlannerAndroid) return;
       if (!window.SupabaseClient?.currentUser || !window.Chat?.pushState) return;
       const indie = typeof Plan !== 'undefined' && Plan.isIndie();
-      if (indie && !Plan.can('alerts')) return;   // 개인 매니저 무료: 알림은 유료 기능
       try { if (Date.now() - Number(localStorage.getItem('rp_push_card_later') || 0) < 3 * 86400e3) return; } catch (e) { }
       const st = await window.Chat.pushState();
       const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);

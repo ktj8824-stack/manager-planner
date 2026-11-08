@@ -113,7 +113,7 @@ const Profile = {
           <div style="display:flex;align-items:center;gap:10px;">
             <div style="flex:1;min-width:0;">
               <div style="font-size:15px;font-weight:800;color:${paid ? '#047857' : '#3730a3'};">${paid ? `유료 사용 중 ${esc(Plan.untilText())}` : '무료로 쓰는 중'}</div>
-              <div style="font-size:12.5px;color:#475569;margin-top:3px;line-height:1.5;">${paid ? 'AI 비서·알림·자동 길안내·교통 예측·아티스트 여러 명' : `월 ${Plan.FEE.toLocaleString()}원이면 AI 비서·알림·자동 길안내·교통 예측을 모두 쓸 수 있어요.`}</div>
+              <div style="font-size:12.5px;color:#475569;margin-top:3px;line-height:1.5;">${paid ? 'AI 비서·자동 길안내·교통 예측·아티스트 여러 명' : `월 ${Plan.FEE.toLocaleString()}원이면 AI 비서·자동 길안내·교통 예측을 모두 쓸 수 있어요.`}</div>
             </div>
             <button type="button" onclick="App.navigate('upgrade')" style="flex-shrink:0;border:0;background:${paid ? '#10b981' : '#4f46e5'};color:#fff;font-size:13px;font-weight:800;padding:9px 12px;border-radius:10px;cursor:pointer;">${paid ? '연장하기' : '유료 알아보기'}</button>
           </div>
