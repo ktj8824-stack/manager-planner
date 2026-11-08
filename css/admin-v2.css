@@ -432,3 +432,8 @@
 .mp2-dicon .mp2-pin { position: absolute; left: 0; top: 0; }
 .leaflet-container { font-family: inherit; }
 .mp2 .mp2-ctl { bottom: 26px; }
+
+/* 관제 지도: 단순하게 — 바탕 지도는 흐린 회색, 핀과 말풍선만 색 */
+.mp2-map .leaflet-tile-pane { filter: grayscale(1) contrast(.75) brightness(1.12) opacity(.6); }
+.mp2-map.leaflet-container { background: #f4f4f5; }
+.mp2-map .leaflet-control-zoom a { color: #27272a; }
