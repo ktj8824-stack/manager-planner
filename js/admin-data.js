@@ -1703,7 +1703,7 @@ class HQDataStore {
   timelineKey(s) {
     const d = (s && typeof s.departure === 'object') ? s.departure : { place: s?.departure };
     const sh = s?.shop || {};
-    return [s?.date, String(s?.startTime || '').slice(0, 5), s?.location, s?.locationAddress, d?.place, d?.address,
+    return [s?.date, String(s?.startTime || '').slice(0, 5), String(s?.endTime || '').slice(0, 5), String(s?.title || '').trim(), s?.location, s?.locationAddress, d?.place, d?.address,
       sh.needed ? 1 : 0, sh.needed ? sh.name : '', sh.needed ? sh.address : '', sh.needed ? Number(sh.durationMin) || '' : '',
       localStorage.getItem('bp_buffer_wait'), localStorage.getItem('bp_buffer_travel'), localStorage.getItem('bp_buffer_shop')].map(v => String(v ?? '')).join('|');
   }
