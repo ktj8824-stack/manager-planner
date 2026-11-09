@@ -134,7 +134,8 @@ const HqExpenses = {
   csv() {
     const list = this.filter === 'ALL' ? this.items : this.items.filter(x => x.user_id === this.filter);
     const schedules = window.hqStore?.getSchedules?.() || [];
-    const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    // 엑셀이 =, +, -, @ 로 시작하는 칸을 수식으로 실행하지 않게 앞에 ' 를 붙임 (메모·장소에 수식을 넣어도 글자로만 보임)
+    const cell = (v) => { let s = String(v ?? ''); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return `"${s.replace(/"/g, '""')}"`; };
     const rows = [['날짜', '매니저', '항목', '금액', '메모', '관련 일정', '영수증'],
       ...[...list].sort((a, b) => a.date.localeCompare(b.date)).map(x => {
         const s = schedules.find(z => z.id === x.schedule_id);

@@ -2515,10 +2515,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const geoKey = (t) => 'hq_geo_' + t.slice(0, 80);
     await Promise.all(shown.map(async (p) => {
       if (p.lat || p.hide || !p.where) return;
-      try { const c = JSON.parse(localStorage.getItem(geoKey(p.where)) || 'null'); if (c && c.lat) { p.lat = c.lat; p.lng = c.lng; return; } } catch (e) { }
+      try { const c = JSON.parse(localStorage.getItem(geoKey(p.where)) || 'null'); if (c && c.lat) { p.lat = c.lat; p.lng = c.lng; return; } if (c && c.fail && Date.now() - c.at < 6 * 3600000) return; } catch (e) { }
       try {
         const pt = typeof KakaoAPI !== 'undefined' && KakaoAPI.geocode ? await Promise.race([KakaoAPI.geocode(p.where), new Promise(r => setTimeout(() => r(null), 6000))]) : null;
         if (pt && pt.x && pt.y) { p.lat = Number(pt.y); p.lng = Number(pt.x); try { localStorage.setItem(geoKey(p.where), JSON.stringify({ lat: p.lat, lng: p.lng })); } catch (e) { } }
+        // 못 찾은 장소는 6시간 동안 다시 묻지 않음 (매니저 상태가 바뀔 때마다 지도를 다시 그려도 같은 검색을 반복하지 않게)
+        else if (navigator.onLine !== false) { try { localStorage.setItem(geoKey(p.where), JSON.stringify({ fail: true, at: Date.now() })); } catch (e) { } }
       } catch (e) { }
     }));
     if (myRun !== mapRun || !document.getElementById('mp2-map')) return;
@@ -2529,20 +2531,25 @@ document.addEventListener('DOMContentLoaded', () => {
       showNoPos(shown, '오늘 일정');
       return;
     }
+    // 같은 날·같은 보기에서 다시 그릴 때(매니저 상태 실시간 반영 등)는 보고 있던 위치·확대를 그대로 둠
+    const viewKey = todayStr + '|' + (onlyLate ? 'late' : 'all');
+    const keep = hqMap && hqMapKey === viewKey ? (() => { try { return { c: hqMap.getCenter(), z: hqMap.getZoom() }; } catch (e) { return null; } })() : null;
     if (hqMap) { try { hqMap.remove(); } catch (e) { } hqMap = null; }
     hqMap = L.map('mp2-map', { zoomControl: true, attributionControl: true }).setView([37.55, 126.98], 11);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(hqMap);
+    hqMapKey = viewKey;
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors' }).addTo(hqMap);
     const placed = shown.filter(p => p.lat && p.lng);
     placed.forEach(p => {
       const icon = L.divIcon({ className: 'mp2-dicon', iconSize: null, iconAnchor: [0, 0],
         html: `<span class="mp2-pin ${p.cls}"><span class="mp2-tip"><b style="color:${esc(p.color)}">${esc(p.aname)}</b><span>${esc(p.place)} · ${esc(p.mgr)}</span>${p.line ? `<em>${esc(p.line)}</em>` : ''}</span><i style="background:${esc(p.color)}"></i></span>` });
       L.marker([p.lat, p.lng], { icon, title: p.aname + ' ' + p.place, keyboard: true, riseOnHover: true }).addTo(hqMap).on('click', () => Admin.openScheduleDetailModal(p.sch.id));
     });
-    if (placed.length === 1) hqMap.setView([placed[0].lat, placed[0].lng], 13);
+    if (keep) hqMap.setView(keep.c, keep.z);
+    else if (placed.length === 1) hqMap.setView([placed[0].lat, placed[0].lng], 13);
     else if (placed.length > 1) hqMap.fitBounds(placed.map(p => [p.lat, p.lng]), { padding: [80, 60], maxZoom: 14 });
     showNoPos(shown.filter(p => !(p.lat && p.lng)), '지도에 못 올린 일정 (장소를 찾지 못함)');
   }
-  let hqMap = null, mapRun = 0, leafletP = null;
+  let hqMap = null, hqMapKey = '', mapRun = 0, leafletP = null;
   function loadLeaflet() {
     if (window.L && window.L.map) return Promise.resolve(window.L);
     if (leafletP) return leafletP;
