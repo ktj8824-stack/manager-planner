@@ -1699,7 +1699,20 @@ class HQDataStore {
   }
 
   // 동선 계산 (교통 예측). 경로 서버가 느리면 10초 뒤 추정값으로 — 등록이 멈추지 않게
+  // 동선 계산에 쓰이는 입력값 묶음 (등록창 미리보기 결과를 저장 때 그대로 다시 쓰기 위한 열쇠)
+  timelineKey(s) {
+    const d = (s && typeof s.departure === 'object') ? s.departure : { place: s?.departure };
+    const sh = s?.shop || {};
+    return [s?.date, String(s?.startTime || '').slice(0, 5), s?.location, s?.locationAddress, d?.place, d?.address,
+      sh.needed ? 1 : 0, sh.needed ? sh.name : '', sh.needed ? sh.address : '', sh.needed ? Number(sh.durationMin) || '' : '',
+      localStorage.getItem('bp_buffer_wait'), localStorage.getItem('bp_buffer_travel'), localStorage.getItem('bp_buffer_shop')].map(v => String(v ?? '')).join('|');
+  }
+  rememberPreviewTimeline(schedule, tl) { this._previewTL = { key: this.timelineKey(schedule), tl: JSON.parse(JSON.stringify(tl)), at: Date.now() }; }
+
   async buildTimelineCapped(schedule, capMs = 10000) {
+    // 등록창 옆에서 방금 실제 교통으로 계산해 보여 준 동선이면 그대로 씀 (본사가 본 것 = 매니저 앱에 들어가는 것)
+    const pv = this._previewTL;
+    if (pv && Date.now() - pv.at < 15 * 60000 && pv.key === this.timelineKey(schedule)) return JSON.parse(JSON.stringify(pv.tl));
     if (typeof this.generateSmartTimelineAsync !== 'function') return this.generateAutoTimeline(schedule);
     let timer;
     const slow = new Promise(res => { timer = setTimeout(() => res(null), capMs); });
