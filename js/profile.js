@@ -153,13 +153,15 @@ const Profile = {
         <section class="me-group">
           <h2>계정</h2>
           <div class="me-box">
+            ${row('위치 정보', (window.Loc && Loc.ok()) ? '동의함 · 이용·제공 내역 보기' : '동의 안 함 · 위치 대신 주소를 적어요', chev, 'Loc.openSettings()')}
             ${row('계정 전환', '', chev, 'Profile.switchAccount()')}
             ${row('<span style="color:#dc2626;">로그아웃</span>', '', '', 'Profile.logout()', 'me-logout')}
           </div>
           <div class="me-foot">
             <button type="button" onclick="Profile.showVersion()">v1.0.0</button> ·
             <button type="button" onclick="window.open('./terms.html', '_blank', 'noopener')">이용약관</button> ·
-            <button type="button" onclick="window.open('./privacy.html', '_blank', 'noopener')">개인정보처리방침</button>
+            <button type="button" onclick="window.open('./privacy.html', '_blank', 'noopener')">개인정보처리방침</button> ·
+            <button type="button" onclick="window.open('./location-terms.html', '_blank', 'noopener')">위치기반서비스 이용약관</button>
           </div>
         </section>
       </div>
@@ -317,6 +319,7 @@ const Profile = {
       localStorage.removeItem('bp_user_email');
       localStorage.removeItem('bp_user_role');
       localStorage.removeItem('bp_company_name');
+      localStorage.removeItem('rp_loc_consent');
       localStorage.removeItem('bp_manager_filter');
       localStorage.removeItem('bp_onboarded');
       ['rp_default_departure', 'bp_user_phone', 'bp_user_vehicle', 'rp_vehicle', 'bp_account', 'rp_pro_until'].forEach(k => localStorage.removeItem(k));
@@ -428,17 +431,16 @@ const Profile = {
   fillEmergencyGps() {
     const btn = document.getElementById('em-gps-btn');
     if (!navigator.geolocation) { U.toast('이 기기에서는 위치를 가져올 수 없습니다. 위치를 직접 입력해 주세요.'); return; }
+    if (!window.Loc || !Loc.ok()) { if (window.Loc) Loc.ask('긴급보고에 지금 위치를 함께 보내려면 동의가 필요해요.').then(ok => ok && setTimeout(() => this.fillEmergencyGps(), 350)); return; }
     if (btn) { btn.disabled = true; btn.textContent = '위치 확인 중...'; }
-    navigator.geolocation.getCurrentPosition(pos => {
+    Loc.get({ enableHighAccuracy: true, timeout: 10000, maximumAge: 15000 }).then(pos => {
+      if (!pos) { if (btn) { btn.disabled = false; btn.textContent = '📍 내 현재 위치 넣기 (지도 링크 첨부)'; } U.toast('위치를 가져오지 못했습니다. 기기의 위치 권한을 허용하거나 직접 입력해 주세요.'); return; }
       const lat = +pos.coords.latitude.toFixed(6), lng = +pos.coords.longitude.toFixed(6);
       this._emGps = { lat, lng };
       const input = document.getElementById('em-location');
       if (input && !input.value.trim()) input.value = '현재 위치 (지도 링크 첨부됨)';
       if (btn) { btn.disabled = false; btn.textContent = '✅ 현재 위치가 첨부되었습니다 (다시 누르면 갱신)'; }
-    }, () => {
-      if (btn) { btn.disabled = false; btn.textContent = '📍 내 현재 위치 넣기 (지도 링크 첨부)'; }
-      U.toast('위치를 가져오지 못했습니다. 기기의 위치 권한을 허용하거나 직접 입력해 주세요.');
-    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 15000 });
+    });
   },
 
   async submitEmergencyReport() {
@@ -460,6 +462,7 @@ const Profile = {
       U.toast('긴급 보고 전송 실패: ' + (err.message || '다시 시도해 주세요.'));
       return;
     }
+    if (gps && window.Loc) Loc.provided('sos', '긴급보고 위치');
     this._emGps = null;
     document.getElementById('emergency-report-modal').remove();
     U.toast('🚨 본사로 긴급 보고가 전송되었습니다.');

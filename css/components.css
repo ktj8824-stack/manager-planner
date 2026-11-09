@@ -1129,3 +1129,26 @@ div.art-add.locked button { margin-top:6px; border:0; background:#4f46e5; color:
 .exp-amt .exp-st { display: block; font-size: 11px; font-weight: 800; text-align: right; margin-top: 2px; }
 .exp-st.ok { color: #047857; } .exp-st.bad { color: #b91c1c; }
 .exp-info small.exp-bad { color: #b91c1c; }
+
+/* 위치 정보 동의 · 내역 */
+.loc-c { display:flex; flex-direction:column; gap:12px; text-align:left; }
+.loc-why { margin:0; font-size:14px; font-weight:700; color:#0f172a; line-height:1.5; }
+.loc-dl { margin:0; display:flex; flex-direction:column; gap:8px; }
+.loc-dl > div { background:#f2f2f7; border-radius:12px; padding:10px 12px; }
+.loc-dl dt { font-size:12px; font-weight:800; color:#4f46e5; margin-bottom:2px; }
+.loc-dl dd { margin:0; font-size:13.5px; color:#1c1c1e; line-height:1.5; }
+.loc-link { font-size:13px; color:#4f46e5; font-weight:700; text-decoration:none; }
+.loc-btns { display:flex; gap:8px; }
+.loc-btns button { flex:1; min-height:48px; border-radius:12px; font:inherit; font-size:15px; font-weight:800; cursor:pointer; border:1px solid #d1d1d6; background:#fff; color:#1c1c1e; }
+.loc-btns .loc-yes { background:#4f46e5; border-color:#4f46e5; color:#fff; }
+.loc-st { display:flex; flex-direction:column; gap:2px; background:#f2f2f7; border-radius:12px; padding:12px 14px; }
+.loc-st b { font-size:16px; } .loc-st.on b { color:#047857; }
+.loc-st span { font-size:13px; color:#636366; }
+.loc-h { margin:6px 0 0; font-size:13px; color:#636366; }
+.loc-log { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; max-height:220px; overflow:auto; }
+.loc-log li { display:grid; grid-template-columns:72px 1fr; gap:8px; padding:8px 0; border-bottom:1px solid #e5e5ea; font-size:13px; }
+.loc-log li span { min-width:0; }
+.loc-log small { display:block; color:#8e8e93; font-size:12px; }
+.loc-log .loc-t { color:#8e8e93; font-variant-numeric:tabular-nums; }
+.loc-log .loc-empty { display:block; color:#8e8e93; border:0; }
+.sos-loc-btn { margin-left:6px; border:1px solid #fecaca; background:#fff; color:#b91c1c; border-radius:999px; padding:2px 10px; font:inherit; font-size:12px; font-weight:800; cursor:pointer; }

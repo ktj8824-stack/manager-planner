@@ -218,7 +218,7 @@ const App = {
     if (target) {
       target.classList.add('active');
       switch(name) {
-        case 'home': Home.init(); break;
+        case 'home': Home.init(); try { window.Loc && Loc.maybeAsk(); } catch (e) { } break;
         case 'register': Register.init(); break;
         case 'timeline': Timeline.init(); break;
         case 'login': Login.init(); break;

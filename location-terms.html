@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>위치기반서비스 이용약관 | 로드플래너</title>
+  <meta name="description" content="로드플래너 위치기반서비스 이용약관 — 개인위치정보의 이용·제공·보관과 이용자의 권리에 관한 약관입니다."/>
+  <link rel="icon" href="icon.svg"/>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0a0f;
+      color: #e5e5ea;
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .header {
+      background: rgba(15,15,25,0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header a {
+      color: #30d158;
+      text-decoration: none;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+    }
+    .header a:hover { color: #4ade80; }
+    .header-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+    .hero {
+      text-align: center;
+      margin-bottom: 48px;
+      padding: 40px 24px;
+      background: linear-gradient(135deg, rgba(48,209,88,0.1) 0%, rgba(10,132,255,0.1) 100%);
+      border: 1px solid rgba(48,209,88,0.2);
+      border-radius: 20px;
+    }
+    .hero-icon { font-size: 48px; margin-bottom: 16px; display: block; }
+    .hero h1 { font-size: 28px; font-weight: 800; color: #ffffff; margin-bottom: 8px; }
+    .hero p { font-size: 14px; color: #8e8e93; }
+    .section {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 20px;
+      transition: border-color 0.2s;
+    }
+    .section:hover { border-color: rgba(48,209,88,0.3); }
+    .section-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #30d158, #0a84ff);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+    .section h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+    }
+    .section p { font-size: 14px; color: #aeaeb2; margin-bottom: 12px; }
+    .section p:last-child { margin-bottom: 0; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+    thead { background: rgba(48,209,88,0.1); }
+    th { padding: 10px 14px; text-align: left; color: #30d158; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    td { padding: 10px 14px; color: #aeaeb2; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    ul { padding-left: 0; list-style: none; }
+    ul li { font-size: 14px; color: #aeaeb2; padding: 6px 0 6px 20px; position: relative; }
+    ul li::before { content: '•'; color: #30d158; position: absolute; left: 4px; }
+    .highlight {
+      background: rgba(10,132,255,0.1);
+      border: 1px solid rgba(10,132,255,0.25);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 13px;
+      color: #5ac8fa;
+      margin-top: 12px;
+    }
+    .contact-box {
+      background: linear-gradient(135deg, rgba(48,209,88,0.08), rgba(10,132,255,0.08));
+      border: 1px solid rgba(48,209,88,0.25);
+      border-radius: 16px;
+      padding: 28px;
+      text-align: center;
+      margin-top: 32px;
+    }
+    .contact-box h3 { font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 12px; }
+    .contact-box p { font-size: 14px; color: #aeaeb2; margin-bottom: 6px; }
+    .contact-box a { color: #30d158; text-decoration: none; }
+    .footer { text-align: center; padding: 32px 24px; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 48px; }
+    .footer p { font-size: 12px; color: #636366; }
+    .footer a { color: #30d158; text-decoration: none; }
+  </style>
+<script src="js/icons.js?v=310"></script>
+</head>
+<body>
+
+  <header class="header">
+    <a href="index.html">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 5l-7 7 7 7"/>
+      </svg>
+      홈으로
+    </a>
+    <span class="header-title">위치기반서비스 이용약관</span>
+  </header>
+
+  <div class="container">
+
+    <div class="hero">
+      <span class="hero-icon">📍</span>
+      <h1>위치기반서비스 이용약관</h1>
+      <p>로드플래너는 꼭 필요한 순간에만 위치를 씁니다.<br/>시행일: 2026년 11월 9일</p>
+    </div>
+
+    <div class="section">
+      <h2><span class="section-num">1</span>목적</h2>
+      <p>이 약관은 로드플래너(이하 "회사")가 제공하는 위치기반서비스(이하 "서비스")를 이용할 때, 회사와 개인위치정보주체(이하 "이용자")의 권리·의무와 그 밖에 필요한 사항을 정합니다.</p>
+    </div>
+    <div class="section">
+      <h2><span class="section-num">2</span>약관의 효력과 변경</h2>
+      <ul>
+        <li>이 약관은 이용자가 앱의 "위치 정보 이용 동의" 화면에서 동의한 때부터 효력이 생깁니다.</li>
+        <li>회사는 관련 법령을 어기지 않는 범위에서 약관을 바꿀 수 있으며, 바꿀 때는 시행 7일 전(이용자에게 불리하면 30일 전)부터 앱과 이 페이지에 알립니다. 내용이 바뀌면 앱에서 다시 동의를 받습니다.</li>
+      </ul>
+    </div>
+    <div class="section">
+      <h2><span class="section-num">3</span>서비스 내용</h2>
+      <table>
+        <thead><tr><th>서비스</th><th>위치를 쓰는 때</th><th>내용</th></tr></thead>
+        <tbody>
+          <tr><td>이동 중 도착 예상·지연 알림 (회사 소속 매니저)</td><td>[출발]을 누른 이동 단계가 있고 앱이 화면에 켜져 있을 때, 약 2분마다</td><td>현재 위치에서 다음 장소까지 실시간 교통 기준 소요 시간을 계산해, 늦을 것 같으면 본인에게 먼저 알립니다.</td></tr>
+          <tr><td>본사 지연 보고</td><td>이용자가 [본사에 지연 알리기]를 누를 때</td><td>위치로 계산한 <b>도착 예상 시각</b>만 소속 회사 본사에 보냅니다. 좌표는 보내지 않습니다.</td></tr>
+          <tr><td>긴급보고 위치 첨부</td><td>긴급 지원 화면을 열었을 때(또는 위치 넣기를 누를 때) 1회</td><td>이용자가 보고를 보내면 그 순간 위치 1곳이 지도 링크로 소속 회사 본사에 전달됩니다.</td></tr>
+        </tbody>
+      </table>
+      <div class="highlight">📍 위치는 동의한 이용자에게만, 위 경우에만 씁니다. 퇴근 뒤·일정 없는 시간·앱이 꺼져 있을 때에는 위치를 읽지 않으며, 본사가 이용자의 위치를 지도에서 계속 지켜보는 기능은 없습니다.</div>
+    </div>
+    <div class="section">
+      <h2><span class="section-num">4</span>이용 요금</h2>
+      <p>서비스는 로드플래너 이용 요금에 포함되어 있으며 위치 서비스만을 위한 별도 요금은 없습니다. 다만 데이터 통신 요금은 이용자가 가입한 통신사 요금제에 따릅니다.</p>
+    </div>
+    <div class="section">
+      <h2><span class="section-num">5</span>개인위치정보의 이용·제공</h2>
+      <ul>
+        <li>회사는 이용자의 동의 없이 개인위치정보를 이용하거나 제3자에게 제공하지 않습니다.</li>
+        <li>제공받는 자: 이용자가 소속된 회사의 본사(대표·관리자). 제공 목적: 지연 보고, 긴급 상황 대응. 제공 항목: 도착 예상 시각(지연 보고), 보고 시점의 위치 좌표(긴급보고).</li>
+        <li>회사는 개인위치정보를 제3자에게 제공할 때마다 제공받는 자, 제공 일시, 목적을 즉시 앱 화면으로 알리고, "내 정보 → 위치 정보"에서 언제든 다시 볼 수 있게 합니다.</li>
+        <li>도착 시간 계산을 위해 출발·도착 좌표가 경로 계산 서비스(SK텔레콤 TMAP API)로 전송되며, 회사는 이 좌표를 저장하지 않습니다.</li>
+      </ul>
+    </div>
+    <div class="section">
+      <h2><span class="section-num">6</span>개인위치정보의 보유기간과 파기</h2>
+      <table>
+        <thead><tr><th>항목</th><th>보유기간</th></tr></thead>
+        <tbody>
+          <tr><td>지연 계산에 쓴 현재 위치</td><td>저장하지 않음 (계산 즉시 버림)</td></tr>
+          <tr><td>긴급보고에 첨부한 위치</td><td>보고 글(로드톡 공지)에 담겨 소속 회사의 서비스 이용 기간 동안 보관, 이용 종료 시 지체 없이 파기</td></tr>
+          <tr><td>위치정보 이용·제공사실 확인자료</td><td>1년 보관 후 자동 파기 (위치정보법 제16조)</td></tr>
+          <tr><td>동의·철회 기록</td><td>회원 탈퇴 시까지</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="section">
+      <h2><span class="section-num">7</span>이용자의 권리</h2>
+      <ul>
+        <li>이용자는 언제든지 동의의 전부 또는 일부를 철회할 수 있습니다 ("내 정보 → 위치 정보 → 동의 철회"). 철회하면 회사는 위치를 더 이상 읽지 않으며, 철회 전에 수집된 개인위치정보와 확인자료(법령상 보관 의무가 있는 것 제외)를 지체 없이 파기합니다.</li>
+        <li>이용자는 언제든지 위치 이용을 일시적으로 멈추도록 요구할 수 있으며, 회사는 이를 거절하지 않고 기술적 수단을 마련합니다 (휴대폰 설정에서 위치 권한 끄기 포함).</li>
+        <li>이용자는 본인에 대한 위치정보 이용·제공사실 확인자료와, 개인위치정보가 제3자에게 제공된 이유와 내용을 열람·고지 요구할 수 있으며, 오류가 있으면 정정을 요구할 수 있습니다.</li>
+        <li>동의하지 않거나 철회해도 일정·알림·[출발]·[도착] 버튼 등 다른 기능은 그대로 쓸 수 있으며, 이를 이유로 한 불이익은 없습니다. 소속 회사도 이를 이유로 불이익을 줄 수 없도록 안내합니다.</li>
+      </ul>
+    </div>
+    <div class="section">
+      <h2><span class="section-num">8</span>만 14세 미만 · 보호의무자</h2>
+      <p>서비스는 만 14세 이상만 이용할 수 있으며, 회사는 만 14세 미만 아동의 개인위치정보를 수집·이용·제공하지 않습니다. 8세 이하 아동 등의 보호의무자 동의에 의한 서비스는 제공하지 않습니다.</p>
+    </div>
+    <div class="section">
+      <h2><span class="section-num">9</span>손해배상과 면책</h2>
+      <ul>
+        <li>회사가 위치정보법 제15조부터 제26조를 위반해 이용자에게 손해가 생기면 이용자는 손해배상을 청구할 수 있으며, 회사는 고의나 과실이 없음을 증명하지 못하면 책임을 집니다.</li>
+        <li>천재지변, 통신 장애, 이용자의 기기 설정 등 회사가 통제할 수 없는 사유로 위치를 받지 못하거나 도착 예상 시각이 실제와 다른 경우 회사는 책임을 지지 않습니다. 도착 예상은 참고용입니다.</li>
+      </ul>
+    </div>
+    <div class="section">
+      <h2><span class="section-num">10</span>분쟁 조정</h2>
+      <p>위치정보와 관련한 분쟁은 회사와 이용자가 협의하여 해결하며, 협의가 되지 않으면 아래 기관에 조정을 신청할 수 있습니다.</p>
+      <ul>
+        <li>방송미디어통신위원회 (위치정보법 제28조에 따른 재정 신청)</li>
+        <li>개인정보분쟁조정위원회 (www.kopico.go.kr, 1833-6972)</li>
+      </ul>
+    </div>
+
+    <div class="contact-box">
+      <h3>📍 위치정보 관리책임자 · 사업자 정보</h3>
+      <p><strong style="color:#fff;">로드플래너 운영팀 (JM)</strong></p>
+      <p>위치정보 관리책임자: 로드플래너 운영팀 대표</p>
+      <p>이메일: <a href="mailto:support@managerplanner.kr">support@managerplanner.kr</a></p>
+    </div>
+
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 로드플래너. All rights reserved. &nbsp;|&nbsp; <a href="terms.html">이용약관</a> &nbsp;|&nbsp; <a href="privacy.html">개인정보처리방침</a> &nbsp;|&nbsp; <a href="index.html">홈으로</a></p>
+  </footer>
+
+</body>
+</html>

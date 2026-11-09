@@ -289,6 +289,7 @@ const AutoNav = {
   //   목표 도착(다음 단계 시각)보다 5분 이상 늦을 것 같으면 알려 주고, 버튼 하나로 본사에 지연 보고
   async _delayCheck() {
     if (document.hidden || !navigator.geolocation || typeof TmapAPI === 'undefined') return;
+    if (!window.Loc || !Loc.ok()) return;                     // 위치 동의 전에는 위치를 읽지 않음 (버튼 시각만으로 동작)
     if (typeof Plan !== 'undefined' && Plan.isIndie()) return;   // 본사 지연 보고 기능 → 개인 매니저는 없음
     if (Date.now() - (this._lastDelayCheck || 0) < 110000) return;
     const me = window.SupabaseClient?.currentUser?.id;
@@ -311,8 +312,10 @@ const AutoNav = {
     const target = new Date(); target.setHours(h, m - wait, 0, 0);
     // 목표 시각이 이미 1시간 넘게 지났으면 '이동중' 표시가 남은 옛 단계 → 지연 계산 안 함 (707분 같은 엉뚱한 값 방지)
     if (Date.now() - target.getTime() > 60 * 60000) return;
-    const pos = await new Promise(res => navigator.geolocation.getCurrentPosition(p => res(p), () => res(null), { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }));
+    const pos = await Loc.get();
     if (!pos) return;
+    const logKey = 'rp_loc_eta_' + sch.id + '_' + idx;          // 확인자료: 같은 이동 구간은 1번만 기록
+    try { if (!sessionStorage.getItem(logKey)) { sessionStorage.setItem(logKey, '1'); Loc.log('eta', null, '이동 중 도착 예상·지연 계산'); } } catch (e) { }
     const pt = await KakaoAPI.geocode(dest);
     if (!pt) return;
     const eta = await TmapAPI.getRouteTime(pos.coords.longitude, pos.coords.latitude, pt.x, pt.y);
@@ -349,6 +352,7 @@ const AutoNav = {
         await window.Chat.sendNotice({ title: `⏰ 지연 예상 약 ${d.late}분`, content: `${who}\n${d.name} · 도착 예상 ${d.arrive} (목표 ${d.target}, 현재 교통 기준)`, isUrgent: d.late >= 15 });
       }
       if (window.hqStore?.addStatusLog) await window.hqStore.addStatusLog(d.sch.id, { label: `[지연 예상] 약 ${d.late}분 · 도착 예상 ${d.arrive} (목표 ${d.target})` });
+      if (window.Loc) Loc.provided('delay_report', '위치로 계산한 도착 예상 시각');
       if (typeof U !== 'undefined') U.toast('본사에 지연을 알렸어요.');
     } catch (e) { if (typeof U !== 'undefined') U.toast('알리지 못했어요. 로드톡으로 직접 보내 주세요.'); }
   },

@@ -74,7 +74,7 @@ const Login = {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
             본사 관리자라면 관제 포털로
           </a>
-          <div class="lg-legal"><a href="terms.html" target="_blank">이용약관</a> · <a href="privacy.html" target="_blank">개인정보처리방침</a></div>
+          <div class="lg-legal"><a href="terms.html" target="_blank">이용약관</a> · <a href="privacy.html" target="_blank">개인정보처리방침</a> · <a href="location-terms.html" target="_blank">위치 이용약관</a></div>
         </div>
       </div>
     `;

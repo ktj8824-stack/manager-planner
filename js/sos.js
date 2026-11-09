@@ -88,13 +88,22 @@ const Sos = {
   },
 
   _gps() {
-    if (this.st.gps || !navigator.geolocation) { if (!navigator.geolocation) { const l = U.$('#sos-gps-line'); if (l) l.textContent = l.textContent.replace('위치 확인 중', '위치 없음'); } return; }
-    navigator.geolocation.getCurrentPosition(pos => {
-      this.st.gps = { lat: +pos.coords.latitude.toFixed(6), lng: +pos.coords.longitude.toFixed(6) };
-      const l = U.$('#sos-gps-line'); if (l) l.textContent = l.textContent.replace('위치 확인 중', '현재 위치');
-    }, () => { const l = U.$('#sos-gps-line'); if (l) l.textContent = l.textContent.replace('위치 확인 중', '위치 권한 없음'); },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
+    const line = U.$('#sos-gps-line');
+    const say = (txt) => { if (line) line.innerHTML = txt; };
+    if (this.st.gps) return;
+    if (!navigator.geolocation) { say(`위치 없음 · ${this._hm()} 시각 자동 첨부`); return; }
+    if (!window.Loc || !Loc.ok()) {
+      say(`위치 첨부 안 함 · ${this._hm()} 시각 자동 첨부 <button type="button" class="sos-loc-btn" onclick="Sos.askLoc()">📍 위치도 보내기</button>`);
+      return;
+    }
+    say(`위치 확인 중 · ${this._hm()} 시각 자동 첨부`);
+    Loc.get({ enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }).then(pos => {
+      if (pos) this.st.gps = { lat: +pos.coords.latitude.toFixed(6), lng: +pos.coords.longitude.toFixed(6) };
+      say(`${pos ? '현재 위치' : '위치 권한 없음'} · ${this._hm()} 시각 자동 첨부`);
+    });
   },
+  _hm() { const n = new Date(); return `${String(n.getHours()).padStart(2, '0')}:${String(n.getMinutes()).padStart(2, '0')}`; },
+  async askLoc() { if (await Loc.ask('긴급보고에 지금 위치를 함께 보내려면 동의가 필요해요.')) this._gps(); },
 
   // 같은 회사 본사(대표·관리자) 전화번호 — 샘플 번호는 쓰지 않음
   async _loadPhones() {
@@ -138,6 +147,7 @@ const Sos = {
     ].filter(Boolean);
     try {
       await window.Chat.sendNotice({ targetId: 'ALL', title: `🚨 현장 긴급보고 · ${st.type} (${user})`, content: lines.join('\n'), isUrgent: true, imageFile: st.photo });
+      if (st.gps && window.Loc) Loc.provided('sos', '긴급보고 위치');
       st.stage = 'sent'; st.photo = null;
       this._sendBtn();
       U.haptic && U.haptic();

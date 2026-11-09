@@ -3,7 +3,7 @@ const { chromium, devices } = require('playwright');
 (async () => {
   const b = await chromium.launch(); const ctx = await b.newContext({ ...devices['iPhone 14'], geolocation: { latitude: 37.5665, longitude: 126.978 }, permissions: ['geolocation'] });
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.addInitScript(() => sessionStorage.setItem('rp_splash_shown', '1'));
+  await p.addInitScript(() => { sessionStorage.setItem('rp_splash_shown', '1'); localStorage.setItem('rp_loc_consent', 'yes'); });
   await p.route(/^https?:\/\/(?!127\.0\.0\.1|localhost|0\.0\.0\.0)/, r => r.request().url().endsWith('.js') ? r.fulfill({ status: 200, contentType: 'application/javascript', body: '' }) : r.abort());
   await p.goto(process.argv[2] + '/index.html'); await p.waitForTimeout(1000);
   await p.tap('text=1초 둘러보기'); await p.waitForTimeout(1500);

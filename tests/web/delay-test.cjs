@@ -4,7 +4,7 @@ const { chromium } = require('playwright');
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, geolocation: { latitude: 37.52, longitude: 127.04 }, permissions: ['geolocation'] });
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.clock.install({ time: new Date('2026-10-25T12:55:00+09:00') }); await p.clock.resume();
-  await p.addInitScript(() => { sessionStorage.setItem('rp_splash_shown', '1'); localStorage.setItem('bp_buffer_prep', '0'); });
+  await p.addInitScript(() => { sessionStorage.setItem('rp_splash_shown', '1'); localStorage.setItem('bp_buffer_prep', '0'); localStorage.setItem('rp_loc_consent', 'yes'); });
   await p.route(/^https?:\/\/(?!127\.0\.0\.1|localhost)/, r => r.request().url().endsWith('.js') ? r.fulfill({ status: 200, contentType: 'application/javascript', body: '' }) : r.abort());
   await p.goto(process.env.BASE_DEMO + '/index.html'); await p.waitForTimeout(600);
   const r = await p.evaluate(async () => {
