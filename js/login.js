@@ -18,8 +18,21 @@ const Login = {
     const inputStyle = 'background:#efeff4; border:1px solid transparent; color:var(--text-100); height:50px; padding:0 14px; border-radius:12px; font-size:15px; width:100%; outline:none;';
     el.innerHTML = `
       <div class="login-container lg-wrap">
+        <aside class="lg-side" aria-hidden="true">
+          <div class="lg-side-top"><img src="icon.svg" alt=""><b>로드플래너</b></div>
+          <div class="lg-side-mid">
+            <h2>약속 시간에서 거꾸로,<br><em>오늘 동선이 먼저</em> 나와요</h2>
+            <ul>
+              <li><span>⏰</span><div><b>기상부터 철수까지 자동 계산</b>그날 교통 예측으로 출발 시각을 잡아요</div></li>
+              <li><span>🚗</span><div><b>누르면 바로 길안내</b>티맵·카카오내비로 다음 장소까지</div></li>
+              <li><span>🔔</span><div><b>늦을 것 같으면 먼저 알림</b>본사와 로드톡으로 바로 공유</div></li>
+            </ul>
+          </div>
+          <div class="lg-side-foot">© 2026 로드플래너</div>
+        </aside>
+        <div class="lg-main">
         <div class="lg-head">
-          <img src="img/logo.jpg" alt="" class="lg-logo">
+          <img src="icon.svg" alt="" class="lg-logo">
           <h1 class="login-title">로드플래너</h1>
           <p class="login-subtitle">현장 매니저를 위한 스케줄 · 동선 앱</p>
         </div>
@@ -75,6 +88,7 @@ const Login = {
             본사 관리자라면 관제 포털로
           </a>
           <div class="lg-legal"><a href="terms.html" target="_blank">이용약관</a> · <a href="privacy.html" target="_blank">개인정보처리방침</a> · <a href="location-terms.html" target="_blank">위치 이용약관</a></div>
+        </div>
         </div>
       </div>
     `;

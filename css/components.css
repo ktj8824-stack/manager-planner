@@ -950,7 +950,33 @@ div.art-add.locked button { margin-top:6px; border:0; background:#4f46e5; color:
 .exp-link { border:0; background:none; color:#4f46e5; font-weight:700; font-size:13px; text-decoration:underline; padding:6px 0; cursor:pointer; align-self:flex-start; }
 
 /* ── 시작 화면 (두 가지 입구) ── */
-.login-container.lg-wrap { align-items:stretch; justify-content:flex-start; max-width:420px; margin:0 auto; padding:48px 20px 24px; min-height:100vh; min-height:100dvh; box-sizing:border-box; display:flex; flex-direction:column; gap:26px; background:#f2f2f7; }
+.login-container.lg-wrap { align-items:stretch; justify-content:flex-start; max-width:none; width:100%; margin:0; padding:0; min-height:100vh; min-height:100dvh; box-sizing:border-box; display:flex; flex-direction:column; background:#f2f2f7; }
+.lg-main { width:100%; max-width:440px; margin:0 auto; padding:48px 20px 24px; box-sizing:border-box; display:flex; flex-direction:column; gap:26px; flex:1; }
+.lg-side { display:none; }
+/* 넓은 화면(태블릿·PC): 양옆 빈 공간 없이 — 왼쪽 소개, 오른쪽 로그인 */
+@media (min-width: 760px) {
+  #app:has(#screen-login.active) { max-width:none; box-shadow:none; }
+  .login-container.lg-wrap { display:grid; grid-template-columns:minmax(0, 1.1fr) minmax(400px, 1fr); }
+  .lg-side { display:flex; flex-direction:column; justify-content:space-between; gap:36px; padding:56px clamp(32px, 5vw, 72px); background:radial-gradient(120% 90% at 0% 0%, #312e81 0%, #111827 55%, #0b1020 100%); color:#d1d5db; min-width:0; }
+  .lg-side-top { display:flex; align-items:center; gap:12px; }
+  .lg-side-top img { width:44px; height:44px; border-radius:12px; }
+  .lg-side-top b { font-size:20px; font-weight:800; color:#fff; }
+  .lg-side-mid h2 { margin:0; font-size:clamp(28px, 3.2vw, 42px); line-height:1.25; font-weight:900; color:#fff; letter-spacing:-1px; }
+  .lg-side-mid h2 em { font-style:normal; color:#a5b4fc; }
+  .lg-side-mid ul { list-style:none; margin:32px 0 0; padding:0; display:flex; flex-direction:column; gap:14px; }
+  .lg-side-mid li { display:flex; gap:12px; align-items:flex-start; font-size:15px; line-height:1.5; }
+  .lg-side-mid li > span { flex-shrink:0; width:30px; height:30px; border-radius:9px; background:rgba(165,180,252,0.14); display:grid; place-items:center; }
+  .lg-side-mid li b { display:block; color:#fff; font-weight:700; }
+  .lg-side-foot { font-size:12.5px; color:#6b7280; }
+  .lg-main { justify-content:center; padding:48px 32px; background:#f2f2f7; }
+  .lg-main .lg-foot { margin-top:8px; }
+}
+/* 태블릿 세로: 소개 칸 없이 한 줄 (배경은 화면 끝까지) */
+@media (min-width: 760px) and (max-width: 959px) {
+  .login-container.lg-wrap { display:flex; }
+  .lg-side { display:none; }
+  .lg-main { max-width:480px; }
+}
 .lg-head { display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center; }
 .lg-logo { width:64px; height:64px; border-radius:18px; box-shadow:0 6px 14px rgba(0,0,0,0.18); }
 .lg-head .login-title { margin:6px 0 0; font-size:26px; font-weight:900; color:#0f172a; letter-spacing:-0.5px; }
