@@ -150,7 +150,7 @@ const Expenses = {
           ${cur?.receipt_path ? `<button type="button" class="exp-link" onclick="Expenses.viewReceipt(${escJs(cur.receipt_path)})">영수증 보기</button>` : ''}
         </div>
         <button type="submit" id="exp-save" class="btn-primary" style="width:100%; padding:14px; font-weight:800;">${cur ? '저장' : '추가'}</button>
-        ${cur ? `<button type="button" class="btn-secondary" style="width:100%; padding:12px; color:#dc2626;" onclick="Expenses.remove(${escJs(cur.id)})">삭제</button>` : ''}
+        ${cur && cur.status === 'approved' ? `<p class="exp-lock-note" style="margin:0; font-size:13px; color:#636366; text-align:center;">본사가 승인한 경비라 지울 수 없어요. 고치면 다시 승인 대기로 바뀌어요.</p>` : cur ? `<button type="button" class="btn-secondary" style="width:100%; padding:12px; color:#dc2626;" onclick="Expenses.remove(${escJs(cur.id)})">삭제</button>` : ''}
       </form>`);
     const form = document.getElementById('exp-form');
     form?.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing && e.target.tagName === 'INPUT') { e.preventDefault(); e.target.blur(); } });
@@ -211,14 +211,16 @@ const Expenses = {
 
   async remove(id) {
     const cur = this.items.find(x => x.id === id);
-    if (!cur || !confirm(`${this.cat(cur.category).label} ${this.won(cur.amount)} 기록을 삭제할까요?`)) return;
+    if (!cur) return;
+    if (cur.status === 'approved') { U.toast('본사가 승인한 경비는 지울 수 없어요.'); return; }
+    if (!confirm(`${this.cat(cur.category).label} ${this.won(cur.amount)} 기록을 삭제할까요?`)) return;
     try {
       if (this.online()) await SupabaseClient.expenseDelete(id, cur.receipt_path);
       else this._saveLocal(this._local().filter(x => x.id !== id));
       App.closeModal();
       U.toast('삭제했어요');
       this.rerender();
-    } catch (e) { U.toast('삭제하지 못했어요. 잠시 후 다시 해 주세요.'); }
+    } catch (e) { U.toast(e && e.message === 'APPROVED_LOCKED' ? '본사가 승인한 경비는 지울 수 없어요.' : '삭제하지 못했어요. 잠시 후 다시 해 주세요.'); }
   },
 
   async viewReceipt(path) {

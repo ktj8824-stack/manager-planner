@@ -51,6 +51,8 @@ create trigger location_logs_now before insert on public.location_logs
   for each row execute function public.location_logs_now();
 
 -- 1년 지난 확인자료 자동 삭제 (매일 04:10 KST = 19:10 UTC)
-select cron.unschedule(jobid) from cron.job where jobname = 'location_logs_purge';
-select cron.schedule('location_logs_purge', '10 19 * * *',
-  $$delete from public.location_logs where created_at < now() - interval '1 year'$$);
+create or replace function public.location_logs_purge() returns void language sql security definer set search_path = pg_catalog as $$
+  delete from public.location_logs where created_at < now() - interval '1 year';
+$$;
+revoke all on function public.location_logs_purge() from public, anon, authenticated;
+select cron.schedule('location_logs_purge', '10 19 * * *', 'select public.location_logs_purge()');

@@ -31,7 +31,7 @@ const TESTS = [
   ['그날 교통 예측 동선', 'web/tm-test.cjs', [], [/도착 기준 교통 예측/, /현재 교통 기준/]],
   ['완료 단계 접기', 'web/fold-test.cjs', [], [/완료된 단계 2개/]],
   ['현장 메모', 'web/venue-test.cjs', [], [/현장 메모 2/, /지하 2층 B구역 주차/]],
-  ['예약 알림 (출발·밤 요약·본사 알림 끄기)', 'server/rem-test.mts', [], [/13분 뒤 출발/, /매니저 확인 대기 1건/, /개인유료일정/, /개인무료일정/, /prefOff hq: 0 mgr: [1-9]/]],
+  ['예약 알림 (출발·밤 요약·본사 알림 끄기)', 'server/rem-test.mts', [], [/13분 뒤 출발/, /매니저 확인 대기 1건 · 담당 미지정 1건/, /개인유료일정/, /개인무료일정/, /prefOff hq: 0 mgr: [1-9]/]],
   ['아침 재계산·출발 지연', 'server/rem2-test.mts', [], [/retimed: 1/, /late: 1/, /출발 지연 7분/]],
   ['결제 서버 확인·알림 안내 (화면)', 'web/billing-test.cjs', [], [/"amount":120000/, /"tampered":"blocked"/, /"ok":"success"/, /"shown":true,"afterOn":true,"nativeHidden":true/]],
   ['결제 서버 로직 (금액 조작·권한)', 'server/pay-test.mts', [], [/"mgrBlocked":"FORBIDDEN"/, /"tamper":"AMOUNT_MISMATCH"/, /"otherUser":"ORDER_NOT_FOUND"/, /"slots":2/, /"rejected":"REJECT_CARD_COMPANY"/, /"companyMgrPro":"FORBIDDEN"/, /"indieAmount":20000/, /"indieRowCompany":null/, /"indieStatus":true/, /"indieStd":"FORBIDDEN"/]],

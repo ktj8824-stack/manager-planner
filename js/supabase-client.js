@@ -665,8 +665,9 @@ const SupabaseClient = {
     return data;
   },
   async expenseDelete(id, receiptPath) {
-    const { error } = await this.client.from('expenses').delete().eq('id', id);
+    const { data, error } = await this.client.from('expenses').delete().eq('id', id).select('id');
     if (error) throw error;
+    if (!data || !data.length) throw new Error('APPROVED_LOCKED');   // 승인된 경비는 서버가 지우지 않음
     if (receiptPath) await this.client.storage.from('expense-receipts').remove([receiptPath]).catch(() => { });
   },
   async expenseUploadReceipt(blob) {

@@ -10,6 +10,9 @@ const rows = [
     timeline_items: [{ time: '10:55', label: '[픽업 출발] 숙소 출발', done: false }], artists: { name: '솔로' }, vehicles: null, profiles: { company_id: null } },
   { id: 's4', title: '개인유료일정', date: '2026-11-04', start_time: '13:30:00', location: '홍대', manager_id: 'indie2', is_secret: false, status: 'scheduled', status_logs: [],
     timeline_items: [{ time: '10:55', label: '[픽업 출발] 숙소 출발', done: false }], artists: { name: '솔로' }, vehicles: null, profiles: { company_id: null } },
+  // 담당 미지정: 매니저 프로필이 없어도 만든 사람(본사)의 회사로 묶여 본사 요약에 '담당 미지정'으로 나와야 함
+  { id: 's5', title: '미지정일정', date: '2026-11-05', start_time: '16:00:00', location: '여의도', manager_id: null, is_secret: false, status: 'scheduled', status_logs: [],
+    timeline_items: [], artists: { name: '루나스' }, vehicles: null, profiles: null, creator: { company_id: 'co' } },
 ];
 const logged = new Set<string>(); const sent: any[] = []; let prefOff = false;
 const db: any = { rpc: async (_n: string, a: any) => ({ data: a.p_user === 'indie2' ? '2099-01-01T00:00:00Z' : null }), from(t: string) {

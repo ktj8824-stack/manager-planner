@@ -1484,10 +1484,13 @@ const Home = {
       const q = input.value.trim();
       if (q.length < 2 || typeof KakaoAPI === 'undefined') { close(); return; }
       const my = ++seq;
+      const first = list.hidden;
       list.hidden = false;
+      // 아이폰 자판에 목록이 가리지 않게 입력칸을 창 위쪽으로 올림 (목록이 처음 열릴 때만)
+      if (first) { try { input.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { } }
       list.innerHTML = '<div class="ps-msg">검색 중...</div>';
-      let docs = [];
-      try { docs = await KakaoAPI.searchPlace(q); } catch (e) { docs = []; }
+      let docs = [], failed = false;
+      try { docs = await KakaoAPI.searchPlace(q); failed = !!KakaoAPI.lastSearchFailed; } catch (e) { docs = []; failed = true; }
       if (my !== seq || document.activeElement !== input) return;
       items = (docs || []).slice(0, 6);
       list.innerHTML = items.length ? items.map((d, i) => `
@@ -1495,7 +1498,7 @@ const Home = {
           <b>${esc(d.place_name || '')}</b>
           <span>${esc(d.road_address_name || d.address_name || '')}</span>
         </button>`).join('')
-        : `<div class="ps-msg">${navigator.onLine === false ? '인터넷 연결을 확인해 주세요.' : '검색 결과가 없어요. 직접 입력해도 돼요.'}</div>`;
+        : `<div class="ps-msg">${navigator.onLine === false ? '인터넷 연결을 확인해 주세요.' : failed ? '검색이 잠시 안 돼요. 장소 이름을 직접 입력해도 돼요.' : '검색 결과가 없어요. 직접 입력해도 돼요.'}</div>`;
     };
     input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(run, 350); });
     // 엔터: 바로 검색 (목록이 이미 있으면 첫 번째를 고름)

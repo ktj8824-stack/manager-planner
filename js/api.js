@@ -77,6 +77,7 @@ const KakaoAPI = {
   /** 카카오 로컬 장소/주소 검색 (키워드 → 없으면 주소) */
   async searchPlace(keyword) {
     const q = String(keyword || '').trim();
+    this.lastSearchFailed = false;
     if (!q) return [];
     const kw = await RouteProxy.call('kakao_keyword', { query: q });
     if (kw && Array.isArray(kw.documents) && kw.documents.length > 0) return kw.documents;
@@ -90,6 +91,8 @@ const KakaoAPI = {
         y: d.y
       }));
     }
+    // 두 검색이 모두 응답 자체를 못 받았으면 '0건'이 아니라 '고장' (화면에서 다른 문구로 알림)
+    if (!kw && !ad) this.lastSearchFailed = true;
     return [];
   },
 

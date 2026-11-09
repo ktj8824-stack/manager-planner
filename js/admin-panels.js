@@ -205,7 +205,7 @@
         if (error) throw error;
         const it = this.items.find(x => x.id === id); if (it) { it.status = status; it.review_note = note; }
         this.draw();
-      } catch (e) { alert('처리하지 못했어요. 대표·관리자 계정인지, 인터넷 연결을 확인해 주세요.'); }
+      } catch (e) { alert(/SELF_REVIEW/.test(String(e && (e.message || e.hint) || '')) ? '내가 쓴 경비는 직접 승인·반려할 수 없어요. 대표가 처리해요.' : '처리하지 못했어요. 대표·관리자 계정인지, 인터넷 연결을 확인해 주세요.'); }
     };
     const _csv = H.csv;
     H.csv = function () { return _csv.call(this); };

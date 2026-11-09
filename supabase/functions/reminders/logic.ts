@@ -180,7 +180,7 @@ export async function run(db: SupabaseClient, send: Sender, nowMs: number, route
   } catch (_e) { /* 기본값 사용 */ }
 
   const { data: rows, error } = await db.from("schedules")
-    .select("id, title, date, start_time, location, manager_id, timeline_items, is_secret, status, status_logs, departure_info, shop_info, artists(name), vehicles(name), profiles!schedules_manager_id_fkey(name, company_id)")
+    .select("id, title, date, start_time, location, manager_id, timeline_items, is_secret, status, status_logs, departure_info, shop_info, artists(name), vehicles(name), profiles!schedules_manager_id_fkey(name, company_id), creator:profiles!schedules_created_by_fkey(company_id)")
     .in("date", [today.ymd, tomorrow.ymd]).not("status", "in", "(cancelled,completed)");
   if (error) throw error;
   const list = (rows ?? []) as Row[];
@@ -290,7 +290,7 @@ export async function run(db: SupabaseClient, send: Sender, nowMs: number, route
     }
     // 본사(대표·관리자): 회사별 내일 일정 수 + 매니저 확인 대기
     const byCo = new Map<string, Row[]>();
-    for (const s of tmr) { const co = s.profiles?.company_id; if (co) byCo.set(co, [...(byCo.get(co) || []), s]); }
+    for (const s of tmr) { const co = s.profiles?.company_id || s.creator?.company_id; if (co) byCo.set(co, [...(byCo.get(co) || []), s]); }
     for (const [co, items] of byCo) {
       if (!(await claim(db, `eve-hq|${co}|${tomorrow.ymd}`))) continue;
       const pending = items.filter((s) => {
