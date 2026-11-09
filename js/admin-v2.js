@@ -26,37 +26,73 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
 
-/* 신규·수정 스케줄: 입력하면서 매니저 동선(기상 → 픽업 → 샵 → 현장)을 바로 계산해 보여 줌
+/* 신규·수정 스케줄: 입력하는 옆에 매니저 동선을 바로 보여 줌 (CEO 플래너 일정 등록창 방식)
+   - 넓은 화면: 왼쪽 입력 · 오른쪽 '매니저 앱에 보이는 동선' (스크롤해도 따라옴)
+   - 좁은 화면: 입력 아래에
    - 등록할 때는 실제 교통으로 다시 계산해서 매니저 앱 타임라인에 들어감 (여기는 시간대 기준 추정) */
 (function () {
   const $ = (id) => document.getElementById(id);
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const hm = (v) => String(v || '').slice(-5);
+  const toMin = (v) => { const m = /^(\d{1,2}):(\d{2})/.exec(v || ''); return m ? +m[1] * 60 + +m[2] : NaN; };
+  const ICON = { 기상: '⏰', 픽업: '🚐', 샵: '💄', 이동: '🚗', 현장: '🎬', 종료: '🏁' };
   let t = null;
+  const optText = (id) => { const s = $(id); return s && s.selectedIndex >= 0 ? String(s.options[s.selectedIndex]?.text || '').replace(/\s*\(.*$/, '') : ''; };
+  const ensureSide = () => {
+    const modal = $('modal-schedule-form'); const box = $('sch-route-preview');
+    if (!modal || !box) return null;
+    let side = $('sch-side');
+    if (!side) {
+      const body = modal.querySelector('.modal-body');
+      side = document.createElement('aside');
+      side.id = 'sch-side'; side.className = 'sch-side';
+      body.appendChild(side);
+      body.classList.add('sch-split');
+      side.appendChild(box);
+    }
+    return box;
+  };
   const draw = () => {
-    const box = $('sch-route-preview');
+    const box = ensureSide();
     if (!box || !window.hqStore || typeof window.hqStore.generateAutoTimeline !== 'function') return;
-    const start = ($('form-start-time')?.value || '').slice(-5);
-    if (!/^\d{2}:\d{2}$/.test(start)) { box.hidden = true; return; }
+    box.hidden = false;
+    const start = hm($('form-start-time')?.value);
+    const end = hm($('form-end-time')?.value);
+    const head = `<h4>매니저 앱에 보이는 동선</h4>`;
+    if (!/^\d{2}:\d{2}$/.test(start)) {
+      box.innerHTML = head + `<div class="sr-empty">시작 시간을 넣으면<br>기상부터 철수까지 동선이 바로 나와요</div>`;
+      return;
+    }
     const sch = {
       title: $('form-title')?.value || '스케줄',
-      startTime: start,
-      endTime: ($('form-end-time')?.value || '').slice(-5) || undefined,
+      startTime: start, endTime: end || undefined,
       location: $('form-location')?.value || '',
-      shop: { needed: !!$('form-shop-needed')?.checked, name: $('form-shop-name')?.value || '', durationMin: Number($('form-shop-duration')?.value) || undefined },
+      shop: { needed: !!$('form-shop-needed')?.checked, name: $('form-shop-name')?.value || '', address: $('form-shop-address')?.value || '', durationMin: Number($('form-shop-duration')?.value) || undefined },
       departure: { place: $('form-departure-place')?.value || '' },
     };
     let tl = [];
     try { tl = window.hqStore.generateAutoTimeline(sch) || []; } catch (e) { tl = []; }
-    if (!tl.length) { box.hidden = true; return; }
-    const sel = $('form-manager');
-    const mgr = sel && sel.selectedIndex >= 0 ? String(sel.options[sel.selectedIndex]?.text || '').replace(/\s*\(.*$/, '') : '';
     const clean = (l) => String(l || '').replace(/^\[[^\]]+\]\s*/, '');
     const KIND = (l) => /^\[기상/.test(l) ? '기상' : /^\[픽업/.test(l) ? '픽업' : /^\[헤어|샵/.test(l) ? '샵' : /^\[현장 이동/.test(l) ? '이동' : /^\[메인/.test(l) ? '현장' : /^\[현장 철수/.test(l) ? '종료' : '';
-    box.innerHTML = `<h4>자동으로 계산한 매니저 동선</h4><ol>${tl.map(x => `<li><b>${esc(x.time || '')}</b><i class="k-${esc(KIND(x.label || ''))}"></i><span>${esc(clean(x.label))}</span></li>`).join('')}</ol>
-      <p>${mgr && !/미지정|선택/.test(mgr) ? `저장하면 ${esc(mgr)} 앱 타임라인에 들어가요` : '담당 매니저를 고르면 그 매니저 앱 타임라인에 들어가요'} · 지금은 시간대 기준 추정이고, 저장할 때 실제 교통으로 다시 계산해요</p>`;
-    box.hidden = false;
+    const first = tl.find(x => /^\[(픽업|현장 이동)/.test(x.label || ''));
+    const mgrId = $('form-manager')?.value || '';
+    const mgr = optText('form-manager');
+    const hasMgr = mgrId && !/미지정|선택/.test(mgr);
+    // 겹침 확인: 같은 날 같은 매니저·차량
+    const warns = [];
+    if (end && start && toMin(end) <= toMin(start)) warns.push('종료 시간이 시작보다 빠르거나 같아요 (자정을 넘기는 일정이면 그대로 두세요)');
+    try {
+      const date = $('form-date')?.value;
+      const r = window.hqStore.checkConflict?.({ id: $('form-sch-id')?.value || null, date, startTime: start, endTime: end || start, managerId: mgrId || null, vehicleId: $('form-vehicle')?.value || null });
+      (r?.conflicts || []).slice(0, 3).forEach(c => warns.push(`${c.type === 'vehicle' ? '차량 ' + (c.vehicleName || '') : '매니저 ' + (c.managerName || '')} 겹침 · ${c.conflictTime} ${c.conflictArtist ? c.conflictArtist + ' ' : ''}${c.conflictScheduleTitle || ''}`));
+    } catch (e) { }
+    box.innerHTML = head
+      + (first ? `<div class="sr-lead"><span>${hasMgr ? esc(mgr) + ' 출발' : '첫 출발'}</span><b>${esc(first.time)}</b></div>` : '')
+      + `<ol class="sr-list">${tl.map(x => { const k = KIND(x.label || ''); return `<li class="k-${esc(k)}"><b>${esc(x.time || '')}</b><span><em>${ICON[k] || '•'}</em>${esc(clean(x.label))}${x.desc ? `<small>${esc(x.desc)}</small>` : ''}</span></li>`; }).join('')}</ol>`
+      + warns.map(w => `<div class="sr-warn">⚠️ ${esc(w)}</div>`).join('')
+      + `<p class="sr-note">${hasMgr ? `저장하면 ${esc(mgr)} 앱 타임라인에 이대로 들어가요.` : '담당 매니저를 고르면 그 매니저 앱 타임라인에 들어가요.'} 지금은 시간대 기준 추정이고, 저장할 때 실제 교통으로 다시 계산해요.</p>`;
   };
-  const later = () => { clearTimeout(t); t = setTimeout(draw, 150); };
+  const later = () => { clearTimeout(t); t = setTimeout(draw, 120); };
   const start = () => {
     const form = $('form-schedule');
     if (!form) return;
@@ -64,8 +100,13 @@
     form.addEventListener('change', later);
     const modal = $('modal-schedule-form');
     if (modal) new MutationObserver(() => { if (modal.classList.contains('active')) setTimeout(draw, 200); }).observe(modal, { attributes: true, attributeFilter: ['class'] });
-    // 시간 바퀴로 고르면 숨은 칸 값만 바뀌므로 주기적으로도 확인
-    setInterval(() => { if (modal && modal.classList.contains('active')) { const k = ($('form-start-time')?.value || '') + ($('form-end-time')?.value || ''); if (k !== start._k) { start._k = k; draw(); } } }, 700);
+    // 시간 바퀴·검색 자동 입력은 이벤트 없이 값만 바뀌므로 주기적으로도 확인
+    let key = '';
+    setInterval(() => {
+      if (!modal || !modal.classList.contains('active')) return;
+      const k = ['form-start-time', 'form-end-time', 'form-date', 'form-location', 'form-departure-place', 'form-shop-name', 'form-manager', 'form-vehicle'].map(id => $(id)?.value || '').join('|') + ($('form-shop-needed')?.checked ? 1 : 0);
+      if (k !== key) { key = k; draw(); }
+    }, 600);
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();

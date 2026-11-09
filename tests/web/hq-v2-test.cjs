@@ -32,7 +32,7 @@ const { chromium } = require('playwright');
   await p.click('#btn-open-add-schedule'); await p.waitForTimeout(500);
   await p.fill('#form-title', '테스트 방송');
   await p.waitForTimeout(400);
-  R.newPanel = await p.evaluate(() => { const r = document.querySelector('#modal-schedule-form > .modal-content').getBoundingClientRect(); const pv = document.getElementById('sch-route-preview'); return { right: Math.round(r.right) === innerWidth, tall: r.height >= innerHeight - 2, preview: !pv.hidden && pv.querySelectorAll('li').length >= 2 }; });
+  R.newPanel = await p.evaluate(() => { const r = document.querySelector('#modal-schedule-form > .modal-content').getBoundingClientRect(); const pv = document.getElementById('sch-route-preview'); return { right: Math.round(r.right) === innerWidth, tall: r.height >= innerHeight - 2, preview: !pv.hidden && pv.querySelectorAll('li').length >= 2, side: !!pv.closest('#sch-side') && pv.getBoundingClientRect().left > document.getElementById('form-title').getBoundingClientRect().right }; });
   await p.evaluate(() => document.querySelector('#modal-schedule-form [data-close]').click()); await p.waitForTimeout(300);
   // 긴급 공지 미리보기
   await p.evaluate(() => Admin.openSendMsgModal()); await p.waitForTimeout(300);
