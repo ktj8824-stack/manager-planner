@@ -283,12 +283,20 @@
 .sch-route .sr-note { margin: 12px 0 0; font-size: 12px; color: #64748b; line-height: 1.5; }
 /* 넓은 화면: 입력 옆에 동선 (CEO 플래너 일정 등록창처럼) */
 #modal-schedule-form > .modal-content { width: min(1060px, 100%) !important; }
-#modal-schedule-form .modal-body.sch-split { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
-#modal-schedule-form .sch-side { position: sticky; top: 0; min-width: 0; }
+/* 왼쪽 입력만 휠로 움직이고, 오른쪽 동선과 [저장하고 매니저에게 알림]은 제자리 (버튼은 늘 화면 맨 아래) */
+#modal-schedule-form .modal-body.sch-split { display: grid; grid-template-columns: minmax(0, 1fr) 340px; grid-template-rows: minmax(0, 1fr); gap: 20px; overflow: hidden; padding-bottom: 20px; }
+#modal-schedule-form .modal-body.sch-split > #form-schedule { overflow-y: auto; overscroll-behavior: contain; min-height: 0; padding-right: 8px; padding-bottom: 24px; }
+#modal-schedule-form .modal-body.sch-split .form-actions { display: none !important; }
+#modal-schedule-form .sch-side { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+#modal-schedule-form .sch-side > .sch-route { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+#modal-schedule-form .sch-side > .sch-side-submit { flex: 0 0 auto; }
 @media (max-width: 1100px) {
   #modal-schedule-form > .modal-content { width: min(640px, 100%) !important; }
-  #modal-schedule-form .modal-body.sch-split { display: block; }
-  #modal-schedule-form .sch-side { position: static; margin-top: 16px; }
+  #modal-schedule-form .modal-body.sch-split { display: block; overflow-y: auto; }
+  #modal-schedule-form .modal-body.sch-split > #form-schedule { overflow: visible; padding: 0; }
+  #modal-schedule-form .modal-body.sch-split .form-actions { display: flex !important; }
+  #modal-schedule-form .sch-side { margin-top: 16px; }
+  #modal-schedule-form .sch-side > .sch-side-submit { display: none; }
 }
 
 /* 공지 미리보기 */
