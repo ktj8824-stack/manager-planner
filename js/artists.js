@@ -138,6 +138,7 @@ const Artists = {
         const newId = 'art_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
         await window.hqStore.addArtist({ id: newId, name, type, members: type === '그룹' ? 2 : 1, color, emoji: '✨', status: '활동중' });
         U.toast(`${name}님을 등록했어요`);
+        if (window.Ads) Ads.moment('artist');
       }
       this._syncAssigned();
       App.closeModal();

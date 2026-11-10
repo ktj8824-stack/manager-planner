@@ -17,7 +17,7 @@ const App = {
     }
     this.loadPreferences();
     this.renderNav();
-    this.renderAdBanner();
+    try { window.Ads && Ads.sync(); } catch (e) { }   // 무료 개인 매니저만 아래 띠 광고
     
     // 1. HQ 실시간 알림 수신 (BroadcastChannel - 로컬/크로스탭)
     // 1. HQ 실시간 알림 수신 (BroadcastChannel - 로컬/크로스탭)
@@ -235,6 +235,7 @@ const App = {
       }
     }
     this.updateNav(name === 'timeline' ? 'home' : name);
+    try { window.Ads && Ads.sync(); } catch (e) { }
     
     const nav = U.$('#top-header');
     const hide = name === 'login' || name === 'onboarding';

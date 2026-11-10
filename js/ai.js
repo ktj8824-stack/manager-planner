@@ -282,6 +282,7 @@ const RoadAI = {
         places: data.places || [], ids
       };
       this.messages.push(m); this.append(m); this.save();
+      if (window.Ads) setTimeout(() => Ads.moment('ai'), 1500);   // 무료 개인 매니저만 (Ads 안에서 판단)
     } catch (e) {
       this.hideTyping();
       this.botSay(e && e.login ? '로그인이 만료됐어요. 다시 로그인해 주세요.'

@@ -1444,6 +1444,7 @@ const Home = {
       }
       App.closeModal();
       U.toast(editId ? '✅ 스케줄을 수정했습니다.' : '✅ 스케줄이 등록되었습니다!');
+      if (window.Ads) Ads.moment(editId ? 'schedule-edit' : 'schedule');
       const parts = dateVal.split('-').map(Number);
       if (parts.length === 3) this.selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
       this.render();

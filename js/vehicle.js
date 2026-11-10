@@ -108,6 +108,7 @@ const Vehicle = {
     } catch (e) { }
     App.closeModal();
     U.toast('차량 정보를 저장했어요');
+    if (window.Ads) Ads.moment('vehicle');
     const sc = window.SupabaseClient;
     if (sc?.isConfigured && sc.currentUser) {
       sc.client.auth.updateUser({ data: { vehicle: v } }).catch(() => { });

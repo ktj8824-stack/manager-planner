@@ -44,6 +44,7 @@ const Plan = {
       if (s && s.proUntil) localStorage.setItem('rp_pro_until', s.proUntil);
       else localStorage.removeItem('rp_pro_until');
     } catch (e) { /* 연결이 안 되면 마지막으로 받은 값 유지 */ }
+    try { window.Ads && Ads.sync(); } catch (e) { }   // 유료로 바뀌면 광고 바로 끄기
   },
 
   untilText() {
