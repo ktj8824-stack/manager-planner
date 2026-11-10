@@ -846,7 +846,7 @@
 .notice-badge[hidden] { display: none; }
 
 /* ── 아래 메뉴 (홈·로드톡·긴급·내 정보) ── */
-:root { --bottom-nav-h: 64px; --nav-safe: max(0px, calc(env(safe-area-inset-bottom) - 14px)); }  /* 아이폰 홈 바 자리를 다 비우지 않고 14pt 덜 비움 */
+:root { --bottom-nav-h: 64px; --nav-safe: max(0px, calc(env(safe-area-inset-bottom) - 26px)); }  /* 아이폰 홈 바 자리는 8pt만 비움 */
 .bottom-nav {
   position: fixed; left: 50%; transform: translateX(-50%); bottom: 0;
   width: 100%; max-width: var(--app-w);
