@@ -53,6 +53,14 @@ const Plan = {
     return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}까지`;
   },
 
+  // 다음 자동결제일 (유료 기간이 끝나는 날)
+  nextBillText() {
+    const t = Date.parse(this.proUntil());
+    if (!Number.isFinite(t) || t <= Date.now()) return '';
+    const d = new Date(t);
+    return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+  },
+
   // 유료 기능을 눌렀을 때 안내 창
   upsell(feature) {
     const what = this.FEATURES[feature] || '이 기능';
@@ -61,7 +69,7 @@ const Plan = {
       <div style="padding:4px 2px; text-align:left;">
         <p style="font-size:15px; font-weight:700; color:var(--text-100); margin-bottom:10px;">‘${what}’은(는) 유료에서 쓸 수 있어요.</p>
         <div style="background:var(--bg-input); border-radius:12px; padding:12px 14px; margin-bottom:14px;">
-          <div style="font-size:13px; font-weight:800; color:var(--accent); margin-bottom:4px;">월 ${this.FEE.toLocaleString()}원</div>
+          <div style="font-size:13px; font-weight:800; color:var(--accent); margin-bottom:4px;">월 ${this.FEE.toLocaleString()}원 · 부가세 포함 · 매달 자동결제</div>
           <ul style="font-size:14px; color:var(--text-200); padding-left:18px; margin:0;">${list}</ul>
         </div>
         <button class="btn-primary" style="width:100%; padding:14px; font-weight:800;" onclick="App.closeModal(); App.navigate('upgrade');">유료 알아보기</button>

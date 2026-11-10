@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
       getPayment: async (id: string) => must(await db.from("payments").select("*").eq("order_id", id).maybeSingle()),
       insertPayment: async (row: unknown) => must(await db.from("payments").insert(row)),
       updatePayment: async (id: string, patch: unknown) => must(await db.from("payments").update(patch).eq("order_id", id)),
-      getCompany: async (id: string) => must(await db.from("companies").select("plan, paid_until, extra_manager_slots").eq("id", id).maybeSingle()),
+      getCompany: async (id: string) => must(await db.from("companies").select("plan, paid_until, extra_manager_slots, next_extra_slots").eq("id", id).maybeSingle()),
       updateCompany: async (id: string, patch: unknown) => must(await db.from("companies").update(patch).eq("id", id)),
       countManagers: async (id: string) => {
         const r = await db.from("profiles").select("id", { count: "exact", head: true }).eq("company_id", id).in("role", ["manager", "staff"]);
@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
         const r = must(await db.from("payments").select("period_end").eq("user_id", uid).eq("plan", "pro").eq("status", "DONE").order("period_end", { ascending: false }).limit(1)) as { period_end: string }[];
         return r?.[0]?.period_end || null;
       },
-      recentPayments: async (cid: string) => must(await db.from("payments").select("order_id, plan, add_slots, amount, status, method, approved_at, period_end, mode, created_at").eq("company_id", cid).neq("status", "READY").order("created_at", { ascending: false }).limit(12)),
+      recentPayments: async (cid: string) => must(await db.from("payments").select("order_id, plan, kind, add_slots, amount, status, method, approved_at, period_end, mode, created_at").eq("company_id", cid).neq("status", "READY").order("created_at", { ascending: false }).limit(12)),
     };
     const toss = async (paymentKey: string, orderId: string, amount: number) => {
       const res = await fetch("https://api.tosspayments.com/v1/payments/confirm", {

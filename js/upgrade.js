@@ -36,6 +36,7 @@ const Upgrade = {
           <div class="upg-price-box">
             <div class="upg-price">₩${fee} <span>/ 월</span></div>
           </div>
+          <div style="font-size:13px; color:var(--text-300); margin-top:10px; font-weight:600;">부가세 포함 · 매달 자동결제 · 언제든 해지</div>
         </div>
 
         <div class="upg-content">
@@ -81,12 +82,18 @@ const Upgrade = {
         </div>
 
         <div class="upg-action">
-          ${paid ? `<div style="text-align:center; font-size:14px; font-weight:800; color:#047857; margin-bottom:10px;">유료 사용 중 · ${esc(Plan.untilText())}</div>` : ''}
-          <button class="btn-upg" onclick="Upgrade.startPayment()">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-            ${paid ? '1개월 연장하기' : `월 ${fee}원 결제하기`}
-          </button>
-          <p style="text-align:center; font-size:var(--fs-xs); color:var(--text-400); margin-top:var(--sp-4);">결제하면 바로 1개월 동안 적용돼요.<br>자동으로 다시 결제되지 않아요.</p>
+          ${paid ? `
+            <div style="background:#ecfdf5; border-radius:14px; padding:14px 16px; text-align:center;">
+              <div style="font-size:15px; font-weight:800; color:#047857;">유료 사용 중</div>
+              <div style="font-size:13px; color:#065f46; margin-top:4px;">다음 결제일 ${esc(Plan.nextBillText())} · 매달 자동결제</div>
+            </div>
+            <p style="text-align:center; font-size:var(--fs-xs); color:var(--text-400); margin-top:var(--sp-4); line-height:1.6;">해지해도 ${esc(Plan.untilText())} 계속 쓸 수 있어요.</p>`
+          : `
+            <button class="btn-upg" onclick="Upgrade.startPayment()">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+              월 ${fee}원 정기결제 시작
+            </button>
+            <p style="text-align:center; font-size:var(--fs-xs); color:var(--text-400); margin-top:var(--sp-4); line-height:1.6;">결제하면 바로 쓸 수 있어요. 매달 같은 날 자동으로 결제되고,<br>언제든 해지할 수 있어요. 해지해도 결제한 기간까지는 계속 쓸 수 있어요.</p>`}
         </div>
       </div>
     `;
@@ -95,25 +102,10 @@ const Upgrade = {
     setTimeout(() => U.stagger(el, '.feat-item', 100), 50);
   },
 
+  // 중간 확인 창 없이 결제 페이지로 바로 이동 (동의·금액은 결제 페이지에서 확인)
   startPayment() {
-    const fee = Plan.FEE;
-    const userName = encodeURIComponent(localStorage.getItem('bp_user_name') || '개인 매니저');
+    const userName = encodeURIComponent(localStorage.getItem('bp_user_name') || '');
     const userEmail = encodeURIComponent(localStorage.getItem('bp_user_email') || '');
-    const company = encodeURIComponent('개인 매니저');
-    const payUrl = `payment.html?plan=pro&totalFee=${fee}&company=${company}&ceo=${userName}&email=${userEmail}&return=mobile`;
-
-    App.showModal('결제', `
-      <div style="padding:4px 0; text-align:center;">
-        <div style="font-size:36px; margin-bottom:12px;">💳</div>
-        <h3 style="font-size:17px; font-weight:700; margin-bottom:6px; color:var(--text-100);">개인 매니저 유료 (1개월)</h3>
-        <p style="font-size:14px; color:var(--text-400); margin-bottom:20px; line-height:1.5;">
-          <strong>${fee.toLocaleString()}원</strong> (부가세 포함)<br>
-          토스페이먼츠로 안전하게 결제돼요.
-        </p>
-        <button class="btn-primary" style="width:100%; padding:14px; margin-bottom:10px; font-weight:700; font-size:14px; background:linear-gradient(135deg, #6366f1, #8b5cf6);" onclick="location.href=${escJs(payUrl)}">
-          카드 / 간편결제로 결제
-        </button>
-      </div>
-    `);
+    location.href = `payment.html?plan=pro&ceo=${userName}&email=${userEmail}&return=mobile`;
   }
 };

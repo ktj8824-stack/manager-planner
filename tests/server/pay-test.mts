@@ -10,10 +10,11 @@ const okToss = async (_k: string, _o: string, amount: number) => ({ ok: true, st
 const ceo = { id: 'u1', company_id: 'c1', role: 'ceo' }, mgr = { id: 'u2', company_id: 'c1', role: 'manager' };
 const now = new Date('2026-11-05T06:00:00Z');
 const out: any = {};
-out.quote = quote('standard', 3).amount;
+out.quote = quote('standard', 3).amount; { const q = quote('standard', 2); out.vat = [q.supply, q.vat, q.amount].join('/'); }
+try { await handle('prepare', { plan: 'standard', addSlots: 0 }, ceo, db, okToss, 'test', now); } catch (e: any) { out.belowUsed = e.code + ' ' + e.message; }
 try { await handle('prepare', { plan: 'standard', addSlots: 1 }, mgr, db, okToss, 'test', now); } catch (e: any) { out.mgrBlocked = e.code; }
 const p = await handle('prepare', { plan: 'standard', addSlots: 2 }, ceo, db, okToss, 'test', now);
-out.prepared = p.amount;
+out.prepared = p.amount; out.orderIdFmt = /^RP-20261105-[A-Z2-9]{6}$/.test(p.orderId);
 try { await handle('confirm', { orderId: p.orderId, paymentKey: 'k', amount: 1000 }, ceo, db, okToss, 'test', now); } catch (e: any) { out.tamper = e.code; }
 const p2 = await handle('prepare', { plan: 'standard', addSlots: 2 }, ceo, db, okToss, 'test', now);
 try { await handle('confirm', { orderId: p2.orderId, paymentKey: 'k', amount: p2.amount }, mgr, db, okToss, 'test', now); } catch (e: any) { out.otherUser = e.code; }
@@ -21,6 +22,34 @@ const c = await handle('confirm', { orderId: p2.orderId, paymentKey: 'k', amount
 out.confirmed = c.status; out.slots = company.extra_manager_slots; out.until = company.paid_until;
 const again = await handle('confirm', { orderId: p2.orderId, paymentKey: 'k', amount: p2.amount }, ceo, db, okToss, 'test', now);
 out.idempotent = again.status;
+// 이용 중 자리 추가 → 다음 결제일까지 일할 (30일 중 10일 남음: 20,000×10/30=6,660 + 부가세 666)
+const mid = new Date('2026-11-25T06:00:00Z');
+const qq = await handle('quote', { plan: 'standard', addSlots: 3 }, ceo, db, okToss, 'test', mid);
+out.prorateQuote = [qq.kind, qq.added, qq.daysLeft, qq.cycleDays, qq.supply, qq.vat, qq.amount, qq.monthly.amount].join('/');
+const untilBefore = company.paid_until;
+const pr = await handle('prepare', { plan: 'standard', addSlots: 3 }, ceo, db, okToss, 'test', mid);
+const prc = await handle('confirm', { orderId: pr.orderId, paymentKey: 'k2', amount: pr.amount }, ceo, db, okToss, 'test', mid);
+out.prorateDone = [prc.kind, company.extra_manager_slots, company.paid_until === untilBefore].join('/');
+const same = await handle('quote', { plan: 'standard', addSlots: 3 }, ceo, db, okToss, 'test', mid);
+out.renewKind = same.kind + '/' + same.amount;
+const st2 = await handle('prepare', { plan: 'standard', addSlots: 4 }, ceo, db, okToss, 'test', mid);
+company.extra_manager_slots = 5; // 그 사이 다른 결제로 자리가 바뀜
+let tossCalled = false; const spyToss = async (...a: any[]) => { tossCalled = true; return okToss(a[0], a[1], a[2]); };
+try { await handle('confirm', { orderId: st2.orderId, paymentKey: 'k3', amount: st2.amount }, ceo, db, spyToss, 'test', mid); } catch (e: any) { out.stale = e.code + '/' + tossCalled; }
+company.extra_manager_slots = 2;
+// 이용 중 자리 줄이기 → 오늘 결제 없음, 다음 결제일부터 적용 (예약)
+const rq = await handle('quote', { plan: 'standard', addSlots: 1 }, ceo, db, okToss, 'test', mid);
+try { await handle('prepare', { plan: 'standard', addSlots: 1 }, ceo, db, okToss, 'test', mid); } catch (e: any) { out.reducePay = e.code; }
+const sc = await handle('schedule_slots', { addSlots: 1 }, ceo, db, okToss, 'test', mid);
+let below = ''; try { await handle('schedule_slots', { addSlots: 0 }, ceo, db, okToss, 'test', mid); } catch (e: any) { below = e.code; }
+const stR = await handle('status', {}, ceo, db, okToss, 'test', mid);
+const cancel = await handle('schedule_slots', { addSlots: 2 }, ceo, db, okToss, 'test', mid);
+out.reduce = [rq.kind, rq.amount, sc.nextExtraSlots, sc.monthly.amount, company.extra_manager_slots, stR.company.nextExtraSlots, below, cancel.nextExtraSlots].join('/');
+await handle('schedule_slots', { addSlots: 1 }, ceo, db, okToss, 'test', mid);
+const pr2 = await handle('prepare', { plan: 'standard', addSlots: 3 }, ceo, db, okToss, 'test', mid);
+await handle('confirm', { orderId: pr2.orderId, paymentKey: 'k4', amount: pr2.amount }, ceo, db, okToss, 'test', mid);
+out.addClearsReduce = company.next_extra_slots === null && company.extra_manager_slots === 3;
+company.extra_manager_slots = 2;
 const st = await handle('status', {}, ceo, db, okToss, 'test', now);
 out.total = st.company.totalSlots; out.active = st.company.active;
 try { await handle('prepare', { plan: 'pro' }, mgr, db, okToss, 'test', now); } catch (e: any) { out.companyMgrPro = e.code; }

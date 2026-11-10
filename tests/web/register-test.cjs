@@ -38,10 +38,11 @@ const { chromium } = require('playwright');
   // 결제 주소: ?가 두 번 들어가지 않는지
   const q = await ctx.newPage();
   await q.route(/^https?:\/\/(?!127\.0\.0\.1|localhost|0\.0\.0\.0)/, r => r.request().url().includes('tosspayments') ? r.fulfill({ status: 200, contentType: 'application/javascript', body: `window.__req=[];window.TossPayments=function(){return{widgets(){return{setAmount:async()=>{},renderPaymentMethods:async()=>{},renderAgreement:async()=>{},requestPayment:async(o)=>{window.__req.push(o)}}}}};window.TossPayments.ANONYMOUS='A';` }) : (r.request().url().endsWith('.js') || r.request().url().includes('supabase-js')) ? r.fulfill({ status: 200, contentType: 'application/javascript', body: '' }) : r.abort());
-  await q.goto(process.env.BASE_PROD + '/payment.html?plan=pro&totalFee=4900&company=100%25%EC%97%94%ED%84%B0&return=mobile');
+  await q.goto(process.env.BASE_PROD + '/payment.html?addSlots=0&totalFee=4900&company=100%25%EC%97%94%ED%84%B0');
   await q.waitForTimeout(400);
   out.pay = await q.evaluate(async () => {
     window.SupabaseClient.invokePayments = async () => ({ orderId: 'RP-PRO-1', amount: 4900, orderName: 'PRO' });
+    document.getElementById('agree-auto').click();
     await startPayment();
     const u = window.__req[0] && window.__req[0].successUrl;
     return { company: document.getElementById('pay-company-name').textContent, qmarks: (u.match(/\?/g) || []).length, phone: document.getElementById('buyer-phone').value };

@@ -5,225 +5,182 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>구독 결제 | 로드플래너</title>
+  <title>결제 | 로드플래너</title>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Pretendard', -apple-system, sans-serif;
-      background: #0f172a;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px 16px;
-      color: #f8fafc;
+      background: #f2f2f7; min-height: 100vh; color: #111827;
+      display: flex; flex-direction: column; align-items: center;
     }
-    body::before {
-      content: '';
-      position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
-      background: radial-gradient(ellipse at 20% 20%, rgba(99,102,241,0.15) 0%, transparent 50%),
-                  radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.10) 0%, transparent 50%);
-      pointer-events: none; z-index: 0;
-    }
-    .page-wrap { position: relative; z-index: 1; width: 100%; max-width: 520px; }
-    .pay-header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+    .page-wrap { width: 100%; max-width: 520px; padding: 16px 16px 40px; }
+    .pay-header { display: flex; align-items: center; gap: 12px; margin: 4px 0 18px; }
     .pay-back-btn {
-      width: 36px; height: 36px; border-radius: 10px; border: 1px solid #334155;
-      background: rgba(255,255,255,0.05); color: #94a3b8; font-size: 18px;
-      cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+      width: 40px; height: 40px; border-radius: 12px; border: 1px solid #e5e7eb; background: #fff;
+      color: #374151; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
-    .pay-back-btn:hover { background: rgba(255,255,255,0.10); color: #f8fafc; }
-    .pay-header-title { font-size: 20px; font-weight: 800; color: #f8fafc; }
-    .pay-header-sub { font-size: 13px; color: #94a3b8; margin-top: 2px; }
-    .card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 20px; margin-bottom: 14px; }
-    .card-title { font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
-    .order-company { font-size: 18px; font-weight: 800; color: #f8fafc; margin-bottom: 4px; }
-    .order-plan {
-      display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 16px;
-    }
-    .order-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 8px 0; border-bottom: 1px solid #334155; font-size: 13px; color: #94a3b8;
-    }
-    .order-row:last-child { border-bottom: none; }
-    .order-row span:last-child { color: #e2e8f0; font-weight: 600; }
-    .order-total { display: flex; justify-content: space-between; align-items: center; padding: 14px 0 0; margin-top: 4px; }
-    .order-total-label { font-size: 15px; font-weight: 700; color: #f8fafc; }
-    .order-total-amount { font-size: 22px; font-weight: 900; color: #a5f3fc; }
-    .order-vat { font-size: 11px; color: #64748b; text-align: right; margin-top: 2px; }
+    .pay-header-title { font-size: 20px; font-weight: 800; }
+    .pay-header-sub { font-size: 13px; color: #6b7280; margin-top: 2px; }
+    .card { background: #fff; border-radius: 16px; padding: 18px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+    .card-title { font-size: 14px; font-weight: 800; color: #111827; margin-bottom: 12px; }
+    .order-company { font-size: 13px; color: #6b7280; margin: -6px 0 10px; }
+    .row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; font-size: 14px; color: #4b5563; }
+    .row b { color: #111827; font-weight: 700; }
+    .row.sub { font-size: 13px; color: #6b7280; }
+    .divider { height: 1px; background: #f0f0f3; margin: 6px 0; }
+    .total { display: flex; justify-content: space-between; align-items: baseline; padding-top: 10px; }
+    .total-label { font-size: 15px; font-weight: 800; }
+    .total-amount { font-size: 24px; font-weight: 900; color: #4f46e5; }
+    .total-note { font-size: 12.5px; color: #6b7280; margin-top: 6px; line-height: 1.5; }
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
     .method-tab {
-      padding: 12px 10px; border-radius: 12px; border: 1.5px solid #334155;
-      background: #0f172a; color: #94a3b8; font-size: 13px; font-weight: 700;
-      font-family: 'Pretendard', sans-serif; cursor: pointer; transition: all 0.2s;
-      text-align: center;
+      padding: 12px 10px; border-radius: 12px; border: 1.5px solid #e5e7eb; background: #fff;
+      font-family: inherit; cursor: pointer; text-align: center; display: flex; flex-direction: column; gap: 3px;
     }
-    .method-tab:hover { border-color: #6366f1; color: #f8fafc; }
-    .method-tab.active {
-      border-color: #6366f1; background: rgba(99,102,241,0.15); color: #a5b4fc;
-      box-shadow: 0 0 12px rgba(99,102,241,0.2);
+    .method-tab .t { font-size: 14px; font-weight: 800; color: #111827; }
+    .method-tab .d { font-size: 11.5px; color: #6b7280; }
+    .method-tab.active { border-color: #4f46e5; background: #eef2ff; }
+    .method-tab.active .t { color: #4338ca; }
+    .info-box { background: #f5f7ff; border-radius: 12px; padding: 12px 14px; font-size: 13px; color: #374151; line-height: 1.55; margin-top: 10px; }
+    .field { margin-bottom: 12px; }
+    .label { font-size: 12.5px; color: #4b5563; margin-bottom: 6px; font-weight: 700; }
+    .input {
+      width: 100%; background: #fff; border: 1.5px solid #e5e7eb; border-radius: 12px;
+      padding: 12px 14px; font-size: 16px; font-family: inherit; color: #111827; outline: none;
     }
-    .method-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .method-btn {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 8px; padding: 16px 12px; border-radius: 12px; border: 2px solid #334155;
-      background: #0f172a; cursor: pointer; transition: all 0.2s; color: #cbd5e1;
-      font-size: 13px; font-weight: 600; font-family: 'Pretendard', sans-serif;
+    .input:focus { border-color: #4f46e5; }
+    .input::placeholder { color: #9ca3af; }
+    .radios { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .radios label {
+      font-size: 13px; font-weight: 700; color: #374151; cursor: pointer; padding: 8px 12px; border-radius: 999px;
+      border: 1.5px solid #e5e7eb; display: inline-flex; align-items: center; gap: 6px;
     }
-    .method-btn:hover { border-color: #6366f1; background: rgba(99,102,241,0.08); color: #f8fafc; }
-    .method-btn.selected { border-color: #6366f1; background: rgba(99,102,241,0.15); color: #a5b4fc; }
-    .method-icon { font-size: 24px; line-height: 1; }
-    .billing-row { display: flex; flex-direction: column; gap: 12px; }
-    .billing-label { font-size: 12px; color: #64748b; margin-bottom: 5px; font-weight: 600; }
-    .billing-input {
-      width: 100%; background: #0f172a; border: 1.5px solid #334155; border-radius: 10px;
-      padding: 12px 14px; font-size: 16px; font-family: 'Pretendard', sans-serif;
-      color: #f8fafc; outline: none; transition: border-color 0.2s;
+    .radios input { accent-color: #4f46e5; }
+    .radios label:has(input:checked) { border-color: #4f46e5; background: #eef2ff; color: #4338ca; }
+    .agree {
+      display: flex; gap: 10px; align-items: flex-start; background: #fff; border-radius: 16px; padding: 16px 18px;
+      margin-bottom: 12px; cursor: pointer; font-size: 14px; line-height: 1.5; color: #111827; font-weight: 600;
     }
-    .billing-input:focus { border-color: #6366f1; }
-    .billing-input::placeholder { color: #475569; }
+    .agree input { width: 22px; height: 22px; accent-color: #4f46e5; flex-shrink: 0; margin-top: 1px; }
+    .agree small { display: block; font-size: 12.5px; color: #6b7280; font-weight: 500; margin-top: 2px; }
     .pay-btn {
-      width: 100%; padding: 18px; border-radius: 14px; border: none;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff;
-      font-size: 16px; font-weight: 800; font-family: 'Pretendard', sans-serif;
-      cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 20px rgba(99,102,241,0.35);
-      margin-top: 6px; letter-spacing: -0.3px;
+      width: 100%; padding: 17px; border-radius: 14px; border: none; background: #4f46e5; color: #fff;
+      font-size: 16px; font-weight: 800; font-family: inherit; cursor: pointer;
     }
-    .pay-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.45); }
-    .pay-btn:active { transform: translateY(0); }
-    .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-    .pay-notice { text-align: center; font-size: 12px; color: #475569; margin-top: 12px; line-height: 1.6; }
+    .pay-btn:disabled { background: #c7c9d9; cursor: not-allowed; }
+    .pay-notice { text-align: center; font-size: 12px; color: #6b7280; margin-top: 12px; line-height: 1.6; }
     .spinner {
-      display: inline-block; width: 16px; height: 16px;
-      border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
       border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 8px; vertical-align: middle;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .security-badges { display: flex; justify-content: center; gap: 16px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e293b; }
-    .sec-badge { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #475569; }
-    .sec-badge span { font-size: 14px; }
   </style>
 <script src="js/icons.js?v=315"></script>
 </head>
 <body>
-<div id="test-banner" style="position:sticky;top:0;z-index:9999;background:#f59e0b;color:#1f1300;text-align:center;font:700 13px/1.4 Pretendard,sans-serif;padding:8px 12px;">🧪 테스트 결제 — 실제 결제되지 않습니다 (카드가 청구되지 않아요)</div>
+<div id="test-banner" style="position:sticky;top:0;z-index:9999;width:100%;background:#f59e0b;color:#1f1300;text-align:center;font:700 13px/1.4 Pretendard,sans-serif;padding:8px 12px;">🧪 테스트 결제 — 실제 결제되지 않습니다 (카드가 청구되지 않아요)</div>
 <div class="page-wrap">
   <div class="pay-header">
-    <button class="pay-back-btn" onclick="history.back()">&#8592;</button>
+    <button class="pay-back-btn" onclick="history.back()" aria-label="뒤로">&#8592;</button>
     <div>
-      <div class="pay-header-title">&#128179; 구독 결제</div>
-      <div class="pay-header-sub">Enterprise Standard 플랜</div>
+      <div class="pay-header-title">결제</div>
+      <div class="pay-header-sub" id="pay-plan-name">회사 요금제</div>
     </div>
   </div>
 
+  <!-- 주문 내용 -->
   <div class="card">
-    <div class="card-title">&#128203; 주문 요약</div>
-    <div class="order-company" id="pay-company-name">—</div>
-    <div class="order-plan">Enterprise Standard</div>
-    <div class="order-row"><span>기본 요금 (2인 포함)</span><span>100,000원</span></div>
-    <div class="order-row">
-      <span>추가 슬롯 (<span id="pay-add-slots">0</span>명 × 20,000원)</span>
-      <span id="pay-add-fee">+0원 / 월</span>
+    <div class="card-title">주문 내용</div>
+    <div class="order-company" id="pay-company-name"></div>
+    <div id="order-rows"></div>
+    <div class="divider"></div>
+    <div class="total">
+      <span class="total-label">매달 결제 금액</span>
+      <span class="total-amount" id="pay-total-amount">—</span>
     </div>
-    <div class="order-row"><span>매니저 슬롯 합계</span><span id="pay-total-slots">2명</span></div>
-    <div class="order-total">
-      <span class="order-total-label">월 청구 합계</span>
-      <span class="order-total-amount" id="pay-total-amount">100,000원</span>
-    </div>
-    <div class="order-vat" id="pay-vat-text">월 100,000원 (VAT 별도)</div>
+    <div class="total-note" id="pay-total-note"></div>
   </div>
 
-  <div class="card" style="padding: 20px;">
-    <div class="card-title">&#128179; 결제 수단 선택</div>
-    
-    <!-- 계좌 결제 통합 (계좌이체 & 가상계좌 나란히 1:1 배치) -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
-      <button type="button" id="tab-btn-card" class="method-tab active" onclick="switchMethodTab('card')" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 14px 10px;">
-        <span style="font-size: 15px; font-weight: 800; color: #f8fafc;">💳 카드·간편결제</span>
-        <span style="font-size: 11px; color: #94a3b8;">실시간 이체 · 카드 · 간편결제</span>
+  <!-- 결제 방법 -->
+  <div class="card">
+    <div class="card-title">결제 방법</div>
+    <div class="tabs" id="method-tabs">
+      <button type="button" id="tab-btn-card" class="method-tab active" onclick="switchMethodTab('card')">
+        <span class="t">카드 · 간편결제</span><span class="d">매달 자동결제</span>
       </button>
-      <button type="button" id="tab-btn-va" class="method-tab" onclick="switchMethodTab('va')" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 14px 10px;">
-        <span style="font-size: 15px; font-weight: 800; color: #f8fafc;">🏢 가상계좌</span>
-        <span style="font-size: 11px; color: #94a3b8;">법인/기획사 무통장입금</span>
+      <button type="button" id="tab-btn-va" class="method-tab" onclick="switchMethodTab('va')">
+        <span class="t">가상계좌</span><span class="d">회사 계좌로 입금</span>
       </button>
     </div>
 
-    <!-- 1) 토스 위젯 영역 (카드/간편결제) -->
+    <!-- 1) 카드·간편결제 (토스 위젯) -->
     <div id="section-card-widget">
       <div id="payment-method" style="min-height: 200px;"></div>
       <div id="agreement"></div>
+      <div class="info-box" id="card-tax-note">카드로 결제하면 <b>카드 매출전표가 세금 증빙</b>이 돼요.<br>세금계산서는 따로 받지 않아도 돼요.</div>
     </div>
 
-    <!-- 2) 가상계좌 전용 발급 영역 -->
-    <div id="section-va" style="display: none; padding: 6px 0;">
-      <div style="background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.25); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;">
-        <div style="font-size: 14px; font-weight: 700; color: #a5b4fc; margin-bottom: 4px;">🏢 법인 & 기획사 전용 가상계좌</div>
-        <p style="font-size: 12px; color: #94a3b8; line-height: 1.5;">
-          원하시는 입금 은행을 선택하시면 전용 입금 계좌가 즉시 발급됩니다.<br>
-          전자세금계산서 및 현금영수증 지출증빙이 지원됩니다.
-        </p>
-      </div>
-
-      <div style="margin-bottom: 14px;">
-        <div class="billing-label">입금 은행 선택</div>
-        <select id="va-bank-select" class="billing-input" style="cursor: pointer;">
-          <option value="기업은행">🏢 IBK기업은행 (003)</option>
-          <option value="국민은행" selected>🏦 KB국민은행 (004)</option>
-          <option value="농협은행">🌾 NH농협은행 (011)</option>
-          <option value="신한은행">🔵 신한은행 (088)</option>
-          <option value="카카오뱅크">🟡 카카오뱅크 (090)</option>
-          <option value="우리은행">🔷 우리은행 (020)</option>
-          <option value="하나은행">🟢 하나은행 (081)</option>
-          <option value="토스뱅크">🔵 토스뱅크 (092)</option>
+    <!-- 2) 가상계좌 (회사 요금제만) -->
+    <div id="section-va" style="display: none;">
+      <div class="field">
+        <div class="label">입금할 은행</div>
+        <select id="va-bank-select" class="input" style="cursor: pointer;">
+          <option value="기업은행">IBK기업은행</option>
+          <option value="국민은행" selected>KB국민은행</option>
+          <option value="농협은행">NH농협은행</option>
+          <option value="신한은행">신한은행</option>
+          <option value="카카오뱅크">카카오뱅크</option>
+          <option value="우리은행">우리은행</option>
+          <option value="하나은행">하나은행</option>
+          <option value="토스뱅크">토스뱅크</option>
         </select>
       </div>
-
-      <div style="margin-bottom: 14px;">
-        <div class="billing-label">입금자명 (성명 또는 법인명)</div>
-        <input type="text" id="va-depositor" class="billing-input" placeholder="대표자 성명 또는 법인명">
+      <div class="field">
+        <div class="label">입금자명</div>
+        <input type="text" id="va-depositor" class="input" placeholder="회사명 또는 대표자 이름">
       </div>
-
-      <div style="margin-bottom: 6px;">
-        <div class="billing-label">증빙 서류 발행 구분</div>
-        <div style="display: flex; gap: 14px; margin-bottom: 10px;">
-          <label style="font-size: 13px; color: #e2e8f0; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-            <input type="radio" name="receipt-type" value="tax" checked onchange="toggleReceiptInput(this.value)"> 세금계산서 (지출증빙)
-          </label>
-          <label style="font-size: 13px; color: #e2e8f0; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-            <input type="radio" name="receipt-type" value="cash" onchange="toggleReceiptInput(this.value)"> 소득공제 (개인)
-          </label>
-          <label style="font-size: 13px; color: #94a3b8; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-            <input type="radio" name="receipt-type" value="none" onchange="toggleReceiptInput(this.value)"> 미발행
-          </label>
+      <div class="field" style="margin-bottom:0;">
+        <div class="label">증빙 서류</div>
+        <div class="radios">
+          <label><input type="radio" name="receipt-type" value="tax" checked onchange="toggleReceiptInput(this.value)"> 세금계산서</label>
+          <label><input type="radio" name="receipt-type" value="cash" onchange="toggleReceiptInput(this.value)"> 현금영수증</label>
+          <label><input type="radio" name="receipt-type" value="none" onchange="toggleReceiptInput(this.value)"> 필요 없음</label>
         </div>
-        <input type="text" id="va-tax-number" class="billing-input" placeholder="사업자등록번호 10자리 입력 (- 제외)">
+        <!-- 세금계산서: 회사명·사업자번호·받을 이메일이 꼭 필요 -->
+        <div id="tax-fields">
+          <div class="field"><div class="label">회사명 (상호)</div><input type="text" id="tax-company" class="input" placeholder="사업자등록증의 상호"></div>
+          <div class="field"><div class="label">사업자등록번호</div><input type="text" inputmode="numeric" id="va-tax-number" class="input" placeholder="숫자 10자리 (- 없이)" maxlength="12"></div>
+          <div class="field" style="margin-bottom:0;"><div class="label">세금계산서 받을 이메일</div><input type="email" id="tax-email" class="input" placeholder="tax@company.com"></div>
+        </div>
+        <div id="cash-fields" style="display:none;">
+          <div class="field" style="margin-bottom:0;"><div class="label">휴대폰 번호 또는 사업자등록번호</div><input type="text" inputmode="numeric" id="cash-number" class="input" placeholder="숫자만 입력"></div>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- 결제하는 사람 -->
   <div class="card">
-    <div class="card-title">&#128100; 구매자 정보</div>
-    <div class="billing-row">
-      <div><div class="billing-label">대표자 이름</div><input type="text" class="billing-input" id="buyer-name" placeholder="홍길동"></div>
-      <div><div class="billing-label">이메일 (영수증 발송)</div><input type="email" class="billing-input" id="buyer-email" placeholder="ceo@company.com"></div>
-      <div><div class="billing-label">연락처</div><input type="tel" class="billing-input" id="buyer-phone" placeholder="010-0000-0000"></div>
-    </div>
+    <div class="card-title">결제하는 사람</div>
+    <div class="field"><div class="label">이름</div><input type="text" class="input" id="buyer-name" placeholder="홍길동"></div>
+    <div class="field"><div class="label">이메일 (영수증 받을 곳)</div><input type="email" class="input" id="buyer-email" placeholder="name@company.com"></div>
+    <div class="field" style="margin-bottom:0;"><div class="label">연락처</div><input type="tel" class="input" id="buyer-phone" placeholder="010-0000-0000"></div>
   </div>
 
-  <button class="pay-btn" id="btn-pay" onclick="startPayment()">
-    &#128179; <span id="pay-btn-text">월 100,000원 결제하기</span>
+  <!-- 동의 (체크해야 결제 버튼이 켜짐) -->
+  <label class="agree" for="agree-auto">
+    <input type="checkbox" id="agree-auto" onchange="syncPayButton()">
+    <span><span id="agree-text">매달 자동결제에 동의해요</span><small id="agree-sub">언제든 해지할 수 있고, 해지해도 결제한 기간까지는 계속 쓸 수 있어요.</small></span>
+  </label>
+
+  <button class="pay-btn" id="btn-pay" onclick="startPayment()" disabled>
+    <span id="pay-btn-text">결제하기</span>
   </button>
-  <button type="button" id="btn-mock" hidden style="width:100%; padding:12px; margin-top:8px; border-radius:12px; border:1px dashed rgba(255,255,255,0.25); background:transparent; color:#94a3b8; font-size:13px; font-weight:600; cursor:pointer; font-family:'Pretendard',sans-serif;" onclick="simulateTestPayment()">
+  <button type="button" id="btn-mock" hidden style="width:100%; padding:12px; margin-top:8px; border-radius:12px; border:1px dashed #9ca3af; background:transparent; color:#6b7280; font-size:13px; font-weight:600; cursor:pointer; font-family:'Pretendard',sans-serif;" onclick="simulateTestPayment()">
     ⚡ 테스트 즉시 승인 (모의 결제)
   </button>
-  <p class="pay-notice">결제는 <strong style="color:#818cf8;">토스페이먼츠</strong>를 통해 안전하게 처리됩니다.<br>정기 구독은 매월 같은 날 자동 결제되며, 언제든지 취소할 수 있습니다.</p>
-  <div class="security-badges">
-    <div class="sec-badge"><span>&#128274;</span> SSL 보안결제</div>
-    <div class="sec-badge"><span>&#128737;&#65039;</span> PCI DSS 인증</div>
-    <div class="sec-badge"><span>&#9989;</span> 토스페이먼츠</div>
-  </div>
+  <p class="pay-notice">결제는 <b>토스페이먼츠</b>로 안전하게 처리돼요.</p>
 </div>
 
 <script src="https://js.tosspayments.com/v2/standard"></script>
@@ -234,160 +191,210 @@
   const params      = new URLSearchParams(location.search);
   const plan        = params.get('plan') || 'standard';
   const isProPlan   = (plan === 'pro');
-  const addSlots    = parseInt(params.get('addSlots') || '0');
-  const totalSlots  = parseInt(params.get('totalSlots') || (isProPlan ? '1' : '2'));
-  const totalFee    = parseInt(params.get('totalFee') || params.get('fee') || (isProPlan ? '20000' : '100000'));
-  const addFee      = addSlots * 20000;
-  // URLSearchParams 가 이미 풀어 준 값 (한 번 더 풀면 % 들어간 이름에서 멈춤)
+  const won = (n) => Number(n).toLocaleString() + '원';
+
+  // 요금 (화면 표시용 — 실제 결제 금액은 서버가 정함)
+  //   개인 매니저: 20,000원 (부가세 포함)
+  //   회사: 기본 100,000원(2자리) + 자리당 20,000원, 부가세 10% 별도
+  const PRICE = { pro: 20000, base: 100000, baseSlots: 2, perSlot: 20000, vatRate: 0.1 };
+  const addSlots    = Math.max(0, parseInt(params.get('addSlots') || '0') || 0);
+  const totalSlots  = PRICE.baseSlots + addSlots;
+  const monthSupply = isProPlan ? PRICE.pro : PRICE.base + PRICE.perSlot * addSlots;
+  const monthVat    = isProPlan ? 0 : Math.round(monthSupply * PRICE.vatRate);
+
+  // 이용 중에 자리를 늘리면: 늘린 자리만 다음 결제일까지 남은 날짜만큼 일할 계산 (서버와 같은 계산)
+  //   cur = 지금 결제된 추가 자리, until = 다음 결제일 — 화면 미리보기용이고, 실제 금액은 서버 견적(quote)으로 다시 받음
+  function localQuote() {
+    const cur = parseInt(params.get('cur') || '0') || 0, until = params.get('until');
+    const monthly = { supply: monthSupply, vat: monthVat, amount: monthSupply + monthVat };
+    if (!isProPlan && until && new Date(until) > new Date() && addSlots > cur) {
+      const end = new Date(until), start = new Date(until); start.setUTCMonth(start.getUTCMonth() - 1);
+      const cycleDays = Math.round((end - start) / 86400000);
+      const daysLeft = Math.min(cycleDays, Math.max(1, Math.ceil((end - Date.now()) / 86400000)));
+      const added = addSlots - cur;
+      const sup = Math.floor(PRICE.perSlot * added * daysLeft / cycleDays / 10) * 10, v = Math.round(sup * PRICE.vatRate);
+      return { kind: 'prorate', added, daysLeft, cycleDays, supply: sup, vat: v, amount: sup + v, nextBillAt: until, monthly };
+    }
+    return { kind: 'month', supply: monthSupply, vat: monthVat, amount: monthSupply + monthVat, monthly };
+  }
+  let Q = localQuote();
+  let totalFee = Q.amount;
+
   const companyName = params.get('company') || localStorage.getItem('bp_company_name') || localStorage.getItem('hq_company_name') || '';
   const ceoName     = params.get('ceo') || localStorage.getItem('bp_user_name') || localStorage.getItem('hq_user_name') || '';
   const ceoEmail    = params.get('email') || localStorage.getItem('bp_user_email') || localStorage.getItem('hq_user_email') || '';
   const ceoPhone    = params.get('phone') || localStorage.getItem('bp_user_phone') || localStorage.getItem('hq_user_phone') || '';
-  // 결과 페이지 주소 (원래 주소의 ?... 를 버리고 새로 붙임)
   const resultUrl = (q) => { const u = new URL('payment-result.html', location.href); Object.entries(q).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== '') u.searchParams.set(k, String(v)); }); return u.toString(); };
   const returnTarget = params.get('return') || (isProPlan ? 'mobile' : 'admin');
+  const billDay = new Date().getDate(); // 매달 오늘 날짜에 결제
 
-  // UI 요소 바인딩
-  document.getElementById('pay-company-name').textContent = companyName;
   document.getElementById('buyer-name').value  = ceoName;
   document.getElementById('buyer-email').value = ceoEmail;
   document.getElementById('buyer-phone').value = ceoPhone;
 
-  if (isProPlan) {
-    // 개인 매니저 유료 (월 20,000원) UI 세팅
-    document.querySelector('.pay-header-sub').textContent = '로드플래너 개인 매니저 유료';
-    document.querySelector('.order-plan').textContent     = '개인 매니저 유료';
-    document.querySelector('.order-plan').style.background = 'rgba(99,102,241,0.2)';
-    document.querySelector('.order-plan').style.color      = '#a5b4fc';
-
-    // 기본 요금 행
-    const firstRow = document.querySelector('.order-row');
-    if (firstRow) {
-      firstRow.innerHTML = '<span>개인 매니저 유료 (로드비서·자동 길안내·교통 예측·아티스트 여러 명·경비 기록)</span><span>20,000원</span>';
+  // ── 주문 내용 그리기 ──
+  const md = (d) => { const x = new Date(d); return `${x.getMonth() + 1}월 ${x.getDate()}일`; };
+  function renderOrder() {
+    const rows = document.getElementById('order-rows');
+    const label = document.querySelector('.total-label');
+    totalFee = Q.amount;
+    if (isProPlan) {
+      document.getElementById('pay-plan-name').textContent = '개인 매니저 유료';
+      rows.innerHTML = `<div class="row"><span>개인 매니저 유료 (한 달)</span><b>${won(PRICE.pro)}</b></div>`;
+      document.getElementById('pay-total-note').textContent = `부가세 포함 · 매달 ${billDay}일 자동결제 · 언제든 해지`;
+      document.getElementById('method-tabs').style.display = 'none'; // 개인은 카드·간편결제만
+      document.getElementById('card-tax-note').style.display = 'none';
+      label.textContent = '매달 결제 금액';
+    } else if (Q.kind === 'prorate') {
+      document.getElementById('pay-plan-name').textContent = '회사 요금제 · 자리 추가';
+      document.getElementById('pay-company-name').textContent = companyName;
+      rows.innerHTML = `
+        <div class="row"><span>추가 ${Q.added}자리 × ${won(PRICE.perSlot)}</span><b>${won(PRICE.perSlot * Q.added)}</b></div>
+        <div class="row sub"><span>다음 결제일(${md(Q.nextBillAt)})까지 ${Q.daysLeft}일 / ${Q.cycleDays}일</span><span>일할 계산</span></div>
+        <div class="divider"></div>
+        <div class="row sub"><span>공급가</span><span>${won(Q.supply)}</span></div>
+        <div class="row sub"><span>부가세 10%</span><span>${won(Q.vat)}</span></div>`;
+      label.textContent = '오늘 결제 금액';
+      document.getElementById('pay-total-note').innerHTML = `${md(Q.nextBillAt)}부터는 매니저 ${totalSlots}자리 포함 <b>매달 ${won(Q.monthly.amount)}</b> (부가세 포함) 자동결제`;
+    } else {
+      document.getElementById('pay-plan-name').textContent = '회사 요금제';
+      document.getElementById('pay-company-name').textContent = companyName;
+      rows.innerHTML = `
+        <div class="row"><span>기본 요금 (2자리 포함)</span><b>${won(PRICE.base)}</b></div>
+        <div class="row"><span>추가 자리 ${addSlots}개 × ${won(PRICE.perSlot)}</span><b>${won(PRICE.perSlot * addSlots)}</b></div>
+        <div class="divider"></div>
+        <div class="row sub"><span>공급가 (매니저 ${totalSlots}자리)</span><span>${won(Q.supply)}</span></div>
+        <div class="row sub"><span>부가세 10%</span><span>${won(Q.vat)}</span></div>`;
+      label.textContent = '매달 결제 금액';
+      document.getElementById('pay-total-note').textContent = `공급가 ${won(Q.supply)} + 부가세 ${won(Q.vat)}`;
     }
-    // 슬롯 행 숨김
-    const addRow = document.getElementById('pay-add-slots')?.closest('.order-row');
-    if (addRow) addRow.style.display = 'none';
-    const slotsRow = document.getElementById('pay-total-slots')?.closest('.order-row');
-    if (slotsRow) slotsRow.style.display = 'none';
-
-    document.getElementById('pay-total-amount').textContent = totalFee.toLocaleString() + '원';
-    document.getElementById('pay-vat-text').textContent     = '월 ' + totalFee.toLocaleString() + '원 (VAT 포함)';
-    document.getElementById('pay-btn-text').textContent     = '월 ' + totalFee.toLocaleString() + '원 결제하기';
-  } else {
-    // Enterprise Standard 기본 플랜 UI 세팅
-    document.getElementById('pay-add-slots').textContent    = addSlots;
-    document.getElementById('pay-add-fee').textContent      = '+' + addFee.toLocaleString() + '원 / 월';
-    document.getElementById('pay-total-slots').textContent  = totalSlots + '명';
-    document.getElementById('pay-total-amount').textContent = totalFee.toLocaleString() + '원';
-    document.getElementById('pay-vat-text').textContent     = '월 ' + totalFee.toLocaleString() + '원 (VAT 별도)';
-    document.getElementById('pay-btn-text').textContent     = '월 ' + totalFee.toLocaleString() + '원 결제하기';
+    document.getElementById('pay-total-amount').textContent = won(totalFee);
   }
+  renderOrder();
 
-  // 결제 수단 탭 전환 로직
+  // ── 결제 방법 ──
   let currentMethodTab = 'card';
 
   function switchMethodTab(tab) {
+    if (isProPlan) tab = 'card';
     currentMethodTab = tab;
-    const btnCard = document.getElementById('tab-btn-card');
-    const btnVa   = document.getElementById('tab-btn-va');
-    const secCard = document.getElementById('section-card-widget');
-    const secVa   = document.getElementById('section-va');
-    const payBtnText = document.getElementById('pay-btn-text');
-
-    if (tab === 'card') {
-      btnCard.classList.add('active');
-      btnVa.classList.remove('active');
-      secCard.style.display = 'block';
-      secVa.style.display = 'none';
-      payBtnText.textContent = '월 ' + totalFee.toLocaleString() + '원 결제하기';
-    } else {
-      btnVa.classList.add('active');
-      btnCard.classList.remove('active');
-      secCard.style.display = 'none';
-      secVa.style.display = 'block';
-      payBtnText.textContent = '월 ' + totalFee.toLocaleString() + '원 가상계좌 발급하기';
-
-      // 기본 입금자명 자동 채우기
-      const depositorInput = document.getElementById('va-depositor');
-      if (!depositorInput.value) {
-        depositorInput.value = document.getElementById('buyer-name').value || '';
-      }
+    document.getElementById('tab-btn-card').classList.toggle('active', tab === 'card');
+    document.getElementById('tab-btn-va').classList.toggle('active', tab === 'va');
+    document.getElementById('section-card-widget').style.display = tab === 'card' ? 'block' : 'none';
+    document.getElementById('section-va').style.display = tab === 'va' ? 'block' : 'none';
+    if (tab === 'va') {
+      const dep = document.getElementById('va-depositor');
+      if (!dep.value) dep.value = companyName || document.getElementById('buyer-name').value || '';
+      const tc = document.getElementById('tax-company');
+      if (!tc.value) tc.value = companyName;
+      const te = document.getElementById('tax-email');
+      if (!te.value) te.value = document.getElementById('buyer-email').value || '';
     }
+    renderAgreeAndButton();
   }
 
   function toggleReceiptInput(type) {
-    const input = document.getElementById('va-tax-number');
-    if (type === 'tax') {
-      input.style.display = 'block';
-      input.placeholder = '사업자등록번호 10자리 입력 (- 제외)';
-    } else if (type === 'cash') {
-      input.style.display = 'block';
-      input.placeholder = '휴대폰 번호 입력 (- 제외)';
-    } else {
-      input.style.display = 'none';
-    }
+    document.getElementById('tax-fields').style.display  = type === 'tax'  ? 'block' : 'none';
+    document.getElementById('cash-fields').style.display = type === 'cash' ? 'block' : 'none';
   }
 
-  // 토스페이먼츠 공식 인증 위젯 클라이언트 키
+  function payLabel() {
+    if (isProPlan) return `월 ${won(totalFee)} 정기결제 시작`;
+    if (Q.kind === 'prorate') return currentMethodTab === 'va' ? `${won(totalFee)} 입금 계좌 받기` : `오늘 ${won(totalFee)} 결제하기`;
+    return currentMethodTab === 'va' ? `${won(totalFee)} 입금 계좌 받기` : `월 ${won(totalFee)} 결제하기`;
+  }
+
+  function renderAgreeAndButton() {
+    const t = document.getElementById('agree-text'), s = document.getElementById('agree-sub');
+    if (currentMethodTab === 'va') {
+      t.textContent = `${won(totalFee)}을 입금 기한 안에 넣을게요`;
+      s.textContent = '가상계좌는 자동결제가 안 돼요. 매달 결제일 전에 새 입금 계좌를 보내드려요.';
+    } else if (Q.kind === 'prorate') {
+      t.textContent = `오늘 ${won(totalFee)}을 결제하고, ${md(Q.nextBillAt)}부터 매달 ${won(Q.monthly.amount)} 자동결제에 동의해요`;
+      s.textContent = '늘린 자리는 결제가 끝나면 바로 쓸 수 있어요. 다음 결제일은 바뀌지 않아요.';
+    } else {
+      t.textContent = `매달 ${billDay}일 ${won(totalFee)} 자동결제에 동의해요`;
+      s.textContent = '언제든 해지할 수 있고, 해지해도 결제한 기간까지는 계속 쓸 수 있어요.';
+    }
+    syncPayButton();
+  }
+
+  function syncPayButton() {
+    const btn = document.getElementById('btn-pay');
+    if (btn.dataset.busy) return;
+    btn.disabled = !document.getElementById('agree-auto').checked;
+    btn.innerHTML = `<span id="pay-btn-text">${payLabel()}</span>`;
+  }
+
+  function setBusy(text) {
+    const btn = document.getElementById('btn-pay');
+    btn.dataset.busy = '1'; btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>' + text;
+  }
+  function clearBusy() { delete document.getElementById('btn-pay').dataset.busy; syncPayButton(); }
+
+  renderAgreeAndButton();
+
+  // 서버 견적으로 금액을 다시 맞춤 (회사 요금제: 이용 중 자리 추가면 일할 금액)
+  (async () => {
+    if (isProPlan) return;
+    try {
+      const r = await SupabaseClient.invokePayments({ action: 'quote', plan: 'standard', addSlots });
+      if (r && r.amount) {
+        Q = r; renderOrder(); renderAgreeAndButton();
+        if (widgets) await widgets.setAmount({ currency: 'KRW', value: totalFee });
+      }
+    } catch (e) { /* 연결이 안 되면 화면 계산 유지 — 결제 때 서버가 다시 정함 */ }
+  })();
+
+  // 토스페이먼츠 결제위젯 클라이언트 키
   const TOSS_CLIENT_KEY = 'test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm';
   let widgets = null;
 
   async function initTossWidget() {
     try {
       const tossPayments = TossPayments(TOSS_CLIENT_KEY);
-      // 비회원 기준 결제위젯 인스턴스 초기화
       widgets = tossPayments.widgets({ customerKey: TossPayments.ANONYMOUS });
-
-      // 결제 금액 설정
-      await widgets.setAmount({
-        currency: 'KRW',
-        value: totalFee,
-      });
-
-      // 결제 수단 UI 렌더링
-      await widgets.renderPaymentMethods({
-        selector: '#payment-method',
-      });
-
-      // 이용약관 UI 렌더링
-      await widgets.renderAgreement({
-        selector: '#agreement',
-      });
+      await widgets.setAmount({ currency: 'KRW', value: totalFee });
+      await widgets.renderPaymentMethods({ selector: '#payment-method' });
+      await widgets.renderAgreement({ selector: '#agreement' });
     } catch (err) {
       console.warn('토스 위젯 초기화 중 알림 (네트워크 환경 폴백 지원):', err);
     }
   }
 
   if (IS_DEV_HOST) { const m = document.getElementById('btn-mock'); if (m) m.hidden = false; }
-  // 위젯 초기화 실행
   initTossWidget();
 
+  function checkVaFields() {
+    const type = (document.querySelector('input[name="receipt-type"]:checked') || {}).value;
+    if (type === 'tax') {
+      const biz = document.getElementById('va-tax-number').value.replace(/\D/g, '');
+      if (!document.getElementById('tax-company').value.trim()) return '세금계산서에 들어갈 회사명을 적어 주세요.';
+      if (biz.length !== 10) return '사업자등록번호 10자리를 적어 주세요.';
+      if (!/@/.test(document.getElementById('tax-email').value)) return '세금계산서 받을 이메일을 적어 주세요.';
+    }
+    if (type === 'cash' && document.getElementById('cash-number').value.replace(/\D/g, '').length < 10) return '현금영수증 받을 번호를 적어 주세요.';
+    return '';
+  }
+
   async function startPayment() {
-    let name  = document.getElementById('buyer-name').value.trim();
-    let email = document.getElementById('buyer-email').value.trim();
-    let phone = document.getElementById('buyer-phone').value.trim();
-    if (!name) {
-      name = ceoName || '';
-      document.getElementById('buyer-name').value = name;
-    }
-    if (!email) {
-      email = ceoEmail || '';
-      document.getElementById('buyer-email').value = email;
-    }
+    if (!document.getElementById('agree-auto').checked) { alert('결제 동의에 체크해 주세요.'); return; }
+    let name  = document.getElementById('buyer-name').value.trim() || ceoName || '';
+    let email = document.getElementById('buyer-email').value.trim() || ceoEmail || '';
+    const phone = document.getElementById('buyer-phone').value.trim();
 
-    const btn = document.getElementById('btn-pay');
-    btn.disabled = true;
-
-    // 1) 가상계좌 모드인 경우
+    // 1) 가상계좌
     if (currentMethodTab === 'va') {
-      btn.innerHTML = '<span class="spinner"></span>가상계좌 발급 중...';
+      const msg = checkVaFields();
+      if (msg) { alert(msg); return; }
+      setBusy('입금 계좌 만드는 중...');
       handleVirtualAccountIssue(name, email, phone);
       return;
     }
 
-    // 2) 토스 위젯 (카드/간편결제) 모드인 경우
-    btn.innerHTML = '<span class="spinner"></span>결제창 여는 중...';
+    // 2) 카드·간편결제
+    setBusy('결제창 여는 중...');
 
     // 서버가 금액을 정하고 주문번호를 발급 (주소의 금액은 화면 표시용일 뿐)
     let order;
@@ -395,25 +402,21 @@
       order = await SupabaseClient.invokePayments({ action: 'prepare', plan: isProPlan ? 'pro' : 'standard', addSlots });
     } catch (err) {
       if (IS_DEV_HOST && !widgets) { simulateTestPayment(); return; }
-      alert(err.message || '주문을 만들지 못했습니다.');
-      btn.disabled = false;
-      btn.innerHTML = '&#128179; <span id="pay-btn-text">월 ' + totalFee.toLocaleString() + '원 결제하기</span>';
+      alert(err.message || '주문을 만들지 못했어요.');
+      clearBusy();
       return;
     }
     const orderId   = order.orderId;
     const orderName = order.orderName;
     if (widgets && order.amount !== totalFee) await widgets.setAmount({ currency: 'KRW', value: order.amount });
 
-    const successUrl = resultUrl({ status: 'success', plan, return: returnTarget, addSlots, totalSlots, totalFee: order ? order.amount : totalFee });
-    const failUrl    = resultUrl({ status: 'fail', plan, return: returnTarget });
+    const successUrl = resultUrl({ status: 'success', plan, return: returnTarget, addSlots, totalSlots, totalFee: order.amount, kind: order.kind, nextAmt: order.monthly && order.monthly.amount, nextAt: order.nextBillAt });
+    const failUrl    = resultUrl({ status: 'fail', plan, return: returnTarget, addSlots, orderId });
 
     try {
       if (widgets) {
         await widgets.requestPayment({
-          orderId: orderId,
-          orderName: orderName,
-          successUrl: successUrl,
-          failUrl: failUrl,
+          orderId, orderName, successUrl, failUrl,
           customerName: name,
           customerEmail: email,
           customerMobilePhone: /^01\d{8,9}$/.test(phone.replace(/-/g, '')) ? phone.replace(/-/g, '') : undefined,
@@ -421,54 +424,44 @@
       } else if (IS_DEV_HOST) {
         simulateTestPayment();
       } else {
-        throw new Error('결제 모듈을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+        throw new Error('결제 모듈을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
       }
     } catch (err) {
       console.error('결제 오류:', err);
       if (err.code !== 'USER_CANCEL') alert('결제 오류: ' + (err.message || err.code || '알 수 없는 오류'));
-      btn.disabled = false;
-      btn.innerHTML = '&#128179; <span id="pay-btn-text">월 ' + totalFee.toLocaleString() + '원 결제하기</span>';
+      clearBusy();
     }
   }
 
-  function handleVirtualAccountIssue(name, email, phone) {
+  // 테스트용 주문번호 (서버와 같은 모양: RP-날짜-6자리)
+  function devOrderId() {
+    const d = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10).replace(/-/g, '');
+    const abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    return 'RP-' + d + '-' + Array.from({ length: 6 }, () => abc[Math.floor(Math.random() * abc.length)]).join('');
+  }
+
+  function handleVirtualAccountIssue(name) {
     if (!IS_DEV_HOST) {
-      alert('가상계좌 결제는 테스트 중에는 사용할 수 없습니다. 카드 결제를 이용해 주세요.');
-      const b = document.getElementById('btn-pay'); b.disabled = false;
-      b.innerHTML = '&#128179; <span id="pay-btn-text">월 ' + totalFee.toLocaleString() + '원 결제하기</span>';
+      alert('가상계좌 결제는 테스트 중에는 사용할 수 없어요. 카드로 결제해 주세요.');
+      clearBusy();
       return;
     }
     const bank = document.getElementById('va-bank-select').value;
     const depositor = document.getElementById('va-depositor').value.trim() || name || '';
-    const taxNumber = document.getElementById('va-tax-number').value.trim();
-
-    // 은행별 실제 가상계좌 체계 생성
+    const taxNumber = document.getElementById('va-tax-number').value.replace(/\D/g, '');
     const bankPrefixes = {
-      '기업은행': '003-948123-01',
-      '국민은행': '004-819230-02',
-      '농협은행': '011-352019-03',
-      '신한은행': '088-110293-04',
-      '카카오뱅크': '090-333019-05',
-      '우리은행': '020-100293-06',
-      '하나은행': '081-620193-07',
-      '토스뱅크': '092-100029-08'
+      '기업은행': '003-948123-01', '국민은행': '004-819230-02', '농협은행': '011-352019-03', '신한은행': '088-110293-04',
+      '카카오뱅크': '090-333019-05', '우리은행': '020-100293-06', '하나은행': '081-620193-07', '토스뱅크': '092-100029-08'
     };
-    const randomSuffix = String(Math.floor(Math.random() * 900) + 100);
-    const accountNumber = (bankPrefixes[bank] || '004-819230-02') + '-' + randomSuffix;
-
-    const dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    dueDate.setHours(23, 59, 59, 0);
-
-    const orderId = (isProPlan ? 'PRO-VA-' : 'HQ-VA-') + Date.now();
-    const targetUrl = resultUrl({ status: 'success', method: 'VIRTUAL_ACCOUNT', orderId, plan, return: returnTarget, addSlots, totalSlots, totalFee, vaBank: bank, vaAcc: accountNumber, vaHolder: depositor, vaDue: dueDate.toISOString(), taxNum: taxNumber });
-
-    window.location.href = targetUrl;
+    const accountNumber = (bankPrefixes[bank] || '004-819230-02') + '-' + String(Math.floor(Math.random() * 900) + 100);
+    const dueDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+    dueDate.setHours(23, 59, 0, 0);
+    location.href = resultUrl({ status: 'success', method: 'VIRTUAL_ACCOUNT', orderId: devOrderId(), plan, return: returnTarget, addSlots, totalSlots, totalFee, vaBank: bank, vaAcc: accountNumber, vaHolder: depositor, vaDue: dueDate.toISOString(), taxNum: taxNumber });
   }
 
   function simulateTestPayment() {
     if (!IS_DEV_HOST) return;
-    const orderId = (isProPlan ? 'PRO-TEST-' : 'HQ-TEST-') + Date.now();
-    location.href = resultUrl({ status: 'success', orderId, plan, return: returnTarget, addSlots, totalSlots, totalFee });
+    location.href = resultUrl({ status: 'success', orderId: devOrderId(), plan, return: returnTarget, addSlots, totalSlots, totalFee, kind: Q.kind, nextAmt: Q.monthly && Q.monthly.amount, nextAt: Q.nextBillAt });
   }
 </script>
 </body>
