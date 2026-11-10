@@ -3,7 +3,7 @@
    ========================================= */
 
 const App = {
-  screens: ['home','register','timeline','login','onboarding','profile','upgrade','ai','artists','expenses','vehicle','sos','talk'],
+  screens: ['home','calendar','register','timeline','login','onboarding','profile','upgrade','ai','artists','expenses','vehicle','sos','talk'],
 
   async init() {
     // 오프라인 기능(서비스워커)은 맨 먼저 등록 (로그인 확인을 기다리다 load 이벤트를 놓치지 않게)
@@ -226,6 +226,7 @@ const App = {
         case 'profile': Profile.render(); break;
         case 'upgrade': Upgrade.init(); break;
         case 'ai': if (window.RoadAI) RoadAI.init(); break;
+        case 'calendar': if (window.CalView) CalView.render(); break;
         case 'artists': if (window.Artists) Artists.render(); break;
         case 'expenses': if (window.Expenses) Expenses.render(); break;
         case 'vehicle': if (window.Vehicle) Vehicle.render(); break;
@@ -289,6 +290,19 @@ const App = {
     const sos = U.$('#top-sos'); if (sos) sos.hidden = indie;
   },
 
+  // 로드비서: 가운데 입체 마이크 버튼
+  MIC_SVG: `<svg viewBox="0 0 48 48" width="46" height="46"><defs>
+    <radialGradient id="rbOrb" cx="35%" cy="28%" r="80%"><stop offset="0" stop-color="#7C86F2"/><stop offset=".55" stop-color="#3B45C4"/><stop offset="1" stop-color="#1F2580"/></radialGradient>
+    <linearGradient id="rbMic" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#D9DDFB"/></linearGradient>
+    <linearGradient id="rbGlass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".55"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient></defs>
+    <circle cx="24" cy="24" r="22" fill="url(#rbOrb)"/>
+    <ellipse cx="20" cy="12.5" rx="12" ry="7" fill="url(#rbGlass)"/>
+    <rect x="18.5" y="11" width="11" height="17.5" rx="5.5" fill="url(#rbMic)"/>
+    <path d="M21 15.5h6M21 19h6M21 22.5h6" stroke="#B9BFF4" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M14.5 23.5a9.5 9.5 0 0 0 19 0" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M24 33v4.5M19.5 37.5h9" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+    <circle cx="35" cy="13" r="1.6" fill="#FFFFFF" opacity=".9"/></svg>`,
+
   renderNav() {
     try { this._lockFrame(); } catch (e) { }
     U.$('#top-header')?.remove();
@@ -310,7 +324,7 @@ const App = {
     U.$('#app').prepend(nav);
     this.updateHeaderUser();
 
-    // 아래: 한 손 엄지로 누르는 메뉴 4개 (오늘·로드톡·로드비서·내 정보) — 긴급은 위 막대 오른쪽
+    // 아래 메뉴 5개 (오늘·캘린더·로드비서(가운데 마이크)·로드톡·내 정보) — 긴급은 위 막대 오른쪽
     // 개인 매니저는 5개 (홈·아티스트·로드비서·차량관리·내 정보) — 로드톡·긴급(본사 보고) 없음
     const bn = U.el('nav', 'bottom-nav');
     bn.id = 'bottom-nav';
@@ -327,8 +341,8 @@ const App = {
         <span>아티스트</span>
       </button>
       <button class="bnav-item bnav-ai" data-s="ai" onclick="App.navigate('ai')" aria-label="로드비서">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.6L18 9.5l-4.2 1.9L12 16l-1.8-4.6L6 9.5l4.2-1.9z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>
-        <span>로드비서</span>
+        <span class="bnav-orb" aria-hidden="true">${App.MIC_SVG}</span>
+        <span class="bnav-ai-label"><em>로드</em>비서</span>
       </button>
       <button class="bnav-item" data-s="vehicle" onclick="App.navigate('vehicle')" aria-label="차량관리">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14v-5l-2-5H7l-2 5z"/><path d="M3 12h18"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>
@@ -343,14 +357,18 @@ const App = {
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
         <span>오늘</span>
       </button>
+      <button class="bnav-item" data-s="calendar" onclick="App.navigate('calendar')" aria-label="캘린더">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M8 2.5v4M16 2.5v4M3 10h18"/><path d="M8 14h2M14 14h2M8 17.5h2"/></svg>
+        <span>캘린더</span>
+      </button>
+      <button class="bnav-item bnav-ai" data-s="ai" onclick="App.navigate('ai')" aria-label="로드비서">
+        <span class="bnav-orb" aria-hidden="true">${App.MIC_SVG}</span>
+        <span class="bnav-ai-label"><em>로드</em>비서</span>
+      </button>
       <button id="notice-bell" class="bnav-item" data-s="talk" onclick="App.openMessages()" aria-label="로드톡">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         <span>로드톡</span>
         <span id="notice-badge" class="notice-badge" hidden>0</span>
-      </button>
-      <button class="bnav-item bnav-ai" data-s="ai" onclick="App.navigate('ai')" aria-label="로드비서">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.6L18 9.5l-4.2 1.9L12 16l-1.8-4.6L6 9.5l4.2-1.9z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>
-        <span>로드비서</span>
       </button>
       <button class="bnav-item" data-s="profile" onclick="App.navigate('profile')">
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>

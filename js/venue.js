@@ -20,6 +20,13 @@ const VenueNotes = {
   _me() { return window.SupabaseClient?.currentUser?.id || ''; },
   _isHq() { const r = localStorage.getItem('admin_bp_user_role') || localStorage.getItem('bp_user_role'); return r === 'ceo' || r === 'hq_admin'; },
 
+  // 저장해 둔 메모를 바로 (시간이 지났어도) — 화면을 다시 그릴 때 깜빡이지 않게
+  cached(text) {
+    const { keys } = this.keys(text);
+    const hit = keys.length ? this._cache.get(keys.join('|')) : null;
+    return hit ? hit.rows : null;
+  },
+
   async list(text, force = false) {
     const { keys, label } = this.keys(text);
     if (!keys.length) return [];
@@ -73,13 +80,14 @@ const VenueNotes = {
     const compact = el.hasAttribute('data-venue-compact');
     const arg = this._esc(JSON.stringify(text));
     const addBtn = `<button type="button" onclick="event.stopPropagation(); VenueNotes.add(${arg})" style="border:0;background:none;color:#3B45C4;font-size:13px;font-weight:700;cursor:pointer;padding:4px 0;">+ 메모 남기기</button>`;
+    const put = (html) => { if (el._vHtml !== html) { el.innerHTML = html; el._vHtml = html; } };
     if (!rows.length) {
-      el.innerHTML = compact ? '' : `<div style="margin-top:8px;font-size:13px;color:#5B616E;display:flex;align-items:center;gap:6px;">📌 <span>현장 메모 없음</span> ${addBtn}</div>`;
+      put(compact ? '' : `<div style="margin-top:8px;font-size:13px;color:#5B616E;display:flex;align-items:center;gap:6px;">📌 <span>현장 메모 없음</span> ${addBtn}</div>`);
       return;
     }
     const me = this._me(), hq = this._isHq();
     const shown = rows.slice(0, compact ? 2 : 5);
-    el.innerHTML = `
+    put(`
       <div style="margin-top:8px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:8px 10px;" onclick="event.stopPropagation()">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
           <span style="font-size:12.5px;font-weight:800;color:#92400e;">📌 현장 메모 ${rows.length}</span>${addBtn}
@@ -90,7 +98,7 @@ const VenueNotes = {
             ${(r.author_id === me || hq) ? `<button type="button" onclick="event.stopPropagation(); VenueNotes.remove(${this._esc(JSON.stringify(r.id))})" title="지우기" style="border:0;background:none;color:#b45309;cursor:pointer;font-size:14px;line-height:1;padding:0 2px;">×</button>` : ''}
           </div>`).join('')}
         ${rows.length > shown.length ? `<div style="font-size:12px;color:#a16207;">외 ${rows.length - shown.length}개</div>` : ''}
-      </div>`;
+      </div>`);
   },
 
   async hydrate(root = document, force = false) {
@@ -107,7 +115,15 @@ const VenueNotes = {
     if (this._obs || typeof MutationObserver === 'undefined') return;
     let t = null;
     this._obs = new MutationObserver(muts => {
-      if (!muts.some(m => [...m.addedNodes].some(n => n.nodeType === 1 && (n.matches?.('[data-venue]') || n.querySelector?.('[data-venue]'))))) return;
+      const added = [];
+      muts.forEach(m => m.addedNodes.forEach(n => {
+        if (n.nodeType !== 1) return;
+        if (n.matches?.('[data-venue]')) added.push(n);
+        n.querySelectorAll?.('[data-venue]').forEach(e => added.push(e));
+      }));
+      if (!added.length) return;
+      // 화면을 다시 그린 순간(그리기 전)에 저장된 메모를 바로 채움 → 사라졌다 나타나는 깜빡임 없음
+      added.forEach(el => { const rows = this.cached(el.getAttribute('data-venue') || ''); if (rows) { try { this.render(el, rows); } catch (e) { } } });
       clearTimeout(t); t = setTimeout(() => this.hydrate(), 150);
     });
     this._obs.observe(document.body, { childList: true, subtree: true });
