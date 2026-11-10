@@ -77,7 +77,7 @@ const Onboarding = {
     btn.classList.add('on');
     
     // Live preview
-    const fontStr = font === 'Pretendard' ? "'Pretendard Variable', 'Pretendard', sans-serif" : `'${font}', sans-serif`;
+    const fontStr = font === 'Pretendard' ? "'IBM Plex Sans KR', 'Pretendard', -apple-system, sans-serif" : `'${font}', sans-serif`;
     document.documentElement.style.setProperty('--font-sans', fontStr);
     U.haptic();
   },

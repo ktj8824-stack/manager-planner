@@ -22,7 +22,7 @@ const HqExpenses = {
     m.innerHTML = `
       <div class="modal-content" style="max-width: 900px; width: 94%;">
         <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-          <h3 style="margin:0; font-size:16px; font-weight:800; color:#0f172a;">💳 매니저 경비 정산</h3>
+          <h3 style="margin:0; font-size:16px; font-weight:800; color:#14161A;">💳 매니저 경비 정산</h3>
           <button type="button" class="btn-secondary" onclick="HqExpenses.close()" style="padding:7px 16px; font-size:13.5px; font-weight:800; border-radius:8px;">닫기</button>
         </div>
         <div class="modal-body" style="padding:16px;" id="hq-exp-body"></div>
@@ -49,7 +49,7 @@ const HqExpenses = {
 
   async load() {
     const body = document.getElementById('hq-exp-body');
-    if (body) body.innerHTML = '<div style="padding:30px; text-align:center; color:#64748b;">불러오는 중...</div>';
+    if (body) body.innerHTML = '<div style="padding:30px; text-align:center; color:#5B616E;">불러오는 중...</div>';
     const [y, m] = this.month.split('-').map(Number);
     const last = new Date(y, m, 0).getDate();
     try {
@@ -80,7 +80,7 @@ const HqExpenses = {
     body.innerHTML = `
       <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:14px;">
         <button type="button" class="btn-secondary" onclick="HqExpenses.shift(-1)" style="padding:6px 12px;">‹</button>
-        <b style="font-size:16px; color:#0f172a;">${y}년 ${m}월</b>
+        <b style="font-size:16px; color:#14161A;">${y}년 ${m}월</b>
         <button type="button" class="btn-secondary" onclick="HqExpenses.shift(1)" style="padding:6px 12px;">›</button>
         <select onchange="HqExpenses.setFilter(this.value)" style="margin-left:auto; padding:7px 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px;">
           <option value="ALL">전체 매니저</option>
@@ -95,11 +95,11 @@ const HqExpenses = {
         </div>
         ${this.filter === 'ALL' ? mgrIds.map(id => `
           <button type="button" onclick="HqExpenses.setFilter(${escJs(id)})" style="text-align:left; background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px; cursor:pointer;">
-            <div style="font-size:12.5px; color:#64748b; font-weight:700;">${esc(this.name(id))}</div>
-            <div style="font-size:17px; font-weight:800; color:#0f172a; margin-top:2px;">${this.won(byMgr[id])}</div>
+            <div style="font-size:12.5px; color:#5B616E; font-weight:700;">${esc(this.name(id))}</div>
+            <div style="font-size:17px; font-weight:800; color:#14161A; margin-top:2px;">${this.won(byMgr[id])}</div>
           </button>`).join('') : ''}
       </div>
-      ${Object.keys(byCat).length ? `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">${Object.entries(byCat).map(([c, v]) => `<span style="background:#eef2ff; color:#3730a3; border-radius:999px; padding:4px 10px; font-size:12.5px; font-weight:700;">${esc(this.CATS[c] || c)} ${this.won(v)}</span>`).join('')}</div>` : ''}
+      ${Object.keys(byCat).length ? `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">${Object.entries(byCat).map(([c, v]) => `<span style="background:#EEF0FD; color:#2B338F; border-radius:999px; padding:4px 10px; font-size:12.5px; font-weight:700;">${esc(this.CATS[c] || c)} ${this.won(v)}</span>`).join('')}</div>` : ''}
       ${list.length ? `
       <div style="overflow-x:auto; border:1px solid #e2e8f0; border-radius:12px;">
         <table style="width:100%; border-collapse:collapse; font-size:13px; min-width:640px;">
@@ -115,11 +115,11 @@ const HqExpenses = {
               <td style="padding:8px 10px; text-align:right; font-weight:800; white-space:nowrap;">${this.won(x.amount)}</td>
               <td style="padding:8px 10px;">${esc(x.memo || '')}</td>
               <td style="padding:8px 10px;">${esc(sch(x.schedule_id))}</td>
-              <td style="padding:8px 10px;">${x.receipt_path ? `<button type="button" onclick="HqExpenses.receipt(${escJs(x.receipt_path)})" style="border:0; background:none; color:#4f46e5; font-weight:700; text-decoration:underline; cursor:pointer;">보기</button>` : '<span style="color:#94a3b8;">없음</span>'}</td>
+              <td style="padding:8px 10px;">${x.receipt_path ? `<button type="button" onclick="HqExpenses.receipt(${escJs(x.receipt_path)})" style="border:0; background:none; color:#3B45C4; font-weight:700; text-decoration:underline; cursor:pointer;">보기</button>` : '<span style="color:#94a3b8;">없음</span>'}</td>
             </tr>`).join('')}
           </tbody>
         </table>
-      </div>` : `<div style="padding:30px; text-align:center; color:#64748b;">이 달에는 기록된 경비가 없어요.<br>매니저가 앱 '내 정보 → 경비 기록'에서 남기면 여기에 모여요.</div>`}`;
+      </div>` : `<div style="padding:30px; text-align:center; color:#5B616E;">이 달에는 기록된 경비가 없어요.<br>매니저가 앱 '내 정보 → 경비 기록'에서 남기면 여기에 모여요.</div>`}`;
   },
 
   async receipt(path) {

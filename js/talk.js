@@ -140,7 +140,7 @@ const Talk = {
     const items = window.Chat._items ? window.Chat._items() : [];
     if (!items.length) return this._loading ? '<div class="talk-empty">불러오는 중...</div>' : '<div class="talk-empty">아직 대화방이 없어요.</div>';
     const unread = window.Chat.st.unread || {};
-    const colors = ['#4f46e5', '#ec4899', '#0891b2', '#475569', '#16a34a', '#ea580c'];
+    const colors = ['#3B45C4', '#ec4899', '#0891b2', '#475569', '#16a34a', '#ea580c'];
     return `<ul class="talk-rooms">${items.map((it, i) => {
       const n = it.room ? (unread[it.room.id] || 0) : 0;
       const prev = this._split(it.room?.last_message_preview || '').text || it.room?.last_message_preview || it.sub;

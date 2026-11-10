@@ -19,6 +19,8 @@ const { chromium } = require('playwright');
   });
   await p.reload(); await p.waitForTimeout(1500);
   const R = {};
+  R.todayDefault = await p.evaluate(() => document.querySelector('.view-tab-btn.active')?.dataset.view === 'gantt' && document.getElementById('hq-page-title').textContent === '오늘 현황' && !!document.querySelector('#hq-todo .hq-todo-row.late'));
+  await p.click('.view-tab-btn[data-view="month"]'); await p.waitForTimeout(400);
   R.kpi = await p.evaluate(() => { const t = [...document.querySelectorAll('.tb-tile.v2')]; return { n: t.length, first: t[0]?.querySelector('.tb-l')?.textContent, hot: t[0]?.classList.contains('hot'), sub: !!t[0]?.querySelector('.tb-s')?.textContent }; });
   R.month = await p.evaluate(() => { const c = document.querySelector('.mv2-cell.today'); return { rows: c.querySelectorAll('.mv2-ev').length, more: c.querySelector('.mv2-more')?.textContent || '', legend: !!document.querySelector('.mv2-legend') }; });
   R.sideStatus = await p.evaluate(() => [...document.querySelectorAll('#manager-status-list .sb-st.late')].length >= 1);

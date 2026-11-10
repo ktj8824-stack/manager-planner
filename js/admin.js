@@ -54,7 +54,7 @@ const ARTIST_TYPE_COLORS = {
   crown: '#10b981',   // 왕관/MC (에메랄드)
   music: '#06b6d4',   // 음표/밴드 (시안)
   heart: '#f43f5e',   // 하트 (로즈)
-  sparkle: '#6366f1'  // 스파클 (인디고)
+  sparkle: '#4C57D6'  // 스파클 (인디고)
 };
 
 // Global Admin Interface
@@ -67,7 +67,7 @@ window.Admin = {
     const iconInput = document.getElementById('new-artist-icon');
     if (iconInput) iconInput.value = iconKey;
 
-    const assignedColor = ARTIST_TYPE_COLORS[iconKey] || '#6366f1';
+    const assignedColor = ARTIST_TYPE_COLORS[iconKey] || '#4C57D6';
     const colorInput = document.getElementById('new-artist-color');
     if (colorInput) colorInput.value = assignedColor;
 
@@ -83,7 +83,7 @@ window.Admin = {
         } else {
           opt.style.borderColor = '#cbd5e1';
           opt.style.borderWidth = '1px';
-          opt.style.color = '#64748b';
+          opt.style.color = '#5B616E';
           opt.style.boxShadow = 'none';
           opt.classList.remove('active');
         }
@@ -133,7 +133,7 @@ window.Admin = {
 
     let html = `
       <button type="button" class="member-chip-btn ${isAll ? 'active' : ''}" data-member="ALL"
-        style="padding:5px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s; border:1px solid ${isAll ? '#6366f1' : '#cbd5e1'}; background:${isAll ? '#6366f1' : '#ffffff'}; color:${isAll ? '#ffffff' : '#475569'};">
+        style="padding:5px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s; border:1px solid ${isAll ? '#4C57D6' : '#cbd5e1'}; background:${isAll ? '#4C57D6' : '#ffffff'}; color:${isAll ? '#ffffff' : '#475569'};">
         ✨ 전체 (완전체)
       </button>
     `;
@@ -142,7 +142,7 @@ window.Admin = {
       const sel = !isAll && selectedArr.includes(m);
       html += `
         <button type="button" class="member-chip-btn ${sel ? 'active' : ''}" data-member="${esc(m)}"
-          style="padding:5px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s; border:1px solid ${sel ? '#6366f1' : '#cbd5e1'}; background:${sel ? 'rgba(99,102,241,0.15)' : '#ffffff'}; color:${sel ? '#4338ca' : '#475569'};">
+          style="padding:5px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s; border:1px solid ${sel ? '#4C57D6' : '#cbd5e1'}; background:${sel ? 'rgba(59, 69, 196,0.15)' : '#ffffff'}; color:${sel ? '#2B338F' : '#475569'};">
           👤 ${esc(m)}
         </button>
       `;
@@ -182,7 +182,7 @@ window.Admin = {
     const ceo = localStorage.getItem('bp_user_name') || '관리자';
 
     const brandEl = document.getElementById('hq-brand-title');
-    if (brandEl) brandEl.textContent = comp.toUpperCase();
+    if (brandEl) brandEl.textContent = comp === 'STAR' ? '본사' : comp;
 
     const compSubEl = document.getElementById('header-company-sub');
     if (compSubEl) compSubEl.textContent = `${comp} 통합 스케줄 관리`;
@@ -340,7 +340,7 @@ window.Admin = {
       } else {
         badge.textContent = '로컬 스토리지 모드';
         badge.style.background = '#f1f5f9';
-        badge.style.color = '#64748b';
+        badge.style.color = '#5B616E';
         badge.style.borderColor = '#cbd5e1';
       }
     }
@@ -589,7 +589,7 @@ window.Admin = {
       shop: { label: '샵', color: '#ec4899', bg: 'rgba(236, 72, 153, 0.1)' },
       dorm: { label: '숙소', color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.1)' },
       office: { label: '사옥/연습실', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.1)' },
-      etc: { label: '기타', color: '#64748b', bg: 'rgba(100, 116, 139, 0.1)' }
+      etc: { label: '기타', color: '#5B616E', bg: 'rgba(100, 116, 139, 0.1)' }
     };
 
     listEl.innerHTML = places.map(p => {
@@ -605,15 +605,15 @@ window.Admin = {
               ${p.contact ? `<span style="font-size: 11px; color: var(--text-dim);">(${esc(p.contact)})</span>` : ''}
             </div>
             <div style="font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4C57D6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
               ${esc(p.address)}
             </div>
           </div>
           <div style="display: flex; gap: 6px; flex-shrink: 0;">
             <button type="button" onclick="Admin.editPlace(${escJs(p.id)})" 
-              style="background: transparent; border: 1px solid rgba(99, 102, 241, 0.4); color: #6366f1; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s;"
-              onmouseover="this.style.background='#6366f1'; this.style.color='#fff';"
-              onmouseout="this.style.background='transparent'; this.style.color='#6366f1';">
+              style="background: transparent; border: 1px solid rgba(59, 69, 196, 0.4); color: #4C57D6; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s;"
+              onmouseover="this.style.background='#4C57D6'; this.style.color='#fff';"
+              onmouseout="this.style.background='transparent'; this.style.color='#4C57D6';">
               수정
             </button>
             <button type="button" onclick="Admin.deletePlace(${escJs(p.id)})" 
@@ -643,7 +643,7 @@ window.Admin = {
     const btnSubmit = document.getElementById('btn-submit-place');
 
     if (editIdEl) editIdEl.value = target.id;
-    if (titleEl) titleEl.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> 거점 정보 수정: <strong style="color:var(--primary); margin-left:4px;">${esc(target.name)}</strong>`;
+    if (titleEl) titleEl.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4C57D6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> 거점 정보 수정: <strong style="color:var(--primary); margin-left:4px;">${esc(target.name)}</strong>`;
     if (typeEl) typeEl.value = target.type || 'etc';
     if (nameEl) nameEl.value = target.name || '';
     if (contactEl) contactEl.value = target.contact || '';
@@ -664,7 +664,7 @@ window.Admin = {
     const btnSubmit = document.getElementById('btn-submit-place');
 
     if (editIdEl) editIdEl.value = '';
-    if (titleEl) titleEl.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> 신규 거점 (샵 / 숙소 / 사옥) 등록`;
+    if (titleEl) titleEl.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4C57D6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> 신규 거점 (샵 / 숙소 / 사옥) 등록`;
     if (nameEl) nameEl.value = '';
     if (contactEl) contactEl.value = '';
     if (addressEl) addressEl.value = '';
@@ -771,9 +771,9 @@ window.Admin = {
     if (brandTitleEl) {
       const companyName = localStorage.getItem('bp_company_name');
       if (companyName && companyName !== 'STAR') {
-        brandTitleEl.textContent = companyName + ' SCHEDULER';
+        brandTitleEl.textContent = companyName;
       } else {
-        brandTitleEl.textContent = 'SCHEDULER';
+        brandTitleEl.textContent = '본사';
         (async () => {
           try {
             if (SupabaseClient.isConfigured && SupabaseClient.client) {
@@ -785,7 +785,7 @@ window.Admin = {
                 const name = data?.companies?.name;
                 if (name) {
                   localStorage.setItem('bp_company_name', name);
-                  brandTitleEl.textContent = name + ' SCHEDULER';
+                  brandTitleEl.textContent = name;
                 }
               }
             }
@@ -903,7 +903,7 @@ window.Admin = {
       const isActive = currentRole === r.role;
       return `
         <div onclick="AuthPersona.switchRole(${escJs(r.key)}); Admin.closeRoleModal(); Admin.updateRoleBadge();"
-             style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-radius:10px; border:2px solid ${esc(isActive ? r.color : '#334155')}; background:#0f172a; cursor:pointer; transition:all 0.2s;">
+             style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-radius:10px; border:2px solid ${esc(isActive ? r.color : '#334155')}; background:#14161A; cursor:pointer; transition:all 0.2s;">
           <div style="display:flex; align-items:center; gap:12px;">
             <div style="width:38px; height:38px; border-radius:10px; background:${esc(r.color)}20; color:${esc(r.color)}; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800;">
               ${esc(r.badge.split(' ')[0])}
@@ -919,7 +919,7 @@ window.Admin = {
           <div>
             ${isActive
           ? `<span style="background:${esc(r.color)}; color:#fff; font-size:11px; font-weight:800; padding:5px 10px; border-radius:20px;">선택됨 ✓</span>`
-          : '<span style="color:#64748b; font-size:12px; font-weight:700;">전환 ➔</span>'}
+          : '<span style="color:#5B616E; font-size:12px; font-weight:700;">전환 ➔</span>'}
           </div>
         </div>
       `;
@@ -989,11 +989,11 @@ window.Admin = {
 
     if (!artists || artists.length === 0) {
       container.innerHTML = `
-        <div style="text-align:center; padding:35px 20px; color:#64748b; font-size:13px; background:#e2e8f0; border-radius:8px; border:1px dashed #cbd5e1;">
-          <div style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:12px; background:rgba(99,102,241,0.1); color:#6366f1; margin-bottom:8px;">
+        <div style="text-align:center; padding:35px 20px; color:#5B616E; font-size:13px; background:#e2e8f0; border-radius:8px; border:1px dashed #cbd5e1;">
+          <div style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:12px; background:rgba(59, 69, 196,0.1); color:#4C57D6; margin-bottom:8px;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
           </div>
-          <div style="font-weight:700; color:#0f172a; margin-bottom:4px;">등록된 소속 아티스트가 없습니다.</div>
+          <div style="font-weight:700; color:#14161A; margin-bottom:4px;">등록된 소속 아티스트가 없습니다.</div>
           <div style="font-size:12px; color:#475569;">우측 상단의 <strong>[+ 신규 아티스트 등록]</strong> 버튼을 눌러 추가해보세요.</div>
         </div>
       `;
@@ -1019,21 +1019,21 @@ window.Admin = {
       return `
         <div style="background:#e2e8f0; border-radius:10px; padding:12px 16px; border:1px solid #cbd5e1; display:flex; justify-content:space-between; align-items:center; gap:12px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
           <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
-            <div style="width:40px; height:40px; border-radius:10px; background:${esc(art.color || '#6366f1')}; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#fff; box-shadow:0 2px 6px ${esc(art.color || '#6366f1')}40;">
+            <div style="width:40px; height:40px; border-radius:10px; background:${esc(art.color || '#4C57D6')}; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#fff; box-shadow:0 2px 6px ${esc(art.color || '#4C57D6')}40;">
               ${getArtistTypeIcon(art, 20)}
             </div>
             <div style="flex:1; min-width:0;">
               <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                <strong style="color:#0f172a; font-size:15px; font-weight:800;">${esc(art.name)}</strong>
-                <span style="font-size:11px; background:#e0e7ff; color:#4338ca; border:1px solid #c7d2fe; padding:2px 8px; border-radius:4px; font-weight:700;">${esc(art.type || '그룹')} · ${esc(art.members || 1)}명</span>
+                <strong style="color:#14161A; font-size:15px; font-weight:800;">${esc(art.name)}</strong>
+                <span style="font-size:11px; background:#E3E6FA; color:#2B338F; border:1px solid #D5D9F7; padding:2px 8px; border-radius:4px; font-weight:700;">${esc(art.type || '그룹')} · ${esc(art.members || 1)}명</span>
                 <span style="font-size:11px; background:${art.status === '활동중' ? '#ecfdf5' : art.status === '컴백준비' ? '#fdf4ff' : '#f1f5f9'}; color:${art.status === '활동중' ? '#059669' : art.status === '컴백준비' ? '#c026d3' : '#475569'}; border:1px solid ${art.status === '활동중' ? '#a7f3d0' : art.status === '컴백준비' ? '#f5d0fe' : '#cbd5e1'}; padding:2px 8px; border-radius:4px; font-weight:700;">${esc(art.status || '활동중')}</span>
                 <span style="font-size:11px; background:#ffffff; color:#475569; border:1px solid #cbd5e1; padding:2px 8px; border-radius:4px; font-weight:600;">스케줄 ${esc(artSchedules.length)}건</span>
               </div>
-              ${careText ? `<div style="font-size:12px; color:#475569; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:flex; align-items:center; gap:4px; font-weight:500;" title="${esc(careText)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2"><path d="M10.5 20.5l10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></svg> 케어: ${esc(careText)}</div>` : `<div style="font-size:12px; color:#64748b; margin-top:4px;">케어 정보 미등록</div>`}
+              ${careText ? `<div style="font-size:12px; color:#475569; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:flex; align-items:center; gap:4px; font-weight:500;" title="${esc(careText)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2"><path d="M10.5 20.5l10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></svg> 케어: ${esc(careText)}</div>` : `<div style="font-size:12px; color:#5B616E; margin-top:4px;">케어 정보 미등록</div>`}
             </div>
           </div>
           <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-            <button type="button" onclick="Admin.openArtistFormModal(${escJs(art.id)})" style="background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; font-size:12px; font-weight:700; padding:6px 12px; border-radius:6px; cursor:pointer; transition:all 0.15s; box-shadow:0 1px 2px rgba(0,0,0,0.03);" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">수정</button>
+            <button type="button" onclick="Admin.openArtistFormModal(${escJs(art.id)})" style="background:#ffffff; border:1px solid #cbd5e1; color:#14161A; font-size:12px; font-weight:700; padding:6px 12px; border-radius:6px; cursor:pointer; transition:all 0.15s; box-shadow:0 1px 2px rgba(0,0,0,0.03);" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">수정</button>
             <button type="button" onclick="Admin.deleteArtist(${escJs(art.id)}, ${escJs(art.name)})" style="background:#fee2e2; border:1px solid #fca5a5; color:#dc2626; font-size:12px; font-weight:700; padding:6px 12px; border-radius:6px; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'">삭제</button>
           </div>
         </div>
@@ -1107,7 +1107,7 @@ window.Admin = {
           memberListInput.value = (art.memberList && Array.isArray(art.memberList)) ? art.memberList.join(', ') : '';
         }
         
-        if (titleEl) titleEl.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> 소속 아티스트 수정';
+        if (titleEl) titleEl.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4C57D6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> 소속 아티스트 수정';
         if (submitBtn) submitBtn.textContent = '수정 완료';
       }
     } else {
@@ -1119,7 +1119,7 @@ window.Admin = {
       const memberListInput = document.getElementById('new-artist-member-list');
       if (memberListInput) memberListInput.value = '';
       this.selectArtistIcon('star');
-      if (titleEl) titleEl.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg> 소속 아티스트 추가';
+      if (titleEl) titleEl.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4C57D6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg> 소속 아티스트 추가';
       if (submitBtn) submitBtn.textContent = '아티스트 등록';
     }
 
@@ -1154,7 +1154,7 @@ window.Admin = {
         const schedules = await window.hqStore.getSchedules();
         let artistHtml = `
           <div class="artist-chip active" data-artist-id="ALL">
-            <div class="artist-avatar" style="background:#6366f1;">🏢</div>
+            <div class="artist-avatar" style="background:#4C57D6;">🏢</div>
             <div class="artist-meta">
               <div class="name">전체 소속 아티스트</div>
               <div class="sub">통합 캘린더 모드</div>
@@ -1206,8 +1206,8 @@ window.Admin = {
 
     if (badge) {
       badge.textContent = `매니저 ${sub.activeManagerCount}명 / ${sub.totalSlots}자리 (${sub.availableSlots}자리 남음)`;
-      badge.style.background = sub.isFull ? 'rgba(239,68,68,0.2)' : 'rgba(99,102,241,0.2)';
-      badge.style.color = sub.isFull ? '#fca5a5' : '#c7d2fe';
+      badge.style.background = sub.isFull ? 'rgba(239,68,68,0.2)' : 'rgba(59, 69, 196,0.2)';
+      badge.style.color = sub.isFull ? '#fca5a5' : '#D5D9F7';
     }
 
     if (warning) {
@@ -1220,7 +1220,7 @@ window.Admin = {
         submitBtn.style.background = 'linear-gradient(135deg, #ef4444, #f59e0b)';
       } else {
         submitBtn.textContent = '매니저 계정 생성';
-        submitBtn.style.background = '#6366f1';
+        submitBtn.style.background = '#4C57D6';
       }
     }
 
@@ -1332,11 +1332,11 @@ window.Admin = {
     // 자리 현황
     if ($('sub-slot-progress-text')) {
       $('sub-slot-progress-text').textContent = `매니저 ${used}명 / ${paidSlots}자리`;
-      $('sub-slot-progress-text').style.color = used >= paidSlots ? '#b91c1c' : '#4f46e5';
+      $('sub-slot-progress-text').style.color = used >= paidSlots ? '#b91c1c' : '#3B45C4';
     }
     if ($('sub-slot-progress-bar')) {
       $('sub-slot-progress-bar').style.width = `${Math.min(100, Math.round((used / Math.max(1, paidSlots)) * 100))}%`;
-      $('sub-slot-progress-bar').style.background = used >= paidSlots ? '#ef4444' : '#4f46e5';
+      $('sub-slot-progress-bar').style.background = used >= paidSlots ? '#ef4444' : '#3B45C4';
     }
     const shortage = $('sub-shortage');
     if (shortage) {
@@ -1383,7 +1383,7 @@ window.Admin = {
         const d = new Date(p.approved_at || p.created_at);
         const st = p.status === 'DONE' ? '' : ' · <span style="color:#b45309;">입금 대기</span>';
         return `<div style="display:flex; justify-content:space-between; gap:8px; padding:6px 0; font-size:12.5px; color:#475569; border-top:1px solid #e2e8f0;">
-          <span>${d.getMonth() + 1}월 ${d.getDate()}일 · ${esc(p.order_id || '')}${st}</span><b style="color:#0f172a;">${won(p.amount || 0)}</b></div>`;
+          <span>${d.getMonth() + 1}월 ${d.getDate()}일 · ${esc(p.order_id || '')}${st}</span><b style="color:#14161A;">${won(p.amount || 0)}</b></div>`;
       }).join('');
     }
 
@@ -1453,8 +1453,8 @@ window.Admin = {
         <div class="mgr2-card ${st.cls === 'late' ? 'late' : ''}" style="background:#fff; border-radius:12px; padding:14px; border:${st.cls === 'late' ? '2px solid #dc2626' : '1px solid #e4e4e7'}; margin-bottom:10px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
             <div style="display:flex; align-items:center; gap:8px;">
-              <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:${esc(mgr.color || '#6366f1')}; box-shadow:0 0 6px ${esc(mgr.color || '#6366f1')}60;"></span>
-              <strong style="color:#0f172a; font-size:15px; font-weight:800;">${esc(mgr.name)}</strong>
+              <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:${esc(mgr.color || '#4C57D6')}; box-shadow:0 0 6px ${esc(mgr.color || '#4C57D6')}60;"></span>
+              <strong style="color:#14161A; font-size:15px; font-weight:800;">${esc(mgr.name)}</strong>
               <span class="mgr2-st ${esc(st.cls)}">${esc(st.text)}</span>
               <span style="font-size:11px; background:#ffffff; color:#475569; border:1px solid #cbd5e1; padding:2px 8px; border-radius:4px; font-weight:700;">${mgr.role === 'hq_admin' ? '본사 관리자' : '현장 매니저'}</span>
             </div>
@@ -1462,7 +1462,7 @@ window.Admin = {
               <span style="font-size:12px; color:#2563eb; font-family:monospace; background:#eff6ff; padding:3px 8px; border-radius:4px; border:1px solid #bfdbfe; font-weight:700;">🆔 ${esc(emailDisplay)}</span>
               <span style="font-size:12px; color:#475569; font-weight:600;">📱 ${esc(mgr.phone || '연락처 없음')}</span>
               <div style="display:flex; align-items:center; gap:6px;">
-                <button type="button" onclick="Admin.openEditManagerModal(${escJs(mgr.id)})" style="background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; font-size:12px; font-weight:700; padding:5px 12px; border-radius:6px; cursor:pointer; transition:all 0.15s; box-shadow:0 1px 2px rgba(0,0,0,0.03);" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">수정</button>
+                <button type="button" onclick="Admin.openEditManagerModal(${escJs(mgr.id)})" style="background:#ffffff; border:1px solid #cbd5e1; color:#14161A; font-size:12px; font-weight:700; padding:5px 12px; border-radius:6px; cursor:pointer; transition:all 0.15s; box-shadow:0 1px 2px rgba(0,0,0,0.03);" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">수정</button>
                 ${mgr.role !== 'hq_admin' ? `<button type="button" onclick="Admin.deleteManager(${escJs(mgr.id)})" style="background:#fee2e2; border:1px solid #fca5a5; color:#dc2626; font-size:12px; font-weight:700; padding:5px 12px; border-radius:6px; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'">삭제</button>` : ''}
               </div>
             </div>
@@ -1471,7 +1471,7 @@ window.Admin = {
             ${artists.map(art => {
         const isChecked = assigned.includes(art.id);
         const nm = String(art.name || '').replace(/\s*\([^)]*\)\s*$/, '');
-        return `<button type="button" class="mgr2-chip ${isChecked ? 'on' : ''}" aria-pressed="${isChecked}" onclick="Admin.toggleArtistAssignment(${escJs(mgr.id)}, ${escJs(art.id)})" style="--c:${esc(art.color || '#4f46e5')}">${isChecked ? '' : '+ '}${esc(nm)}</button>`;
+        return `<button type="button" class="mgr2-chip ${isChecked ? 'on' : ''}" aria-pressed="${isChecked}" onclick="Admin.toggleArtistAssignment(${escJs(mgr.id)}, ${escJs(art.id)})" style="--c:${esc(art.color || '#3B45C4')}">${isChecked ? '' : '+ '}${esc(nm)}</button>`;
       }).join('')}
           </div>
         </div>
@@ -1557,11 +1557,11 @@ window.Admin = {
 
     if (!vehicles || vehicles.length === 0) {
       container.innerHTML = `
-        <div style="text-align:center; padding:35px 20px; color:#64748b; font-size:13px; background:#e2e8f0; border-radius:8px; border:1px dashed #cbd5e1;">
+        <div style="text-align:center; padding:35px 20px; color:#5B616E; font-size:13px; background:#e2e8f0; border-radius:8px; border:1px dashed #cbd5e1;">
           <div style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:12px; background:rgba(37,99,235,0.1); color:#2563eb; margin-bottom:8px;">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 7.5 C8.2 4.5 15.8 4.5 16.5 7.5 L17.5 10.8 C19.5 10.5 20.5 11.2 20.5 12.2 C20.5 13.2 19.5 13.8 18 13.8 V18 C18 18.8 17.5 19.5 16.5 19.5 H15.2 C14.5 19.5 14.2 19 14.2 18.2 V16.2 H9.8 V18.2 C9.8 19 9.5 19.5 8.8 19.5 H7.5 C6.5 19.5 6 18.8 6 18 V13.8 C4.5 13.8 3.5 13.2 3.5 12.2 C3.5 11.2 4.5 10.5 6.5 10.8 Z"/><path d="M6.2 11.8 C9 12.6 15 12.6 17.8 11.8"/><path d="M7.2 14.2 C8.6 13.8 9.8 14.3 9.8 15.4 C9.8 16.5 8.5 16.8 7.2 16.2 C6.8 15.6 6.8 14.8 7.2 14.2 Z"/><path d="M16.8 14.2 C15.4 13.8 14.2 14.3 14.2 15.4 C14.2 16.5 15.5 16.8 16.8 16.2 C17.2 15.6 17.2 14.8 16.8 14.2 Z"/></svg>
           </div>
-          <div style="font-weight:700; color:#0f172a; margin-bottom:4px;">등록된 지원 차량이 없습니다.</div>
+          <div style="font-weight:700; color:#14161A; margin-bottom:4px;">등록된 지원 차량이 없습니다.</div>
           <div style="font-size:12px; color:#475569;">우측 상단의 <strong>[+ 신규 차량 등록]</strong> 버튼을 눌러 차량을 추가해보세요.</div>
         </div>
       `;
@@ -1593,20 +1593,20 @@ window.Admin = {
             </div>
             <div style="flex:1; min-width:0;">
               <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                <strong style="color:#0f172a; font-size:15px; font-weight:800;">${esc(veh.name)}</strong>
-                <span style="font-size:11px; background:#ffffff; color:#0f172a; padding:2px 8px; border-radius:4px; font-weight:800; border:1px solid #cbd5e1;">${esc(veh.number || '번호미등록')}</span>
+                <strong style="color:#14161A; font-size:15px; font-weight:800;">${esc(veh.name)}</strong>
+                <span style="font-size:11px; background:#ffffff; color:#14161A; padding:2px 8px; border-radius:4px; font-weight:800; border:1px solid #cbd5e1;">${esc(veh.number || '번호미등록')}</span>
                 <span style="font-size:11px; background:${esc(statusBg)}; color:${esc(statusColor)}; border:1px solid ${esc(statusBorder)}; padding:2px 8px; border-radius:4px; font-weight:700;">${esc(isDispatchedToday ? '오늘 배차 ' + todayDispatches.length + '건' : (veh.status || '운행가능'))}</span>
                 <span style="font-size:11px; background:#ffffff; color:#475569; border:1px solid #cbd5e1; padding:2px 8px; border-radius:4px; font-weight:600;">${esc(veh.type || '밴')} · ${esc(veh.seats || 7)}인승</span>
               </div>
               <div style="font-size:12px; color:#475569; margin-top:4px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-weight:500;">
-                ${veh.defaultArtist ? `<span>⭐ 전담: <strong style="color:#0f172a;">${esc(veh.defaultArtist)}</strong></span>` : `<span>공용 차량</span>`}
-                ${veh.driver ? `<span>👤 담당: <strong style="color:#0f172a;">${esc(veh.driver)}</strong></span>` : ''}
-                ${veh.notes ? `<span style="color:#64748b;">📝 ${esc(veh.notes)}</span>` : ''}
+                ${veh.defaultArtist ? `<span>⭐ 전담: <strong style="color:#14161A;">${esc(veh.defaultArtist)}</strong></span>` : `<span>공용 차량</span>`}
+                ${veh.driver ? `<span>👤 담당: <strong style="color:#14161A;">${esc(veh.driver)}</strong></span>` : ''}
+                ${veh.notes ? `<span style="color:#5B616E;">📝 ${esc(veh.notes)}</span>` : ''}
               </div>
             </div>
           </div>
           <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-            <button type="button" onclick="Admin.openVehicleFormModal(${escJs(veh.id)})" style="background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; font-size:12px; font-weight:700; padding:6px 12px; border-radius:6px; cursor:pointer; transition:all 0.15s; box-shadow:0 1px 2px rgba(0,0,0,0.03);" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">수정</button>
+            <button type="button" onclick="Admin.openVehicleFormModal(${escJs(veh.id)})" style="background:#ffffff; border:1px solid #cbd5e1; color:#14161A; font-size:12px; font-weight:700; padding:6px 12px; border-radius:6px; cursor:pointer; transition:all 0.15s; box-shadow:0 1px 2px rgba(0,0,0,0.03);" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">수정</button>
             <button type="button" onclick="Admin.deleteVehicle(${escJs(veh.id)}, ${escJs(veh.name)})" style="background:#fee2e2; border:1px solid #fca5a5; color:#dc2626; font-size:12px; font-weight:700; padding:6px 12px; border-radius:6px; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'">삭제</button>
           </div>
         </div>
@@ -1692,7 +1692,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentDate: new Date(),
     selectedArtistFilter: 'ALL',
     selectedManagerFilter: 'ALL',
-    currentView: 'month', // 'month', 'week', 'gantt'
+    currentView: 'gantt', // 'gantt'(오늘 현황 기본) | 'month' | 'week' | 'kanban' | 'map' | 'analytics'
     activeScheduleId: null
   };
 
@@ -1808,7 +1808,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const cards = [
-      { id: 'kpi-card-today', key: 'today', title: '오늘 총 스케줄', color: '#6366f1', iconSvg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' },
+      { id: 'kpi-card-today', key: 'today', title: '오늘 총 스케줄', color: '#4C57D6', iconSvg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' },
       { id: 'kpi-card-shop', key: 'shop', title: '헤메샵 경유 스케줄', color: '#be185d', iconSvg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#be185d" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M6 2.5 L6.8 4.8 L9 5.5 L6.8 6.2 L6 8.5 L5.2 6.2 L3 5.5 L5.2 4.8 Z" fill="#be185d" stroke="none"/><path d="m11.5 12.5-6 6a1.77 1.77 0 1 0 2.5 2.5l6-6"/><path d="m9.5 10.5 4 4"/><path d="M13.5 10.5c-.8-3.2 1-6 4.5-6s4.5 2 4 5.5c-.6 3.2-3.5 4.5-5.5 3.5"/></svg>' },
       { id: 'kpi-card-active', key: 'active', title: '현재 가동중인 차량/팀', color: '#0891b2', iconSvg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M7.5 7.5 C8.2 4.5 15.8 4.5 16.5 7.5 L17.5 10.8 C19.5 10.5 20.5 11.2 20.5 12.2 C20.5 13.2 19.5 13.8 18 13.8 V18 C18 18.8 17.5 19.5 16.5 19.5 H15.2 C14.5 19.5 14.2 19 14.2 18.2 V16.2 H9.8 V18.2 C9.8 19 9.5 19.5 8.8 19.5 H7.5 C6.5 19.5 6 18.8 6 18 V13.8 C4.5 13.8 3.5 13.2 3.5 12.2 C3.5 11.2 4.5 10.5 6.5 10.8 Z"/><path d="M6.2 11.8 C9 12.6 15 12.6 17.8 11.8"/><path d="M7.2 14.2 C8.6 13.8 9.8 14.3 9.8 15.4 C9.8 16.5 8.5 16.8 7.2 16.2 C6.8 15.6 6.8 14.8 7.2 14.2 Z"/><path d="M16.8 14.2 C15.4 13.8 14.2 14.3 14.2 15.4 C14.2 16.5 15.5 16.8 16.8 16.2 C17.2 15.6 17.2 14.8 16.8 14.2 Z"/></svg>' },
       { id: 'kpi-card-artist', key: 'artist', title: '등록된 소속 아티스트', color: '#10b981', iconSvg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' }
@@ -1823,7 +1823,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const dataList = kpiDataCache[c.key] || [];
 
         let popHtml = `
-          <div style="font-size:13px; font-weight:800; border-bottom:1px solid #cbd5e1; padding-bottom:8px; margin-bottom:10px; color:#0f172a; display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:13px; font-weight:800; border-bottom:1px solid #cbd5e1; padding-bottom:8px; margin-bottom:10px; color:#14161A; display:flex; justify-content:space-between; align-items:center;">
             <span style="display:flex; align-items:center;">${c.iconSvg} ${esc(c.title)}</span>
             <span style="background:${esc(c.color)}; color:#fff; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:800;">${esc(dataList.length)}${c.key === 'artist' ? '팀' : '건'}</span>
           </div>
@@ -1831,7 +1831,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (dataList.length === 0) {
           popHtml += `
-            <div style="text-align:center; padding:18px 10px; color:#64748b; font-size:12px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">
+            <div style="text-align:center; padding:18px 10px; color:#5B616E; font-size:12px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">
               해당하는 내역이 없습니다.
             </div>
           `;
@@ -1841,16 +1841,16 @@ document.addEventListener('DOMContentLoaded', () => {
               ${dataList.map(art => `
                 <div class="kpi-popover-art-item" onclick="Admin.openArtistModal()" style="background:#e2e8f0; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:12px; border:1px solid #cbd5e1; display:flex; justify-content:space-between; align-items:center; transition:all 0.15s; box-shadow:0 1px 2px rgba(0,0,0,0.03);" onmouseenter="this.style.background='#dbeafe'; this.style.borderColor=${escJs(c.color)}; this.style.transform='translateY(-1px)';" onmouseleave="this.style.background='#e2e8f0'; this.style.borderColor='#cbd5e1'; this.style.transform='none';">
                   <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="width:24px; height:24px; border-radius:6px; background:${esc(art.color || '#6366f1')}; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700;">
+                    <span style="width:24px; height:24px; border-radius:6px; background:${esc(art.color || '#4C57D6')}; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700;">
                       ${getArtistTypeIcon(art, 13)}
                     </span>
-                    <strong style="color:#0f172a; font-size:13.5px; font-weight:800;">${esc(art.name)}</strong>
+                    <strong style="color:#14161A; font-size:13.5px; font-weight:800;">${esc(art.name)}</strong>
                   </div>
                   <span style="font-size:11px; background:#ffffff; color:#475569; border:1px solid #cbd5e1; padding:2px 6px; border-radius:4px; font-weight:700;">${esc(art.type || '그룹')} · ${esc(art.members || 1)}명</span>
                 </div>
               `).join('')}
             </div>
-            <div style="font-size:11px; color:#64748b; text-align:center; margin-top:8px; background:#f8fafc; padding:7px; border-radius:8px; border:1px solid #e2e8f0; font-weight:500;">
+            <div style="font-size:11px; color:#5B616E; text-align:center; margin-top:8px; background:#f8fafc; padding:7px; border-radius:8px; border:1px solid #e2e8f0; font-weight:500;">
               💡 클릭 시 <strong>[아티스트 관리]</strong> 모달이 열립니다.
             </div>
           `;
@@ -1866,7 +1866,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </span>
                     <span style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:700; background:#ffffff; color:#475569; border:1px solid #cbd5e1;">${esc(sch.status || '확정')}</span>
                   </div>
-                  <div style="font-weight:800; color:#0f172a; margin-bottom:4px; font-size:13.5px; display:flex; align-items:center; gap:6px;">
+                  <div style="font-weight:800; color:#14161A; margin-bottom:4px; font-size:13.5px; display:flex; align-items:center; gap:6px;">
                     <span style="background:${esc(c.color)}; color:#fff; font-size:10px; padding:1px 6px; border-radius:4px; font-weight:700;">${esc(sch.artistName || '아티스트')}</span>
                     <span>${esc(sch.title)}</span>
                   </div>
@@ -1877,7 +1877,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
               `).join('')}
             </div>
-            <div style="font-size:11px; color:#64748b; text-align:center; margin-top:8px; background:#f8fafc; padding:7px; border-radius:8px; border:1px solid #e2e8f0; font-weight:500;">
+            <div style="font-size:11px; color:#5B616E; text-align:center; margin-top:8px; background:#f8fafc; padding:7px; border-radius:8px; border:1px solid #e2e8f0; font-weight:500;">
               💡 일정을 클릭하시면 <strong>상세 정보 및 역산 동선</strong>이 열립니다.
             </div>
           `;
@@ -2024,7 +2024,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const isSel = state.selectedArtistFilter === art.id;
       artistHtml += `
         <button type="button" class="artist-chip v2 ${isSel ? 'active' : ''}" data-artist-id="${esc(art.id)}" aria-pressed="${isSel}">
-          <span class="sb-dot" style="background:${esc(art.color || '#6366f1')}" aria-hidden="true"></span>
+          <span class="sb-dot" style="background:${esc(art.color || '#4C57D6')}" aria-hidden="true"></span>
           <span class="artist-meta"><span class="name">${esc(String(art.name || '').replace(/\s*\([^)]*\)\s*$/, ''))}</span><span class="sub">${esc(art.type || '')}</span></span>
           <span class="sb-count">${esc(count)}</span>
         </button>`;
@@ -2290,7 +2290,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (isAll) return { color: '#52525b', all: true };
       let art = artists.find(a => a.id === sch.artistId);
       if (!art && (sch.artistName || sch.artist)) { const n = sch.artistName || sch.artist || ''; art = artists.find(a => n.includes(a.name.split(' ')[0]) || a.name.includes(n)); }
-      return { color: art ? (art.color || '#6366f1') : '#6366f1', all: false };
+      return { color: art ? (art.color || '#4C57D6') : '#4C57D6', all: false };
     };
     for (let day = 1; day <= totalDays; day++) {
       const d = new Date(year, month, day);
@@ -2311,7 +2311,7 @@ document.addEventListener('DOMContentLoaded', () => {
     allSchedules.filter(s => s.date && s.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).forEach(s => {
       const c = artColorOf(s);
       if (c.all) used.set('전원', '#52525b');
-      else { const a = artists.find(x => x.id === s.artistId); if (a) used.set(String(a.name).replace(/\s*\([^)]*\)\s*$/, ''), a.color || '#6366f1'); }
+      else { const a = artists.find(x => x.id === s.artistId); if (a) used.set(String(a.name).replace(/\s*\([^)]*\)\s*$/, ''), a.color || '#4C57D6'); }
     });
     html += `</div>${used.size ? `<div class="mv2-legend">${[...used].map(([n, c]) => `<span><i style="background:${esc(c)}"></i>${esc(n)}</span>`).join('')}</div>` : ''}</div>`;
     el.scheduleViewport.innerHTML = html;
@@ -2364,7 +2364,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const toMin = (t) => { const m = /^(\d{1,2}):(\d{2})/.exec(String(t || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; };
     const todayStr = fmtDate(new Date());
     const now = new Date(); const nowMin = now.getHours() * 60 + now.getMinutes();
-    const colorOf = (sch) => { if (sch.isSecret) return '#9333ea'; if (sch.artistId === 'ALL') return '#52525b'; const a = artists.find(x => x.id === sch.artistId); return a ? (a.color || '#6366f1') : '#6366f1'; };
+    const colorOf = (sch) => { if (sch.isSecret) return '#9333ea'; if (sch.artistId === 'ALL') return '#52525b'; const a = artists.find(x => x.id === sch.artistId); return a ? (a.color || '#4C57D6') : '#4C57D6'; };
     const nameOf = (sch) => { if (sch.artistId === 'ALL') return '전원'; const a = artists.find(x => x.id === sch.artistId); return String((a && a.name) || sch.artistName || '').replace(/\s*\([^)]*\)\s*$/, ''); };
     const WK = ['일', '월', '화', '수', '목', '금', '토'];
     const perDay = weekDays.map(d => allSchedules.filter(s => s.date === fmtDate(d)).sort((x, y) => String(x.startTime || '').localeCompare(String(y.startTime || ''))));
@@ -2443,7 +2443,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const sub = mgr ? (anyLate ? `${mgr.managerName} · 응답 없음` : mgr.managerName) : '';
       const barHtml = bars.map(b => `<div class="cal-event-pill gv2-bar ${b.cls}${b.main ? ' main' : ''}" data-sch-id="${esc(b.id)}" title="${esc(b.label)}" style="left:${pct(b.a0)}%; width:${Math.max(0.8, pct(b.a1) - pct(b.a0))}%">${esc(b.label)}</div>`).join('');
       return `<div class="gv2-row${anyLate ? ' late' : ''}">
-        <div class="gv2-who"><span class="gv2-dot" style="background:${esc(art.color || '#6366f1')}"></span><span><b>${esc(String(art.name || '').replace(/\s*\([^)]*\)\s*$/, ''))}</b><small class="${anyLate ? 'bad' : ''}">${esc(sub)}</small></span></div>
+        <div class="gv2-who"><span class="gv2-dot" style="background:${esc(art.color || '#4C57D6')}"></span><span><b>${esc(String(art.name || '').replace(/\s*\([^)]*\)\s*$/, ''))}</b><small class="${anyLate ? 'bad' : ''}">${esc(sub)}</small></span></div>
         <div class="gv2-track">${barHtml || '<span class="gv2-none">오늘 일정 없음</span>'}${isToday && nowMin >= H0 * 60 ? `<i class="gv2-now" style="left:${pct(nowMin)}%"></i>` : ''}</div>
       </div>`;
     }).join('');
@@ -2507,7 +2507,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const canView = window.AuthPersona ? window.AuthPersona.canViewSecret(sch) : true;
       const hide = sch.isSecret && !canView;
       const art = artists.find(a => a.id === sch.artistId);
-      const color = art ? (art.color || '#6366f1') : (sch.artistId === 'ALL' ? '#52525b' : '#6366f1');
+      const color = art ? (art.color || '#4C57D6') : (sch.artistId === 'ALL' ? '#52525b' : '#4C57D6');
       const aname = sch.artistId === 'ALL' ? '전원' : String((art && art.name) || sch.artistName || '아티스트').replace(/\s*\([^)]*\)\s*$/, '');
       const tl = Array.isArray(sch.timeline) ? sch.timeline : [];
       const cur = tl.find(t => t.moving && !t.done) || tl.find(t => !t.done && !/^\[기상/.test(t.label || ''));
@@ -2583,7 +2583,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const canView = window.AuthPersona ? window.AuthPersona.canViewSecret(sch) : true;
       const hide = sch.isSecret && !canView;
       const art = artists.find(a => a.id === sch.artistId);
-      const color = art ? (art.color || '#6366f1') : '#52525b';
+      const color = art ? (art.color || '#4C57D6') : '#52525b';
       const aname = sch.artistId === 'ALL' ? '전원' : String((art && art.name) || sch.artistName || '').replace(/\s*\([^)]*\)\s*$/, '');
       const tl = Array.isArray(sch.timeline) ? sch.timeline : [];
       const done = sch.status === '완료' || (tl.length && tl.every(t => t.done));
@@ -2706,7 +2706,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const CAT = { music_show: '음악방송 · 생방송', broadcast: '예능 · 라디오 · 인터뷰', shooting: '화보 · 촬영 · 광고', event: '행사 · 콘서트 · 페스티벌', fansign: '팬미팅 · 팬사인회', recording: '녹음 · 안무 · 연습', overseas: '해외 투어 · 출국', meeting: '미팅 · 기획회의' };
     const catCount = {}; list.forEach(s => { const k = norm(s.category); catCount[k] = (catCount[k] || 0) + 1; });
     const cats = Object.entries(catCount).sort((x, y) => y[1] - x[1]);
-    const artRows = artists.map(a => ({ name: String(a.name || '').replace(/\s*\([^)]*\)\s*$/, ''), color: a.color || '#6366f1', n: list.filter(s => s.artistId === a.id).length })).filter(r => r.n > 0);
+    const artRows = artists.map(a => ({ name: String(a.name || '').replace(/\s*\([^)]*\)\s*$/, ''), color: a.color || '#4C57D6', n: list.filter(s => s.artistId === a.id).length })).filter(r => r.n > 0);
     const allN = list.filter(s => s.artistId === 'ALL').length;
     if (allN) artRows.push({ name: '전원', color: '#52525b', n: allN, all: true });
     artRows.sort((x, y) => y.n - x.n);
@@ -2729,7 +2729,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="an2-kpi"><span>현장 지원 매니저</span><b>${managers.length}명</b><small>이번 달 담당 ${usedMgr}명</small></div>
         </div>
         <div class="an2-two">
-          <section class="an2-card"><h3>분야별 스케줄 · ${month}월 ${total}건</h3>${cats.map(([k, n]) => bar(CAT[k], n, maxCat, '#4f46e5')).join('') || '<p class="an2-empty">이번 달 일정이 없어요.</p>'}</section>
+          <section class="an2-card"><h3>분야별 스케줄 · ${month}월 ${total}건</h3>${cats.map(([k, n]) => bar(CAT[k], n, maxCat, '#3B45C4')).join('') || '<p class="an2-empty">이번 달 일정이 없어요.</p>'}</section>
           <section class="an2-card"><h3>아티스트별 스케줄</h3>${artRows.map(r => bar(r.name, r.n, maxArt, r.color)).join('') || '<p class="an2-empty">이번 달 일정이 없어요.</p>'}${allN ? `<p class="an2-note">'전원'은 소속 아티스트 모두가 참여하는 일정이에요</p>` : ''}</section>
         </div>
         <div class="an2-two">
@@ -2751,7 +2751,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const isAll = sch.artistId === 'ALL' || (sch.artistName && (sch.artistName.includes('전원') || sch.artistName.includes('전체')));
       const displayArtName = isAll ? '전체 아티스트 (전원)' : (sch.artistName || '아티스트');
-      const badgeColor = isAll ? '#4f46e5' : (art ? art.color : '#6366f1');
+      const badgeColor = isAll ? '#3B45C4' : (art ? art.color : '#4C57D6');
       const conflictResult = typeof window.hqStore?.checkConflict === 'function' 
         ? window.hqStore.checkConflict(sch) 
         : { hasConflict: false, conflicts: [] };
@@ -2787,8 +2787,8 @@ document.addEventListener('DOMContentLoaded', () => {
               </span>
             `}
           </div>
-          <h2 style="font-size:20px; color:#0f172a; font-weight:800; margin:8px 0 4px 0;">${esc(sch.title || '스케줄명 없음')}</h2>
-          <div style="font-size:13px; color:#64748b; font-weight:600;">📅 ${esc(sch.date)} (${esc(sch.startTime)} ~ ${esc(sch.endTime)})</div>
+          <h2 style="font-size:20px; color:#14161A; font-weight:800; margin:8px 0 4px 0;">${esc(sch.title || '스케줄명 없음')}</h2>
+          <div style="font-size:13px; color:#5B616E; font-weight:600;">📅 ${esc(sch.date)} (${esc(sch.startTime)} ~ ${esc(sch.endTime)})</div>
         </div>
         ${getStatusBadge(sch.status)}
       </div>
@@ -2797,10 +2797,10 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="background:#e2e8f0; padding:10px 12px; border-radius:8px; border:1px solid #cbd5e1; display:flex; flex-direction:column; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
           <div style="display:flex; align-items:center; gap:8px;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-            <span style="color:#475569; font-weight:600;">메인 장소:</span> <strong style="color:#0f172a;">${esc(sch.location || '미정')}</strong>
+            <span style="color:#475569; font-weight:600;">메인 장소:</span> <strong style="color:#14161A;">${esc(sch.location || '미정')}</strong>
           </div>
           ${sch.locationAddress ? `
-            <div style="font-size:11px; color:#64748b; padding-left:23px; word-break:break-all;">
+            <div style="font-size:11px; color:#5B616E; padding-left:23px; word-break:break-all;">
               📍 ${esc(sch.locationAddress)}
             </div>
           ` : ''}
@@ -2808,32 +2808,32 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div style="background:#e2e8f0; padding:10px 12px; border-radius:8px; border:1px solid #cbd5e1; display:flex; align-items:center; gap:8px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-          <span style="color:#475569; font-weight:600;">담당 매니저:</span> <strong style="color:#0f172a;">${esc(sch.managerName || '미배정')}</strong>
+          <span style="color:#475569; font-weight:600;">담당 매니저:</span> <strong style="color:#14161A;">${esc(sch.managerName || '미배정')}</strong>
         </div>
         <div style="background:#e2e8f0; padding:10px 12px; border-radius:8px; border:1px solid #cbd5e1; display:flex; align-items:center; gap:8px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l2-6h10l2 6"></path><rect x="3" y="11" width="18" height="8" rx="2"></rect><circle cx="7.5" cy="15.5" r="1.5"></circle><circle cx="16.5" cy="15.5" r="1.5"></circle></svg>
-          <span style="color:#475569; font-weight:600;">배차 차량:</span> <strong style="color:#0f172a;">${esc(sch.vehicleName || '미배정')}</strong>
+          <span style="color:#475569; font-weight:600;">배차 차량:</span> <strong style="color:#14161A;">${esc(sch.vehicleName || '미배정')}</strong>
         </div>
         <div style="background:#e2e8f0; padding:10px 12px; border-radius:8px; border:1px solid #cbd5e1; display:flex; align-items:center; gap:8px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 4 6 6-9 9H5v-6l9-9z"></path><path d="M18 8l-2-2"></path></svg>
-          <span style="color:#475569; font-weight:600;">헤메 샵:</span> <strong style="color:#0f172a;">${esc(sch.shopLocation || (sch.shop?.name) || '미경유')}</strong>
+          <span style="color:#475569; font-weight:600;">헤메 샵:</span> <strong style="color:#14161A;">${esc(sch.shopLocation || (sch.shop?.name) || '미경유')}</strong>
         </div>
         ${sch.departure?.place || sch.departurePlace ? `
           <div style="background:#e2e8f0; padding:10px 12px; border-radius:8px; border:1px solid #cbd5e1; display:flex; align-items:center; gap:8px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
-            <span style="color:#475569; font-weight:600;">출발 장소:</span> <strong style="color:#0f172a;">${esc(sch.departure?.place || sch.departurePlace)}</strong>
+            <span style="color:#475569; font-weight:600;">출발 장소:</span> <strong style="color:#14161A;">${esc(sch.departure?.place || sch.departurePlace)}</strong>
           </div>
         ` : ''}
         ${sch.outfit ? `
           <div style="background:#e2e8f0; padding:10px 12px; border-radius:8px; border:1px solid #cbd5e1; display:flex; align-items:center; gap:8px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#db2777" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></svg>
-            <span style="color:#475569; font-weight:600;">의상 컨셉:</span> <strong style="color:#0f172a;">${esc(sch.outfit)}</strong>
+            <span style="color:#475569; font-weight:600;">의상 컨셉:</span> <strong style="color:#14161A;">${esc(sch.outfit)}</strong>
           </div>
         ` : ''}
         ${(sch.contactName || sch.contactPhone) ? `
           <div style="background:#e2e8f0; padding:10px 12px; border-radius:8px; border:1px solid #cbd5e1; grid-column: span 2; display:flex; align-items:center; gap:8px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-            <span style="color:#475569; font-weight:600;">현장 연락처:</span> <strong style="color:#0f172a;">${esc(sch.contactName || '')} ${sch.contactPhone ? `(${sch.contactPhone})` : ''}</strong>
+            <span style="color:#475569; font-weight:600;">현장 연락처:</span> <strong style="color:#14161A;">${esc(sch.contactName || '')} ${sch.contactPhone ? `(${sch.contactPhone})` : ''}</strong>
           </div>
         ` : ''}
         ${sch.isSecret ? `
@@ -2850,13 +2850,13 @@ document.addEventListener('DOMContentLoaded', () => {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
             현장 특이사항 / 메모
           </div>
-          <div style="font-size:13px; color:#0f172a; line-height:1.5;">${esc(sch.notes)}</div>
+          <div style="font-size:13px; color:#14161A; line-height:1.5;">${esc(sch.notes)}</div>
         </div>
       ` : ''}
 
       <div style="margin-top:16px;">
-        <h4 style="font-size:14px; color:#0f172a; margin-bottom:10px; display:flex; align-items:center; gap:6px; font-weight:800;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+        <h4 style="font-size:14px; color:#14161A; margin-bottom:10px; display:flex; align-items:center; gap:6px; font-weight:800;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4C57D6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
           스마트 역산 타임라인
         </h4>
         <div style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto;">
@@ -2900,9 +2900,9 @@ document.addEventListener('DOMContentLoaded', () => {
               restText = restText.replace(/^\[?현장 철수\]?\s*/, '');
             } else if (lower.includes('메인') || lower.includes('방송') || lower.includes('촬영') || lower.includes('공연')) {
               tag = '메인 일정';
-              badgeBg = '#eef2ff';
-              badgeColor = '#4f46e5';
-              badgeBorder = '#c7d2fe';
+              badgeBg = '#EEF0FD';
+              badgeColor = '#3B45C4';
+              badgeBorder = '#D5D9F7';
               iconSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 9 15 12 10 15 10 9"/></svg>';
               restText = restText.replace(/^\[?메인 일정\]?\s*/, '');
             } else {
@@ -2920,7 +2920,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   ${iconSvg}
                   <span>${esc(tag)}</span>
                 </span>
-                <span style="color:${item.done ? '#94a3b8' : '#0f172a'}; text-decoration:${item.done ? 'line-through' : 'none'}; font-weight:600; flex:1;">${esc(restText)}</span>
+                <span style="color:${item.done ? '#94a3b8' : '#14161A'}; text-decoration:${item.done ? 'line-through' : 'none'}; font-weight:600; flex:1;">${esc(restText)}</span>
                 ${item.done ? `
                   <span style="margin-left:auto; font-size:11px; color:#059669; font-weight:700; display:inline-flex; align-items:center; gap:3px; background:#ecfdf5; padding:2px 6px; border-radius:4px; border:1px solid #a7f3d0;">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -2954,17 +2954,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
       ${sch.statusLogs && sch.statusLogs.length > 0 ? `
         <div style="margin-top:16px; border-top:1px solid #cbd5e1; padding-top:14px;">
-          <h4 style="font-size:14px; color:#0f172a; margin-bottom:8px; display:flex; align-items:center; gap:6px; font-weight:800;">
+          <h4 style="font-size:14px; color:#14161A; margin-bottom:8px; display:flex; align-items:center; gap:6px; font-weight:800;">
             <span>⏱️ 변경·진행 이력 (본사 수정 + 현장 기록)</span>
-            <span style="font-size:11px; color:#64748b; font-weight:normal;">(총 ${esc(sch.statusLogs.length)}회 기록)</span>
+            <span style="font-size:11px; color:#5B616E; font-weight:normal;">(총 ${esc(sch.statusLogs.length)}회 기록)</span>
           </h4>
           <div style="display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto;">
             ${sch.statusLogs.map(log => `
-              <div style="display:flex; justify-content:space-between; align-items:center; background:#e2e8f0; padding:6px 10px; border-radius:6px; font-size:12px; border:1px solid #cbd5e1; border-left:3px solid ${log.ackOf ? '#10b981' : '#6366f1'};">
-                <div style="color:#0f172a; font-weight:600;">
+              <div style="display:flex; justify-content:space-between; align-items:center; background:#e2e8f0; padding:6px 10px; border-radius:6px; font-size:12px; border:1px solid #cbd5e1; border-left:3px solid ${log.ackOf ? '#10b981' : '#4C57D6'};">
+                <div style="color:#14161A; font-weight:600;">
                   ${esc(log.label)}
                 </div>
-                <div style="font-size:11px; color:#64748b; font-family:monospace;">
+                <div style="font-size:11px; color:#5B616E; font-family:monospace;">
                   ${esc(log.date && log.date !== fmtDate(new Date()) ? log.date.slice(5).replace('-', '/') + ' ' : '')}${esc(log.time)} (${esc(log.managerName || '현장매니저')})
                 </div>
               </div>
@@ -3008,7 +3008,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const filtered = query ? shops.filter(s => s.name.includes(query) || (s.address && s.address.includes(query))) : shops;
 
         if (filtered.length === 0) {
-          shopDropdown.innerHTML = '<div style="padding:10px; text-align:center; color:#64748b; font-size:12px;">등록된 추천 샵이 없습니다. [샵 검색] 버튼으로 검색해보세요.</div>';
+          shopDropdown.innerHTML = '<div style="padding:10px; text-align:center; color:#5B616E; font-size:12px;">등록된 추천 샵이 없습니다. [샵 검색] 버튼으로 검색해보세요.</div>';
         } else {
           shopDropdown.innerHTML = `
             <div style="padding:4px 8px; font-size:11px; color:#94a3b8; font-weight:700; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between;">
@@ -3018,11 +3018,11 @@ document.addEventListener('DOMContentLoaded', () => {
           ` + filtered.map(s => `
             <div class="shop-item-choice" style="padding:8px 10px; border-radius:6px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:8px; border-bottom:1px solid #f1f5f9; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
               <div style="flex:1; min-width:0;">
-                <div style="font-weight:700; color:#0f172a; font-size:13px; display:flex; align-items:center; gap:6px;">
+                <div style="font-weight:700; color:#14161A; font-size:13px; display:flex; align-items:center; gap:6px;">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg>
                   <span>${esc(s.name)}</span>
                 </div>
-                <div style="font-size:11px; color:#64748b; margin-top:2px;">${esc(s.address || '')}</div>
+                <div style="font-size:11px; color:#5B616E; margin-top:2px;">${esc(s.address || '')}</div>
               </div>
               <button type="button" style="padding:4px 8px; font-size:11px; background:#fdf2f8; color:#db2777; border:1px solid #fbcfe8; border-radius:4px; font-weight:700; cursor:pointer; flex-shrink:0;">선택</button>
             </div>
@@ -3052,7 +3052,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!shopDropdown) return;
         shopDropdown.style.display = 'block';
         shopDropdown.innerHTML = `
-          <div style="padding:12px; text-align:center; color:#64748b; font-size:12px; display:flex; align-items:center; justify-content:center; gap:6px;">
+          <div style="padding:12px; text-align:center; color:#5B616E; font-size:12px; display:flex; align-items:center; justify-content:center; gap:6px;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
             <span>카카오 & 티맵 샵 검색 중...</span>
           </div>
@@ -3089,7 +3089,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (results.length === 0) {
           shopDropdown.innerHTML = `
-            <div style="padding:14px; text-align:center; color:#64748b; font-size:12px;">
+            <div style="padding:14px; text-align:center; color:#5B616E; font-size:12px;">
               <div style="color:#ef4444; font-weight:600; margin-bottom:4px;">'${esc(query)}' 검색 결과가 없습니다.</div>
               <div>직접 주소를 입력하거나 다른 키워드로 검색해주세요.</div>
             </div>
@@ -3104,12 +3104,12 @@ document.addEventListener('DOMContentLoaded', () => {
         ` + results.map(item => `
           <div class="shop-search-item" style="padding:8px 10px; border-radius:6px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:8px; border-bottom:1px solid #f1f5f9; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
             <div style="flex:1; min-width:0;">
-              <div style="font-weight:700; color:#0f172a; font-size:13px; display:flex; align-items:center; gap:6px;">
+              <div style="font-weight:700; color:#14161A; font-size:13px; display:flex; align-items:center; gap:6px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg>
                 <span>${esc(item.name)}</span>
                 <span style="font-size:10px; background:#fdf2f8; color:#db2777; border:1px solid #fbcfe8; padding:1px 5px; border-radius:4px; font-weight:700;">${esc(item.provider)}</span>
               </div>
-              <div style="font-size:11px; color:#64748b; margin-top:2px;">${esc(item.address || '주소 정보 없음')}</div>
+              <div style="font-size:11px; color:#5B616E; margin-top:2px;">${esc(item.address || '주소 정보 없음')}</div>
             </div>
             <button type="button" style="padding:4px 8px; font-size:11px; background:#fdf2f8; color:#db2777; border:1px solid #fbcfe8; border-radius:4px; font-weight:700; cursor:pointer; flex-shrink:0;">선택</button>
           </div>
@@ -3163,14 +3163,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const filtered = query ? places.filter(p => p.name.includes(query) || (p.address && p.address.includes(query))) : places;
 
         if (filtered.length === 0) {
-          departureDropdown.innerHTML = '<div style="padding:10px; text-align:center; color:#64748b; font-size:12px;">등록된 거점이 없습니다. 직접 입력해주세요.</div>';
+          departureDropdown.innerHTML = '<div style="padding:10px; text-align:center; color:#5B616E; font-size:12px;">등록된 거점이 없습니다. 직접 입력해주세요.</div>';
         } else {
           departureDropdown.innerHTML = filtered.map(p => {
             let iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
             if (p.type === 'dorm') {
               iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
             } else if (p.type === 'office') {
-              iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="8" y1="6" x2="8" y2="6.01"/><line x1="16" y1="6" x2="16" y2="6.01"/><line x1="8" y1="10" x2="8" y2="10.01"/><line x1="16" y1="10" x2="16" y2="10.01"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="16" y1="14" x2="16" y2="14.01"/><line x1="8" y1="18" x2="8" y2="18.01"/><line x1="16" y1="18" x2="16" y2="18.01"/></svg>';
+              iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B45C4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="8" y1="6" x2="8" y2="6.01"/><line x1="16" y1="6" x2="16" y2="6.01"/><line x1="8" y1="10" x2="8" y2="10.01"/><line x1="16" y1="10" x2="16" y2="10.01"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="16" y1="14" x2="16" y2="14.01"/><line x1="8" y1="18" x2="8" y2="18.01"/><line x1="16" y1="18" x2="16" y2="18.01"/></svg>';
             } else if (p.type === 'shop') {
               iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg>';
             }
@@ -3178,11 +3178,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return `
               <div class="dept-item-choice" style="padding:8px 10px; border-radius:6px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:8px; border-bottom:1px solid #f1f5f9; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
                 <div style="flex:1; min-width:0;">
-                  <div style="font-weight:700; color:#0f172a; font-size:13px; display:flex; align-items:center; gap:6px;">
+                  <div style="font-weight:700; color:#14161A; font-size:13px; display:flex; align-items:center; gap:6px;">
                     ${iconSvg}
                     <span>${esc(p.name)}</span>
                   </div>
-                  <div style="font-size:11px; color:#64748b; margin-top:2px;">${esc(p.address || '')}</div>
+                  <div style="font-size:11px; color:#5B616E; margin-top:2px;">${esc(p.address || '')}</div>
                 </div>
                 <button type="button" style="padding:4px 8px; font-size:11px; background:#ecfeff; color:#0891b2; border:1px solid #a5f3fc; border-radius:4px; font-weight:700; cursor:pointer; flex-shrink:0;">선택</button>
               </div>
@@ -3227,7 +3227,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (editSch) {
-      el.scheduleFormTitle.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> 스케줄 정보 수정`;
+      el.scheduleFormTitle.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4C57D6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> 스케줄 정보 수정`;
       el.formSchId.value = editSch.id;
       el.formTitle.value = editSch.title || '';
       if (el.formArtist) {
@@ -3323,7 +3323,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.Admin.renderScheduleMemberSelector(editSch.artistId, editSch.targetMembers || 'ALL');
       }
     } else {
-      el.scheduleFormTitle.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> 신규 스케줄 등록`;
+      el.scheduleFormTitle.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4C57D6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> 신규 스케줄 등록`;
       el.formSchId.value = '';
       try { document.getElementById('sch-more-shop').open = false; document.getElementById('sch-more-extra').open = false; } catch (e) { }
       const baseDate = dateStr || fmtDate(state.currentDate);
@@ -3548,7 +3548,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let popHtml = `
           <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:8px; margin-bottom:10px;">
-            <div style="font-size:14px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:6px;">
+            <div style="font-size:14px; font-weight:800; color:#14161A; display:flex; align-items:center; gap:6px;">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
               ${esc(y)}년 ${Number(m)}월 ${Number(d)}일 (${esc(dayName)})
             </div>
@@ -3568,7 +3568,7 @@ document.addEventListener('DOMContentLoaded', () => {
             art = allArtists.find(a => sName.includes(a.name.split(' ')[0]) || a.name.includes(sName));
           }
           const isSec = sch.isSecret === true;
-          const artColor = isSec ? '#9333ea' : (isAll ? '#0284c7' : (art ? (art.color || '#f59e0b') : '#4f46e5'));
+          const artColor = isSec ? '#9333ea' : (isAll ? '#0284c7' : (art ? (art.color || '#f59e0b') : '#3B45C4'));
           const badgeText = isAll ? '전원' : (art ? art.name.split(' ')[0] : (sch.artistName || '아티스트'));
           popHtml += `
             <div onclick="Admin.openScheduleDetail(${escJs(sch.id)})" 
@@ -3584,9 +3584,9 @@ document.addEventListener('DOMContentLoaded', () => {
                   ${esc(sch.status || '예정')}
                 </span>
               </div>
-              <div style="font-size:13px; font-weight:800; color:#0f172a; margin-bottom:6px; display:flex; align-items:flex-start; gap:6px;">
+              <div style="font-size:13px; font-weight:800; color:#14161A; margin-bottom:6px; display:flex; align-items:flex-start; gap:6px;">
                 <span style="background:${esc(artColor)}; color:#ffffff; font-size:10.5px; padding:2px 7px; border-radius:4px; font-weight:700; white-space:nowrap; flex-shrink:0; line-height:1.3;">${esc(badgeText)}</span>
-                <span style="line-height:1.4; word-break:keep-all; flex:1; min-width:0; color:#0f172a;">${esc(sch.title)}</span>
+                <span style="line-height:1.4; word-break:keep-all; flex:1; min-width:0; color:#14161A;">${esc(sch.title)}</span>
               </div>
               <div style="font-size:11.5px; color:#475569; display:flex; flex-direction:column; gap:4px;">
                 <div style="display:flex; align-items:center; gap:5px;">
@@ -3595,11 +3595,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div style="display:flex; align-items:center; gap:14px; margin-top:2px; flex-wrap:wrap;">
                   <span style="display:inline-flex; align-items:center; gap:4px; color:#475569; white-space:nowrap; font-weight:600;">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5B616E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                     ${esc(sch.managerName || '미배정')}
                   </span>
                   <span style="display:inline-flex; align-items:center; gap:4px; color:#475569; white-space:nowrap; font-weight:500;">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M5 11l2-6h10l2 6"></path><rect x="3" y="11" width="18" height="8" rx="2"></rect><circle cx="7.5" cy="15.5" r="1.5"></circle><circle cx="16.5" cy="15.5" r="1.5"></circle></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5B616E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M5 11l2-6h10l2 6"></path><rect x="3" y="11" width="18" height="8" rx="2"></rect><circle cx="7.5" cy="15.5" r="1.5"></circle><circle cx="16.5" cy="15.5" r="1.5"></circle></svg>
                     ${esc(sch.vehicleName || '차량 미지정')}
                   </span>
                 </div>
@@ -3609,7 +3609,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         popHtml += `</div>
-          <div style="font-size:11px; color:#64748b; text-align:center; margin-top:10px; background:#f8fafc; padding:8px; border-radius:8px; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:center; gap:5px;">
+          <div style="font-size:11px; color:#5B616E; text-align:center; margin-top:10px; background:#f8fafc; padding:8px; border-radius:8px; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:center; gap:5px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
             <span>일정을 클릭하시면 <strong>상세 정보 및 역산 동선</strong>이 열립니다.</span>
           </div>
@@ -4367,7 +4367,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!el.locationSearchResults) return;
         el.locationSearchResults.style.display = 'block';
         el.locationSearchResults.innerHTML = `
-          <div style="padding:12px; text-align:center; color:#64748b; font-size:12px; display:flex; align-items:center; justify-content:center; gap:6px;">
+          <div style="padding:12px; text-align:center; color:#5B616E; font-size:12px; display:flex; align-items:center; justify-content:center; gap:6px;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
             <span>카카오 & 티맵 위치 검색 중...</span>
           </div>
@@ -4408,7 +4408,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (results.length === 0) {
           el.locationSearchResults.innerHTML = `
-            <div style="padding:14px; text-align:center; color:#64748b; font-size:12px;">
+            <div style="padding:14px; text-align:center; color:#5B616E; font-size:12px;">
               <div style="color:#ef4444; font-weight:600; margin-bottom:4px;">검색 결과가 없습니다.</div>
               <div>도로명 주소를 직접 입력창에 입력하실 수 있습니다.</div>
             </div>
@@ -4419,12 +4419,12 @@ document.addEventListener('DOMContentLoaded', () => {
         el.locationSearchResults.innerHTML = results.map(item => `
           <div class="loc-search-item" style="padding:8px 10px; border-radius:6px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:8px; border-bottom:1px solid #f1f5f9; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
             <div style="flex:1; min-width:0;">
-              <div style="font-weight:700; color:#0f172a; font-size:13px; display:flex; align-items:center; gap:6px;">
+              <div style="font-weight:700; color:#14161A; font-size:13px; display:flex; align-items:center; gap:6px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 <span>${esc(item.name)}</span>
                 <span style="font-size:10px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; padding:1px 5px; border-radius:4px; font-weight:700;">${esc(item.provider)}</span>
               </div>
-              <div style="font-size:11px; color:#64748b; margin-top:2px;">${esc(item.address || '주소 정보 없음')}</div>
+              <div style="font-size:11px; color:#5B616E; margin-top:2px;">${esc(item.address || '주소 정보 없음')}</div>
             </div>
             <button type="button" style="padding:4px 8px; font-size:11px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; border-radius:4px; font-weight:700; cursor:pointer; flex-shrink:0;">선택</button>
           </div>

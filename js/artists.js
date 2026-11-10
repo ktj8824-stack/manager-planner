@@ -6,7 +6,7 @@
 
 const Artists = {
   TYPES: ['솔로', '그룹', '배우', '방송인', '모델', '기타'],
-  COLORS: ['#ec4899', '#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#64748b'],
+  COLORS: ['#ec4899', '#4C57D6', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#5B616E'],
 
   list() {
     try { return (window.hqStore?.getArtists?.() || []).filter(a => a && a.id); } catch (e) { return []; }

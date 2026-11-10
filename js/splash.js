@@ -23,14 +23,14 @@
     "@font-face{font-family:'RPSora';src:url(" + FONT + ") format('woff');font-weight:700;font-display:block}",
     '#rp-splash{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;flex-direction:column;overflow:hidden;',
     'background:radial-gradient(120% 95% at 50% 10%,#3f37c9 0%,#2a2580 42%,#14123d 100%);color:#fff;',
-    "font-family:-apple-system,BlinkMacSystemFont,'Pretendard Variable','Pretendard','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;",
+    "font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Pretendard','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;",
     'transition:opacity .45s ease, transform .45s ease;cursor:pointer;-webkit-tap-highlight-color:transparent;}',
     '#rp-splash.out{opacity:0;transform:scale(1.04);pointer-events:none;}',
     '#rp-splash svg{width:min(88vw,440px);height:auto;overflow:visible;}',
     "#rp-splash .rp-word{margin-top:18px;font-family:'RPSora',-apple-system,system-ui,sans-serif;font-weight:700;font-size:clamp(40px,11vw,60px);letter-spacing:-.045em;line-height:1;}",
     '#rp-splash .rp-word span{display:inline-block;opacity:0;transform:translateY(24px);transition:opacity .35s ease,transform .45s cubic-bezier(.2,.8,.2,1);}',
     '#rp-splash .rp-word span.on{opacity:1;transform:none;}',
-    '#rp-splash .rp-word .p{color:#a5b4fc;}',
+    '#rp-splash .rp-word .p{color:#B4BBF0;}',
     '#rp-splash .rp-tag{margin-top:14px;font-size:15px;font-weight:600;color:rgba(255,255,255,.8);opacity:0;transform:translateY(10px);transition:opacity .4s ease,transform .4s ease;}',
     '#rp-splash .rp-tag.on{opacity:1;transform:none;}',
     '#rp-pin{transform-origin:330px 70px;transform:scale(0);transition:transform .4s cubic-bezier(.34,1.56,.64,1);}',
@@ -41,10 +41,10 @@
   var ROAD = 'M -20 160 C 60 160, 80 95, 150 95 S 240 140, 280 110 S 320 70, 330 70';
   var CAR = '<g id="rp-car">' +
       '<path d="M8 -3 L 70 -26 L 70 26 L 8 3 Z" fill="url(#rp-beam)"/>' +
-      '<rect x="-12" y="-7" width="24" height="14" rx="4.5" fill="#e0e7ff"/>' +
-      '<rect x="-10.5" y="-5.8" width="21" height="11.6" rx="3.4" fill="#4f46e5"/>' +
+      '<rect x="-12" y="-7" width="24" height="14" rx="4.5" fill="#E3E6FA"/>' +
+      '<rect x="-10.5" y="-5.8" width="21" height="11.6" rx="3.4" fill="#3B45C4"/>' +
       '<rect x="2.5" y="-4.6" width="5.5" height="9.2" rx="1.8" fill="#1e1b4b"/>' +
-      '<rect x="-5" y="-5.2" width="6" height="10.4" rx="1.5" fill="#6366f1"/>' +
+      '<rect x="-5" y="-5.2" width="6" height="10.4" rx="1.5" fill="#4C57D6"/>' +
       '<circle cx="11.5" cy="-4" r="1.3" fill="#fffbe6"/><circle cx="11.5" cy="4" r="1.3" fill="#fffbe6"/>' +
       '<rect x="-13" y="-5.5" width="1.6" height="3" rx=".6" fill="#ef4444"/><rect x="-13" y="2.5" width="1.6" height="3" rx=".6" fill="#ef4444"/>' +
     '</g>';
@@ -53,7 +53,7 @@
       '<defs><radialGradient id="rp-beam" cx="0" cy=".5" r="1"><stop offset="0" stop-color="#fff7cc" stop-opacity=".7"/><stop offset="1" stop-color="#fff7cc" stop-opacity="0"/></radialGradient></defs>' +
       '<path d="' + ROAD + '" fill="none" stroke="#0b0a26" stroke-width="26" stroke-linecap="round"/>' +
       '<path id="rp-center" d="' + ROAD + '" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.6" stroke-dasharray="7 8"/>' +
-      '<path id="rp-trail" d="' + ROAD + '" fill="none" stroke="#a5b4fc" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<path id="rp-trail" d="' + ROAD + '" fill="none" stroke="#B4BBF0" stroke-width="3.5" stroke-linecap="round"/>' +
       '<g id="rp-pin"><ellipse cx="330" cy="72" rx="9" ry="3" fill="rgba(0,0,0,.35)"/><path d="M330 40c-9 0-15 6-15 15 0 11 15 15 15 15s15-4 15-15c0-9-6-15-15-15z" fill="#22c55e"/><circle cx="330" cy="54.5" r="5.2" fill="#fff"/></g>' +
       CAR +
     '</svg>';

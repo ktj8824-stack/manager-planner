@@ -123,7 +123,7 @@ const DEFAULT_ARTISTS = [
 
 // 초기 매니저 및 임직원/스태프 풀
 const DEFAULT_MANAGERS = [
-  { id: 'mgr_ceo', name: '홍길동 대표이사', email: 'ceo@entplanner.com', phone: '010-1234-0001', role: 'hq_admin', title: '대표이사 / 총괄 CEO', color: '#6366f1', assignedArtists: ['art_1', 'art_2', 'art_3', 'art_4', 'art_5'] },
+  { id: 'mgr_ceo', name: '홍길동 대표이사', email: 'ceo@entplanner.com', phone: '010-1234-0001', role: 'hq_admin', title: '대표이사 / 총괄 CEO', color: '#4C57D6', assignedArtists: ['art_1', 'art_2', 'art_3', 'art_4', 'art_5'] },
   { id: 'mgr_1', name: '김태현 본부장', email: 'th.kim@entplanner.com', phone: '010-5555-1111', role: 'hq_admin', title: '매니지먼트 1본부장', color: '#3b82f6', assignedArtists: ['art_1', 'art_2'] },
   { id: 'mgr_2', name: '박진우 팀장', email: 'jw.park@entplanner.com', phone: '010-3333-2222', role: 'manager', title: '걸그룹 전담 치프 매니저', color: '#ec4899', assignedArtists: ['art_1'] },
   { id: 'mgr_3', name: '최현석 매니저', email: 'hs.choi@entplanner.com', phone: '010-7777-3333', role: 'manager', title: '보이그룹 2팀 로드 매니저', color: '#f59e0b', assignedArtists: ['art_2'] },
@@ -142,14 +142,14 @@ const DEFAULT_VEHICLES = [
 
 // 스케줄 표준 카테고리 (8대 분류)
 const SCHEDULE_CATEGORIES = {
-  MUSIC_SHOW: { id: 'music_show', name: '음악방송 / 생방송', color: '#6366f1', icon: '📺' },
+  MUSIC_SHOW: { id: 'music_show', name: '음악방송 / 생방송', color: '#4C57D6', icon: '📺' },
   BROADCAST: { id: 'broadcast', name: '예능 / 라디오 / 인터뷰', color: '#3b82f6', icon: '🎙️' },
   SHOOTING: { id: 'shooting', name: '화보 / 촬영 / 광고', color: '#ec4899', icon: '📸' },
   EVENT: { id: 'event', name: '행사 / 콘서트 / 페스티벌', color: '#f59e0b', icon: '🎪' },
   FANSIGN: { id: 'fansign', name: '팬미팅 / 팬사인회', color: '#10b981', icon: '💌' },
   RECORDING: { id: 'recording', name: '녹음 / 안무레슨 / 연습', color: '#8b5cf6', icon: '🎵' },
   OVERSEAS: { id: 'overseas', name: '해외 투어 / 출국', color: '#0ea5e9', icon: '✈️' },
-  MEETING: { id: 'meeting', name: '미팅 / 기획회의 / 기타', color: '#64748b', icon: '💼' }
+  MEETING: { id: 'meeting', name: '미팅 / 기획회의 / 기타', color: '#5B616E', icon: '💼' }
 };
 
 // 기본 데모 스케줄 생성 (2026년 10월 당월 오늘 일정 + 11월 메인 캘린더 기준 총 14건 완벽 동기화)
@@ -900,7 +900,7 @@ class HQDataStore {
             phone: m.phone || existing?.phone || '',
             password: existing?.password,
             role: m.role || existing?.role || 'manager',
-            color: m.color || existing?.color || '#6366f1',
+            color: m.color || existing?.color || '#4C57D6',
             assignedArtists: ((m.artist_managers || []).map(am => am.artist_id).length > 0)
               ? (m.artist_managers || []).map(am => am.artist_id)
               : (existing?.assignedArtists || [])
@@ -2359,7 +2359,7 @@ window.AuthPersona = {
       email: 'admin@star-ent.com',
       badge: '🏢 본사 총괄 (HQ)',
       shortBadge: '🏢 HQ 총괄',
-      color: '#6366f1',
+      color: '#4C57D6',
       assignedArtists: ['art_1', 'art_2', 'art_3', 'art_4', 'art_5'],
       desc: '전체 스케줄 등록/수정, 배차 관제, 비공개 관리'
     },

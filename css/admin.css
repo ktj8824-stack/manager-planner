@@ -11,19 +11,19 @@
   --bg-glass: rgba(255, 255, 255, 0.85);
 
   --border-color: #e2e8f0;
-  --border-focus: #4f46e5;
+  --border-focus: #3B45C4;
 
-  --primary: #4f46e5;
+  --primary: #3B45C4;
   --primary-light: #818cf8;
-  --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%);
+  --primary-gradient: linear-gradient(135deg, #3B45C4 0%, #9333ea 100%);
   --accent-cyan: #06b6d4;
   --accent-pink: #ec4899;
   --accent-emerald: #10b981;
   --accent-amber: #f59e0b;
 
-  --text-main: #0f172a;
+  --text-main: #14161A;
   --text-muted: #475569;
-  --text-dim: #64748b;
+  --text-dim: #5B616E;
 
   /* ?? ?이?바: ?프???크 ?이??? */
   --sidebar-bg: #263448;
@@ -38,7 +38,7 @@
 
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
-  --shadow-glow: 0 0 25px rgba(79, 70, 229, 0.15);
+  --shadow-glow: 0 0 25px rgba(59, 69, 196, 0.15);
 
   --transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -47,7 +47,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+  font-family: 'IBM Plex Sans KR', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -107,7 +107,7 @@ body {
   font-size: 15px;
   font-weight: 800;
   letter-spacing: -0.5px;
-  background: linear-gradient(90deg, #ffffff, #c7d2fe);
+  background: linear-gradient(90deg, #ffffff, #D5D9F7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -190,10 +190,10 @@ body {
 }
 
 .artist-chip.active {
-  background: rgba(99, 102, 241, 0.22);
-  border-color: #6366f1;
+  background: rgba(59, 69, 196, 0.22);
+  border-color: #4C57D6;
   color: #ffffff;
-  box-shadow: 0 3px 10px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 3px 10px rgba(59, 69, 196, 0.25);
 }
 
 .artist-avatar {
@@ -242,7 +242,7 @@ body {
 }
 
 .artist-chip.active .artist-meta .sub {
-  color: #e0e7ff;
+  color: #E3E6FA;
 }
 
 .count-badge {
@@ -256,7 +256,7 @@ body {
 }
 
 .artist-chip.active .count-badge {
-  background: #6366f1;
+  background: #4C57D6;
   color: #ffffff;
   border-color: #818cf8;
 }
@@ -274,9 +274,9 @@ body {
   width: 100%;
   padding: 11px 14px;
   border-radius: 8px;
-  background: rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(99, 102, 241, 0.4);
-  color: #c7d2fe;
+  background: rgba(59, 69, 196, 0.15);
+  border: 1px solid rgba(59, 69, 196, 0.4);
+  color: #D5D9F7;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -289,10 +289,10 @@ body {
 }
 
 .sidebar-footer #btn-open-settings:hover {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #4C57D6, #8b5cf6);
   color: #ffffff;
-  border-color: #a5b4fc;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+  border-color: #B4BBF0;
+  box-shadow: 0 4px 14px rgba(59, 69, 196, 0.4);
   transform: translateY(-1px);
 }
 
@@ -313,8 +313,8 @@ body {
   gap: 8px;
   padding: 12px;
   border-radius: var(--radius-md);
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: rgba(59, 69, 196, 0.1);
+  border: 1px solid rgba(59, 69, 196, 0.2);
   color: var(--primary);
   text-decoration: none;
   font-size: 13px;
@@ -532,8 +532,8 @@ body {
 }
 
 .today-btn {
-  background: rgba(79, 70, 229, 0.08);
-  border: 1px solid rgba(79, 70, 229, 0.25);
+  background: rgba(59, 69, 196, 0.08);
+  border: 1px solid rgba(59, 69, 196, 0.25);
   color: var(--primary);
   padding: 4px 10px;
   border-radius: var(--radius-sm);
@@ -606,7 +606,7 @@ body {
 }
 
 .cal-month-cell.today {
-  background: rgba(79, 70, 229, 0.03);
+  background: rgba(59, 69, 196, 0.03);
 }
 
 .cal-month-view-header {
@@ -719,7 +719,7 @@ body.modal-lock { overflow: hidden !important; }
   width: 100%;
   background: #ffffff;
   border: 1px solid #cbd5e1;
-  color: #0f172a;
+  color: #14161A;
   padding: 8px 12px;
   border-radius: 8px;
   font-size: 13px;
@@ -733,8 +733,8 @@ body.modal-lock { overflow: hidden !important; }
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+  border-color: #4C57D6;
+  box-shadow: 0 0 0 2px rgba(59, 69, 196, 0.15);
   background: #ffffff;
 }
 
@@ -858,9 +858,9 @@ body.modal-lock { overflow: hidden !important; }
 }
 
 .kanban-card {
-  background: #0f172a;
+  background: #14161A;
   border: 1px solid #334155;
-  border-left: 4px solid var(--accent-theme, #4f46e5);
+  border-left: 4px solid var(--accent-theme, #3B45C4);
   border-radius: var(--radius-sm);
   padding: 14px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
@@ -906,7 +906,7 @@ body.modal-lock { overflow: hidden !important; }
 }
 
 .map-canvas-card {
-  background: #0f172a;
+  background: #14161A;
   border-radius: var(--radius-md);
   border: 1px solid #334155;
   padding: 16px;
@@ -1024,7 +1024,7 @@ body.modal-lock { overflow: hidden !important; }
 
 .category-bar-track {
   height: 10px;
-  background: #0f172a;
+  background: #14161A;
   border-radius: 5px;
   overflow: hidden;
 }

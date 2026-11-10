@@ -56,7 +56,7 @@ const Profile = {
     const userDept       = localStorage.getItem('bp_dept_name')    || '';
     const indie = typeof Plan !== 'undefined' && Plan.isIndie();   // 개인 매니저 (본사 없음)
     const paid = !indie || Plan.isPaid();
-    const lock = (f) => (indie && !Plan.can(f)) ? '<span style="font-size:12px;font-weight:800;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;padding:3px 9px;border-radius:999px;white-space:nowrap;">🔒 유료</span>' : ProfileIcons.chevron;
+    const lock = (f) => (indie && !Plan.can(f)) ? '<span style="font-size:12px;font-weight:800;color:#4C57D6;background:#EEF0FD;border:1px solid #D5D9F7;padding:3px 9px;border-radius:999px;white-space:nowrap;">🔒 유료</span>' : ProfileIcons.chevron;
     if (indie && !this._planChecked) { this._planChecked = true; Plan.refresh().then(() => { if (State.screen === 'profile') this.render(); }); }
     // 담당 아티스트: 본사가 지정한 아티스트 ID → 이름
     const assignedArtists = (() => {
@@ -72,7 +72,7 @@ const Profile = {
       try { ids = JSON.parse(localStorage.getItem('bp_assigned_artists') || '[]') || []; } catch (e) { }
       if (indie) ids = allArtists.map(a => a.id);
       return ids.map(id => allArtists.find(a => a.id === id)).filter(Boolean)
-        .map(a => `<span class="me-chip" style="--c:${esc(a.color || '#6366f1')}">${esc(String(a.name || '').replace(/\s*\([^)]*\)/g, '').trim())}</span>`).join('');
+        .map(a => `<span class="me-chip" style="--c:${esc(a.color || '#4C57D6')}">${esc(String(a.name || '').replace(/\s*\([^)]*\)/g, '').trim())}</span>`).join('');
     })();
     const phone = window.SupabaseClient?.currentProfile?.phone || localStorage.getItem('bp_user_phone') || '';
     const vehicle = localStorage.getItem('bp_user_vehicle') || '';
@@ -264,7 +264,7 @@ const Profile = {
     const b = document.getElementById('push-state-badge');
     if (!b || !window.Chat?.pushState) return;
     const st = await window.Chat.pushState();
-    const map = { on: ['켜짐', '#ecfdf5', '#047857', '#a7f3d0'], off: ['켜기', '#eef2ff', '#4338ca', '#c7d2fe'], denied: ['차단됨', '#fef2f2', '#b91c1c', '#fecaca'], unsupported: ['앱 화면 알림', '#f1f5f9', '#64748b', '#e2e8f0'] };
+    const map = { on: ['켜짐', '#ecfdf5', '#047857', '#a7f3d0'], off: ['켜기', '#EEF0FD', '#2B338F', '#D5D9F7'], denied: ['차단됨', '#fef2f2', '#b91c1c', '#fecaca'], unsupported: ['앱 화면 알림', '#f1f5f9', '#5B616E', '#e2e8f0'] };
     const [txt, bg, fg, bd] = (st === 'unsupported' && window.RoadPlannerAndroid) ? ['앱 알림', '#ecfdf5', '#047857', '#a7f3d0'] : (map[st] || map.off);
     b.textContent = txt; b.style.background = bg; b.style.color = fg; b.style.borderColor = bd;
   },

@@ -41,7 +41,7 @@ const Login = {
         <div id="login-choose" class="lg-step">
           <h2 class="lg-h2">어떻게 쓰시나요?</h2>
           <button type="button" id="tab-b2b" class="lg-card" onclick="Login.setTab('b2b')">
-            <span class="lg-ico" style="background:#eef2ff; color:#4f46e5;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M16 9h2a2 2 0 0 1 2 2v10M8 7h4M8 11h4M8 15h4M2 21h20"/></svg></span>
+            <span class="lg-ico" style="background:#EEF0FD; color:#3B45C4;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M16 9h2a2 2 0 0 1 2 2v10M8 7h4M8 11h4M8 15h4M2 21h20"/></svg></span>
             <span class="lg-txt"><b>회사에서 계정을 받았어요</b><small>소속 매니저 · 본사 일정과 로드톡이 연결돼요</small></span>${chev}
           </button>
           <button type="button" id="tab-b2c" class="lg-card" onclick="Login.setTab('b2c')">
@@ -139,7 +139,7 @@ const Login = {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'btn-social btn-google lg-primary';
-    button.style.cssText = 'background:#fff; color:#0f172a; border:1px solid #d1d1d6; box-shadow:none;';
+    button.style.cssText = 'background:#fff; color:#14161A; border:1px solid #d1d1d6; box-shadow:none;';
     button.textContent = 'Google로 시작하기';
     button.addEventListener('click', () => this.startOAuth('google'));
     wrap.replaceChildren(button);

@@ -177,6 +177,8 @@ copyFile(path.join(ROOT, 'admin-login.html'), path.join(DIST_WEB, 'admin-login.h
 copyFile(path.join(ROOT, 'push-sw.js'), path.join(DIST_WEB, 'push-sw.js')); // 본사 PC 알림 전용
 // 테스트 결제 페이지 (배포본에도 포함)
 for (const f of ['payment.html', 'payment-result.html']) copyFile(path.join(ROOT, f), path.join(DIST_WEB, f));
+// 홍보 홈페이지 (회사 브리핑용) — 본사 주소/intro.html
+copyFile(path.join(ROOT, 'intro.html'), path.join(DIST_WEB, 'intro.html'));
 
 copyDir(path.join(ROOT, 'css'), path.join(DIST_WEB, 'css'));
 copyDir(path.join(ROOT, 'img'), path.join(DIST_WEB, 'img'));

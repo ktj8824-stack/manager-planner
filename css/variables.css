@@ -12,8 +12,8 @@
   --gray-500: #aeaeb2;
   --gray-400: #c7c7cc;
   --gray-300: #d1d1d6;
-  --gray-200: #e5e5ea;
-  --gray-100: #f2f2f7;
+  --gray-200: #E6E7EB;
+  --gray-100: #F6F7F9;
 
   --ios-blue: #007aff;
   --ios-red: #ff3b30;
@@ -21,32 +21,38 @@
   --ios-green: #34c759;
   
   /* ── Semantic Colors ── */
-  --bg-app: #f2f2f7; /* iOS grouped background */
-  --bg-surface: #f2f2f7;
+  --bg-app: #F6F7F9; /* 화면 바탕 (시안 공통 규칙) */
+  --bg-surface: #F6F7F9;
   --bg-elevated: #ffffff;
   --bg-card: #ffffff;
   --bg-card-hover: #f9f9f9;
   --bg-input: #efeff4;
-  --bg-input-hover: #e5e5ea;
+  --bg-input-hover: #E6E7EB;
   --bg-input-focus: #ffffff;
 
-  --text-100: #000000;
-  --text-200: #1c1c1e;
-  --text-300: #3c3c43;
-  --text-400: #8e8e93;
-  --text-500: #aeaeb2;
+  --text-100: #14161A;
+  --text-200: #1E2128;
+  --text-300: #4A4F5A;
+  --text-400: #6B7180;
+  --text-500: #9AA0AC;
 
-  --accent: #4f46e5; /* 로드플래너 대표색(인디고) */
-  --accent-dim: rgba(79, 70, 229, 0.1);
-  --accent-glow: rgba(79, 70, 229, 0.05);
+  --accent: #3B45C4; /* 로드플래너 대표색(남색) — 강조색은 이것 하나 */
+  --accent-ink: #2B338F;
+  --warn: #9A4A06;      /* 지연·빠듯함 (주황) */
+  --warn-bg: #FDF1E3;
+  --ok: #1F7A4C;
+  --ok-bg: #E8F4EC;
+  --line: #E6E7EB;
+  --accent-dim: rgba(59, 69, 196, 0.1);
+  --accent-glow: rgba(59, 69, 196, 0.05);
   --gold: var(--ios-red); /* Map old gold points to iOS red */
   --gold-dim: rgba(255, 59, 48, 0.1);
   --danger: var(--ios-red);
 
-  --border-subtle: rgba(60, 60, 67, 0.08); /* Minimalist thin border */
-  --border-default: rgba(60, 60, 67, 0.18);
+  --border-subtle: #EFF0F3;
+  --border-default: #E6E7EB;
   --border-strong: rgba(60, 60, 67, 0.29);
-  --border-accent: rgba(79, 70, 229, 0.3);
+  --border-accent: rgba(59, 69, 196, 0.3);
 
   /* ── Shadows & Glows ── */
   --shadow-xs: 0 1px 2px rgba(0,0,0,0.02);
@@ -65,15 +71,15 @@
   --grad-gold: var(--ios-red);
   --grad-card: #ffffff;
   --grad-card-gold: #ffffff;
-  --grad-hero: #f2f2f7;
+  --grad-hero: #F6F7F9;
   --grad-bg-radial: none;
   --grad-bg-radial-gold: none;
   --grad-timeline: var(--border-subtle);
   --grad-glass-border: none;
 
   /* ── Typography ── */
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Pretendard Variable', 'Pretendard', 'Inter', system-ui, sans-serif;
-  --font-mono: 'SF Mono', 'JetBrains Mono', 'Fira Code', monospace;
+  --font-sans: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SF Mono', ui-monospace, monospace;
 
   --fs-2xs: 0.75rem;    /* 12px (기존 11px) */
   --fs-xs: 0.8125rem;   /* 13px (기존 12px) */

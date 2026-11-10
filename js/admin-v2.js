@@ -211,3 +211,85 @@
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
+
+/* v3 심플 본사 화면 (2026-11-10 시안)
+   - 왼쪽 흰 메뉴: 오늘 현황·캘린더는 보기 전환, 나머지는 기존 버튼을 그대로 누름
+   - 제목·날짜: 지금 보기에 맞춰 바뀜
+   - 오른쪽 '확인할 것': 지연 · 변경 확인 안 함 · 경비 승인 대기 · 내일 담당 미지정 (오늘 현황에서만) */
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+  const TITLE = { gantt: '오늘 현황', month: '캘린더', week: '주간 시간표', kanban: '실시간 상황판', map: '관제 지도', analytics: '활동 분석' };
+  const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  let expPending = null;
+
+  const view = () => document.querySelector('.view-tab-btn.active')?.dataset.view || 'gantt';
+  const syncHead = () => {
+    const v = view();
+    const t = $('hq-page-title'); if (t && t.textContent !== TITLE[v]) t.textContent = TITLE[v] || '오늘 현황';
+    const d = new Date();
+    const pd = $('hq-page-date'); if (pd) pd.textContent = `${d.getMonth() + 1}월 ${d.getDate()}일 ${DAYS[d.getDay()]}요일 · ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    document.querySelectorAll('.hq-menu [data-go]').forEach(b => b.classList.toggle('on', (b.dataset.go === 'month' && v !== 'gantt') || b.dataset.go === v));
+    document.body.classList.toggle('hq-today-view', v === 'gantt');
+    const cb = $('chat-badge'), mb = $('hq-menu-chat-badge');
+    if (cb && mb) { mb.hidden = cb.hidden || !cb.textContent || cb.textContent === '0'; mb.textContent = cb.textContent; }
+  };
+
+  async function loadExpPending() {
+    try {
+      const sc = window.SupabaseClient;
+      if (!sc || !sc.isConfigured || !sc.client) return;
+      const { data } = await sc.client.from('expenses').select('id, amount').eq('status', 'pending').limit(200);
+      expPending = Array.isArray(data) ? { n: data.length, sum: data.reduce((a, r) => a + (Number(r.amount) || 0), 0) } : null;
+    } catch (e) { expPending = null; }
+  }
+
+  function drawTodo() {
+    const box = $('hq-todo'); const st = window.hqStore;
+    if (!box || !st) return;
+    const items = [];
+    try {
+      (window.Admin?._lateList?.() || []).slice(0, 3).forEach(r => items.push({
+        k: 'late', title: `${r.s.managerName || '담당 미지정'} · ${r.late}분 늦음`, sub: `${String(r.s.artistName || '').replace(/\s*\([^)]*\)\s*$/, '')} ${r.s.title || ''} · ${String(r.note || '').replace(/^\[[^\]]+\]\s*/, '')}`,
+        act: '로드톡', run: () => { try { Chat.open(r.s.managerId ? { managerId: r.s.managerId } : undefined); } catch (e) { $('btn-open-chat')?.click(); } }
+      }));
+    } catch (e) { }
+    try {
+      const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+      const ack = (st.getSchedules() || []).filter(s => { const d = new Date((s.date || '') + 'T00:00:00'); if (isNaN(d) || d < t0) return false; const a = st.ackState && st.ackState(s); return a && a.pending; });
+      if (ack.length) items.push({ k: 'info', title: `변경 확인 안 함 ${ack.length}건`, sub: `${ack[0].managerName || '담당 미지정'} · ${String(ack[0].artistName || '').replace(/\s*\([^)]*\)\s*$/, '')} ${ack[0].title || ''}${ack.length > 1 ? ` 외 ${ack.length - 1}건` : ''}`, act: '보기', run: () => window.Admin?.openScheduleDetail?.(ack[0].id) });
+    } catch (e) { }
+    if (expPending && expPending.n) items.push({ k: 'info', title: `경비 승인 대기 ${expPending.n}건`, sub: `합계 ${expPending.sum.toLocaleString('ko-KR')}원`, act: '승인하기', run: () => $('btn-open-expenses')?.click() });
+    try {
+      const tm = new Date(); tm.setDate(tm.getDate() + 1);
+      const un = (st.getSchedules() || []).filter(s => s.date === ymd(tm) && !s.managerId && s.status !== 'cancelled');
+      if (un.length) items.push({ k: 'mute', title: `내일 담당 미지정 ${un.length}건`, sub: `${tm.getMonth() + 1}/${tm.getDate()} ${un[0].startTime || ''} ${un[0].title || ''}`, act: '배정', run: () => window.Admin?.openScheduleDetail?.(un[0].id) });
+    } catch (e) { }
+    box._items = items;
+    box.innerHTML = `<h3>확인할 것 <span>${items.length}</span></h3>` + (items.length
+      ? items.map((it, i) => `<div class="hq-todo-row ${it.k}"><span class="d" aria-hidden="true"></span><div class="t"><b>${esc(it.title)}</b><small>${esc(it.sub)}</small></div><button type="button" data-i="${i}">${esc(it.act)}</button></div>`).join('')
+      : '<p class="hq-todo-empty">지금 확인할 것이 없어요.</p>');
+  }
+
+  const start = () => {
+    document.querySelectorAll('.hq-menu button').forEach(b => b.addEventListener('click', () => {
+      if (b.dataset.go) document.querySelector(`.view-tab-btn[data-view="${b.dataset.go}"]`)?.click();
+      else if (b.dataset.click) $(b.dataset.click)?.click();
+      setTimeout(syncHead, 50);
+    }));
+    $('hq-todo')?.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-i]'); if (!btn) return;
+      const it = ($('hq-todo')._items || [])[+btn.dataset.i]; if (it && it.run) it.run();
+    });
+    document.querySelectorAll('.view-tab-btn').forEach(b => b.addEventListener('click', () => setTimeout(syncHead, 30)));
+    const brief = $('today-brief');
+    if (brief) new MutationObserver(() => { drawTodo(); syncHead(); }).observe(brief, { childList: true });
+    const cb = $('chat-badge'); if (cb) new MutationObserver(syncHead).observe(cb, { attributes: true, childList: true, characterData: true, subtree: true });
+    syncHead(); drawTodo();
+    loadExpPending().then(drawTodo);
+    setInterval(() => { syncHead(); loadExpPending().then(drawTodo); }, 60000);
+  };
+  window.HqTodo = { draw: drawTodo };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();

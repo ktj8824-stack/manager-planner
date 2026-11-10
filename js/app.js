@@ -162,7 +162,7 @@ const App = {
   loadPreferences() {
     const font = localStorage.getItem('bp_font');
     if (font) {
-      const fontStr = font === 'Pretendard' ? "'Pretendard Variable', 'Pretendard', sans-serif" : `'${font}', sans-serif`;
+      const fontStr = font === 'Pretendard' ? "'IBM Plex Sans KR', 'Pretendard', -apple-system, sans-serif" : `'${font}', sans-serif`;
       document.documentElement.style.setProperty('--font-sans', fontStr);
       if (font !== 'Pretendard') {
         const link = document.createElement('link');
@@ -286,6 +286,7 @@ const App = {
     el.title = parts.join(' · ');
     el.classList.toggle('hq-ok', !indie);
     const bell = U.$('#top-bell'); if (bell) bell.hidden = indie;
+    const sos = U.$('#top-sos'); if (sos) sos.hidden = indie;
   },
 
   renderNav() {
@@ -296,17 +297,20 @@ const App = {
     nav.id = 'top-header';
     nav.innerHTML = `
       <div class="top-brand">
-        <span class="top-brand-icon">🎬</span>
+        <img class="top-brand-icon" src="icon.svg" alt="" width="30" height="30">
         <span class="top-brand-stack"><span class="top-brand-text">로드플래너</span><span class="top-user-name" id="top-user-name"></span></span>
       </div>
-      <button id="top-bell" class="top-bell" onclick="window.Talk ? Talk.open('공지') : App.openMessages()" aria-label="로드톡 공지">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-      </button>
+      <div class="top-acts">
+        <button id="top-bell" class="top-bell" onclick="window.Talk ? Talk.open('공지') : App.openMessages()" aria-label="로드톡 공지">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        </button>
+        <button id="top-sos" class="top-sos" type="button" onclick="App.openEmergencyModal()" aria-label="긴급 지원">긴급</button>
+      </div>
     `;
     U.$('#app').prepend(nav);
     this.updateHeaderUser();
 
-    // 아래: 한 손 엄지로 누르는 메뉴 5개 (홈·로드톡·로드비서·긴급·내 정보)
+    // 아래: 한 손 엄지로 누르는 메뉴 4개 (오늘·로드톡·로드비서·내 정보) — 긴급은 위 막대 오른쪽
     // 개인 매니저는 5개 (홈·아티스트·로드비서·차량관리·내 정보) — 로드톡·긴급(본사 보고) 없음
     const bn = U.el('nav', 'bottom-nav');
     bn.id = 'bottom-nav';
@@ -315,45 +319,41 @@ const App = {
     bn.classList.toggle('bnav-indie', indie);
     bn.innerHTML = indie ? `
       <button class="bnav-item active" data-s="home" onclick="App.navigate('home')">
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        <span>홈</span>
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <span>오늘</span>
       </button>
       <button class="bnav-item" data-s="artists" onclick="App.navigate('artists')" aria-label="아티스트 관리">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z"/></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z"/></svg>
         <span>아티스트</span>
       </button>
       <button class="bnav-item bnav-ai" data-s="ai" onclick="App.navigate('ai')" aria-label="로드비서">
-        <span class="bnav-ai-ico">AI</span>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.6L18 9.5l-4.2 1.9L12 16l-1.8-4.6L6 9.5l4.2-1.9z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>
         <span>로드비서</span>
       </button>
       <button class="bnav-item" data-s="vehicle" onclick="App.navigate('vehicle')" aria-label="차량관리">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14v-5l-2-5H7l-2 5z"/><path d="M3 12h18"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14v-5l-2-5H7l-2 5z"/><path d="M3 12h18"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>
         <span>차량관리</span>
       </button>
       <button class="bnav-item" data-s="profile" onclick="App.navigate('profile')">
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
         <span>내 정보</span>
       </button>
     ` : `
       <button class="bnav-item active" data-s="home" onclick="App.navigate('home')">
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        <span>홈</span>
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <span>오늘</span>
       </button>
       <button id="notice-bell" class="bnav-item" data-s="talk" onclick="App.openMessages()" aria-label="로드톡">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         <span>로드톡</span>
         <span id="notice-badge" class="notice-badge" hidden>0</span>
       </button>
       <button class="bnav-item bnav-ai" data-s="ai" onclick="App.navigate('ai')" aria-label="로드비서">
-        <span class="bnav-ai-ico">AI</span>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.6L18 9.5l-4.2 1.9L12 16l-1.8-4.6L6 9.5l4.2-1.9z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>
         <span>로드비서</span>
       </button>
-      <button class="bnav-item bnav-sos" data-s="sos" onclick="App.openEmergencyModal()" aria-label="긴급 지원">
-        <span class="bnav-sos-ico">🚨</span>
-        <span>긴급</span>
-      </button>
       <button class="bnav-item" data-s="profile" onclick="App.navigate('profile')">
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
         <span>내 정보</span>
       </button>
     `;
@@ -547,7 +547,7 @@ const App = {
       <div style="flex:1; min-width:0;">
         <div style="font-weight:700; font-size:14px; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
           <span>${noti.isUrgent ? '본사 긴급 공지' : '본사 알림'}</span>
-          <span style="font-size:12px; font-weight:700; padding:1px 6px; border-radius:10px; ${noti.isUrgent ? 'background:#ef4444; color:#fff;' : 'background:#4f46e5; color:#fff;'}">${noti.isUrgent ? 'URGENT' : 'NOTICE'}</span>
+          <span style="font-size:12px; font-weight:700; padding:1px 6px; border-radius:10px; ${noti.isUrgent ? 'background:#ef4444; color:#fff;' : 'background:#3B45C4; color:#fff;'}">${noti.isUrgent ? 'URGENT' : 'NOTICE'}</span>
         </div>
         <div style="line-height:1.45; font-size:14px; color:#f1f5f9; word-break:break-word;">${safeContent}</div>
         <div style="font-size:12px; color:#94a3b8; margin-top:6px;">${esc(timeStr)}</div>
@@ -656,7 +656,7 @@ const App = {
         <div class="modal-panel" style="max-height:85vh; padding: 20px 16px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">
             <div style="display:flex; align-items:center; gap:10px;">
-              <div style="width:36px;height:36px;border-radius:50%;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <div style="width:36px;height:36px;border-radius:50%;background:rgba(59, 69, 196,0.15);border:1px solid rgba(59, 69, 196,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
               </div>
               <h2 style="font-size:17px; font-weight:700; color:var(--text-100); margin:0;">HQ 본사 공지 & 알림함</h2>

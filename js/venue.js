@@ -72,9 +72,9 @@ const VenueNotes = {
     const text = el.getAttribute('data-venue') || '';
     const compact = el.hasAttribute('data-venue-compact');
     const arg = this._esc(JSON.stringify(text));
-    const addBtn = `<button type="button" onclick="event.stopPropagation(); VenueNotes.add(${arg})" style="border:0;background:none;color:#4f46e5;font-size:13px;font-weight:700;cursor:pointer;padding:4px 0;">+ 메모 남기기</button>`;
+    const addBtn = `<button type="button" onclick="event.stopPropagation(); VenueNotes.add(${arg})" style="border:0;background:none;color:#3B45C4;font-size:13px;font-weight:700;cursor:pointer;padding:4px 0;">+ 메모 남기기</button>`;
     if (!rows.length) {
-      el.innerHTML = compact ? '' : `<div style="margin-top:8px;font-size:13px;color:#64748b;display:flex;align-items:center;gap:6px;">📌 <span>현장 메모 없음</span> ${addBtn}</div>`;
+      el.innerHTML = compact ? '' : `<div style="margin-top:8px;font-size:13px;color:#5B616E;display:flex;align-items:center;gap:6px;">📌 <span>현장 메모 없음</span> ${addBtn}</div>`;
       return;
     }
     const me = this._me(), hq = this._isHq();

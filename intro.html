@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>로드플래너 · 연예 매니저와 기획사를 위한 스케줄 · 동선 서비스</title>
+<meta name="description" content="일정을 넣으면 그날 교통으로 기상부터 철수까지 매니저 동선이 계산되고, 본사와 현장이 같은 시간을 봅니다.">
+<meta property="og:title" content="로드플래너 — 약속 시간에서 거꾸로 계산하는 매니저 스케줄 서비스">
+<meta property="og:description" content="본사 웹 + 매니저 앱. 일정 등록과 동시에 그날 교통으로 동선 계산, 지연은 먼저 알림.">
+<meta property="og:image" content="img/intro-hq.jpg">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{--ink:#14161A;--sub:#4A4F5A;--mute:#6B7180;--line:#E6E7EB;--bg:#F6F7F9;--acc:#3B45C4;--acc-ink:#2B338F;--acc-bg:#EEF0FD;--warn:#9A4A06;--warn-bg:#FDF1E3}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:#fff;color:var(--ink);font-family:'IBM Plex Sans KR',-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;font-size:16px;line-height:1.65;word-break:keep-all;overflow-wrap:break-word;-webkit-font-smoothing:antialiased}
+a{color:var(--acc)}a:hover{color:var(--acc-ink)}
+img{max-width:100%;height:auto;display:block}
+.in{max-width:1160px;margin:0 auto;padding:0 24px}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:6px}
+
+/* 위 막대 */
+.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.96);border-bottom:1px solid var(--line)}
+.top .in{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.brand img{width:32px;height:32px;border-radius:8px}
+.brand b{font-size:17px}
+.nav{display:flex;align-items:center;gap:22px;font-size:14.5px}
+.nav a{color:var(--sub);text-decoration:none}
+.nav a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:12px;font-weight:700;font-size:15.5px;text-decoration:none;border:1px solid transparent;white-space:nowrap}
+.btn.pri{background:var(--acc);color:#fff}.btn.pri:hover{background:var(--acc-ink);color:#fff}
+.btn.line{border-color:#D5D8DF;color:var(--ink);background:#fff}.btn.line:hover{background:var(--bg);color:var(--ink)}
+.btn.sm{height:40px;padding:0 16px;font-size:14px;border-radius:10px}
+.nav .login{color:var(--ink);font-weight:600}
+
+/* 첫 화면 */
+.hero .in{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:48px;align-items:center;padding-top:72px;padding-bottom:64px}
+.kicker{font-size:14px;font-weight:600;color:var(--acc);margin:0 0 14px}
+h1{margin:0 0 20px;font-size:clamp(34px,4.6vw,52px);line-height:1.22;letter-spacing:-1.4px;font-weight:700}
+.lead{margin:0 0 28px;font-size:18px;color:var(--sub);max-width:34em}
+.cta{display:flex;flex-wrap:wrap;gap:10px}
+.note{margin:14px 0 0;font-size:13.5px;color:var(--mute)}
+.phone{justify-self:center;width:min(330px,100%);border-radius:40px;background:#14161A;padding:10px;box-shadow:0 24px 60px rgba(20,22,26,.16)}
+.phone img{border-radius:30px;width:100%;height:auto;aspect-ratio:1170/1992}
+
+section.band{background:var(--bg);border-block:1px solid var(--line)}
+.sec{padding-top:80px;padding-bottom:80px}
+.sec h2{margin:0 0 12px;font-size:clamp(26px,3vw,34px);line-height:1.3;letter-spacing:-.8px}
+.sec .desc{margin:0 0 36px;color:var(--sub);font-size:17px;max-width:40em}
+
+/* 문제 */
+.pains{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.pain{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px}
+.pain q{display:block;font-size:17px;font-weight:700;line-height:1.5;quotes:'“' '”'}
+.pain p{margin:10px 0 0;font-size:14.5px;color:var(--sub)}
+
+/* 기능 */
+.feats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.feat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:10px}
+.ico{width:40px;height:40px;border-radius:10px;background:var(--acc-bg);color:var(--acc);display:flex;align-items:center;justify-content:center}
+.ico svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.feat h3{margin:0;font-size:19px}
+.feat p{margin:0;font-size:15px;color:var(--sub)}
+
+/* 화면 소개 */
+.shot{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:40px;align-items:center}
+.shot + .shot{margin-top:64px}
+.shot.rev{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr)}
+.shot.rev .pic{order:2}
+.frame{border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 18px 44px rgba(20,22,26,.10);background:#fff}
+.frame .bar{height:28px;background:#F1F2F5;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px;padding:0 12px}
+.frame .bar i{width:9px;height:9px;border-radius:50%;background:#D5D8DF;display:block}
+.shot h3{margin:0 0 6px;font-size:22px}
+.shot .who{font-size:14px;color:var(--acc);font-weight:600;margin:0 0 12px}
+.shot ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px}
+.shot li{display:grid;grid-template-columns:20px 1fr;gap:8px;font-size:15.5px;color:var(--sub)}
+.shot li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--acc);margin-top:9px}
+.shot li b{color:var(--ink)}
+.minis{display:flex;justify-content:center}
+.minis .phone{width:min(280px,100%)}
+
+/* 하루 흐름 */
+.flow{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:2px solid var(--ink)}
+.flow li{padding:20px 20px 0 0;display:flex;flex-direction:column;gap:6px}
+.flow .t{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--acc)}
+.flow b{font-size:17px}
+.flow span{font-size:14.5px;color:var(--sub)}
+
+/* 신뢰 */
+.trust{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.trust div{border:1px solid var(--line);border-radius:16px;padding:22px;background:#fff}
+.trust b{display:block;font-size:17px;margin-bottom:6px}
+.trust p{margin:0;font-size:14.5px;color:var(--sub)}
+
+/* 요금 */
+.prices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.price{background:#fff;border:1px solid var(--line);border-radius:18px;padding:28px;display:flex;flex-direction:column;gap:14px}
+.price.main{border:2px solid var(--acc)}
+.price .h b{display:block;font-size:19px}.price .h span{font-size:14px;color:var(--mute)}
+.price .amt{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px}
+.price .amt strong{font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:600;letter-spacing:-1px}
+.price .amt span{font-size:14px;color:var(--mute)}
+.price ul{margin:0;padding:0 0 0 18px;display:flex;flex-direction:column;gap:6px;font-size:15px;color:#3A3F4A}
+.price .btn{margin-top:auto}
+.pnote{margin:16px 0 0;font-size:13.5px;color:var(--mute)}
+
+/* 도입 */
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;counter-reset:s}
+.steps li{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:6px}
+.steps li::before{counter-increment:s;content:counter(s);width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.steps b{font-size:16.5px}.steps span{font-size:14.5px;color:var(--sub)}
+
+/* 자주 묻는 질문 */
+.faq{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.faq details{border-bottom:1px solid var(--line)}
+.faq summary{list-style:none;cursor:pointer;padding:18px 36px 18px 0;font-size:16.5px;font-weight:600;position:relative}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";position:absolute;right:4px;top:14px;font-size:22px;color:var(--mute)}
+.faq details[open] summary::after{content:"−"}
+.faq p{margin:0 0 18px;color:var(--sub);font-size:15.5px;max-width:48em}
+
+/* 문의 */
+.ask{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:24px;background:var(--ink);color:#fff;border-radius:20px;padding:40px}
+.ask h2{color:#fff;margin:0 0 6px}
+.ask p{margin:0;color:#C9CDD5}
+.ask .btn.pri{background:#fff;color:var(--ink)}.ask .btn.pri:hover{background:#E6E7EB}
+.ask .btn.line{background:transparent;color:#fff;border-color:#4A4F5A}
+
+footer{border-top:1px solid var(--line)}
+footer .in{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding:28px 24px 40px;font-size:13px;color:var(--mute)}
+footer a{color:inherit}
+
+@media (max-width:960px){
+  .hero .in,.shot,.shot.rev{grid-template-columns:1fr}
+  .shot.rev .pic{order:0}
+  .pains,.feats,.trust{grid-template-columns:1fr}
+  .flow,.steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .flow li{padding-bottom:16px}
+  .prices{grid-template-columns:1fr}
+  .nav .hide-m{display:none}
+}
+@media (max-width:560px){
+  .in{padding:0 16px}
+  .hero .in{padding-top:40px}
+  .sec{padding-top:56px;padding-bottom:56px}
+  .flow,.steps{grid-template-columns:1fr}
+  .ask{padding:28px 22px}
+  .nav{gap:12px}
+  .nav .login{display:none}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="in">
+    <a class="brand" href="#top" aria-label="로드플래너 처음으로"><img src="icon.svg" alt="" width="32" height="32"><b>로드플래너</b></a>
+    <nav class="nav" aria-label="주요 메뉴">
+      <a class="hide-m" href="#feat">기능</a>
+      <a class="hide-m" href="#screens">화면</a>
+      <a class="hide-m" href="#price">요금</a>
+      <a class="hide-m" href="#faq">질문</a>
+      <a class="login" href="admin-login.html">본사 로그인</a>
+      <a class="btn pri sm" href="#ask">도입 문의</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="in">
+      <div>
+        <p class="kicker">연예 매니저 · 기획사를 위한 스케줄 · 동선 서비스</p>
+        <h1>약속 시간에서 거꾸로,<br>오늘 몇 시에 나갈지<br>먼저 알려 드려요</h1>
+        <p class="lead">일정을 넣으면 그날 교통으로 기상부터 철수까지 매니저 동선이 계산되고, 본사 화면과 매니저 휴대폰에 같은 시간이 바로 올라갑니다.</p>
+        <div class="cta">
+          <a class="btn pri" href="#ask">회사 도입 문의</a>
+          <a class="btn line" href="#screens">화면 먼저 보기</a>
+        </div>
+        <p class="note">본사는 PC 웹 · 매니저는 휴대폰 화면에서 바로 (앱 설치 없이 홈 화면에 추가)</p>
+      </div>
+      <div class="phone"><img src="img/intro-app.jpg" alt="매니저 앱 오늘 화면: 지금 할 일 15시 56분 현장 출발, 출발·도착 버튼과 티맵·카카오내비 길안내" width="1170" height="1992"></div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="in sec">
+      <h2>현장에서 매일 생기는 일</h2>
+      <p class="desc">스케줄표는 있는데, '그래서 몇 시에 나가야 하는지'는 매니저 머릿속에만 있습니다.</p>
+      <div class="pains">
+        <div class="pain"><q>샵 끝나고 방송국까지 몇 분 걸리지?</q><p>출발 시각을 매번 지도 앱으로 따로 계산하고, 길이 막히면 그때부터 늦습니다.</p></div>
+        <div class="pain"><q>지금 어디쯤이에요?</q><p>본사는 전화와 단톡방으로 확인합니다. 운전 중인 매니저도, 기다리는 본사도 불편합니다.</p></div>
+        <div class="pain"><q>시간 바뀐 거 못 봤어요.</q><p>일정이 바뀐 공지는 대화방에 묻히고, 누가 확인했는지 알 수 없습니다.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="feat" class="in sec">
+    <h2>로드플래너가 대신 하는 일</h2>
+    <p class="desc">본사가 일정을 넣는 순간부터 매니저가 철수할 때까지, 같은 시간표를 함께 봅니다.</p>
+    <div class="feats">
+      <article class="feat">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+        <h3>일정을 넣으면 동선이 나와요</h3>
+        <p>행사장 · 샵 · 출발 장소만 넣으면 그날 그 시간대 교통 예측으로 기상, 픽업, 이동 시각을 거꾸로 계산합니다. 등록하는 창 옆에서 바로 확인합니다.</p>
+      </article>
+      <article class="feat">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
+        <h3>늦기 전에 먼저 알려요</h3>
+        <p>전날 밤 내일 첫 출발, 출발 15분 전 알림. 출발 시각이 지나도 표시가 없으면 매니저와 본사에 알리고, 막히면 매니저가 버튼 하나로 도착 예상을 보냅니다.</p>
+      </article>
+      <article class="feat">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 5h18v11H3zM8 20h8M12 16v4"/></svg></span>
+        <h3>본사와 현장이 같은 화면</h3>
+        <p>본사가 바꾼 일정은 매니저 앱에 바로, 매니저의 출발 · 도착은 본사에 바로. 변경을 누가 확인했는지, 로드톡과 긴급 공지까지 한곳에서.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="screens" class="band">
+    <div class="in sec">
+      <h2>실제 화면</h2>
+      <p class="desc">지금 쓰고 있는 화면 그대로입니다. 이름과 일정은 예시입니다.</p>
+
+      <div class="shot">
+        <div class="pic"><div class="frame"><div class="bar" aria-hidden="true"><i></i><i></i><i></i></div><img src="img/intro-hq.jpg" alt="본사 웹 오늘 현황: 지연·전체·이동 중 숫자 한 줄, 아티스트별 하루 막대, 오른쪽 확인할 것 목록" width="2160" height="1290" loading="lazy"></div></div>
+        <div>
+          <p class="who">대표 · 본사 관리자</p>
+          <h3>본사 웹 — 오늘 현황</h3>
+          <ul>
+            <li><span><b>숫자 한 줄</b> — 지연, 오늘 전체, 이동 중, 완료를 한눈에</span></li>
+            <li><span><b>아티스트별 하루 막대</b> — 지금 시각 선 기준으로 누가 어디쯤인지</span></li>
+            <li><span><b>확인할 것</b> — 늦는 매니저, 확인 안 한 변경, 경비 승인, 내일 담당 미지정</span></li>
+            <li><span>월간 · 주간 캘린더, 상황판, 지도, 경비 정산, 차량 배정</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="shot rev">
+        <div class="pic minis"><div class="phone"><img src="img/intro-app.jpg" alt="" width="1170" height="1992" loading="lazy"></div></div>
+        <div>
+          <p class="who">현장 매니저</p>
+          <h3>매니저 앱 — 오늘 할 일 하나만 크게</h3>
+          <ul>
+            <li><span><b>지금 할 일</b> — 다음 출발 시각과 장소, [출발] [도착] 버튼</span></li>
+            <li><span><b>바로 길안내</b> — 누르면 티맵 · 카카오내비가 목적지로 열림</span></li>
+            <li><span><b>오늘 동선</b> — 기상부터 철수까지 단계별 시간과 이동 시간</span></li>
+            <li><span>로드톡, 긴급 보고, 경비 기록, 현장 메모(주차 · 출입구)</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="in sec">
+    <h2>하루는 이렇게 흘러가요</h2>
+    <p class="desc">매니저가 따로 챙기지 않아도 필요한 순간에 알림이 갑니다.</p>
+    <ol class="flow">
+      <li><span class="t">전날 21:00</span><b>내일 일정 요약</b><span>매니저와 본사에 내일 첫 출발 시각이 알림으로 와요.</span></li>
+      <li><span class="t">당일 05:30</span><b>아침 교통 재계산</b><span>그날 교통으로 동선을 다시 맞추고, 바뀌면 매니저가 확인해요.</span></li>
+      <li><span class="t">출발 15분 전</span><b>출발 알림</b><span>누르면 바로 티맵 · 카카오내비 길안내가 열려요.</span></li>
+      <li><span class="t">이동 중</span><b>늦으면 먼저 공유</b><span>도착 예상이 늦어지면 버튼 하나로 본사에 알려요.</span></li>
+    </ol>
+  </section>
+
+  <section class="band">
+    <div class="in sec">
+      <h2>매니저가 안심하고 쓰는 앱</h2>
+      <p class="desc">'감시 앱'이 아니라 '내 업무를 덜어 주는 앱'이어야 현장에서 씁니다.</p>
+      <div class="trust">
+        <div><b>위치를 지켜보지 않아요</b><p>본사 지도에는 일정 장소만 보입니다. 매니저 위치는 본인이 동의한 경우에만, 이동 중 도착 예상 계산과 긴급 보고에만 씁니다.</p></div>
+        <div><b>언제 무엇이 넘어갔는지 보여요</b><p>본사에 도착 예상이나 긴급 위치가 전달되면 매니저에게 바로 알리고, 내역은 본인이 언제든 볼 수 있습니다. 동의는 언제든 철회할 수 있습니다.</p></div>
+        <div><b>대외비 일정은 가려요</b><p>비공개로 표시한 일정은 볼 수 있는 사람만 내용을 봅니다. 외부 협력자에게는 앱 설치 없이 필요한 일정만 링크로 공유합니다.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="price" class="in sec">
+    <h2>요금</h2>
+    <p class="desc">회사는 본사 웹과 매니저 앱을 함께, 혼자 일하는 매니저는 무료로 시작합니다.</p>
+    <div class="prices">
+      <article class="price main">
+        <div class="h"><b>회사 (기획사)</b><span>본사 웹 + 매니저 앱 + 로드톡</span></div>
+        <div class="amt"><strong>100,000원</strong><span>/ 월 · 매니저 2명 포함</span></div>
+        <ul>
+          <li>매니저 1명 추가할 때마다 월 20,000원</li>
+          <li>일정 등록과 동시에 그날 교통으로 동선 계산</li>
+          <li>지연 · 미확인 · 경비 승인을 한 화면에서</li>
+          <li>로드톡, 긴급 공지, 차량 배정, 경비 정산</li>
+        </ul>
+        <a class="btn pri" href="#ask">도입 문의</a>
+      </article>
+      <article class="price">
+        <div class="h"><b>개인 매니저</b><span>혼자 일하는 매니저용 앱</span></div>
+        <div class="amt"><strong>무료</strong><span>· 유료 월 20,000원</span></div>
+        <ul>
+          <li>무료: 일정 · 동선 계산 · 기상/출발 알림 · 아티스트 1명 · 차량 등록</li>
+          <li>유료: 아침 교통 재계산, 차 타면 자동 길안내</li>
+          <li>유료: 아티스트 여러 명, 경비 기록, 로드비서 하루 60번</li>
+        </ul>
+        <a class="btn line" href="https://ktj8824-stack.github.io/manager-planner-app/">무료로 시작</a>
+      </article>
+    </div>
+    <p class="pnote">부가세 별도 여부와 결제 방식은 도입 상담 때 안내드립니다.</p>
+  </section>
+
+  <section class="band">
+    <div class="in sec">
+      <h2>도입은 이렇게 진행돼요</h2>
+      <p class="desc">새로 배울 것이 적도록, 지금 쓰는 일정표에서 시작합니다.</p>
+      <ol class="steps">
+        <li><b>상담</b><span>매니저 수, 아티스트 수, 지금 일정 관리 방식을 듣습니다.</span></li>
+        <li><b>계정 만들기</b><span>본사 계정과 매니저 계정을 만들어 드립니다.</span></li>
+        <li><b>일정 옮기기</b><span>이번 주 일정부터 넣고, 동선이 맞는지 함께 확인합니다.</span></li>
+        <li><b>현장 시작</b><span>매니저 휴대폰에 알림을 켜고 바로 씁니다.</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="faq" class="in sec">
+    <h2>자주 묻는 질문</h2>
+    <div class="faq">
+      <details><summary>앱을 설치해야 하나요?</summary><p>아니요. 휴대폰 브라우저에서 열고 '홈 화면에 추가'를 누르면 앱처럼 쓸 수 있습니다. 본사는 PC 웹에서 씁니다.</p></details>
+      <details><summary>본사가 매니저 위치를 실시간으로 보나요?</summary><p>아니요. 본사에는 매니저가 보낸 도착 예상 시각과 출발 · 도착 표시만 보입니다. 위치는 매니저가 동의한 경우에만 도착 예상 계산과 긴급 보고에 쓰입니다.</p></details>
+      <details><summary>교통 시간은 얼마나 정확한가요?</summary><p>그날 그 시간대의 교통 예측으로 계산하고, 당일 새벽에 한 번 더 다시 계산합니다. 예측은 참고용입니다.</p></details>
+      <details><summary>기존 일정표(엑셀 · 단톡방)는 어떻게 하나요?</summary><p>도입할 때 이번 주 일정부터 함께 옮깁니다. 그다음부터는 본사가 등록하면 매니저 앱에 바로 들어갑니다.</p></details>
+      <details><summary>매니저가 혼자 일하는 경우에도 쓸 수 있나요?</summary><p>네. 개인 매니저는 카카오 로그인으로 무료로 시작할 수 있습니다.</p></details>
+    </div>
+  </section>
+
+  <section id="ask" class="in" style="padding-bottom:80px">
+    <div class="ask">
+      <div>
+        <h2>우리 회사 일정으로 먼저 확인해 보세요</h2>
+        <p>일정 몇 개를 보내 주시면 동선이 어떻게 나오는지 보여 드려요.</p>
+      </div>
+      <div class="cta">
+        <a class="btn pri" href="mailto:support@managerplanner.kr?subject=%EB%A1%9C%EB%93%9C%ED%94%8C%EB%9E%98%EB%84%88%20%EB%8F%84%EC%9E%85%20%EB%AC%B8%EC%9D%98">이메일로 문의</a>
+        <a class="btn line" href="admin-login.html">본사 로그인</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="in">
+    <span>© 2026 로드플래너 · support@managerplanner.kr</span>
+    <span><a href="terms.html">이용약관</a> · <a href="privacy.html">개인정보처리방침</a> · <a href="location-terms.html">위치기반서비스 이용약관</a></span>
+  </div>
+</footer>
+</body>
+</html>

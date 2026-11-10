@@ -6,12 +6,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>로드플래너 본사 로그인</title>
-  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Pretendard', -apple-system, sans-serif;
+      font-family: 'IBM Plex Sans KR', 'Pretendard', -apple-system, sans-serif;
       background: #fff;
       min-height: 100vh;
       min-height: 100dvh;
@@ -27,7 +27,7 @@
     .brand-top img { width: 44px; height: 44px; border-radius: 12px; }
     .brand-top b { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -0.3px; }
     .brand-mid h2 { font-size: clamp(30px, 3.2vw, 44px); font-weight: 800; line-height: 1.25; color: #fff; letter-spacing: -1px; }
-    .brand-mid h2 em { font-style: normal; color: #a5b4fc; }
+    .brand-mid h2 em { font-style: normal; color: #B4BBF0; }
     .brand-mid p { margin-top: 14px; font-size: 16px; color: #9ca3af; line-height: 1.6; max-width: 34em; }
     .brand-list { list-style: none; margin-top: 32px; display: flex; flex-direction: column; gap: 14px; }
     .brand-list li { display: flex; gap: 12px; align-items: flex-start; font-size: 15px; color: #d1d5db; line-height: 1.5; }
@@ -84,7 +84,7 @@
     .title {
       font-size: 28px;
       font-weight: 900;
-      color: #0f172a;
+      color: #14161A;
       letter-spacing: -0.5px;
       line-height: 1.2;
     }
@@ -116,8 +116,8 @@
       border-radius: 12px;
       padding: 14px 16px;
       font-size: 15px;
-      font-family: 'Pretendard', sans-serif;
-      color: #0f172a;
+      font-family: 'IBM Plex Sans KR', 'Pretendard', sans-serif;
+      color: #14161A;
       outline: none;
       transition: all 0.2s;
     }
@@ -138,7 +138,7 @@
       color: #fff;
       font-size: 16px;
       font-weight: 800;
-      font-family: 'Pretendard', sans-serif;
+      font-family: 'IBM Plex Sans KR', 'Pretendard', sans-serif;
       padding: 16px;
       border: none;
       border-radius: 12px;
@@ -227,7 +227,7 @@
     .supabase-notice strong { font-weight: 800; }
   @media (pointer: coarse) { input:not([type=checkbox]):not([type=radio]), select, textarea { font-size: 16px !important; } }
   </style>
-<script src="js/icons.js?v=315"></script>
+<script src="js/icons.js?v=316"></script>
 </head>
 <body>
 
@@ -242,7 +242,7 @@
         <li><span>💬</span><div><b>로드톡 · 긴급 공지</b>현장과 본사가 한 대화방에서</div></li>
       </ul>
     </div>
-    <div class="brand-foot">© 2026 로드플래너 · <a href="terms.html">이용약관</a> · <a href="privacy.html">개인정보처리방침</a> · <a href="location-terms.html">위치기반서비스 이용약관</a></div>
+    <div class="brand-foot">© 2026 로드플래너 · <a href="intro.html">서비스 소개</a> · <a href="terms.html">이용약관</a> · <a href="privacy.html">개인정보처리방침</a> · <a href="location-terms.html">위치기반서비스 이용약관</a></div>
   </section>
 
   <main class="side">
@@ -271,7 +271,7 @@
 
       <button type="submit" class="btn-submit" id="btn-login">포털 접속 (Sign In)</button>
       <button type="button" id="quick-ceo-btn" onclick="quickCeoLogin()" hidden
-        style="width: 100%; margin-top: 10px; padding: 13px; border-radius: 12px; border: 1.5px dashed rgba(99,102,241,0.5); background: rgba(99,102,241,0.06); color: #4f46e5; font-weight: 800; font-size: 13.5px; cursor: pointer; transition: all 0.2s; font-family: 'Pretendard', sans-serif;">
+        style="width: 100%; margin-top: 10px; padding: 13px; border-radius: 12px; border: 1.5px dashed rgba(59, 69, 196,0.5); background: rgba(59, 69, 196,0.06); color: #3B45C4; font-weight: 800; font-size: 13.5px; cursor: pointer; transition: all 0.2s; font-family: 'IBM Plex Sans KR', 'Pretendard', sans-serif;">
         ⚡ 테스트 대표 계정 1초 바로 접속 (ceo@kjm-ent.com)
       </button>
 

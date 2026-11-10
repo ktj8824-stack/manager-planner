@@ -11,7 +11,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Pretendard', -apple-system, sans-serif;
-      background: #f2f2f7; min-height: 100vh; color: #111827;
+      background: #F6F7F9; min-height: 100vh; color: #111827;
       display: flex; flex-direction: column; align-items: center;
     }
     .wrap { width: 100%; max-width: 440px; padding: 32px 16px 40px; }
@@ -22,10 +22,10 @@
     }
     .icon.ok { background: #dcfce7; color: #15803d; }
     .icon.fail { background: #fee2e2; color: #b91c1c; }
-    .icon.va { background: #e0e7ff; color: #4338ca; }
+    .icon.va { background: #E3E6FA; color: #2B338F; }
     .result-title { font-size: 22px; font-weight: 900; margin-bottom: 6px; }
     .result-sub { font-size: 14px; color: #6b7280; line-height: 1.6; }
-    .big-amount { font-size: 30px; font-weight: 900; color: #4f46e5; margin-top: 10px; }
+    .big-amount { font-size: 30px; font-weight: 900; color: #3B45C4; margin-top: 10px; }
     .card { background: #fff; border-radius: 16px; padding: 6px 18px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
     .info-row { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; font-size: 14px; border-bottom: 1px solid #f0f0f3; }
     .info-row:last-child { border-bottom: none; }
@@ -33,9 +33,9 @@
     .info-row span:last-child { color: #111827; font-weight: 700; text-align: right; word-break: break-all; }
     .note { background: #f5f7ff; border-radius: 12px; padding: 12px 14px; font-size: 13px; color: #374151; line-height: 1.55; margin-bottom: 12px; }
     .note.warn { background: #fff7ed; color: #9a3412; }
-    .copy-btn { margin-left: 6px; padding: 3px 9px; border-radius: 8px; border: 1px solid #c7d2fe; background: #eef2ff; color: #4338ca; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .copy-btn { margin-left: 6px; padding: 3px 9px; border-radius: 8px; border: 1px solid #D5D9F7; background: #EEF0FD; color: #2B338F; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
     .btn-primary {
-      display: block; width: 100%; padding: 16px; border-radius: 14px; border: none; background: #4f46e5; color: #fff;
+      display: block; width: 100%; padding: 16px; border-radius: 14px; border: none; background: #3B45C4; color: #fff;
       font-size: 15px; font-weight: 800; font-family: inherit; cursor: pointer; margin-bottom: 10px;
     }
     .btn-secondary {
@@ -43,9 +43,9 @@
       font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; margin-bottom: 10px;
     }
   </style>
-<script src="js/icons.js?v=315"></script>
+<script src="js/icons.js?v=316"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js?v=315"></script>
+<script src="js/supabase-client.js?v=316"></script>
 </head>
 <body>
 <div id="test-banner" style="position:sticky;top:0;z-index:9999;width:100%;background:#f59e0b;color:#1f1300;text-align:center;font:700 13px/1.4 Pretendard,sans-serif;padding:8px 12px;">🧪 테스트 결제 — 실제 결제되지 않습니다 (카드가 청구되지 않아요)</div>
@@ -240,7 +240,7 @@
       document.getElementById('r-method').textContent = methodText;
       show('r-method-row');
       if (payData.receipt && payData.receipt.url) {
-        document.getElementById('r-receipt').innerHTML = `<a href="${esc(payData.receipt.url)}" target="_blank" rel="noopener" style="color:#4f46e5;">영수증 보기</a>`;
+        document.getElementById('r-receipt').innerHTML = `<a href="${esc(payData.receipt.url)}" target="_blank" rel="noopener" style="color:#3B45C4;">영수증 보기</a>`;
         show('r-receipt-row');
       }
     }

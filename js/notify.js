@@ -5,7 +5,7 @@
   if (window.__notifyInstalled) return; window.__notifyInstalled = true;
   const css = `
   .np-wrap{position:fixed;left:0;right:0;bottom:24px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:100000;pointer-events:none;padding:0 12px}
-  .np-toast{pointer-events:auto;max-width:min(520px,100%);background:#1f2937;color:#fff;border-radius:12px;padding:12px 16px;font:600 14px/1.5 system-ui,-apple-system,'Malgun Gothic',sans-serif;white-space:pre-wrap;box-shadow:0 8px 28px rgba(0,0,0,.28);border-left:5px solid #6366f1;opacity:0;transform:translateY(12px);transition:opacity .2s,transform .2s;cursor:pointer}
+  .np-toast{pointer-events:auto;max-width:min(520px,100%);background:#1f2937;color:#fff;border-radius:12px;padding:12px 16px;font:600 14px/1.5 system-ui,-apple-system,'Malgun Gothic',sans-serif;white-space:pre-wrap;box-shadow:0 8px 28px rgba(0,0,0,.28);border-left:5px solid #4C57D6;opacity:0;transform:translateY(12px);transition:opacity .2s,transform .2s;cursor:pointer}
   .np-toast.show{opacity:1;transform:none}
   .np-toast.ok{border-left-color:#10b981}.np-toast.warn{border-left-color:#f59e0b}.np-toast.err{border-left-color:#ef4444}`;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);

@@ -139,16 +139,16 @@ const AutoNav = {
         st.id = 'an-style';
         st.textContent = `
 #an-bg{position:fixed;inset:0;z-index:10050;background:rgba(15,23,42,.55);display:flex;align-items:flex-end;justify-content:center;padding:16px 16px calc(20px + env(safe-area-inset-bottom));}
-#an-box{width:100%;max-width:440px;background:#fff;border-radius:20px;padding:20px 18px 16px;box-shadow:0 20px 50px rgba(0,0,0,.25);color:#0f172a;}
-#an-box .an-k{font-size:13px;font-weight:800;color:#4f46e5;margin-bottom:4px;}
+#an-box{width:100%;max-width:440px;background:#fff;border-radius:20px;padding:20px 18px 16px;box-shadow:0 20px 50px rgba(0,0,0,.25);color:#14161A;}
+#an-box .an-k{font-size:13px;font-weight:800;color:#3B45C4;margin-bottom:4px;}
 #an-box .an-t{font-size:20px;font-weight:800;letter-spacing:-.02em;line-height:1.35;}
 #an-box .an-d{font-size:14.5px;color:#475569;margin-top:6px;line-height:1.45;word-break:keep-all;}
 #an-box .an-c{font-size:14px;color:#334155;margin-top:14px;font-weight:600;}
-#an-box .an-c b{color:#4f46e5;font-size:17px;}
+#an-box .an-c b{color:#3B45C4;font-size:17px;}
 #an-box .an-b{display:flex;gap:8px;margin-top:16px;}
 #an-box .an-b button{flex:1;height:48px;border-radius:12px;font-size:15.5px;font-weight:800;border:0;cursor:pointer;}
 #an-box .an-x{background:#f1f5f9;color:#334155;}
-#an-box .an-go{background:#4f46e5;color:#fff;}`;
+#an-box .an-go{background:#3B45C4;color:#fff;}`;
         document.head.appendChild(st);
       }
       bg = document.createElement('div');
@@ -184,7 +184,7 @@ const AutoNav = {
         <li><b>CarPlay</b> 선택 → <b>연결될 때</b> → <b>즉시 실행</b></li>
         <li>동작에서 <b>URL 열기</b> 추가 → 아래 링크 붙여넣기</li>
       </ol>
-      <div style="font-size:12.5px;color:#64748b;margin-top:6px;">CarPlay가 없으면 2번에서 <b>블루투스</b> → 차량 이름을 고르세요. 로드플래너 앱(아이폰 앱)이나 로그인된 Safari에서 열려야 합니다.</div>`;
+      <div style="font-size:12.5px;color:#5B616E;margin-top:6px;">CarPlay가 없으면 2번에서 <b>블루투스</b> → 차량 이름을 고르세요. 로드플래너 앱(아이폰 앱)이나 로그인된 Safari에서 열려야 합니다.</div>`;
     const android = `
       <div style="font-weight:800;font-size:15px;margin:14px 0 6px;">갤럭시</div>
       <ol style="${S}padding-left:22px;margin:0;list-style:decimal;">
@@ -192,19 +192,19 @@ const AutoNav = {
         <li>조건: <b>블루투스 기기 연결</b> → 차량 선택 (Android Auto도 가능)</li>
         <li>실행: <b>앱 열기</b> → <b>로드플래너 길안내</b> (로드플래너 안드로이드 앱을 설치하면 생기는 파란 길안내 아이콘)</li>
       </ol>
-      <div style="font-size:13px;color:#64748b;margin-top:6px;">앱 대신 브라우저로 쓰는 경우: 실행을 <b>웹페이지 열기</b>(또는 링크 열기) → 아래 링크로 하세요. 앱 아이콘을 길게 누르면 나오는 <b>다음 일정 길안내</b>도 같은 기능이에요.</div>`;
+      <div style="font-size:13px;color:#5B616E;margin-top:6px;">앱 대신 브라우저로 쓰는 경우: 실행을 <b>웹페이지 열기</b>(또는 링크 열기) → 아래 링크로 하세요. 앱 아이콘을 길게 누르면 나오는 <b>다음 일정 길안내</b>도 같은 기능이에요.</div>`;
     const html = `
       <div style="${S}">차에 타서 휴대폰이 차와 연결되면, 로드플래너가 열리면서 <b>오늘 다음 일정</b>으로 내비가 자동으로 켜집니다.</div>
       <div style="font-weight:800;font-size:15px;margin:16px 0 8px;">1. 기본 내비</div>
       <div class="setting-options" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">${opt('tmap', '티맵')}${opt('kakao', '카카오내비')}${opt('choice', '매번 선택')}</div>
       <div style="font-weight:800;font-size:15px;margin:18px 0 8px;">2. 자동 실행 링크</div>
       <div style="display:flex;gap:6px;align-items:center;">
-        <input readonly value="${this.LINK}" onclick="this.select()" style="flex:1;min-width:0;height:42px;border:1px solid #e2e8f0;border-radius:10px;padding:0 10px;font-size:13px;background:#f8fafc;color:#0f172a;">
-        <button type="button" onclick="AutoNav.copyLink(this)" style="height:42px;padding:0 14px;border-radius:10px;border:0;background:#4f46e5;color:#fff;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap;">링크 복사</button>
+        <input readonly value="${this.LINK}" onclick="this.select()" style="flex:1;min-width:0;height:42px;border:1px solid #e2e8f0;border-radius:10px;padding:0 10px;font-size:13px;background:#f8fafc;color:#14161A;">
+        <button type="button" onclick="AutoNav.copyLink(this)" style="height:42px;padding:0 14px;border-radius:10px;border:0;background:#3B45C4;color:#fff;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap;">링크 복사</button>
       </div>
       <div style="font-weight:800;font-size:15px;margin:18px 0 0;">3. 휴대폰에 자동 실행 등록</div>
       ${isAndroid ? android + ios : ios + android}
-      <button type="button" onclick="App.closeModal(); AutoNav.test()" style="width:100%;height:46px;margin-top:18px;border-radius:12px;border:1px solid #c7d2fe;background:#eef2ff;color:#4338ca;font-weight:800;font-size:15px;cursor:pointer;">지금 시험해 보기</button>`;
+      <button type="button" onclick="App.closeModal(); AutoNav.test()" style="width:100%;height:46px;margin-top:18px;border-radius:12px;border:1px solid #D5D9F7;background:#EEF0FD;color:#2B338F;font-weight:800;font-size:15px;cursor:pointer;">지금 시험해 보기</button>`;
     App.showModal('🚗 차에 타면 자동 길안내', html);
   },
 

@@ -420,7 +420,7 @@ const RoadAI = {
     const b = a.before || {};
     const done = a.status !== 'pending';
     const row = (k, v) => v ? `<span>${esc(k)}</span><b>${v}</b>` : '';
-    const arrow = (from, to) => to && to !== from ? `${esc(from || '-')} → <span style="color:#4f46e5">${esc(to)}</span>` : esc(from || '');
+    const arrow = (from, to) => to && to !== from ? `${esc(from || '-')} → <span style="color:#3B45C4">${esc(to)}</span>` : esc(from || '');
     const hq = this.canEdit();
     const title = a.cancel ? '🚫 스케줄 취소' : '✏️ 스케줄 변경';
     const doneLabel = a.status === 'done' ? (hq ? (a.cancel ? '✓ 처리했어요' : '✓ 수정 창을 열었어요') : '✓ 로드톡을 열었어요') : '취소됨';
