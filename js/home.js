@@ -844,8 +844,8 @@ const Home = {
                 ${isDriveStep && dayState === 'today' ? `<button type="button" class="rs-btn${isMoving ? ' on-move' : ''}" onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '이동중')">이동중</button>` : ''}
                 <button type="button" class="rs-btn${isDone ? ' on-done' : ''}" onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '완료')">완료</button>` : ''}
               ${isDriveStep ? `<span class="rs-navs">
-                <button type="button" class="rs-btn ghost" onclick="U.openNavigation('${destinationTarget.replace(/'/g, "\\'")}', '', 'tmap')" title="티맵 길안내">티맵</button>
-                <button type="button" class="rs-btn ghost" onclick="U.openNavigation('${destinationTarget.replace(/'/g, "\\'")}', '', 'kakao')" title="카카오내비 길안내">카카오</button>
+                <button type="button" class="rs-btn ghost" onclick="U.openNavigation(${escJs(destinationTarget)}, '', 'tmap')" title="티맵 길안내">티맵</button>
+                <button type="button" class="rs-btn ghost" onclick="U.openNavigation(${escJs(destinationTarget)}, '', 'kakao')" title="카카오내비 길안내">카카오</button>
               </span>` : ''}
             </div>` : ''}
           </div>
