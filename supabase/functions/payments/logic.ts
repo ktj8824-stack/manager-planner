@@ -76,6 +76,10 @@ async function companyQuote(body: Record<string, unknown>, caller: Caller, db: a
       orderName: `로드플래너 자리 추가 (${added}자리, ${p.daysLeft}일분)`,
     };
   }
+  if (active && q.addSlots < curExtra) {
+    // 이용 중에 자리를 줄이면 오늘 결제는 없음 → 다음 결제일부터 줄어든 금액 (schedule_slots 로 예약)
+    return { kind: "reduce", plan: "standard", addSlots: q.addSlots, prevSlots: curExtra, added: 0, supply: 0, vat: 0, amount: 0, nextBillAt: c.paid_until, monthly, orderName: "" };
+  }
   const start = active ? new Date(c.paid_until) : now;
   return { kind: "month", plan: "standard", addSlots: q.addSlots, prevSlots: curExtra, added: 0, supply: q.supply, vat: q.vat, amount: q.amount, nextBillAt: addMonth(start).toISOString(), monthly, orderName: q.orderName };
 }
@@ -91,6 +95,7 @@ export async function handle(action: string, body: Record<string, unknown>, call
     if (plan === "standard" && !isHQ) throw new PayError(403, "FORBIDDEN", "회사 요금제는 대표·본사 관리자만 결제할 수 있습니다.");
     const q: any = plan === "standard" ? await companyQuote(body, caller, db, now) : { ...quote(plan, 0), kind: "month", prevSlots: 0 };
     if (action === "quote") return q;
+    if (q.kind === "reduce") throw new PayError(400, "REDUCE_NO_PAYMENT", "자리를 줄일 때는 결제하지 않아요. 구독 관리에서 '자리 줄이기 예약'을 눌러 주세요.");
     const orderId = makeOrderId(now);
     await db.insertPayment({ order_id: orderId, company_id: caller.company_id, user_id: caller.id, plan: q.plan, kind: q.kind, prev_slots: q.prevSlots, add_slots: q.addSlots, amount: q.amount, order_name: q.orderName, status: "READY", mode });
     return { orderId, kind: q.kind, amount: q.amount, supply: q.supply, vat: q.vat, daysLeft: q.daysLeft, cycleDays: q.cycleDays, nextBillAt: q.nextBillAt, monthly: q.monthly, orderName: q.orderName, mode };
@@ -129,12 +134,12 @@ export async function handle(action: string, body: Record<string, unknown>, call
       // 결제일은 그대로, 자리만 늘림 → 다음 자동결제부터 늘린 자리 포함 한 달 요금
       const c = await db.getCompany(row.company_id);
       periodEnd = new Date(c.paid_until);
-      await db.updateCompany(row.company_id, { extra_manager_slots: row.add_slots, plan_updated_at: now.toISOString() });
+      await db.updateCompany(row.company_id, { extra_manager_slots: row.add_slots, next_extra_slots: null, plan_updated_at: now.toISOString() });
     } else if (row.plan === "standard") {
       const c = await db.getCompany(row.company_id);
       const start = c?.paid_until && new Date(c.paid_until) > now ? new Date(c.paid_until) : now;
       periodEnd = addMonth(start);
-      await db.updateCompany(row.company_id, { plan: "standard", extra_manager_slots: row.add_slots, paid_until: periodEnd.toISOString(), plan_updated_at: now.toISOString() });
+      await db.updateCompany(row.company_id, { plan: "standard", extra_manager_slots: row.add_slots, next_extra_slots: null, paid_until: periodEnd.toISOString(), plan_updated_at: now.toISOString() });
     } else {
       const cur = await db.proUntil(row.user_id);
       const start = cur && new Date(cur) > now ? new Date(cur) : now;
@@ -143,6 +148,25 @@ export async function handle(action: string, body: Record<string, unknown>, call
     const approvedAt = r.body.approvedAt || now.toISOString();
     await db.updatePayment(orderId, { status: "DONE", payment_key: paymentKey, method: String(r.body.method || ""), approved_at: approvedAt, period_end: periodEnd.toISOString() });
     return { status: "DONE", orderId, plan: row.plan, kind: row.kind || "month", amount: row.amount, method: r.body.method, approvedAt, periodEnd: periodEnd.toISOString(), card: r.body.card ? { company: r.body.card.issuerCode, approveNo: r.body.card.approveNo } : undefined, mode: row.mode };
+  }
+
+  // 이용 중 자리 줄이기: 오늘은 그대로 쓰고, 다음 결제일부터 줄어든 자리·금액 적용 (예약)
+  //   addSlots 가 지금 자리와 같으면 예약 취소
+  //   다음 자동결제(빌링)는 next_extra_slots 가 있으면 그 자리 수로 결제하고 extra_manager_slots 에 반영해야 함
+  if (action === "schedule_slots") {
+    if (!isHQ) throw new PayError(403, "FORBIDDEN", "회사 요금제는 대표·본사 관리자만 바꿀 수 있습니다.");
+    const n = Number(body.addSlots);
+    if (!Number.isInteger(n) || n < 0 || n > PRICING.standard.maxAdd) throw new PayError(400, "INVALID_SLOTS", "추가 인원 수가 올바르지 않습니다.");
+    const c = await db.getCompany(caller.company_id);
+    const curExtra = Number(c?.extra_manager_slots) || 0;
+    if (!c?.paid_until || new Date(c.paid_until) <= now) throw new PayError(400, "NOT_ACTIVE", "이용 중일 때만 줄이기를 예약할 수 있어요.");
+    if (n > curExtra) throw new PayError(400, "USE_PAYMENT", "자리를 늘릴 때는 결제가 필요해요.");
+    const used = await db.countManagers(caller.company_id);
+    const need = used - PRICING.standard.baseSlots - n;
+    if (need > 0) throw new PayError(400, "SLOTS_BELOW_USED", `매니저가 ${used}명 등록돼 있어요. 매니저를 ${need}명 정리한 뒤 줄일 수 있어요.`);
+    const next = n === curExtra ? null : n;
+    await db.updateCompany(caller.company_id, { next_extra_slots: next, plan_updated_at: now.toISOString() });
+    return { nextExtraSlots: next, nextBillAt: c.paid_until, monthly: quote("standard", n) };
   }
 
   if (action === "status") {
@@ -156,6 +180,7 @@ export async function handle(action: string, body: Record<string, unknown>, call
         plan: c?.plan || "free", active, paidUntil,
         baseSlots: PRICING.standard.baseSlots, extraSlots: Number(c?.extra_manager_slots) || 0,
         totalSlots: PRICING.standard.baseSlots + (Number(c?.extra_manager_slots) || 0), usedSlots: used,
+        nextExtraSlots: c?.next_extra_slots ?? null,
         baseFee: PRICING.standard.base, perSlotFee: PRICING.standard.perSlot, vatRate: PRICING.standard.vatRate,
       },
       proUntil: await db.proUntil(caller.id),

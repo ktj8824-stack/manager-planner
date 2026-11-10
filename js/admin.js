@@ -1320,9 +1320,12 @@ window.Admin = {
       chip.style.background = active ? '#dcfce7' : (sub.paidUntil ? '#fee2e2' : '#e2e8f0');
       chip.style.color = active ? '#15803d' : (sub.paidUntil ? '#b91c1c' : '#475569');
     }
+    const pending = (active && Number.isInteger(sub.nextAdditionalSlots)) ? sub.nextAdditionalSlots : null; // 줄이기 예약
+    const untilText = until ? `${until.getMonth() + 1}월 ${until.getDate()}일` : '';
     if (stText) {
       stText.textContent = active
-        ? `다음 결제일 ${until.getMonth() + 1}월 ${until.getDate()}일 · 매니저 ${paidSlots}자리 · 매달 ${won(this._subPrice(sub.additionalSlots || 0).total)}`
+        ? `다음 결제일 ${untilText} · 매니저 ${paidSlots}자리 · 매달 ${won(this._subPrice(sub.additionalSlots || 0).total)}`
+          + (pending !== null ? ` → ${untilText}부터 ${base + pending}자리 · 매달 ${won(this._subPrice(pending).total)}으로 줄어요 (예약됨)` : '')
         : (sub.paidUntil ? '이용 기간이 끝났어요. 결제하면 바로 다시 쓸 수 있어요.' : '아직 결제 전이에요. 기본 2자리부터 시작할 수 있어요.');
     }
 
@@ -1356,10 +1359,18 @@ window.Admin = {
     if ($('sub-calc-vat')) $('sub-calc-vat').textContent = won(price.vat);
     if ($('sub-monthly-total')) $('sub-monthly-total').textContent = won(price.total);
     const pr = this._prorate(addSlots);
-    if ($('sub-monthly-label')) $('sub-monthly-label').textContent = pr ? `다음 결제일부터 매달` : '매달 결제 금액';
+    const cur = sub.additionalSlots || 0;
+    const reduce = active && addSlots < cur;                          // 이용 중 줄이기 → 다음 결제일부터
+    const cancelPending = active && pending !== null && addSlots === cur; // 예약 취소
+    this._mode = pr ? 'prorate' : reduce ? 'reduce' : cancelPending ? 'cancel' : 'pay';
+    if ($('sub-monthly-label')) $('sub-monthly-label').textContent = (pr || reduce) ? `다음 결제일부터 매달` : '매달 결제 금액';
     if ($('sub-prorate')) {
-      $('sub-prorate').style.display = pr ? 'block' : 'none';
-      if (pr) $('sub-prorate').innerHTML = `<div style="font-size:13px; font-weight:800;">오늘 결제 ${won(pr.total)}</div>
+      $('sub-prorate').style.display = (pr || reduce || cancelPending) ? 'block' : 'none';
+      if (reduce) $('sub-prorate').innerHTML = `<div style="font-size:13px; font-weight:800;">오늘 결제는 없어요</div>
+        <div style="font-size:12px;">${untilText}까지는 지금 ${paidSlots}자리를 그대로 쓰고, ${untilText}부터 ${newSlots}자리 · 매달 ${won(price.total)}으로 줄어요.</div>`;
+      else if (cancelPending) $('sub-prorate').innerHTML = `<div style="font-size:13px; font-weight:800;">줄이기 예약이 있어요</div>
+        <div style="font-size:12px;">${untilText}부터 ${base + pending}자리로 줄어들 예정이에요. 취소하면 지금 ${paidSlots}자리 그대로 이어져요.</div>`;
+      else if (pr) $('sub-prorate').innerHTML = `<div style="font-size:13px; font-weight:800;">오늘 결제 ${won(pr.total)}</div>
         <div style="font-size:12px;">추가 ${pr.added}자리 × 20,000원 × 남은 ${pr.daysLeft}일/${pr.cycleDays}일 = ${won(pr.supply)} + 부가세 ${won(pr.vat)}<br>
         다음 결제일(${pr.until.getMonth() + 1}월 ${pr.until.getDate()}일)부터는 ${newSlots}자리 포함 매달 ${won(price.total)}이 자동결제돼요.</div>`;
     }
@@ -1380,7 +1391,10 @@ window.Admin = {
     const btn = $('sub-pay-btn');
     if (btn) {
       const same = active && addSlots === (sub.additionalSlots || 0);
-      btn.textContent = pr ? `오늘 ${won(pr.total)} 결제하기` : same ? `같은 자리로 ${won(price.total)} 미리 결제` : `월 ${won(price.total)} 결제하기`;
+      btn.textContent = pr ? `오늘 ${won(pr.total)} 결제하기`
+        : reduce ? '자리 줄이기 예약'
+        : cancelPending ? '줄이기 예약 취소'
+        : same ? `같은 자리로 ${won(price.total)} 미리 결제` : `월 ${won(price.total)} 결제하기`;
     }
   },
 
@@ -1389,9 +1403,27 @@ window.Admin = {
     this.renderSubscriptionModalContent();
   },
 
+  // 이용 중 자리 줄이기 예약 / 예약 취소 (결제 없음, 서버에 저장)
+  async scheduleSlotChange(addSlots) {
+    const btn = document.getElementById('sub-pay-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
+    try {
+      if (!window.SupabaseClient?.isConfigured) throw new Error('서버에 연결할 수 없어요.');
+      await window.SupabaseClient.invokePayments({ action: 'schedule_slots', addSlots });
+      const r = await window.hqStore.refreshBilling?.();
+      this.tempAdditionalSlots = (r && r.additionalSlots) || addSlots;
+    } catch (e) {
+      alert(e.message || '저장하지 못했어요.');
+    } finally {
+      if (btn) btn.disabled = false;
+      this.renderSubscriptionModalContent();
+    }
+  },
+
   confirmSlotPayment() {
     const sub       = window.hqStore.getSubscription();
     const addSlots  = Math.max(this._minAddSlots(), this.tempAdditionalSlots);
+    if (this._mode === 'reduce' || this._mode === 'cancel') return this.scheduleSlotChange(addSlots);
     const totalSlots = (sub.baseSlots || 2) + addSlots;
 
     const company = encodeURIComponent(localStorage.getItem('bp_company_name') || '');

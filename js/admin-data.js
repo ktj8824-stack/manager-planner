@@ -810,7 +810,7 @@ class HQDataStore {
         companyName: cur.companyName || DEFAULT_SUBSCRIPTION.companyName,
         ceoName: cur.ceoName || DEFAULT_SUBSCRIPTION.ceoName,
         baseSlots: c.baseSlots, additionalSlots: c.extraSlots, baseFee: c.baseFee, additionalSlotFee: c.perSlotFee, vatRate: c.vatRate ?? 0.1,
-        plan: c.plan, paidUntil: c.paidUntil, status: c.active ? 'active' : (c.plan === 'free' ? 'trial' : 'expired'),
+        plan: c.plan, paidUntil: c.paidUntil, nextAdditionalSlots: c.nextExtraSlots ?? null, status: c.active ? 'active' : (c.plan === 'free' ? 'trial' : 'expired'),
         paymentDate: c.paidUntil ? new Date(c.paidUntil).toLocaleDateString('ko-KR') + ' 까지' : '결제 전',
         payments: st.payments || [], payMode: st.mode, serverSynced: Date.now(),
       };

@@ -37,6 +37,19 @@ company.extra_manager_slots = 5; // 그 사이 다른 결제로 자리가 바뀜
 let tossCalled = false; const spyToss = async (...a: any[]) => { tossCalled = true; return okToss(a[0], a[1], a[2]); };
 try { await handle('confirm', { orderId: st2.orderId, paymentKey: 'k3', amount: st2.amount }, ceo, db, spyToss, 'test', mid); } catch (e: any) { out.stale = e.code + '/' + tossCalled; }
 company.extra_manager_slots = 2;
+// 이용 중 자리 줄이기 → 오늘 결제 없음, 다음 결제일부터 적용 (예약)
+const rq = await handle('quote', { plan: 'standard', addSlots: 1 }, ceo, db, okToss, 'test', mid);
+try { await handle('prepare', { plan: 'standard', addSlots: 1 }, ceo, db, okToss, 'test', mid); } catch (e: any) { out.reducePay = e.code; }
+const sc = await handle('schedule_slots', { addSlots: 1 }, ceo, db, okToss, 'test', mid);
+let below = ''; try { await handle('schedule_slots', { addSlots: 0 }, ceo, db, okToss, 'test', mid); } catch (e: any) { below = e.code; }
+const stR = await handle('status', {}, ceo, db, okToss, 'test', mid);
+const cancel = await handle('schedule_slots', { addSlots: 2 }, ceo, db, okToss, 'test', mid);
+out.reduce = [rq.kind, rq.amount, sc.nextExtraSlots, sc.monthly.amount, company.extra_manager_slots, stR.company.nextExtraSlots, below, cancel.nextExtraSlots].join('/');
+await handle('schedule_slots', { addSlots: 1 }, ceo, db, okToss, 'test', mid);
+const pr2 = await handle('prepare', { plan: 'standard', addSlots: 3 }, ceo, db, okToss, 'test', mid);
+await handle('confirm', { orderId: pr2.orderId, paymentKey: 'k4', amount: pr2.amount }, ceo, db, okToss, 'test', mid);
+out.addClearsReduce = company.next_extra_slots === null && company.extra_manager_slots === 3;
+company.extra_manager_slots = 2;
 const st = await handle('status', {}, ceo, db, okToss, 'test', now);
 out.total = st.company.totalSlots; out.active = st.company.active;
 try { await handle('prepare', { plan: 'pro' }, mgr, db, okToss, 'test', now); } catch (e: any) { out.companyMgrPro = e.code; }

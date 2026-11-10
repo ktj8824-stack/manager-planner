@@ -6,3 +6,6 @@ alter table public.payments add column if not exists kind text not null default 
 alter table public.payments drop constraint if exists payments_kind_check;
 alter table public.payments add constraint payments_kind_check check (kind in ('month', 'prorate'));
 alter table public.payments add column if not exists prev_slots int not null default 0;
+
+-- 이용 중 자리 줄이기 예약: 다음 결제일부터 이 추가 자리 수로 결제 (null = 예약 없음)
+alter table public.companies add column if not exists next_extra_slots int check (next_extra_slots is null or next_extra_slots between 0 and 100);
