@@ -634,6 +634,7 @@ const Home = {
 
     // ── 지금 할 일 카드: 이동중인 단계가 있으면 그것, 없으면 아직 안 끝난 첫 단계를 크게 보여 준다 ──
     const allPast = uniqueEvents.length > 0 && uniqueEvents.every(e => e._day === 'past');
+    let nowShown = null;   // 지금 할 일 카드에 크게 나온 단계 — 아래 목록에서는 빼서 겹치지 않게
     try {
       const pending = uniqueEvents.filter(e => !e.done && e.stepCategory !== 'rest');
       const nowEv = allPast ? null : (pending.find(e => e.moving === true) || pending[0]);
@@ -680,6 +681,7 @@ const Home = {
         const shortName = String(name).replace(/\s*\((?=[^)]*\d)[^)]*\)\s*/g, ' ').replace(/\s{2,}/g, ' ').trim() || name;
         const SB = 'min-height:46px; border-radius:12px; font-size:14.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; font-family:inherit;';
         const dayTag = nowEv.forNextDay ? '내일 일정 · ' : nowEv.dayOffset === -1 ? '전날 ' : nowEv.dayOffset === 1 ? '다음날 ' : '';
+        nowShown = nowEv;
         html += `
           <section class="now-card${lateMin ? ' late' : ''}" aria-label="지금 할 일">
             <div class="nc-top">
@@ -713,7 +715,8 @@ const Home = {
     let foldEnd = -1;
     uniqueEvents.forEach((ev, idx) => {
       if (idx === foldCount && foldCount > 0) foldEnd = html.length;
-      const isLast = idx === uniqueEvents.length - 1;
+      if (ev === nowShown) return;   // 위 카드와 같은 단계는 한 번만
+      const isLast = idx === uniqueEvents.length - 1 || (idx === uniqueEvents.length - 2 && uniqueEvents[uniqueEvents.length - 1] === nowShown);
       const isDone = ev.done || false;
       const isHQ = ev.isHQ;
       
