@@ -1,7 +1,7 @@
 /* 로드플래너 AI 비서 (로디) — 아래 메뉴 '로드톡'과 '긴급' 사이 */
 .rpai {
   position: fixed; left: 50%; transform: translateX(-50%);
-  top: var(--header-h); bottom: calc(var(--bottom-nav-h, 64px) + env(safe-area-inset-bottom));
+  top: var(--header-h); bottom: calc(var(--bottom-nav-h, 64px) + var(--nav-safe));
   width: 100%; max-width: var(--app-w);
   display: flex; flex-direction: column; background: #f8fafc; z-index: 40;
   color: #14161A;

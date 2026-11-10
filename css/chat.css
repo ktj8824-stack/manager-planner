@@ -125,7 +125,7 @@
 
 /* 매니저 앱(아래 메뉴가 있는 화면): 로드톡을 열어도 아래 메뉴(홈·로드톡·긴급·내 정보)가 보이게 */
 @media (max-width: 760px) {
-  body.has-bottom-nav .chat-root { bottom: calc(var(--bottom-nav-h, 64px) + env(safe-area-inset-bottom)); }
+  body.has-bottom-nav .chat-root { bottom: calc(var(--bottom-nav-h, 64px) + var(--nav-safe)); }
   body.has-bottom-nav.chat-typing .chat-root { bottom: 0; }
 }
 body.chat-open #bottom-nav { z-index: 99995; }
