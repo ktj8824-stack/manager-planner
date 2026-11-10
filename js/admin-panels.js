@@ -149,7 +149,7 @@
     try {
       const n = (await window.hqStore.getManagers()).length;
       let slot = '';
-      try { const sub = window.hqStore.getSubscription(); slot = `슬롯 ${sub.activeManagerCount} / ${sub.totalSlots}석 (${sub.availableSlots}석 남음)`; } catch (e) { }
+      try { const sub = window.hqStore.getSubscription(); slot = `매니저 ${sub.activeManagerCount}명 / ${sub.totalSlots}자리 (${sub.availableSlots}자리 남음)`; } catch (e) { }
       head('modal-manager-management', '매니저 계정 · 담당 아티스트 배정', `${n}명${slot ? ' · ' + slot : ''}`);
     } catch (e) { }
   };

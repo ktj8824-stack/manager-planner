@@ -16,9 +16,12 @@ const { chromium } = require('playwright');
   await p.waitForTimeout(400);
   out.pay = await p.evaluate(async () => {
     const calls = [];
+    const before = document.getElementById('btn-pay').disabled;
+    document.getElementById('agree-auto').click();
+    window.__ui = { before, after: document.getElementById('btn-pay').disabled, total: document.getElementById('pay-total-amount').textContent, btn: document.getElementById('pay-btn-text').textContent };
     window.SupabaseClient.invokePayments = async (body) => { calls.push(body); return { orderId: 'RP-ENT-1', amount: 120000, orderName: '로드플래너 Enterprise (3명, 1개월)' }; };
     await startPayment();
-    return { calls, amount: window.__amt, req: window.__req[0] && { orderId: window.__req[0].orderId, orderName: window.__req[0].orderName } };
+    return { ui: window.__ui, calls, amount: window.__amt, req: window.__req[0] && { orderId: window.__req[0].orderId, orderName: window.__req[0].orderName } };
   });
   // 2) 결과 페이지: 서버가 거절하면 실패 화면 (성공으로 바뀌지 않음)
   await p.addInitScript(() => { window.__fake = true; });
@@ -29,8 +32,12 @@ const { chromium } = require('playwright');
   out.tampered = await p.evaluate(() => document.body.innerText.includes('결제 금액이 주문과 다릅니다') ? 'blocked' : document.body.innerText.slice(0, 80));
   await p.goto(process.env.BASE_PROD + '/payment-result.html?paymentKey=pk1&orderId=RP-ENT-1&amount=120000&totalFee=120000&addSlots=1');
   await p.waitForTimeout(500);
-  out.ok = await p.evaluate(() => /결제 및 승인 완료/.test(document.body.innerText) ? 'success' : document.body.innerText.slice(0, 80));
+  out.ok = await p.evaluate(() => /결제가 완료됐어요/.test(document.body.innerText) ? 'success' : document.body.innerText.slice(0, 80));
+  out.noAuto = await p.evaluate(() => new Promise(r => setTimeout(() => r(location.pathname.endsWith('payment-result.html')), 5000)));
   await p.unroute('**/js/supabase-client.js*');
+  // 개인 매니저 결제 페이지: 부가세 포함 20,000원, 가상계좌 탭 없음
+  await p.goto(process.env.BASE_PROD + '/payment.html?plan=pro&return=mobile'); await p.waitForTimeout(300);
+  out.pro = await p.evaluate(() => ({ total: document.getElementById('pay-total-amount').textContent, tabs: getComputedStyle(document.getElementById('method-tabs')).display, note: document.getElementById('pay-total-note').textContent.includes('부가세 포함') }));
 
   // 3) 매니저 앱 홈: 알림 꺼져 있으면 안내 카드
   const q = await ctx.newPage(); q.on('pageerror', e => errs.push(e.message));

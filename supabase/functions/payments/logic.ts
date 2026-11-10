@@ -1,7 +1,9 @@
 // 로드플래너 결제 로직 (서버) — 금액은 서버가 정하고, 토스 승인 결과를 서버가 확인한 뒤에만 요금제를 바꿉니다.
+// 회사 요금은 부가세 별도(공급가) → 실제 청구는 공급가 + 부가세 10%
+// 개인 매니저 20,000원은 부가세 포함 가격
 export const PRICING = {
-  standard: { base: 100000, baseSlots: 2, perSlot: 20000, maxAdd: 50 },
-  pro: { amount: 20000 }, // 개인 매니저 유료 (월)
+  standard: { base: 100000, baseSlots: 2, perSlot: 20000, maxAdd: 50, vatRate: 0.1 },
+  pro: { amount: 20000 }, // 개인 매니저 유료 (월, 부가세 포함)
 };
 export const DOCS_TEST_SECRET = "test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6"; // 토스 문서 공개 테스트 키 (실제 돈 안 나감)
 
@@ -12,12 +14,25 @@ export class PayError extends Error {
 export type Caller = { id: string; company_id: string | null; role: string };
 
 export function quote(plan: unknown, addSlots: unknown) {
-  if (plan === "pro") return { plan: "pro", addSlots: 0, amount: PRICING.pro.amount, orderName: "로드플래너 개인 매니저 (1개월)" };
+  if (plan === "pro") {
+    const a = PRICING.pro.amount;
+    return { plan: "pro", addSlots: 0, supply: a, vat: 0, amount: a, orderName: "로드플래너 개인 매니저 (월 정기)" };
+  }
   if (plan !== "standard") throw new PayError(400, "INVALID_PLAN", "알 수 없는 요금제입니다.");
   const n = Number(addSlots ?? 0);
   if (!Number.isInteger(n) || n < 0 || n > PRICING.standard.maxAdd) throw new PayError(400, "INVALID_SLOTS", "추가 인원 수가 올바르지 않습니다.");
   const s = PRICING.standard;
-  return { plan: "standard", addSlots: n, amount: s.base + s.perSlot * n, orderName: `로드플래너 Enterprise (${s.baseSlots + n}명, 1개월)` };
+  const supply = s.base + s.perSlot * n;
+  const vat = Math.round(supply * s.vatRate);
+  return { plan: "standard", addSlots: n, supply, vat, amount: supply + vat, orderName: `로드플래너 회사 요금제 (${s.baseSlots + n}자리, 월 정기)` };
+}
+
+// 주문번호: 문의·환불 때 불러 주기 쉽게 "RP-날짜(한국)-영문숫자 6자리" (예: RP-20261110-8F3K2A)
+export function makeOrderId(now: Date) {
+  const k = new Date(now.getTime() + 9 * 3600 * 1000).toISOString().slice(0, 10).replace(/-/g, "");
+  const abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // 헷갈리는 0·O·1·I 빼고
+  const r = crypto.getRandomValues(new Uint8Array(6));
+  return `RP-${k}-${Array.from(r, (b) => abc[b % abc.length]).join("")}`;
 }
 
 export function addMonth(from: Date) {
@@ -35,9 +50,15 @@ export async function handle(action: string, body: Record<string, unknown>, call
     const q = quote(body.plan, body.addSlots);
     if (q.plan === "pro" && caller.role !== "indie_manager") throw new PayError(403, "FORBIDDEN", "개인 매니저 요금제는 개인 매니저 계정만 결제할 수 있습니다.");
     if (q.plan === "standard" && !isHQ) throw new PayError(403, "FORBIDDEN", "회사 요금제는 대표·본사 관리자만 결제할 수 있습니다.");
-    const orderId = `RP-${q.plan === "pro" ? "PRO" : "ENT"}-${now.getTime()}-${crypto.randomUUID().slice(0, 8)}`;
+    if (q.plan === "standard") {
+      // 지금 등록된 매니저보다 적은 자리로는 결제할 수 없음
+      const used = await db.countManagers(caller.company_id);
+      const need = used - PRICING.standard.baseSlots - q.addSlots;
+      if (need > 0) throw new PayError(400, "SLOTS_BELOW_USED", `매니저가 ${used}명 등록돼 있어요. ${need}자리를 더 추가해야 결제할 수 있어요.`);
+    }
+    const orderId = makeOrderId(now);
     await db.insertPayment({ order_id: orderId, company_id: caller.company_id, user_id: caller.id, plan: q.plan, add_slots: q.addSlots, amount: q.amount, order_name: q.orderName, status: "READY", mode });
-    return { orderId, amount: q.amount, orderName: q.orderName, mode };
+    return { orderId, amount: q.amount, supply: q.supply, vat: q.vat, orderName: q.orderName, mode };
   }
 
   if (action === "confirm") {
@@ -86,7 +107,7 @@ export async function handle(action: string, body: Record<string, unknown>, call
         plan: c?.plan || "free", active, paidUntil,
         baseSlots: PRICING.standard.baseSlots, extraSlots: Number(c?.extra_manager_slots) || 0,
         totalSlots: PRICING.standard.baseSlots + (Number(c?.extra_manager_slots) || 0), usedSlots: used,
-        baseFee: PRICING.standard.base, perSlotFee: PRICING.standard.perSlot,
+        baseFee: PRICING.standard.base, perSlotFee: PRICING.standard.perSlot, vatRate: PRICING.standard.vatRate,
       },
       proUntil: await db.proUntil(caller.id),
       payments: isHQ ? await db.recentPayments(caller.company_id) : [],

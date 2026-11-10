@@ -10,10 +10,11 @@ const okToss = async (_k: string, _o: string, amount: number) => ({ ok: true, st
 const ceo = { id: 'u1', company_id: 'c1', role: 'ceo' }, mgr = { id: 'u2', company_id: 'c1', role: 'manager' };
 const now = new Date('2026-11-05T06:00:00Z');
 const out: any = {};
-out.quote = quote('standard', 3).amount;
+out.quote = quote('standard', 3).amount; { const q = quote('standard', 2); out.vat = [q.supply, q.vat, q.amount].join('/'); }
+try { await handle('prepare', { plan: 'standard', addSlots: 0 }, ceo, db, okToss, 'test', now); } catch (e: any) { out.belowUsed = e.code + ' ' + e.message; }
 try { await handle('prepare', { plan: 'standard', addSlots: 1 }, mgr, db, okToss, 'test', now); } catch (e: any) { out.mgrBlocked = e.code; }
 const p = await handle('prepare', { plan: 'standard', addSlots: 2 }, ceo, db, okToss, 'test', now);
-out.prepared = p.amount;
+out.prepared = p.amount; out.orderIdFmt = /^RP-20261105-[A-Z2-9]{6}$/.test(p.orderId);
 try { await handle('confirm', { orderId: p.orderId, paymentKey: 'k', amount: 1000 }, ceo, db, okToss, 'test', now); } catch (e: any) { out.tamper = e.code; }
 const p2 = await handle('prepare', { plan: 'standard', addSlots: 2 }, ceo, db, okToss, 'test', now);
 try { await handle('confirm', { orderId: p2.orderId, paymentKey: 'k', amount: p2.amount }, mgr, db, okToss, 'test', now); } catch (e: any) { out.otherUser = e.code; }

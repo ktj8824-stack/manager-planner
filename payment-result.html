@@ -11,73 +11,68 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Pretendard', -apple-system, sans-serif;
-      background: #0f172a; min-height: 100vh;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 24px 16px; color: #f8fafc;
+      background: #f2f2f7; min-height: 100vh; color: #111827;
+      display: flex; flex-direction: column; align-items: center;
     }
-    body::before {
-      content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
-      background: radial-gradient(ellipse at 20% 20%, rgba(99,102,241,0.15) 0%, transparent 50%),
-                  radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.10) 0%, transparent 50%);
-      pointer-events: none; z-index: 0;
+    .wrap { width: 100%; max-width: 440px; padding: 32px 16px 40px; }
+    .hero { text-align: center; margin-bottom: 20px; }
+    .icon {
+      width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center;
+      font-size: 30px; font-weight: 900; background: #e5e7eb; color: #6b7280;
     }
-    .wrap {
-      position: relative; z-index: 1;
-      background: #1e293b; border: 1px solid #334155; border-radius: 24px;
-      padding: 48px 40px; max-width: 420px; width: 100%; text-align: center;
-    }
-    .icon { font-size: 64px; margin-bottom: 20px; animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
-    @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    .result-title { font-size: 24px; font-weight: 900; margin-bottom: 8px; }
-    .result-sub { font-size: 14px; color: #94a3b8; margin-bottom: 28px; line-height: 1.6; }
-    .info-box { background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: left; }
-    .info-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid #1e293b; }
+    .icon.ok { background: #dcfce7; color: #15803d; }
+    .icon.fail { background: #fee2e2; color: #b91c1c; }
+    .icon.va { background: #e0e7ff; color: #4338ca; }
+    .result-title { font-size: 22px; font-weight: 900; margin-bottom: 6px; }
+    .result-sub { font-size: 14px; color: #6b7280; line-height: 1.6; }
+    .big-amount { font-size: 30px; font-weight: 900; color: #4f46e5; margin-top: 10px; }
+    .card { background: #fff; border-radius: 16px; padding: 6px 18px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+    .info-row { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; font-size: 14px; border-bottom: 1px solid #f0f0f3; }
     .info-row:last-child { border-bottom: none; }
-    .info-row span:first-child { color: #64748b; }
-    .info-row span:last-child { color: #e2e8f0; font-weight: 600; }
+    .info-row span:first-child { color: #6b7280; flex-shrink: 0; }
+    .info-row span:last-child { color: #111827; font-weight: 700; text-align: right; word-break: break-all; }
+    .note { background: #f5f7ff; border-radius: 12px; padding: 12px 14px; font-size: 13px; color: #374151; line-height: 1.55; margin-bottom: 12px; }
+    .note.warn { background: #fff7ed; color: #9a3412; }
+    .copy-btn { margin-left: 6px; padding: 3px 9px; border-radius: 8px; border: 1px solid #c7d2fe; background: #eef2ff; color: #4338ca; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
     .btn-primary {
-      display: block; width: 100%; padding: 16px; border-radius: 12px; border: none;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff;
-      font-size: 15px; font-weight: 700; font-family: 'Pretendard', sans-serif;
-      cursor: pointer; text-decoration: none; margin-bottom: 10px;
-      transition: all 0.2s; box-shadow: 0 4px 16px rgba(99,102,241,0.3);
+      display: block; width: 100%; padding: 16px; border-radius: 14px; border: none; background: #4f46e5; color: #fff;
+      font-size: 15px; font-weight: 800; font-family: inherit; cursor: pointer; margin-bottom: 10px;
     }
-    .btn-primary:hover { transform: translateY(-2px); }
     .btn-secondary {
-      display: block; width: 100%; padding: 14px; border-radius: 12px;
-      border: 1px solid #334155; background: transparent; color: #94a3b8;
-      font-size: 14px; font-weight: 600; font-family: 'Pretendard', sans-serif;
-      cursor: pointer; text-decoration: none; transition: all 0.2s;
+      display: block; width: 100%; padding: 15px; border-radius: 14px; border: 1px solid #e5e7eb; background: #fff; color: #374151;
+      font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; margin-bottom: 10px;
     }
-    .btn-secondary:hover { border-color: #6366f1; color: #f8fafc; }
-    .confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
   </style>
 <script src="js/icons.js?v=315"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js?v=315"></script>
 </head>
 <body>
-<div id="test-banner" style="position:sticky;top:0;z-index:9999;background:#f59e0b;color:#1f1300;text-align:center;font:700 13px/1.4 Pretendard,sans-serif;padding:8px 12px;">🧪 테스트 결제 — 실제 결제되지 않습니다 (카드가 청구되지 않아요)</div>
-<canvas class="confetti" id="confetti-canvas"></canvas>
+<div id="test-banner" style="position:sticky;top:0;z-index:9999;width:100%;background:#f59e0b;color:#1f1300;text-align:center;font:700 13px/1.4 Pretendard,sans-serif;padding:8px 12px;">🧪 테스트 결제 — 실제 결제되지 않습니다 (카드가 청구되지 않아요)</div>
 <div class="wrap" id="result-wrap">
-  <div class="icon" id="result-icon">⏳</div>
-  <div class="result-title" id="result-title">처리 중...</div>
-  <div class="result-sub" id="result-sub">결제 결과를 확인하고 있습니다.</div>
-  <div class="info-box" id="info-box" style="display:none;">
-    <div class="info-row"><span>주문번호</span><span id="r-order-id">—</span></div>
-    <div class="info-row"><span>결제 금액</span><span id="r-amount">—</span></div>
-    <div class="info-row" id="r-method-row" style="display:none;"><span>결제 수단</span><span id="r-method">—</span></div>
-    <div class="info-row" id="r-va-bank-row" style="display:none;"><span>입금 은행</span><span id="r-va-bank">—</span></div>
-    <div class="info-row" id="r-va-acc-row" style="display:none;"><span>가상 계좌</span><span id="r-va-acc">—</span></div>
-    <div class="info-row" id="r-va-holder-row" style="display:none;"><span>예금주</span><span id="r-va-holder">—</span></div>
-    <div class="info-row" id="r-va-due-row" style="display:none;"><span>입금 기한</span><span id="r-va-due">—</span></div>
-    <div class="info-row" id="r-slots-row"><span>매니저 슬롯</span><span id="r-slots">—</span></div>
-    <div class="info-row" id="r-date-row"><span>결제 일시</span><span id="r-date">—</span></div>
-    <div class="info-row" id="r-receipt-row" style="display:none;"><span>매출 전표</span><span id="r-receipt">—</span></div>
+  <div class="hero">
+    <div class="icon" id="result-icon">…</div>
+    <div class="result-title" id="result-title">확인하고 있어요</div>
+    <div class="result-sub" id="result-sub">결제 결과를 확인하고 있어요. 잠시만 기다려 주세요.</div>
+    <div class="big-amount" id="big-amount" style="display:none;"></div>
   </div>
-  <button class="btn-primary" id="btn-va-confirm" style="display:none; margin-bottom:10px; background:linear-gradient(135deg,#059669,#10b981);" onclick="simulateVirtualDepositDone()">⚡ 입금 확인 시뮬레이션 (즉시 승인)</button>
-  <button class="btn-primary" id="btn-main" onclick="goToAdmin()">&#127968; 관제 포털로 이동</button>
-  <button class="btn-secondary" id="btn-retry" onclick="goToPayment()" style="display:none;">&#8617; 다시 결제하기</button>
+  <div class="card" id="info-box" style="display:none;">
+    <div class="info-row" id="r-va-due-row" style="display:none;"><span>입금 기한</span><span id="r-va-due">—</span></div>
+    <div class="info-row" id="r-va-bank-row" style="display:none;"><span>은행</span><span id="r-va-bank">—</span></div>
+    <div class="info-row" id="r-va-acc-row" style="display:none;"><span>계좌번호</span><span id="r-va-acc">—</span></div>
+    <div class="info-row" id="r-va-holder-row" style="display:none;"><span>입금자명</span><span id="r-va-holder">—</span></div>
+    <div class="info-row"><span>주문번호</span><span id="r-order-id">—</span></div>
+    <div class="info-row" id="r-amount-row"><span>결제 금액</span><span id="r-amount">—</span></div>
+    <div class="info-row" id="r-method-row" style="display:none;"><span>결제 수단</span><span id="r-method">—</span></div>
+    <div class="info-row" id="r-slots-row"><span>요금제</span><span id="r-slots">—</span></div>
+    <div class="info-row" id="r-next-row" style="display:none;"><span>다음 결제일</span><span id="r-next">—</span></div>
+    <div class="info-row" id="r-date-row"><span>결제 일시</span><span id="r-date">—</span></div>
+    <div class="info-row" id="r-receipt-row" style="display:none;"><span>매출전표</span><span id="r-receipt">—</span></div>
+  </div>
+  <div class="note" id="r-note" style="display:none;"></div>
+  <button class="btn-primary" id="btn-va-confirm" style="display:none; background:#059669;" onclick="simulateVirtualDepositDone()">⚡ 입금 확인 시뮬레이션 (즉시 승인)</button>
+  <button class="btn-primary" id="btn-retry" onclick="goToPayment()" style="display:none;">다른 카드로 결제하기</button>
+  <button class="btn-primary" id="btn-main" onclick="goToAdmin()">관제 포털로 이동</button>
 </div>
 
 <script>
@@ -91,183 +86,166 @@
   const orderId      = params.get('orderId') || '';
   const addSlots     = parseInt(params.get('addSlots') || '0');
   const totalSlots   = parseInt(params.get('totalSlots') || (isProPlan ? '1' : '2'));
-  const totalFee     = parseInt(params.get('amount') || params.get('totalFee') || (isProPlan ? '20000' : '100000'));
+  const totalFee     = parseInt(params.get('amount') || params.get('totalFee') || (isProPlan ? '20000' : '110000'));
+  const won = (n) => Number(n).toLocaleString() + '원';
+  const md = (d) => { const x = new Date(d); return `${x.getMonth() + 1}월 ${x.getDate()}일`; };
+  const WD = ['일', '월', '화', '수', '목', '금', '토'];
 
   const iconEl    = document.getElementById('result-icon');
   const titleEl   = document.getElementById('result-title');
   const subEl     = document.getElementById('result-sub');
   const infoBox   = document.getElementById('info-box');
+  const noteEl    = document.getElementById('r-note');
   const btnRetry  = document.getElementById('btn-retry');
   const btnMain   = document.getElementById('btn-main');
   const btnVaConfirm = document.getElementById('btn-va-confirm');
+  const backLabel = (isProPlan || returnTarget === 'mobile') ? '플래너 앱으로 돌아가기' : '관제 포털로 돌아가기';
+  const planText  = isProPlan ? '개인 매니저 유료 (월 정기)' : `회사 요금제 · 매니저 ${totalSlots}자리`;
 
   let currentPayData = null;
 
   async function processPaymentResult() {
-    // 1) 결제 실패 또는 취소
     if (status === 'fail' || (!paymentKey && status !== 'success')) {
-      showFail(params.get('message') || '결제가 취소되었거나 유효하지 않은 요청입니다.');
+      showFail(params.get('message') || '결제가 취소됐거나 올바르지 않은 요청이에요.', params.get('code'));
       return;
     }
 
-    // 2) 토스페이먼츠 paymentKey가 존재하는 경우 백엔드 승인 API 호출
     if (paymentKey) {
-      iconEl.textContent  = '⏳';
-      titleEl.textContent = '결제 승인 검증 중...';
-      subEl.textContent   = '토스페이먼츠 금융 결제망과 안전하게 승인 통신을 진행하고 있습니다.';
-
       try {
-        // 서버가 토스에 승인 요청 → 금액·주문자 확인 → 승인되면 회사 요금제/인원 반영
+        // 서버가 토스에 승인 요청 → 금액·주문자 확인 → 승인되면 요금제/인원 반영
         if (!SupabaseClient.isConfigured) SupabaseClient.init();
         const data = await SupabaseClient.invokePayments({ action: 'confirm', paymentKey, orderId, amount: parseInt(params.get('amount') || '0') });
         currentPayData = data;
         if (data.status === 'DONE') showSuccess(data);
         else if (data.status === 'WAITING_FOR_DEPOSIT') showVirtualAccount(data);
-        else showFail('결제 승인 처리에 실패했습니다.');
+        else showFail('결제 승인 처리에 실패했어요.');
       } catch (err) {
         console.warn('결제 승인 오류:', err);
-        showFail((err && err.message) || '결제 승인에 실패했습니다. 결제는 진행되지 않았습니다.');
+        showFail((err && err.message) || '결제 승인에 실패했어요. 돈은 빠져나가지 않았어요.', err && err.code);
       }
     } else if (status === 'success') {
       if (!IS_DEV_HOST) {
-        showFail('결제 승인 정보가 없어 완료 처리할 수 없습니다. 결제는 진행되지 않았습니다.');
+        showFail('결제 승인 정보가 없어 완료 처리할 수 없어요. 돈은 빠져나가지 않았어요.');
         return;
       }
-      const vaBank = params.get('vaBank');
       const vaAcc = params.get('vaAcc');
-      const vaHolder = params.get('vaHolder');
-      const vaDue = params.get('vaDue');
-
       if (params.get('method') === 'VIRTUAL_ACCOUNT' || vaAcc) {
         showVirtualAccount({
           virtualAccount: {
-            bank: vaBank || 'KB국민은행',
+            bank: params.get('vaBank') || 'KB국민은행',
             accountNumber: vaAcc || '004-819230-02-123',
-            customerName: vaHolder || '',
-            dueDate: vaDue || new Date(Date.now() + 7 * 86400000).toISOString()
+            customerName: params.get('vaHolder') || '',
+            dueDate: params.get('vaDue') || new Date(Date.now() + 3 * 86400000).toISOString()
           }
         });
       } else {
-        showSuccess({ method: '시뮬레이션 승인', status: 'DONE' });
+        const next = new Date(); next.setMonth(next.getMonth() + 1);
+        showSuccess({ method: '테스트 승인', status: 'DONE', periodEnd: next.toISOString() });
       }
     }
   }
 
   const esc = (v) => String(v ?? '').replace(/[&<>"'`]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;' }[c]));
+  const show = (id) => { document.getElementById(id).style.display = 'flex'; };
+
   function showVirtualAccount(payData) {
-    iconEl.textContent  = '🏦';
-    titleEl.textContent = '가상계좌 발급 완료';
-    titleEl.style.color = '#38bdf8';
-    subEl.innerHTML     = '아래 전용 가상계좌로 입금 기한 내에 입금해 주시면<br>입금 즉시 구독 슬롯이 자동으로 활성화됩니다.';
+    iconEl.className = 'icon va'; iconEl.textContent = '₩';
+    titleEl.textContent = '입금 계좌가 만들어졌어요';
+    subEl.textContent = '아래 계좌로 기한 안에 입금하면 바로 적용돼요.';
+    const big = document.getElementById('big-amount'); big.textContent = won(totalFee); big.style.display = 'block';
     infoBox.style.display = 'block';
 
     const va = payData.virtualAccount || {};
-    document.getElementById('r-order-id').textContent = orderId || '—';
-    document.getElementById('r-amount').textContent   = totalFee.toLocaleString() + '원';
-    document.getElementById('r-slots').textContent    = isProPlan ? '개인 매니저 유료 (1개월)' : (totalSlots + '명 (추가 ' + addSlots + '명)');
-    document.getElementById('r-date').textContent     = new Date().toLocaleString('ko-KR');
+    document.getElementById('r-order-id').textContent = payData.orderId || orderId || '—';
+    document.getElementById('r-amount-row').style.display = 'none';
+    document.getElementById('r-date-row').style.display = 'none';
+    document.getElementById('r-slots').textContent = planText;
 
-    // 결제 수단
-    document.getElementById('r-method').textContent = '가상계좌 (무통장입금)';
-    document.getElementById('r-method-row').style.display = 'flex';
-
-    // 가상계좌 전용 항목
-    if (va.bank || va.bankCode) {
-      document.getElementById('r-va-bank').textContent = va.bank || va.bankCode;
-      document.getElementById('r-va-bank-row').style.display = 'flex';
-    }
-    if (va.accountNumber) {
-      {
-        const acc = String(va.accountNumber);
-        const box = document.getElementById('r-va-acc');
-        box.innerHTML = `<span style="color:#a5f3fc;font-weight:700;">${esc(acc)}</span> <button type="button" id="btn-copy-acc" style="margin-left:6px;padding:2px 8px;border-radius:6px;border:1px solid #475569;background:#1e293b;color:#cbd5e1;font-size:11px;cursor:pointer;">복사</button>`;
-        document.getElementById('btn-copy-acc').onclick = () => { navigator.clipboard.writeText(acc); alert('계좌번호가 복사되었습니다: ' + acc); };
-      }
-      document.getElementById('r-va-acc-row').style.display = 'flex';
-    }
-    if (va.customerName) {
-      document.getElementById('r-va-holder').textContent = va.customerName;
-      document.getElementById('r-va-holder-row').style.display = 'flex';
-    }
     if (va.dueDate) {
-      document.getElementById('r-va-due').textContent = new Date(va.dueDate).toLocaleString('ko-KR');
-      document.getElementById('r-va-due-row').style.display = 'flex';
+      const d = new Date(va.dueDate);
+      const hm = d.toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' });
+      document.getElementById('r-va-due').textContent = `${md(d)} (${WD[d.getDay()]}) ${hm}까지`;
+      show('r-va-due-row');
     }
+    if (va.bank || va.bankCode) { document.getElementById('r-va-bank').textContent = va.bank || va.bankCode; show('r-va-bank-row'); }
+    if (va.accountNumber) {
+      const acc = String(va.accountNumber);
+      const box = document.getElementById('r-va-acc');
+      box.innerHTML = `${esc(acc)}<button type="button" class="copy-btn" id="btn-copy-acc">복사</button>`;
+      document.getElementById('btn-copy-acc').onclick = async () => {
+        try { await navigator.clipboard.writeText(acc); } catch (e) { }
+        document.getElementById('btn-copy-acc').textContent = '복사됨';
+      };
+      show('r-va-acc-row');
+    }
+    if (va.customerName) { document.getElementById('r-va-holder').textContent = va.customerName; show('r-va-holder-row'); }
 
-    // 입금 확인 시뮬레이션 버튼 표시 (테스트용)
+    let note = '가상계좌는 자동결제가 안 돼요. 매달 결제일 전에 새 입금 계좌를 보내드려요.';
+    if (params.get('taxNum')) note += '<br>입금이 확인되면 세금계산서를 적어 주신 이메일로 보내드려요.';
+    noteEl.innerHTML = note; noteEl.style.display = 'block';
+
     btnVaConfirm.style.display = IS_DEV_HOST ? 'block' : 'none';
-    btnMain.textContent = (isProPlan || returnTarget === 'mobile') ? '플래너 앱으로 돌아가기' : '관제 포털로 돌아가기';
-
-    // 스토리지에 입금 대기 상태 저장
+    btnMain.className = 'btn-secondary';
+    btnMain.textContent = backLabel;
     saveSubscriptionRecord(payData, 'waiting_deposit');
   }
 
   function simulateVirtualDepositDone() {
     if (!IS_DEV_HOST) return;
     btnVaConfirm.style.display = 'none';
+    const next = new Date(); next.setMonth(next.getMonth() + 1);
     showSuccess({
-      ...currentPayData,
-      status: 'DONE',
-      method: (currentPayData && currentPayData.virtualAccount ? (currentPayData.virtualAccount.bank + ' 가상계좌 (입금완료)') : '가상계좌 (입금완료)')
+      ...currentPayData, status: 'DONE', periodEnd: next.toISOString(),
+      method: (currentPayData && currentPayData.virtualAccount ? (currentPayData.virtualAccount.bank + ' 가상계좌 (입금 완료)') : '가상계좌 (입금 완료)')
     });
   }
 
   function showSuccess(payData) {
-    iconEl.textContent  = '🎉';
-    titleEl.textContent = '결제 및 승인 완료!';
-    titleEl.style.color = '#a5f3fc';
+    iconEl.className = 'icon ok'; iconEl.textContent = '✓';
+    titleEl.textContent = '결제가 완료됐어요';
+    document.getElementById('big-amount').style.display = 'none';
+    ['r-va-due-row', 'r-va-bank-row', 'r-va-acc-row', 'r-va-holder-row'].forEach(id => { document.getElementById(id).style.display = 'none'; });
+    document.getElementById('r-amount-row').style.display = 'flex';
+    document.getElementById('r-date-row').style.display = 'flex';
 
     if (isProPlan) {
-      subEl.innerHTML = '개인 매니저 유료가 시작됐어요.<br>앱으로 돌아가면 바로 적용돼요.';
+      subEl.textContent = '개인 매니저 유료가 시작됐어요. 앱으로 돌아가면 바로 적용돼요.';
       localStorage.setItem('bp_pro', 'true');
     } else {
-      subEl.innerHTML = '구독이 성공적으로 활성화되었습니다.<br>이제 매니저 계정을 추가하여 협업할 수 있습니다.';
+      subEl.textContent = '요금제가 적용됐어요. 이제 매니저를 추가할 수 있어요.';
     }
     infoBox.style.display = 'block';
 
-    const now = new Date();
-    document.getElementById('r-order-id').textContent = orderId || '—';
-    document.getElementById('r-amount').textContent   = totalFee.toLocaleString() + '원 / 월';
-    document.getElementById('r-slots').textContent    = isProPlan ? '개인 매니저 유료 (1개월)' : (totalSlots + '명 (추가 ' + addSlots + '명)');
-    document.getElementById('r-date').textContent     = now.toLocaleString('ko-KR');
+    const amount = (payData && payData.amount) || totalFee;
+    document.getElementById('r-order-id').textContent = (payData && payData.orderId) || orderId || '—';
+    document.getElementById('r-amount').textContent   = won(amount) + ' (부가세 포함)';
+    document.getElementById('r-slots').textContent    = planText;
+    document.getElementById('r-date').textContent     = new Date((payData && payData.approvedAt) || Date.now()).toLocaleString('ko-KR');
 
-    // 결제 수단 및 영수증 처리
+    if (payData && payData.periodEnd) {
+      document.getElementById('r-next').textContent = `${md(payData.periodEnd)} (매달 자동결제)`;
+      show('r-next-row');
+    }
     if (payData) {
-      const methodEl = document.getElementById('r-method');
-      const methodRow = document.getElementById('r-method-row');
-      let methodText = payData.method || '신용카드';
-      if (payData.card && payData.card.issuerCode) {
-        methodText += ` (${payData.card.issuerCode})`;
-      }
-      if (payData.card && payData.card.approveNo) {
-        methodText += ` [승인: ${payData.card.approveNo}]`;
-      }
-      methodEl.textContent = methodText;
-      methodRow.style.display = 'flex';
-
+      let methodText = payData.method || '카드';
+      if (payData.card && payData.card.approveNo) methodText += ` · 승인번호 ${payData.card.approveNo}`;
+      document.getElementById('r-method').textContent = methodText;
+      show('r-method-row');
       if (payData.receipt && payData.receipt.url) {
-        const receiptRow = document.getElementById('r-receipt-row');
-        const receiptEl = document.getElementById('r-receipt');
-        receiptEl.innerHTML = `<a href="${esc(payData.receipt.url)}" target="_blank" rel="noopener" style="color:#6366f1;text-decoration:underline;">영수증 보기</a>`;
-        receiptRow.style.display = 'flex';
+        document.getElementById('r-receipt').innerHTML = `<a href="${esc(payData.receipt.url)}" target="_blank" rel="noopener" style="color:#4f46e5;">영수증 보기</a>`;
+        show('r-receipt-row');
       }
     }
+    noteEl.className = 'note';
+    noteEl.textContent = isProPlan
+      ? '해지는 앱의 내 정보 → 요금제에서 언제든 할 수 있어요. 해지해도 결제한 기간까지는 계속 쓸 수 있어요.'
+      : '카드 매출전표가 세금 증빙이 돼요. 결제 내역은 구독 관리에서 다시 볼 수 있어요.';
+    noteEl.style.display = 'block';
 
-    // 구독 정보 localStorage 업데이트
     saveSubscriptionRecord(payData, 'active');
-
-    // 축하 컨페티 효과
-    launchConfetti();
-
-    // 자동 이동 설정
-    const targetName = (isProPlan || returnTarget === 'mobile') ? '📱 로드플래너 앱으로 이동' : '관제 포털로 이동';
-    let count = 4;
-    btnMain.textContent = `${targetName} (${count}초)`;
-    const timer = setInterval(() => {
-      count--;
-      btnMain.textContent = `${targetName} (${count}초)`;
-      if (count <= 0) { clearInterval(timer); goToAdmin(); }
-    }, 1000);
+    // 자동으로 다른 화면으로 넘어가지 않음 (주문번호를 확인할 시간을 줌)
+    btnMain.className = 'btn-primary';
+    btnMain.textContent = backLabel;
   }
 
   function saveSubscriptionRecord(payData, subStatus = 'active') {
@@ -288,7 +266,7 @@
         monthlyFee: totalFee,
         status: subStatus,
         lastPaidAt: now.toISOString(),
-        lastOrderId: orderId,
+        lastOrderId: (payData && payData.orderId) || orderId,
         paymentKey: paymentKey || (payData && payData.paymentKey) || '',
         receiptUrl: payData && payData.receipt ? payData.receipt.url : '',
         virtualAccount: payData && payData.virtualAccount ? payData.virtualAccount : (existing.virtualAccount || null)
@@ -298,12 +276,10 @@
       if (accountSubKey !== `${baseSubKey}_ceo_kjm_ent_com`) {
         localStorage.setItem(`${baseSubKey}_ceo_kjm_ent_com`, JSON.stringify(updatedSub));
       }
-
-      // 결제 기록 로그 추가
       const logsKey = 'HQ_PAYMENT_LOGS';
       const logs = JSON.parse(localStorage.getItem(logsKey) || '[]');
       logs.unshift({
-        orderId,
+        orderId: (payData && payData.orderId) || orderId,
         plan: isProPlan ? 'PRO' : 'ENTERPRISE',
         amount: totalFee,
         status: subStatus,
@@ -318,16 +294,19 @@
     }
   }
 
-  function showFail(errorMsg) {
-    iconEl.textContent  = '❌';
-    titleEl.textContent = '결제 승인 실패';
-    titleEl.style.color = '#fca5a5';
-    subEl.textContent   = errorMsg;
+  function showFail(errorMsg, code) {
+    iconEl.className = 'icon fail'; iconEl.textContent = '!';
+    titleEl.textContent = '결제가 안 됐어요';
+    subEl.textContent = '돈은 빠져나가지 않았어요.';
+    infoBox.style.display = 'none';
+    noteEl.className = 'note warn';
+    noteEl.innerHTML = `<b>이유</b><br>${esc(errorMsg)}${code ? ` <span style="color:#9ca3af;">(${esc(code)})</span>` : ''}`;
+    noteEl.style.display = 'block';
     btnRetry.style.display = 'block';
-    btnMain.textContent = (isProPlan || returnTarget === 'mobile') ? '플래너 앱으로 돌아가기' : '관제 포털로 돌아가기';
+    btnMain.className = 'btn-secondary';
+    btnMain.textContent = backLabel;
   }
 
-  // 실행
   processPaymentResult();
 
   function goToAdmin() {
@@ -338,47 +317,13 @@
     }
   }
 
+  // 결제 페이지를 처음부터 다시 엶 (토스 결제창으로 되돌아가지 않도록 뒤로가기 대신 주소로 이동)
   function goToPayment() {
-    history.back();
-  }
-
-  // ── 컨페티 ──
-  function launchConfetti() {
-    const canvas = document.getElementById('confetti-canvas');
-    const ctx    = canvas.getContext('2d');
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const pieces = Array.from({ length: 120 }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * -canvas.height,
-      w: Math.random() * 10 + 5,
-      h: Math.random() * 6 + 3,
-      color: ['#6366f1','#8b5cf6','#a5f3fc','#f59e0b','#10b981','#ec4899'][Math.floor(Math.random()*6)],
-      speed: Math.random() * 3 + 1,
-      angle: Math.random() * 360,
-      spin:  Math.random() * 4 - 2,
-      drift: Math.random() * 2 - 1,
-    }));
-
-    let frame = 0;
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      pieces.forEach(p => {
-        ctx.save();
-        ctx.translate(p.x + p.w/2, p.y + p.h/2);
-        ctx.rotate(p.angle * Math.PI / 180);
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = Math.max(0, 1 - frame / 180);
-        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
-        ctx.restore();
-        p.y += p.speed; p.x += p.drift; p.angle += p.spin;
-      });
-      frame++;
-      if (frame < 200) requestAnimationFrame(draw);
-      else ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-    draw();
+    const u = new URL('payment.html', location.href);
+    u.searchParams.set('plan', plan);
+    if (!isProPlan) u.searchParams.set('addSlots', String(addSlots));
+    u.searchParams.set('return', returnTarget);
+    location.href = u.toString();
   }
 </script>
 </body>

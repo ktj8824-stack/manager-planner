@@ -396,7 +396,7 @@
                   <span>💳 구독: Standard</span>
                   <span style="font-size:11px; color:#818cf8; font-weight:700;">관리 &gt;</span>
                 </div>
-                <div class="sub-slots" id="header-slot-text">매니저 슬롯: - / -명</div>
+                <div class="sub-slots" id="header-slot-text">매니저 - / -자리</div>
               </div>
 
               <div class="dropdown-divider"></div>
@@ -1229,7 +1229,7 @@
               <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
               <line x1="1" y1="10" x2="23" y2="10"></line>
             </svg>
-            슬롯 추가
+            자리 추가
           </button>
         </div>
 
@@ -1248,8 +1248,7 @@
             신규 매니저 계정 생성
           </div>
           <div id="mgr-form-slot-warning"
-            style="display:none; color: #ef4444; font-size: 12px; margin-bottom: 10px; font-weight:600;">더 이상 매니저를 생성할 수
-            없습니다. (슬롯 초과)</div>
+            style="display:none; color: #b91c1c; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:8px 10px; font-size: 12.5px; margin-bottom: 10px; font-weight:700;">자리가 다 찼어요 · 매니저를 추가하려면 먼저 자리를 결제해 주세요</div>
 
           <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
             <div class="form-group">
@@ -1724,110 +1723,71 @@
 
   <!-- Company Subscription Modal -->
   <div id="modal-company-subscription" class="modal-overlay">
-    <div class="modal-content" style="max-width:480px; width:100%;">
+    <div class="modal-content" style="max-width:500px; width:100%;">
       <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
-        <h3
-          style="margin:0; font-size:15px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2">
-            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-            <line x1="1" y1="10" x2="23" y2="10"></line>
-          </svg>
-          회사 구독 관리
-        </h3>
+        <h3 style="margin:0; font-size:16px; font-weight:800; color:#0f172a;">회사 구독 관리</h3>
         <button type="button" onclick="Admin.closeSubscriptionModal()"
-          style="padding: 7px 16px; font-size: 13.5px; font-weight: 800; cursor: pointer; border-radius: 8px; background: #ffffff; border: 1px solid #cbd5e1; color: #475569; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
-          onmouseover="this.style.background='#f1f5f9'; this.style.color='#0f172a';"
-          onmouseout="this.style.background='#ffffff'; this.style.color='#475569';">
-          닫기
-        </button>
+          style="padding:7px 16px; font-size:13.5px; font-weight:800; cursor:pointer; border-radius:8px; background:#ffffff; border:1px solid #cbd5e1; color:#475569;">닫기</button>
       </div>
-      <div class="modal-body" style="padding:18px;">
+      <div class="modal-body" style="padding:18px; display:flex; flex-direction:column; gap:12px;">
 
-        <!-- 회사 정보 -->
-        <div
-          style="background:#e2e8f0; border:1px solid #cbd5e1; border-radius:10px; padding:14px; margin-bottom:12px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
-          <div id="sub-company-name" style="font-size:15px; font-weight:800; color:#0f172a; margin-bottom:3px;">—</div>
-          <div id="sub-biz-info" style="font-size:11.5px; color:#475569; font-weight:500;"></div>
-          <div style="margin-top:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <span
-              style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px;">Enterprise
-              Standard</span>
-            <span id="sub-badge-text" style="font-size:11px; color:#475569; font-weight:600;"></span>
+        <!-- 회사·이용 상태 -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <div id="sub-company-name" style="font-size:15px; font-weight:800; color:#0f172a;">—</div>
+            <span id="sub-status-chip" style="font-size:12px; font-weight:800; padding:3px 10px; border-radius:999px; background:#e2e8f0; color:#475569;">—</span>
+          </div>
+          <div id="sub-status-text" style="font-size:13px; color:#475569; margin-top:4px;"></div>
+        </div>
+
+        <!-- 매니저 자리 -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-size:13px; font-weight:800; color:#0f172a;">매니저 자리</span>
+            <span id="sub-slot-progress-text" style="font-size:13px; font-weight:800; color:#4f46e5;">— / —</span>
+          </div>
+          <div style="background:#e2e8f0; border-radius:6px; height:8px; overflow:hidden;">
+            <div id="sub-slot-progress-bar" style="height:100%; background:#4f46e5; border-radius:6px; transition:width 0.3s; width:0%;"></div>
+          </div>
+          <div id="sub-shortage" style="display:none; margin-top:10px; background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; border-radius:10px; padding:10px 12px; font-size:13px; font-weight:700; line-height:1.5;"></div>
+          <div style="display:flex; align-items:center; gap:10px; margin-top:12px;">
+            <span style="font-size:13px; color:#334155; font-weight:700; flex:1;">추가 자리 <span style="color:#64748b; font-weight:500;">(기본 2자리 + 추가)</span></span>
+            <button type="button" id="sub-minus" onclick="Admin.changeSlotCount(-1)" aria-label="자리 빼기"
+              style="width:36px; height:36px; border-radius:10px; border:1px solid #cbd5e1; background:#fff; color:#0f172a; font-size:18px; font-weight:700; cursor:pointer;">−</button>
+            <strong id="sub-slot-adjust-count" style="min-width:28px; text-align:center; font-size:16px; color:#0f172a;">0</strong>
+            <button type="button" id="sub-plus" onclick="Admin.changeSlotCount(1)" aria-label="자리 더하기"
+              style="width:36px; height:36px; border-radius:10px; border:1px solid #cbd5e1; background:#fff; color:#0f172a; font-size:18px; font-weight:700; cursor:pointer;">+</button>
           </div>
         </div>
 
-        <!-- 슬롯 현황 -->
-        <div
-          style="background:#e2e8f0; border:1px solid #cbd5e1; border-radius:10px; padding:12px 14px; margin-bottom:12px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <span style="font-size:12px; font-weight:700; color:#0f172a; display:flex; align-items:center; gap:6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-              매니저 슬롯 현황
-            </span>
-            <span id="sub-slot-progress-text" style="font-size:12px; font-weight:800; color:#2563eb;">— / —명</span>
+        <!-- 요금 -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; font-size:13px; color:#475569;">
+          <div style="display:flex; justify-content:space-between; padding:3px 0;"><span>기본 요금 (2자리 포함)</span><b style="color:#0f172a;">100,000원</b></div>
+          <div style="display:flex; justify-content:space-between; padding:3px 0;"><span>추가 자리 <span id="sub-additional-slot-count">0</span>개 × 20,000원</span><b id="sub-calc-additional-fee" style="color:#0f172a;">0원</b></div>
+          <div style="border-top:1px solid #e2e8f0; margin:6px 0;"></div>
+          <div style="display:flex; justify-content:space-between; padding:3px 0;"><span>공급가</span><span id="sub-calc-supply">—</span></div>
+          <div style="display:flex; justify-content:space-between; padding:3px 0;"><span>부가세 10%</span><span id="sub-calc-vat">—</span></div>
+          <div style="display:flex; justify-content:space-between; align-items:baseline; padding-top:8px;">
+            <span style="font-size:14px; font-weight:800; color:#0f172a;">매달 결제 금액</span>
+            <span id="sub-monthly-total" style="font-size:18px; font-weight:900; color:#4f46e5;">—</span>
           </div>
-          <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; height:8px; overflow:hidden;">
-            <div id="sub-slot-progress-bar"
-              style="height:100%; background:linear-gradient(90deg,#6366f1,#8b5cf6); border-radius:6px; transition:width 0.4s; width:0%;">
-            </div>
-          </div>
+          <div style="font-size:12px; color:#64748b; margin-top:6px; line-height:1.5;">회사 요금은 부가세 별도예요. 카드로 결제하면 카드 매출전표가 세금 증빙이 되고, 세금계산서가 필요하면 가상계좌로 결제할 때 회사명·사업자번호를 넣으면 돼요.</div>
         </div>
 
-        <!-- 월 요금 -->
-        <div
-          style="background:#e2e8f0; border:1px solid #cbd5e1; border-radius:10px; padding:12px 14px; margin-bottom:12px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:12px; color:#475569; font-weight:600;">기본 요금 (2인 포함)</span>
-            <span style="font-size:12px; color:#0f172a; font-weight:700;">100,000원</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-            <span style="font-size:12px; color:#475569; font-weight:600;">추가 슬롯 (<span
-                id="sub-additional-slot-count">0</span>명 × 20,000원)</span>
-            <span id="sub-calc-additional-fee" style="font-size:12px; color:#0f172a; font-weight:700;">+0원 / 월</span>
-          </div>
-          <div
-            style="border-top:1px solid #cbd5e1; margin-top:8px; padding-top:8px; display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:12px; font-weight:800; color:#0f172a;">월 청구 합계</span>
-            <span id="sub-monthly-total" style="font-size:15px; font-weight:800; color:#2563eb;">—</span>
-          </div>
-          <div id="sub-calc-total-fee" style="text-align:right; font-size:11px; color:#64748b; margin-top:2px;"></div>
+        <!-- 결제 내역 -->
+        <div id="sub-history-wrap" style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 16px;">
+          <div style="font-size:13px; font-weight:800; color:#0f172a; margin-bottom:6px;">결제 내역</div>
+          <div id="sub-history"></div>
         </div>
 
-        <!-- 추가 슬롯 조절 -->
-        <div
-          style="background:#e2e8f0; border:1px solid #cbd5e1; border-radius:10px; padding:12px 14px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
-          <div style="font-size:12px; font-weight:700; color:#0f172a; margin-bottom:8px;">슬롯 추가 / 제거</div>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <button onclick="Admin.changeSlotCount(-1)"
-              style="width:34px; height:34px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#0f172a; font-size:16px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 2px rgba(0,0,0,0.03);"
-              onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">−</button>
-            <span style="font-size:13px; color:#0f172a; font-weight:700; flex:1; text-align:center;">추가 슬롯: <strong
-                id="sub-slot-adjust-count" style="color:#2563eb;">0</strong>명</span>
-            <button onclick="Admin.changeSlotCount(1)"
-              style="width:34px; height:34px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#0f172a; font-size:16px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 2px rgba(0,0,0,0.03);"
-              onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">+</button>
-          </div>
-        </div>
-
+        <!-- 예전 화면과의 호환용 (숨김) -->
+        <span id="sub-badge-text" hidden></span><span id="sub-biz-info" hidden></span><span id="sub-calc-total-fee" hidden></span>
       </div>
-      <div class="modal-footer"
-        style="display:flex; gap:8px; justify-content:flex-end; padding:14px 20px; border-top:1px solid #cbd5e1;">
-        <button onclick="Admin.closeSubscriptionModal()"
-          style="padding:8px 16px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#475569; font-size:12px; font-weight:700; cursor:pointer;"
-          onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">취소</button>
-        <button onclick="Admin.confirmSlotPayment()"
-          style="padding:8px 16px; border-radius:8px; border:none; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:12px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(99,102,241,0.3);">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-            <line x1="1" y1="10" x2="23" y2="10"></line>
-          </svg>
-          슬롯 변경 확정
-        </button>
+      <div class="modal-footer" style="display:flex; gap:8px; justify-content:flex-end; padding:14px 20px; border-top:1px solid #e2e8f0;">
+        <button type="button" onclick="Admin.closeSubscriptionModal()"
+          style="padding:10px 16px; border-radius:10px; border:1px solid #cbd5e1; background:#ffffff; color:#475569; font-size:13px; font-weight:700; cursor:pointer;">취소</button>
+        <button type="button" id="sub-pay-btn" onclick="Admin.confirmSlotPayment()"
+          style="padding:10px 18px; border-radius:10px; border:none; background:#4f46e5; color:#fff; font-size:13px; font-weight:800; cursor:pointer;">결제하기</button>
       </div>
     </div>
   </div>
