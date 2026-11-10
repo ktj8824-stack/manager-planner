@@ -688,9 +688,9 @@ const Home = {
             </div>
             <div class="nc-main">
               <span class="nc-time">${dayTag ? `<small>${esc(dayTag)}</small>` : ''}${esc(nowEv.time || '')}</span>
-              <span class="nc-name">${esc(shortName)}</span>
+              <span class="nc-info"><b class="nc-name">${esc(shortName)}</b>${dest ? `<span class="nc-dest">${esc(dest)}</span>` : ''}</span>
             </div>
-            ${dest ? `<div class="nc-dest">${esc(dest)}</div><div data-venue="${esc(dest)}" data-venue-compact style="margin:2px 0 0;"></div>` : ''}
+            ${dest ? `<div data-venue="${esc(dest)}" data-venue-compact style="margin:-4px 0 0;"></div>` : ''}
             ${canAct ? `<div class="nc-acts">
               ${nowDay === 'future' ? `<div class="nc-wait">일정 당일에 출발·도착을 누를 수 있어요</div>` : nowDay === 'past' ? `<button type="button" onclick="Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '완료')" class="nc-btn pri" style="${SB}">완료</button>` : `
               ${isDrive ? `<button type="button" onclick="Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '이동중')" class="nc-btn ${nowEv.moving ? 'moving' : ''}" style="${SB}">${nowEv.moving ? '● 이동중' : '출발'}</button>` : ''}

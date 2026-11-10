@@ -1344,3 +1344,15 @@ div.art-add.locked button { margin-top:6px; border:0; background:#3B45C4; color:
 .cv-empty button, .cv-go { height:44px; padding:0 18px; border-radius:12px; font:inherit; font-size:14.5px; font-weight:700; cursor:pointer; }
 .cv-empty button { border:1px solid #D5D8DF; background:#FFFFFF; color:#14161A; }
 .cv-go { width:100%; margin-top:10px; border:0; background:#3B45C4; color:#FFFFFF; }
+
+/* 지금 할 일 카드: 시각 옆에 장소 이름·주소 (칸 높이 줄이기) */
+.now-card { padding:14px; gap:10px; }
+.nc-main { display:grid; grid-template-columns:auto minmax(0, 1fr); align-items:center; gap:14px; flex-wrap:nowrap; }
+.nc-time { font-size:30px; display:flex; flex-direction:column; align-items:flex-start; }
+.nc-time small { margin:0 0 2px; }
+.nc-info { display:flex; flex-direction:column; gap:2px; min-width:0; padding-left:14px; border-left:1px solid #E6E7EB; }
+.nc-name { font-size:16px; font-weight:700; line-height:1.35; overflow-wrap:anywhere; }
+.nc-info .nc-dest { font-size:12.5px; line-height:1.4; color:#5B616E; }
+.now-card .nc-btn, .now-card .nc-acts button { min-height:44px !important; }
+.nc-wait { padding:10px 0; font-size:13px; }
+.nc-nav { height:38px; }
