@@ -199,9 +199,26 @@
   const PRICE = { pro: 20000, base: 100000, baseSlots: 2, perSlot: 20000, vatRate: 0.1 };
   const addSlots    = Math.max(0, parseInt(params.get('addSlots') || '0') || 0);
   const totalSlots  = PRICE.baseSlots + addSlots;
-  const supply      = isProPlan ? PRICE.pro : PRICE.base + PRICE.perSlot * addSlots;
-  const vat         = isProPlan ? 0 : Math.round(supply * PRICE.vatRate);
-  let   totalFee    = supply + vat;
+  const monthSupply = isProPlan ? PRICE.pro : PRICE.base + PRICE.perSlot * addSlots;
+  const monthVat    = isProPlan ? 0 : Math.round(monthSupply * PRICE.vatRate);
+
+  // 이용 중에 자리를 늘리면: 늘린 자리만 다음 결제일까지 남은 날짜만큼 일할 계산 (서버와 같은 계산)
+  //   cur = 지금 결제된 추가 자리, until = 다음 결제일 — 화면 미리보기용이고, 실제 금액은 서버 견적(quote)으로 다시 받음
+  function localQuote() {
+    const cur = parseInt(params.get('cur') || '0') || 0, until = params.get('until');
+    const monthly = { supply: monthSupply, vat: monthVat, amount: monthSupply + monthVat };
+    if (!isProPlan && until && new Date(until) > new Date() && addSlots > cur) {
+      const end = new Date(until), start = new Date(until); start.setUTCMonth(start.getUTCMonth() - 1);
+      const cycleDays = Math.round((end - start) / 86400000);
+      const daysLeft = Math.min(cycleDays, Math.max(1, Math.ceil((end - Date.now()) / 86400000)));
+      const added = addSlots - cur;
+      const sup = Math.floor(PRICE.perSlot * added * daysLeft / cycleDays / 10) * 10, v = Math.round(sup * PRICE.vatRate);
+      return { kind: 'prorate', added, daysLeft, cycleDays, supply: sup, vat: v, amount: sup + v, nextBillAt: until, monthly };
+    }
+    return { kind: 'month', supply: monthSupply, vat: monthVat, amount: monthSupply + monthVat, monthly };
+  }
+  let Q = localQuote();
+  let totalFee = Q.amount;
 
   const companyName = params.get('company') || localStorage.getItem('bp_company_name') || localStorage.getItem('hq_company_name') || '';
   const ceoName     = params.get('ceo') || localStorage.getItem('bp_user_name') || localStorage.getItem('hq_user_name') || '';
@@ -216,25 +233,44 @@
   document.getElementById('buyer-phone').value = ceoPhone;
 
   // ── 주문 내용 그리기 ──
-  const rows = document.getElementById('order-rows');
-  if (isProPlan) {
-    document.getElementById('pay-plan-name').textContent = '개인 매니저 유료';
-    rows.innerHTML = `<div class="row"><span>개인 매니저 유료 (한 달)</span><b>${won(PRICE.pro)}</b></div>`;
-    document.getElementById('pay-total-note').textContent = `부가세 포함 · 매달 ${billDay}일 자동결제 · 언제든 해지`;
-    document.getElementById('method-tabs').style.display = 'none'; // 개인은 카드·간편결제만
-    document.getElementById('card-tax-note').style.display = 'none';
-  } else {
-    document.getElementById('pay-plan-name').textContent = '회사 요금제';
-    document.getElementById('pay-company-name').textContent = companyName;
-    rows.innerHTML = `
-      <div class="row"><span>기본 요금 (2자리 포함)</span><b>${won(PRICE.base)}</b></div>
-      <div class="row"><span>추가 자리 ${addSlots}개 × ${won(PRICE.perSlot)}</span><b>${won(PRICE.perSlot * addSlots)}</b></div>
-      <div class="divider"></div>
-      <div class="row sub"><span>공급가 (매니저 ${totalSlots}자리)</span><span>${won(supply)}</span></div>
-      <div class="row sub"><span>부가세 10%</span><span>${won(vat)}</span></div>`;
-    document.getElementById('pay-total-note').textContent = `공급가 ${won(supply)} + 부가세 ${won(vat)}`;
+  const md = (d) => { const x = new Date(d); return `${x.getMonth() + 1}월 ${x.getDate()}일`; };
+  function renderOrder() {
+    const rows = document.getElementById('order-rows');
+    const label = document.querySelector('.total-label');
+    totalFee = Q.amount;
+    if (isProPlan) {
+      document.getElementById('pay-plan-name').textContent = '개인 매니저 유료';
+      rows.innerHTML = `<div class="row"><span>개인 매니저 유료 (한 달)</span><b>${won(PRICE.pro)}</b></div>`;
+      document.getElementById('pay-total-note').textContent = `부가세 포함 · 매달 ${billDay}일 자동결제 · 언제든 해지`;
+      document.getElementById('method-tabs').style.display = 'none'; // 개인은 카드·간편결제만
+      document.getElementById('card-tax-note').style.display = 'none';
+      label.textContent = '매달 결제 금액';
+    } else if (Q.kind === 'prorate') {
+      document.getElementById('pay-plan-name').textContent = '회사 요금제 · 자리 추가';
+      document.getElementById('pay-company-name').textContent = companyName;
+      rows.innerHTML = `
+        <div class="row"><span>추가 ${Q.added}자리 × ${won(PRICE.perSlot)}</span><b>${won(PRICE.perSlot * Q.added)}</b></div>
+        <div class="row sub"><span>다음 결제일(${md(Q.nextBillAt)})까지 ${Q.daysLeft}일 / ${Q.cycleDays}일</span><span>일할 계산</span></div>
+        <div class="divider"></div>
+        <div class="row sub"><span>공급가</span><span>${won(Q.supply)}</span></div>
+        <div class="row sub"><span>부가세 10%</span><span>${won(Q.vat)}</span></div>`;
+      label.textContent = '오늘 결제 금액';
+      document.getElementById('pay-total-note').innerHTML = `${md(Q.nextBillAt)}부터는 매니저 ${totalSlots}자리 포함 <b>매달 ${won(Q.monthly.amount)}</b> (부가세 포함) 자동결제`;
+    } else {
+      document.getElementById('pay-plan-name').textContent = '회사 요금제';
+      document.getElementById('pay-company-name').textContent = companyName;
+      rows.innerHTML = `
+        <div class="row"><span>기본 요금 (2자리 포함)</span><b>${won(PRICE.base)}</b></div>
+        <div class="row"><span>추가 자리 ${addSlots}개 × ${won(PRICE.perSlot)}</span><b>${won(PRICE.perSlot * addSlots)}</b></div>
+        <div class="divider"></div>
+        <div class="row sub"><span>공급가 (매니저 ${totalSlots}자리)</span><span>${won(Q.supply)}</span></div>
+        <div class="row sub"><span>부가세 10%</span><span>${won(Q.vat)}</span></div>`;
+      label.textContent = '매달 결제 금액';
+      document.getElementById('pay-total-note').textContent = `공급가 ${won(Q.supply)} + 부가세 ${won(Q.vat)}`;
+    }
+    document.getElementById('pay-total-amount').textContent = won(totalFee);
   }
-  document.getElementById('pay-total-amount').textContent = won(totalFee);
+  renderOrder();
 
   // ── 결제 방법 ──
   let currentMethodTab = 'card';
@@ -264,6 +300,7 @@
 
   function payLabel() {
     if (isProPlan) return `월 ${won(totalFee)} 정기결제 시작`;
+    if (Q.kind === 'prorate') return currentMethodTab === 'va' ? `${won(totalFee)} 입금 계좌 받기` : `오늘 ${won(totalFee)} 결제하기`;
     return currentMethodTab === 'va' ? `${won(totalFee)} 입금 계좌 받기` : `월 ${won(totalFee)} 결제하기`;
   }
 
@@ -272,6 +309,9 @@
     if (currentMethodTab === 'va') {
       t.textContent = `${won(totalFee)}을 입금 기한 안에 넣을게요`;
       s.textContent = '가상계좌는 자동결제가 안 돼요. 매달 결제일 전에 새 입금 계좌를 보내드려요.';
+    } else if (Q.kind === 'prorate') {
+      t.textContent = `오늘 ${won(totalFee)}을 결제하고, ${md(Q.nextBillAt)}부터 매달 ${won(Q.monthly.amount)} 자동결제에 동의해요`;
+      s.textContent = '늘린 자리는 결제가 끝나면 바로 쓸 수 있어요. 다음 결제일은 바뀌지 않아요.';
     } else {
       t.textContent = `매달 ${billDay}일 ${won(totalFee)} 자동결제에 동의해요`;
       s.textContent = '언제든 해지할 수 있고, 해지해도 결제한 기간까지는 계속 쓸 수 있어요.';
@@ -294,6 +334,18 @@
   function clearBusy() { delete document.getElementById('btn-pay').dataset.busy; syncPayButton(); }
 
   renderAgreeAndButton();
+
+  // 서버 견적으로 금액을 다시 맞춤 (회사 요금제: 이용 중 자리 추가면 일할 금액)
+  (async () => {
+    if (isProPlan) return;
+    try {
+      const r = await SupabaseClient.invokePayments({ action: 'quote', plan: 'standard', addSlots });
+      if (r && r.amount) {
+        Q = r; renderOrder(); renderAgreeAndButton();
+        if (widgets) await widgets.setAmount({ currency: 'KRW', value: totalFee });
+      }
+    } catch (e) { /* 연결이 안 되면 화면 계산 유지 — 결제 때 서버가 다시 정함 */ }
+  })();
 
   // 토스페이먼츠 결제위젯 클라이언트 키
   const TOSS_CLIENT_KEY = 'test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm';
@@ -358,7 +410,7 @@
     const orderName = order.orderName;
     if (widgets && order.amount !== totalFee) await widgets.setAmount({ currency: 'KRW', value: order.amount });
 
-    const successUrl = resultUrl({ status: 'success', plan, return: returnTarget, addSlots, totalSlots, totalFee: order.amount });
+    const successUrl = resultUrl({ status: 'success', plan, return: returnTarget, addSlots, totalSlots, totalFee: order.amount, kind: order.kind, nextAmt: order.monthly && order.monthly.amount, nextAt: order.nextBillAt });
     const failUrl    = resultUrl({ status: 'fail', plan, return: returnTarget, addSlots, orderId });
 
     try {
@@ -409,7 +461,7 @@
 
   function simulateTestPayment() {
     if (!IS_DEV_HOST) return;
-    location.href = resultUrl({ status: 'success', orderId: devOrderId(), plan, return: returnTarget, addSlots, totalSlots, totalFee });
+    location.href = resultUrl({ status: 'success', orderId: devOrderId(), plan, return: returnTarget, addSlots, totalSlots, totalFee, kind: Q.kind, nextAmt: Q.monthly && Q.monthly.amount, nextAt: Q.nextBillAt });
   }
 </script>
 </body>

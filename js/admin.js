@@ -1256,6 +1256,21 @@ window.Admin = {
     return { supply, vat, total: supply + vat };
   },
 
+  // 이용 중에 자리를 늘리면: 늘린 자리만 다음 결제일까지 남은 날짜만큼 일할 (서버 payments 함수와 같은 계산, 화면 미리보기용)
+  _prorate(addSlots) {
+    const sub = window.hqStore.getSubscription();
+    const cur = sub.additionalSlots || 0;
+    const until = sub.paidUntil ? new Date(sub.paidUntil) : null;
+    if (!until || until <= new Date() || addSlots <= cur) return null;
+    const start = new Date(until); start.setUTCMonth(start.getUTCMonth() - 1);
+    const cycleDays = Math.round((until - start) / 86400000);
+    const daysLeft = Math.min(cycleDays, Math.max(1, Math.ceil((until - Date.now()) / 86400000)));
+    const added = addSlots - cur;
+    const supply = Math.floor((sub.additionalSlotFee || 20000) * added * daysLeft / cycleDays / 10) * 10;
+    const vat = Math.round(supply * (sub.vatRate || 0.1));
+    return { added, daysLeft, cycleDays, supply, vat, total: supply + vat, until };
+  },
+
   // 지금 등록된 매니저 수보다 적게는 줄일 수 없음
   _minAddSlots() {
     const sub = window.hqStore.getSubscription();
@@ -1340,6 +1355,14 @@ window.Admin = {
     if ($('sub-calc-supply')) $('sub-calc-supply').textContent = `${won(price.supply)} (${newSlots}자리)`;
     if ($('sub-calc-vat')) $('sub-calc-vat').textContent = won(price.vat);
     if ($('sub-monthly-total')) $('sub-monthly-total').textContent = won(price.total);
+    const pr = this._prorate(addSlots);
+    if ($('sub-monthly-label')) $('sub-monthly-label').textContent = pr ? `다음 결제일부터 매달` : '매달 결제 금액';
+    if ($('sub-prorate')) {
+      $('sub-prorate').style.display = pr ? 'block' : 'none';
+      if (pr) $('sub-prorate').innerHTML = `<div style="font-size:13px; font-weight:800;">오늘 결제 ${won(pr.total)}</div>
+        <div style="font-size:12px;">추가 ${pr.added}자리 × 20,000원 × 남은 ${pr.daysLeft}일/${pr.cycleDays}일 = ${won(pr.supply)} + 부가세 ${won(pr.vat)}<br>
+        다음 결제일(${pr.until.getMonth() + 1}월 ${pr.until.getDate()}일)부터는 ${newSlots}자리 포함 매달 ${won(price.total)}이 자동결제돼요.</div>`;
+    }
 
     // 결제 내역 (서버 기록)
     const hist = (sub.payments || []).filter(p => p.status === 'DONE' || p.status === 'WAITING_FOR_DEPOSIT').slice(0, 5);
@@ -1357,7 +1380,7 @@ window.Admin = {
     const btn = $('sub-pay-btn');
     if (btn) {
       const same = active && addSlots === (sub.additionalSlots || 0);
-      btn.textContent = same ? `같은 자리로 ${won(price.total)} 미리 결제` : `월 ${won(price.total)} 결제하기`;
+      btn.textContent = pr ? `오늘 ${won(pr.total)} 결제하기` : same ? `같은 자리로 ${won(price.total)} 미리 결제` : `월 ${won(price.total)} 결제하기`;
     }
   },
 
@@ -1378,7 +1401,7 @@ window.Admin = {
     // 자리는 결제가 서버에서 승인된 뒤에만 바뀜 (여기서 미리 저장하지 않음)
     this.closeSubscriptionModal();
     window.location.href =
-      `payment.html?addSlots=${addSlots}&totalSlots=${totalSlots}&company=${company}&ceo=${ceo}&email=${email}`;
+      `payment.html?addSlots=${addSlots}&totalSlots=${totalSlots}&cur=${sub.additionalSlots || 0}&until=${encodeURIComponent(sub.paidUntil || '')}&company=${company}&ceo=${ceo}&email=${email}`;
   },
 
   async renderManagerManagementList() {

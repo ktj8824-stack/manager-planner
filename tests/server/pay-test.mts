@@ -22,6 +22,21 @@ const c = await handle('confirm', { orderId: p2.orderId, paymentKey: 'k', amount
 out.confirmed = c.status; out.slots = company.extra_manager_slots; out.until = company.paid_until;
 const again = await handle('confirm', { orderId: p2.orderId, paymentKey: 'k', amount: p2.amount }, ceo, db, okToss, 'test', now);
 out.idempotent = again.status;
+// 이용 중 자리 추가 → 다음 결제일까지 일할 (30일 중 10일 남음: 20,000×10/30=6,660 + 부가세 666)
+const mid = new Date('2026-11-25T06:00:00Z');
+const qq = await handle('quote', { plan: 'standard', addSlots: 3 }, ceo, db, okToss, 'test', mid);
+out.prorateQuote = [qq.kind, qq.added, qq.daysLeft, qq.cycleDays, qq.supply, qq.vat, qq.amount, qq.monthly.amount].join('/');
+const untilBefore = company.paid_until;
+const pr = await handle('prepare', { plan: 'standard', addSlots: 3 }, ceo, db, okToss, 'test', mid);
+const prc = await handle('confirm', { orderId: pr.orderId, paymentKey: 'k2', amount: pr.amount }, ceo, db, okToss, 'test', mid);
+out.prorateDone = [prc.kind, company.extra_manager_slots, company.paid_until === untilBefore].join('/');
+const same = await handle('quote', { plan: 'standard', addSlots: 3 }, ceo, db, okToss, 'test', mid);
+out.renewKind = same.kind + '/' + same.amount;
+const st2 = await handle('prepare', { plan: 'standard', addSlots: 4 }, ceo, db, okToss, 'test', mid);
+company.extra_manager_slots = 5; // 그 사이 다른 결제로 자리가 바뀜
+let tossCalled = false; const spyToss = async (...a: any[]) => { tossCalled = true; return okToss(a[0], a[1], a[2]); };
+try { await handle('confirm', { orderId: st2.orderId, paymentKey: 'k3', amount: st2.amount }, ceo, db, spyToss, 'test', mid); } catch (e: any) { out.stale = e.code + '/' + tossCalled; }
+company.extra_manager_slots = 2;
 const st = await handle('status', {}, ceo, db, okToss, 'test', now);
 out.total = st.company.totalSlots; out.active = st.company.active;
 try { await handle('prepare', { plan: 'pro' }, mgr, db, okToss, 'test', now); } catch (e: any) { out.companyMgrPro = e.code; }

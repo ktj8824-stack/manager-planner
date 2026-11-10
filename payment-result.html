@@ -101,6 +101,7 @@
   const btnVaConfirm = document.getElementById('btn-va-confirm');
   const backLabel = (isProPlan || returnTarget === 'mobile') ? '플래너 앱으로 돌아가기' : '관제 포털로 돌아가기';
   const planText  = isProPlan ? '개인 매니저 유료 (월 정기)' : `회사 요금제 · 매니저 ${totalSlots}자리`;
+  const nextAmt   = parseInt(params.get('nextAmt') || '0') || 0;   // 다음 자동결제 금액 (자리 추가 후)
 
   let currentPayData = null;
 
@@ -140,7 +141,7 @@
         });
       } else {
         const next = new Date(); next.setMonth(next.getMonth() + 1);
-        showSuccess({ method: '테스트 승인', status: 'DONE', periodEnd: next.toISOString() });
+        showSuccess({ method: '테스트 승인', status: 'DONE', periodEnd: params.get('nextAt') || next.toISOString() });
       }
     }
   }
@@ -208,7 +209,10 @@
     document.getElementById('r-amount-row').style.display = 'flex';
     document.getElementById('r-date-row').style.display = 'flex';
 
-    if (isProPlan) {
+    const isProrate = (payData && payData.kind === 'prorate') || params.get('kind') === 'prorate';
+    if (isProrate) {
+      subEl.textContent = '자리가 늘었어요. 이제 매니저를 추가할 수 있어요.';
+    } else if (isProPlan) {
       subEl.textContent = '개인 매니저 유료가 시작됐어요. 앱으로 돌아가면 바로 적용돼요.';
       localStorage.setItem('bp_pro', 'true');
     } else {
@@ -222,10 +226,14 @@
     document.getElementById('r-slots').textContent    = planText;
     document.getElementById('r-date').textContent     = new Date((payData && payData.approvedAt) || Date.now()).toLocaleString('ko-KR');
 
-    if (payData && payData.periodEnd) {
-      document.getElementById('r-next').textContent = `${md(payData.periodEnd)} (매달 자동결제)`;
+    const nextAt = (payData && payData.periodEnd) || params.get('nextAt');
+    if (nextAt) {
+      document.getElementById('r-next').textContent = isProrate && nextAmt
+        ? `${md(nextAt)}부터 매달 ${won(nextAmt)}`
+        : `${md(nextAt)} (매달 자동결제)`;
       show('r-next-row');
     }
+    if (isProrate) document.getElementById('r-amount').textContent = won(amount) + ' (일할 · 부가세 포함)';
     if (payData) {
       let methodText = payData.method || '카드';
       if (payData.card && payData.card.approveNo) methodText += ` · 승인번호 ${payData.card.approveNo}`;
