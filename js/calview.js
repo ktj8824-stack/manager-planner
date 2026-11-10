@@ -6,6 +6,7 @@ const CalView = {
   y: null, m: null, sel: null,
 
   _ymd(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; },
+  _t(s) { return String((s && (s.startTime || s.teeOff || s.time)) || '').slice(0, 5); },
   _clean(n) { return String(n || '').replace(/\s*\([^)]*\)\s*$/, '').trim(); },
 
   render() {
@@ -33,11 +34,11 @@ const CalView = {
     }
 
     const sel = this.sel;
-    const selList = (State.getSchedulesForDate(sel.getFullYear(), sel.getMonth(), sel.getDate()) || []).slice().sort((a, b) => String(a.startTime || '').localeCompare(String(b.startTime || '')));
+    const selList = (State.getSchedulesForDate(sel.getFullYear(), sel.getMonth(), sel.getDate()) || []).slice().sort((a, b) => this._t(a).localeCompare(this._t(b)));
     const rows = selList.map(s => {
       const hidden = s.isSecret && window.AuthPersona && !window.AuthPersona.canViewSecret?.(s);
       return `<button type="button" class="cv-row" onclick="CalView.open(${sel.getFullYear()},${sel.getMonth()},${sel.getDate()})">
-        <span class="cv-t">${esc(String(s.startTime || '').slice(0, 5) || '--:--')}</span>
+        <span class="cv-t">${esc(this._t(s) || '종일')}</span>
         <span class="cv-bar" style="background:${esc(colorOf(s))}"></span>
         <span class="cv-body"><b>${esc(hidden ? '비공개 일정' : (s.title || '일정'))}</b><small>${esc([this._clean(s.artistName), hidden ? '' : this._clean(s.location)].filter(Boolean).join(' · '))}</small></span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
