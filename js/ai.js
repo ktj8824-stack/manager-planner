@@ -439,7 +439,7 @@ const RoadAI = {
       </div>
       ${done ? `<div class="rpai-btns"><button class="rpai-btn done" disabled>${doneLabel}</button></div>`
         : `<p class="rpai-note">${note}</p>
-           <div class="rpai-btns"><button class="rpai-btn" onclick="RoadAI.confirm('${msgId}',${i})">${hq ? (a.cancel ? '삭제하기' : '수정 창 열기') : '본사에 요청'}</button><button class="rpai-btn ghost" onclick="RoadAI.dismiss('${msgId}',${i})">취소</button></div>`}
+           <div class="rpai-btns"><button class="rpai-btn" onclick="RoadAI.confirm('${msgId}',${i})">${hq ? (a.cancel ? '취소로 바꾸기' : '수정 창 열기') : '본사에 요청'}</button><button class="rpai-btn ghost" onclick="RoadAI.dismiss('${msgId}',${i})">취소</button></div>`}
     </div>`;
   },
 
@@ -448,7 +448,7 @@ const RoadAI = {
     const id = (m.ids || [])[a.idx];
     const sch = id && (window.hqStore?.getSchedules?.() || []).find(s => s.id === id);
     const b = a.before || {};
-    if (!sch || (b.title && !sch.isSecret && sch.title !== b.title)) { U.toast('그 스케줄을 찾지 못했어요. 스케줄 화면에서 직접 확인해 주세요.'); return; }
+    if (!sch || (b.title && !sch.isSecret && !String(sch.title || '').startsWith(b.title))) { U.toast('그 스케줄을 찾지 못했어요. 스케줄 화면에서 직접 확인해 주세요.'); return; }
     const req = a.cancel
       ? `[변경 요청] ${this._md(sch.date)} ${sch.startTime} "${sch.title}" 스케줄이 취소됐어요.${a.reason ? ' (' + a.reason + ')' : ''}`
       : `[변경 요청] ${this._md(sch.date)} ${sch.startTime} "${sch.title}" → ${a.new_date ? this._md(a.new_date) + ' ' : ''}${a.new_start || sch.startTime}${a.new_end ? '~' + a.new_end : ''}로 바뀌었어요.${a.reason ? ' (' + a.reason + ')' : ''}`;
@@ -460,10 +460,11 @@ const RoadAI = {
       return;
     }
     if (typeof Home === 'undefined') return;
-    if (a.cancel) {
-      await Home.deleteScheduleFromApp(id);
-      const still = (window.hqStore?.getSchedules?.() || []).some(s => s.id === id);
-      if (!still) { a.status = 'done'; this.save(); this._redraw(m); }
+    if (a.cancel) {   // 지우지 않고 '취소' 상태로 (매니저에게 취소 알림이 가고 기록이 남음)
+      if (!confirm(`"${sch.title}" (${sch.date} ${sch.startTime}) 일정을 '취소'로 바꿀까요?\n담당 매니저에게 취소 알림이 가요.`)) return;
+      try { await window.hqStore.updateSchedule(id, { status: '취소' }); U.toast('일정을 취소로 바꿨어요.'); Home.render && Home.render(); }
+      catch (err) { U.toast('바꾸지 못했어요: ' + (err?.message || err)); return; }
+      a.status = 'done'; this.save(); this._redraw(m);
       return;
     }
     Home.openScheduleRegisterModal(id);

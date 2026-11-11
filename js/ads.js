@@ -56,18 +56,19 @@ const Ads = {
     if (this.UNIT_BANNER) this._loadAdfit();
   },
 
+  _today() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; },   // 한국 날짜 (자정에 초기화)
   _log() {
     try { const d = JSON.parse(localStorage.getItem('rp_ad_log') || '{}'); return d && typeof d === 'object' ? d : {}; } catch (e) { return {}; }
   },
   _canShow() {
     const log = this._log();
-    const today = new Date().toISOString().slice(0, 10);
+    const today = this._today();
     if (log.day !== today) return true;
     if ((log.n || 0) >= this.DAY_MAX) return false;
     return !log.at || Date.now() - log.at >= this.GAP_MS;
   },
   _mark() {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = this._today();
     const log = this._log();
     const n = log.day === today ? (log.n || 0) + 1 : 1;
     try { localStorage.setItem('rp_ad_log', JSON.stringify({ day: today, n, at: Date.now() })); } catch (e) { }

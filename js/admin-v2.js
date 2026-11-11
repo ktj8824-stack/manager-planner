@@ -100,7 +100,7 @@
     if (my !== seq) return;                                   // 그 사이 입력이 바뀜
     const ok = Array.isArray(tl) && tl.length && tl.some(x => /교통 예측|현재 교통/.test(x.desc || ''));
     real = { key, tl: Array.isArray(tl) && tl.length ? tl : null, state: ok ? 'done' : 'fail' };
-    if (real.tl) st.rememberPreviewTimeline(s, real.tl);
+    if (real.tl && ok) st.rememberPreviewTimeline(s, real.tl);   // 교통 조회 실패(추정)면 저장 때 다시 계산
     draw();
   };
 

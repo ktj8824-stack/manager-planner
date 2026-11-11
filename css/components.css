@@ -1058,7 +1058,7 @@ div.art-add.locked button { margin-top:6px; border:0; background:#3B45C4; color:
 #sos-call { display:flex; flex-direction:column; gap:8px; }
 .sos-call { min-height:64px; border:0; border-radius:18px; background:#dc2626; color:#fff; font-size:18px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:10px; text-decoration:none; box-shadow:0 8px 20px rgba(220,38,38,0.28); padding:0 16px; text-align:center; }
 .sos-call.sub { min-height:50px; font-size:15px; background:#fff; color:#b91c1c; border:1px solid #fecaca; box-shadow:none; }
-.sos-call.none, .sos-call:disabled { background:#fff; color:#3c3c43; border:1px solid #E6E7EB; box-shadow:none; font-size:14px; font-weight:600; line-height:1.5; padding:14px 16px; }
+.sos-call.none, .sos-call:disabled { word-break:keep-all; background:#fff; color:#3c3c43; border:1px solid #E6E7EB; box-shadow:none; font-size:14px; font-weight:600; line-height:1.5; padding:14px 16px; }
 .sos-box { background:#fff; border-radius:18px; padding:16px; display:flex; flex-direction:column; gap:12px; }
 .sos-box h2 { margin:0; font-size:17px; font-weight:800; color:#14161A; }
 .sos-hint { font-size:13px; color:#3c3c43; margin-top:-6px; }
@@ -1216,7 +1216,7 @@ div.art-add.locked button { margin-top:6px; border:0; background:#3B45C4; color:
 .wk-days .v-cal-day .wk-dot.on { background:#3B45C4; }
 .wk-days .v-cal-day.sun .wk-w { color:#A1271B; }
 .wk-days .v-cal-day.sat .wk-w { color:#3B45C4; }
-.wk-days .v-cal-day.past .wk-n { color:#9AA0AC; }
+.wk-days .v-cal-day.past .wk-n { color:#7A808C; }
 .wk-days .v-cal-day.today { box-shadow:inset 0 0 0 1.5px #3B45C4; }
 .wk-days .v-cal-day.selected { background:#3B45C4; }
 .wk-days .v-cal-day.selected .wk-w, .wk-days .v-cal-day.selected .wk-n { color:#FFFFFF; }
@@ -1325,7 +1325,7 @@ div.art-add.locked button { margin-top:6px; border:0; background:#3B45C4; color:
 .cv-cell.blank { cursor:default; }
 .cv-n { font-family:var(--font-mono); font-size:15px; font-weight:600; width:28px; height:22px; line-height:22px; border-radius:7px; }
 .cv-cell.sun .cv-n { color:#A1271B; } .cv-cell.sat .cv-n { color:#3B45C4; }
-.cv-cell.past .cv-n { color:#9AA0AC; }
+.cv-cell.past .cv-n { color:#7A808C; }
 .cv-cell.today .cv-n { box-shadow:inset 0 0 0 1.5px #3B45C4; }
 .cv-cell.sel .cv-n { background:#3B45C4; color:#FFFFFF; }
 .cv-dots { display:flex; gap:3px; align-items:center; height:6px; }

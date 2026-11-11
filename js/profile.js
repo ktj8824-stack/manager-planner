@@ -320,6 +320,7 @@ const Profile = {
       localStorage.removeItem('bp_user_role');
       localStorage.removeItem('bp_company_name');
       localStorage.removeItem('rp_loc_consent');
+      if (window.Loc) Loc._asked = false;
       localStorage.removeItem('bp_manager_filter');
       localStorage.removeItem('bp_onboarded');
       ['rp_default_departure', 'bp_user_phone', 'bp_user_vehicle', 'rp_vehicle', 'bp_account', 'rp_pro_until'].forEach(k => localStorage.removeItem(k));

@@ -82,7 +82,7 @@ const VenueNotes = {
     const addBtn = `<button type="button" onclick="event.stopPropagation(); VenueNotes.add(${arg})" style="border:0;background:none;color:#3B45C4;font-size:13px;font-weight:700;cursor:pointer;padding:4px 0;">+ 메모 남기기</button>`;
     const put = (html) => { if (el._vHtml !== html) { el.innerHTML = html; el._vHtml = html; } };
     if (!rows.length) {
-      put(compact ? '' : `<div style="margin-top:8px;font-size:13px;color:#5B616E;display:flex;align-items:center;gap:6px;">📌 <span>현장 메모 없음</span> ${addBtn}</div>`);
+      put(compact ? `<div style="display:flex;justify-content:flex-end;margin:-6px 0 -4px;">${addBtn.replace('+ 메모 남기기', '+ 현장 메모 남기기')}</div>` : `<div style="margin-top:8px;font-size:13px;color:#5B616E;display:flex;align-items:center;gap:6px;">📌 <span>현장 메모 없음</span> ${addBtn}</div>`);
       return;
     }
     const me = this._me(), hq = this._isHq();

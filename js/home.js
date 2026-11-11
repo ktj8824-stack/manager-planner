@@ -370,7 +370,7 @@ const Home = {
     if (events.length === 0 && rawSchedules.length === 0) {
       html += `
         <div class="tl-empty">
-          <b>등록된 스케줄이 없습니다.</b>
+          <b>이 날은 스케줄이 없어요.</b>
           <span>이 날은 쉬는 날이에요.</span>
           <button type="button" onclick="Home.openScheduleRegisterModal()">+ 새 스케줄 등록하기</button>
         </div>
@@ -682,7 +682,6 @@ const Home = {
         const shortName = String(name).replace(/\s*\((?=[^)]*\d)[^)]*\)\s*/g, ' ').replace(/\s{2,}/g, ' ').trim() || name;
         const SB = 'min-height:46px; border-radius:12px; font-size:14.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; font-family:inherit;';
         const dayTag = nowEv.forNextDay ? '내일 일정 · ' : nowEv.dayOffset === -1 ? '전날 ' : nowEv.dayOffset === 1 ? '다음날 ' : '';
-        nowShown = nowEv;
         html += `
           <section class="now-card${lateMin ? ' late' : ''}" aria-label="지금 할 일">
             <div class="nc-top">
@@ -706,6 +705,7 @@ const Home = {
             </div>` : ''}
             ${contact ? `<a href="tel:${esc(contact.phone.replace(/[^0-9+]/g, ''))}" class="nc-tel">${esc(contact.name)} 전화 · ${esc(contact.phone)}</a>` : ''}
           </section>`;
+        nowShown = nowEv;   // 카드가 다 만들어진 뒤에만 아래 목록에서 뺌
       }
     } catch (e) { console.warn('지금 할 일 카드 오류', e); }
 
@@ -780,7 +780,7 @@ const Home = {
         badgeStyle = 'background:rgba(59, 130, 246, 0.15); color:#2563eb; border:1px solid rgba(59, 130, 246, 0.35);';
         iconType = 'car';
         restText = restText.replace(/^\[?픽업 출발\]?\s*/, '');
-      } else if (tag.includes('이동') || tag.includes('출발') || lowerText.includes('이동 출발') || lowerText.includes('출발 및 이동')) {
+      } else if (ev.stepCategory !== 'rest' && !/^(대기|식사)/.test(tag) && (tag.includes('이동') || tag.includes('출발') || lowerText.includes('이동 출발') || lowerText.includes('출발 및 이동'))) {
         tag = '현장 이동';
         badgeStyle = 'background:rgba(59, 130, 246, 0.15); color:#2563eb; border:1px solid rgba(59, 130, 246, 0.35);';
         iconType = 'car';
@@ -845,8 +845,8 @@ const Home = {
                 ${isDriveStep && dayState === 'today' ? `<button type="button" class="rs-btn${isMoving ? ' on-move' : ''}" onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '이동중')">이동중</button>` : ''}
                 <button type="button" class="rs-btn${isDone ? ' on-done' : ''}" onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '완료')">완료</button>` : ''}
               ${isDriveStep ? `<span class="rs-navs">
-                <button type="button" class="rs-btn ghost" onclick="U.openNavigation('${destinationTarget.replace(/'/g, "\\'")}', '', 'tmap')" title="티맵 길안내">티맵</button>
-                <button type="button" class="rs-btn ghost" onclick="U.openNavigation('${destinationTarget.replace(/'/g, "\\'")}', '', 'kakao')" title="카카오내비 길안내">카카오</button>
+                <button type="button" class="rs-btn ghost" onclick="U.openNavigation(${escJs(destinationTarget)}, '', 'tmap')" title="티맵 길안내">티맵</button>
+                <button type="button" class="rs-btn ghost" onclick="U.openNavigation(${escJs(destinationTarget)}, '', 'kakao')" title="카카오내비 길안내">카카오</button>
               </span>` : ''}
             </div>` : ''}
           </div>

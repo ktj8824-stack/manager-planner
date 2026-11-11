@@ -156,6 +156,8 @@ const App = {
       if (typeof Home.updateRightTimeline === 'function') Home.updateRightTimeline();
     } else if (State.screen === 'timeline' && typeof Timeline !== 'undefined' && typeof Timeline.render === 'function') {
       Timeline.render();
+    } else if (State.screen === 'calendar' && window.CalView) {
+      CalView.render();
     }
   },
 

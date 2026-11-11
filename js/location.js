@@ -48,7 +48,7 @@ const Loc = {
     this.log(kind, to, purpose);
     const now = new Date();
     const hm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    setTimeout(() => { try { U.toast(`📍 ${hm} ${to}에 위치 정보를 제공했어요 (${purpose}). 내 정보 → 위치 정보에서 볼 수 있어요.`); } catch (e) { } }, 2600);
+    setTimeout(() => { try { U.toast(`📍 ${hm} ${esc(to)}에 위치 정보를 제공했어요 (${purpose}). 내 정보 → 위치 정보에서 볼 수 있어요.`); } catch (e) { } }, 2600);
   },
 
   recipient() {
@@ -94,9 +94,9 @@ const Loc = {
   // 회사 매니저: 로그인 뒤 한 번 물어보기 (결정 안 했을 때만)
   async maybeAsk() {
     if (this._asked) return;
-    this._asked = true;
     if (!this._sc() || (typeof Plan !== 'undefined' && Plan.isIndie && Plan.isIndie())) return;
     if (['ceo', 'hq_admin'].includes(localStorage.getItem('bp_user_role'))) return;
+    this._asked = true;   // 로그인·역할 확인 뒤에 표시 (로그아웃 뒤 다시 로그인하면 다시 확인)
     const s = await this.sync();
     if (s) return;
     setTimeout(() => { if (!U.$('#app-modal')) this.ask('이동 중 도착 예상 시각을 계산하고 늦을 것 같으면 먼저 알려 드리려면 위치가 필요해요.'); }, 2500);

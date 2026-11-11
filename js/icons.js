@@ -14,6 +14,12 @@
 
   // 24x24, stroke 기반 아이콘 경로
   var P = {
+    fuel: '<path d="M3 22h12M4 9h10M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0V9.83a2 2 0 0 0-.59-1.42L18 5"/>',
+    parking: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/>',
+    road: '<path d="M4 21 8 3M20 21 16 3M12 4v2M12 10v3M12 17v3"/>',
+    bottle: '<path d="M9 2h6M10 2v3.5a3 3 0 0 1-.9 2.1L8 8.7A3 3 0 0 0 7 11v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9a3 3 0 0 0-1-2.3l-1.1-1.1a3 3 0 0 1-.9-2.1V2"/><path d="M7 14h10"/>',
+    receipt: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6M16 12h-6M13 16h-3"/>',
+    plus: '<circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/>',
     film: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M3 7.5h4M3 12h18M3 16.5h4M17 3v18M17 7.5h4M17 16.5h4"/>',
     check: '<circle cx="12" cy="12" r="10"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/>',
     alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/>',
@@ -99,7 +105,7 @@
     '💻': 'laptop', '🚪': 'logout', '☁': 'cloud', '📧': 'mail', '💌': 'mail', '🎸': 'music', '🎵': 'music',
     '✈': 'plane', '🌱': 'sprout', '🌾': 'sprout', '📶': 'signal', '📡': 'signal', '✏': 'pencil', '🗑': 'trash',
     '📏': 'ruler', '☀': 'sun', '🚫': 'ban', '🏥': 'hospital', '🤖': 'bot', '🔧': 'wrench', '📝': 'note',
-    '🚦': 'traffic', '⏸': 'pause', '🆔': 'mail',
+    '🚦': 'traffic', '⛽': 'fuel', '🅿': 'parking', '🛣': 'road', '🧴': 'bottle', '🧾': 'receipt', '➕': 'plus', '📷': 'camera', '🍚': 'food', '⏸': 'pause', '🆔': 'mail',
     // 음식: 모두 식사(수저) 아이콘
     '🍲': 'food', '🥪': 'food', '🥩': 'food', '🍱': 'food', '🍽': 'food', '🥘': 'food', '🍖': 'food', '🍷': 'food',
     '🥬': 'food', '🍗': 'food', '🍙': 'food', '🍜': 'food', '🍏': 'food',
