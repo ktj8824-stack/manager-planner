@@ -29,6 +29,7 @@ const AutoNav = {
   init() {
     this.startWatch();
     if (!this._consumeFlag()) return;
+    try { localStorage.setItem('rp_autonav_used', String(Date.now())); } catch (e) { }   // 설정 끝 → 홈 홍보 줄 숨김
     this.start();
   },
 
@@ -204,11 +205,34 @@ const AutoNav = {
       </div>
       <div style="font-weight:800;font-size:15px;margin:18px 0 0;">3. 휴대폰에 자동 실행 등록</div>
       ${isAndroid ? android + ios : ios + android}
-      <button type="button" onclick="App.closeModal(); AutoNav.test()" style="width:100%;height:46px;margin-top:18px;border-radius:12px;border:1px solid #D5D9F7;background:#EEF0FD;color:#2B338F;font-weight:800;font-size:15px;cursor:pointer;">지금 시험해 보기</button>`;
+      <a href="autonav-guide.html?os=${isAndroid ? 'android' : 'ios'}" style="display:flex;align-items:center;justify-content:center;width:100%;height:46px;margin-top:18px;border-radius:12px;background:#3B45C4;color:#fff;font-weight:800;font-size:15px;text-decoration:none;">그림으로 보는 설정 가이드</a>
+      <button type="button" onclick="App.closeModal(); AutoNav.test()" style="width:100%;height:46px;margin-top:8px;border-radius:12px;border:1px solid #D5D9F7;background:#EEF0FD;color:#2B338F;font-weight:800;font-size:15px;cursor:pointer;">지금 시험해 보기</button>`;
     App.showModal('🚗 차에 타면 자동 길안내', html);
   },
 
   test() { this.start(); },
+
+  // 오늘 화면 홍보 줄: 한 번도 자동 실행된 적 없고, ✕ 안 눌렀을 때만
+  promoHtml() {
+    try {
+      if (localStorage.getItem('rp_autonav_used') || localStorage.getItem('rp_autonav_promo_off')) return '';
+      const role = localStorage.getItem('bp_user_role');
+      if (role === 'ceo' || role === 'hq_admin') return '';
+    } catch (e) { return ''; }
+    const os = /Android/i.test(navigator.userAgent) ? 'android' : 'ios';
+    return `<div class="an-promo" role="note">
+      <a class="an-promo-go" href="autonav-guide.html?os=${os}">
+        <span class="an-promo-ic" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17l1.5-5h9L18 17M7.5 12l1.2-3.6A2 2 0 0 1 10.6 7h2.8a2 2 0 0 1 1.9 1.4L16.5 12"/><circle cx="8" cy="17" r="1.6"/><circle cx="16" cy="17" r="1.6"/></svg></span>
+        <span class="an-promo-t"><b>차에 타면 길안내가 저절로</b><small>차에 연결되면 다음 일정 내비 자동 실행</small></span>
+        <span class="an-promo-btn">1분 설정</span>
+      </a>
+      <button type="button" class="an-promo-x" aria-label="다시 보지 않기" onclick="AutoNav.hidePromo()">✕</button>
+    </div>`;
+  },
+  hidePromo() {
+    try { localStorage.setItem('rp_autonav_promo_off', '1'); } catch (e) { }
+    document.querySelectorAll('.an-promo').forEach(el => el.remove());
+  },
 
   // ── 출발 15분 전 화면 알림 (앱이 켜져 있을 때) + 아이폰 앱 네이티브 알림 예약 전달 ──
   //  서버(예약 알림 함수)는 푸시로 보내고, 앱이 켜져 있으면 여기서 바로 화면에 띄운다
