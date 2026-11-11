@@ -167,6 +167,7 @@
       const all = this.items;
       const total = all.reduce((s, x) => s + Number(x.amount || 0), 0);
       const pend = all.filter(x => (x.status || 'pending') === 'pending');
+      const edited = all.filter(x => x.status === 'approved' && x.edited_after_approval_at);   // 승인 뒤 매니저가 고친 것
       const byMgr = {}; all.forEach(x => { byMgr[x.user_id] = (byMgr[x.user_id] || 0) + Number(x.amount || 0); });
       const schedules = window.hqStore?.getSchedules?.() || [];
       const art = (x) => { const s = x.schedule_id && schedules.find(z => z.id === x.schedule_id); return s ? short(s.artistName || '') : ''; };
@@ -175,8 +176,9 @@
           ${x.receipt_path ? `<button type="button" class="ex2-rc" onclick="HqExpenses.receipt(${J(x.receipt_path)})">영수증<br>보기</button>` : '<span class="ex2-rc none">영수증<br>없음</span>'}
           <span class="ex2-main"><b>${E(this.CATS[x.category] || x.category)} · ${this.won(x.amount)}</b>
             <small>${E(x.date.slice(5).replace('-', '/').replace(/^0/, ''))} · ${E(this.name(x.user_id))}${art(x) ? ' · ' + E(art(x)) : ''}${x.memo ? ' · ' + E(x.memo) : ''}</small>
-            ${x.status === 'rejected' && x.review_note ? `<small class="bad">반려 사유: ${E(x.review_note)}</small>` : ''}</span>
-          ${actions ? `<span class="ex2-act"><button type="button" class="ex2-no" onclick="HqExpenses.review(${J(x.id)}, 'rejected')">반려</button><button type="button" class="ex2-ok" onclick="HqExpenses.review(${J(x.id)}, 'approved')">승인</button></span>`
+            ${x.status === 'rejected' && x.review_note ? `<small class="bad">반려 사유: ${E(x.review_note)}</small>` : ''}
+            ${x.edited_after_approval_at && x.approved_snapshot ? `<small class="ex2-edited">승인 후 수정됨 · 승인 때 ${E([x.approved_snapshot.date && x.approved_snapshot.date !== x.date ? String(x.approved_snapshot.date).slice(5).replace('-', '/') : '', x.approved_snapshot.category !== x.category ? (this.CATS[x.approved_snapshot.category] || x.approved_snapshot.category) : '', Number(x.approved_snapshot.amount) !== Number(x.amount) ? this.won(x.approved_snapshot.amount) : '', (x.approved_snapshot.memo || '') !== (x.memo || '') ? '메모 "' + (x.approved_snapshot.memo || '') + '"' : ''].filter(Boolean).join(' · ') || '영수증·연결 일정이 바뀜')}</small>` : ''}</span>
+          ${actions ? `<span class="ex2-act"><button type="button" class="ex2-no" onclick="HqExpenses.review(${J(x.id)}, 'rejected')">반려</button><button type="button" class="ex2-ok" onclick="HqExpenses.review(${J(x.id)}, 'approved')">${actions === 'edited' ? '확인' : '승인'}</button></span>`
                     : `<span class="ex2-st ${E(x.status)}">${E(ST[x.status] || '')}</span>`}
         </div>`;
       body.innerHTML = `
@@ -191,10 +193,11 @@
         </div>
         <div class="ex2-kpi"><div><span>${m}월 합계 · ${all.length}건</span><b>${this.won(total)}</b></div><div class="${pend.length ? 'warn' : ''}"><span>승인 대기</span><b>${pend.length}건</b></div></div>
         ${pend.length ? `<h4>승인 대기</h4>${pend.map(x => row(x, true)).join('')}` : ''}
+        ${edited.length ? `<h4>승인 후 수정됨 <small>확인하면 표시가 사라져요</small></h4>${edited.map(x => row(x, 'edited')).join('')}` : ''}
         ${Object.keys(byMgr).length ? `<h4>매니저별 ${m}월 합계</h4><div class="ex2-mgr">${Object.entries(byMgr).sort((a, b) => b[1] - a[1]).map(([id, v]) => `<div><span>${E(this.name(id))}</span><b>${this.won(v)}</b></div>`).join('')}</div>` : ''}
-        ${all.length - pend.length ? `<h4>처리한 경비</h4>${all.filter(x => (x.status || 'pending') !== 'pending').map(x => row(x, false)).join('')}` : ''}
+        ${all.length - pend.length - edited.length ? `<h4>처리한 경비</h4>${all.filter(x => (x.status || 'pending') !== 'pending' && !(x.status === 'approved' && x.edited_after_approval_at)).map(x => row(x, false)).join('')}` : ''}
         ${!all.length ? '<div class="p2-empty">이 달에는 기록된 경비가 없어요.<br>매니저가 앱 \'경비 기록\'에 올린 영수증이 여기로 모여요.</div>' : ''}
-        <p class="p2-foot">매니저가 앱 '경비 기록'에 올린 영수증이 여기로 모여요 · 매니저가 고치면 다시 승인 대기로 와요</p>`;
+        <p class="p2-foot">매니저가 앱 '경비 기록'에 올린 영수증이 여기로 모여요 · 승인 전 경비를 고치면 다시 승인 대기로, 승인된 경비를 고치면 '승인 후 수정됨'으로 와요</p>`;
       head('modal-hq-expenses', '매니저 경비 정산', '영수증 확인 · 승인 · 월별 합계', 'onclick="HqExpenses.close()"');
     };
     H.review = async function (id, status) {
@@ -203,7 +206,7 @@
       try {
         const { error } = await window.SupabaseClient.client.rpc('expense_review', { p_id: id, p_status: status, p_note: note });
         if (error) throw error;
-        const it = this.items.find(x => x.id === id); if (it) { it.status = status; it.review_note = note; }
+        const it = this.items.find(x => x.id === id); if (it) { it.status = status; it.review_note = note; it.edited_after_approval_at = null; it.approved_snapshot = null; }
         this.draw();
       } catch (e) { alert(/SELF_REVIEW/.test(String(e && (e.message || e.hint) || '')) ? '내가 쓴 경비는 직접 승인·반려할 수 없어요. 대표가 처리해요.' : '처리하지 못했어요. 대표·관리자 계정인지, 인터넷 연결을 확인해 주세요.'); }
     };

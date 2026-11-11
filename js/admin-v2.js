@@ -242,6 +242,8 @@
       if (!sc || !sc.isConfigured || !sc.client) return;
       const { data } = await sc.client.from('expenses').select('id, amount').eq('status', 'pending').limit(200);
       expPending = Array.isArray(data) ? { n: data.length, sum: data.reduce((a, r) => a + (Number(r.amount) || 0), 0) } : null;
+      const ed = await sc.client.from('expenses').select('id').eq('status', 'approved').not('edited_after_approval_at', 'is', null).limit(200);
+      if (expPending && Array.isArray(ed.data)) expPending.edited = ed.data.length;
     } catch (e) { expPending = null; }
   }
 
@@ -261,6 +263,7 @@
       if (ack.length) items.push({ k: 'info', title: `변경 확인 안 함 ${ack.length}건`, sub: `${ack[0].managerName || '담당 미지정'} · ${String(ack[0].artistName || '').replace(/\s*\([^)]*\)\s*$/, '')} ${ack[0].title || ''}${ack.length > 1 ? ` 외 ${ack.length - 1}건` : ''}`, act: '보기', run: () => window.Admin?.openScheduleDetail?.(ack[0].id) });
     } catch (e) { }
     if (expPending && expPending.n) items.push({ k: 'info', title: `경비 승인 대기 ${expPending.n}건`, sub: `합계 ${expPending.sum.toLocaleString('ko-KR')}원`, act: '승인하기', run: () => $('btn-open-expenses')?.click() });
+    if (expPending && expPending.edited) items.push({ k: 'info', title: `승인 후 수정된 경비 ${expPending.edited}건`, sub: '매니저가 승인된 경비를 고쳤어요', act: '확인하기', run: () => $('btn-open-expenses')?.click() });
     try {
       const tm = new Date(); tm.setDate(tm.getDate() + 1);
       const un = (st.getSchedules() || []).filter(s => s.date === ymd(tm) && !s.managerId && s.status !== 'cancelled');

@@ -104,7 +104,7 @@ const Expenses = {
           <span class="exp-ico">${c.icon}</span>
           <span class="exp-info"><b>${esc(c.label)}${x.memo ? ' · ' + esc(x.memo) : ''}</b>${title(x.schedule_id) ? `<small>${esc(title(x.schedule_id))}</small>` : ''}${x.status === 'rejected' && x.review_note ? `<small class="exp-bad">반려 사유: ${esc(x.review_note)}</small>` : ''}</span>
           ${x.receipt_path || x.receipt_local ? '<span class="exp-rc" title="영수증 있음">📷</span>' : ''}
-          <span class="exp-amt">${this.won(x.amount)}${x.status === 'approved' ? '<small class="exp-st ok">승인</small>' : x.status === 'rejected' ? '<small class="exp-st bad">반려</small>' : ''}</span>
+          <span class="exp-amt">${this.won(x.amount)}${x.status === 'approved' ? (x.edited_after_approval_at ? '<small class="exp-st ok">승인 · 수정됨</small>' : '<small class="exp-st ok">승인</small>') : x.status === 'rejected' ? '<small class="exp-st bad">반려</small>' : ''}</span>
         </button>`;
     }).join('');
     box.innerHTML = `
@@ -150,7 +150,7 @@ const Expenses = {
           ${cur?.receipt_path ? `<button type="button" class="exp-link" onclick="Expenses.viewReceipt(${escJs(cur.receipt_path)})">영수증 보기</button>` : ''}
         </div>
         <button type="submit" id="exp-save" class="btn-primary" style="width:100%; padding:14px; font-weight:800;">${cur ? '저장' : '추가'}</button>
-        ${cur && cur.status === 'approved' ? `<p class="exp-lock-note" style="margin:0; font-size:13px; color:#636366; text-align:center;">본사가 승인한 경비라 지울 수 없어요. 고치면 다시 승인 대기로 바뀌어요.</p>` : cur ? `<button type="button" class="btn-secondary" style="width:100%; padding:12px; color:#dc2626;" onclick="Expenses.remove(${escJs(cur.id)})">삭제</button>` : ''}
+        ${cur && cur.status === 'approved' ? `<p class="exp-lock-note" style="margin:0; font-size:13px; color:#636366; text-align:center;">본사가 승인한 경비라 지울 수 없어요. 고치면 승인은 그대로이고, 본사에 '승인 후 수정됨'으로 알려져요.</p>` : cur ? `<button type="button" class="btn-secondary" style="width:100%; padding:12px; color:#dc2626;" onclick="Expenses.remove(${escJs(cur.id)})">삭제</button>` : ''}
       </form>`);
     const form = document.getElementById('exp-form');
     form?.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing && e.target.tagName === 'INPUT') { e.preventDefault(); e.target.blur(); } });

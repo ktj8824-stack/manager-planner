@@ -1310,9 +1310,31 @@ const Home = {
     wrap.appendChild(list);
     let timer = null, seq = 0, items = [];
     const close = () => { list.hidden = true; };
+    // 최근 쓴 장소 (이 기기, 최대 8곳) — 칸을 누르거나 1글자 이하일 때 먼저 보여 줌
+    const RK = 'rp_recent_places';
+    const recent = () => { try { const a = JSON.parse(localStorage.getItem(RK) || '[]'); return Array.isArray(a) ? a.filter(x => x && x.n) : []; } catch (e) { return []; } };
+    const remember = (n, a) => {
+      if (!n) return;
+      try { localStorage.setItem(RK, JSON.stringify([{ n, a: a || '' }, ...recent().filter(x => x.n !== n || (x.a || '') !== (a || ''))].slice(0, 8))); } catch (e) { }
+    };
+    const showRecent = () => {
+      const q = input.value.trim();
+      const r = recent().filter(x => !q || x.n.includes(q) || (x.a || '').includes(q)).slice(0, 5);
+      if (!r.length) { close(); return; }
+      seq++;
+      items = r.map(x => ({ place_name: x.n, road_address_name: x.a }));
+      list.innerHTML = `<div class="ps-msg" style="padding:8px 14px 2px;font-size:12px;font-weight:700;text-align:left;color:#5B616E;">최근 쓴 장소</div>` + items.map((d, i) => `
+        <button type="button" class="ps-item" data-i="${i}">
+          <b>${esc(d.place_name || '')}</b>
+          <span>${esc(d.road_address_name || '')}</span>
+        </button>`).join('');
+      list.hidden = false;
+    };
+    input.addEventListener('focus', () => { if (input.value.trim().length < 2) showRecent(); });
     const run = async () => {
       const q = input.value.trim();
-      if (q.length < 2 || typeof KakaoAPI === 'undefined') { close(); return; }
+      if (q.length < 2) { showRecent(); return; }
+      if (typeof KakaoAPI === 'undefined') { close(); return; }
       const my = ++seq;
       const first = list.hidden;
       list.hidden = false;
@@ -1347,6 +1369,7 @@ const Home = {
       const d = items[Number(btn.dataset.i)];
       if (!d) return;
       const addr = d.road_address_name || d.address_name || '';
+      remember(d.place_name || '', addr);
       if (addrId) {
         input.value = d.place_name || '';
         const a = document.getElementById(addrId);
