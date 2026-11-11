@@ -1301,8 +1301,9 @@ div.art-add.locked button { margin-top:6px; border:0; background:#3B45C4; color:
 
 /* 아래 메뉴 가운데: 로드비서 입체 마이크 */
 .bnav-item.bnav-ai { position:relative; gap:2px; }
-.bnav-orb { width:46px; height:46px; margin-top:-18px; border-radius:50%; display:block; box-shadow:0 6px 14px rgba(43,51,143,.35), 0 2px 4px rgba(43,51,143,.25), inset 0 -2px 4px rgba(0,0,0,.18); background:#FFFFFF; transition:transform .15s ease; }
-.bnav-orb svg { width:46px; height:46px; display:block; }
+.bnav-orb { width:40px; height:40px; margin-top:-8px; border-radius:50%; display:block; box-shadow:0 6px 14px rgba(43,51,143,.35), 0 2px 4px rgba(43,51,143,.25), inset 0 -2px 4px rgba(0,0,0,.18); background:#FFFFFF; transition:transform .15s ease; }
+.bnav-orb svg { width:40px; height:40px; display:block; }
+body.ads-on .bnav-orb { margin-top:-2px; }   /* 광고 띠와 겹치지 않게 */
 .bnav-item.bnav-ai:active .bnav-orb { transform:scale(.94); }
 .bnav-item.bnav-ai.active .bnav-orb { box-shadow:0 0 0 3px #FFFFFF, 0 0 0 5px #D5D9F7, 0 6px 14px rgba(43,51,143,.35); }
 .bnav-ai-label { font-size:11.5px; font-weight:800; letter-spacing:-0.3px; color:#2B338F; }
