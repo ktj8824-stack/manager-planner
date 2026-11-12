@@ -89,7 +89,7 @@ const Plan = {
         <div style="padding:4px 2px; text-align:left;">
           <p style="font-size:15px; font-weight:700; color:var(--text-100); margin-bottom:8px;">차에 타면 다음 일정으로 내비가 저절로 켜져요.</p>
           <p style="font-size:14px; color:var(--text-200); margin-bottom:14px;">결제 없이 7일 동안 그대로 써 볼 수 있어요. 체험이 끝나면 유료(월 ${this.FEE.toLocaleString()}원)에서 계속 쓸 수 있어요.</p>
-          <button class="btn-primary" style="width:100%; padding:14px; font-weight:800;" onclick="App.closeModal(); Plan.startTrial(); location.href='autonav-guide.html?from=app&os=' + (/Android/i.test(navigator.userAgent) ? 'android' : 'ios');">7일 무료 체험 시작</button>
+          <button class="btn-primary" style="width:100%; padding:14px; font-weight:800;" onclick="App.closeModal(); Plan.startTrial(); AutoNav.showGuide(/Android/i.test(navigator.userAgent) ? 'android' : 'ios');">7일 무료 체험 시작</button>
           <button class="btn-secondary" style="width:100%; padding:12px; margin-top:8px;" onclick="App.closeModal()">나중에</button>
         </div>`);
       return;

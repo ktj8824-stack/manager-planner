@@ -1401,3 +1401,12 @@ body.ads-on .bottom-nav { padding-top:58px; }
 .an-promo-t small { font-size:12px; color:#C9CCD6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .an-promo-btn { flex:none; height:30px; padding:0 10px; border-radius:9px; background:#fff; color:#2B338F; font-size:13px; font-weight:700; display:grid; place-items:center; }
 .an-promo-x { position:absolute; top:50%; right:6px; transform:translateY(-50%); width:30px; height:30px; border:0; background:transparent; color:#8A90A0; font-size:14px; cursor:pointer; }
+
+/* 앱 안 자동 길안내 가이드: 위 시계 줄은 비우고, 아래 메뉴는 보이게 (bottom은 메뉴 높이를 재서 넣음) */
+#an-guide{position:fixed;top:0;bottom:calc(var(--bottom-nav-h, 64px) + var(--nav-safe, 0px));left:50%;transform:translateX(-50%);width:100%;max-width:var(--app-w, 100vw);z-index:99990;background:#fff;display:flex;flex-direction:column}
+#an-guide .ang-bar{flex:none;display:flex;align-items:center;gap:4px;padding:calc(env(safe-area-inset-top, 0px) + 6px) 12px 6px 4px;border-bottom:1px solid #e5e7eb;background:#fff}
+#an-guide .ang-bar b{font-size:17px;font-weight:800;color:#14161A}
+#an-guide .ang-back{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:0;background:none;color:#14161A;cursor:pointer}
+#an-guide iframe{flex:1;width:100%;border:0;display:block}
+body.guide-open #bottom-nav{z-index:99995}
+body.guide-open .ad-banner,body.guide-open .home-fab{display:none!important}

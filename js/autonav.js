@@ -205,7 +205,7 @@ const AutoNav = {
       </div>
       <div style="font-weight:800;font-size:15px;margin:18px 0 0;">3. 휴대폰에 자동 실행 등록</div>
       ${isAndroid ? android + ios : ios + android}
-      <a href="autonav-guide.html?from=app&os=${isAndroid ? 'android' : 'ios'}" style="display:flex;align-items:center;justify-content:center;width:100%;height:46px;margin-top:18px;border-radius:12px;background:#3B45C4;color:#fff;font-weight:800;font-size:15px;text-decoration:none;">그림으로 보는 설정 가이드</a>
+      <a href="autonav-guide.html?from=app&os=${isAndroid ? 'android' : 'ios'}" onclick="return AutoNav.guideClick('${isAndroid ? 'android' : 'ios'}')" style="display:flex;align-items:center;justify-content:center;width:100%;height:46px;margin-top:18px;border-radius:12px;background:#3B45C4;color:#fff;font-weight:800;font-size:15px;text-decoration:none;">그림으로 보는 설정 가이드</a>
       <button type="button" onclick="App.closeModal(); AutoNav.test()" style="width:100%;height:46px;margin-top:8px;border-radius:12px;border:1px solid #D5D9F7;background:#EEF0FD;color:#2B338F;font-weight:800;font-size:15px;cursor:pointer;">지금 시험해 보기</button>`;
     App.showModal('🚗 차에 타면 자동 길안내', html);
   },
@@ -223,7 +223,7 @@ const AutoNav = {
     const locked = typeof Plan !== 'undefined' && Plan.isIndie && Plan.isIndie() && !Plan.can('autonav');   // 무료 개인 매니저: 설정 전에 알림
     const canTrial = locked && Plan.trialUsed && !Plan.trialUsed();   // 아직 체험 전 → 누르면 7일 무료 체험
     return `<div class="an-promo" role="note">
-      <a class="an-promo-go" href="autonav-guide.html?from=app&os=${os}"${canTrial ? ` onclick="Plan.startTrial();"` : locked ? ` onclick="event.preventDefault(); Plan.require('autonav');"` : ''}>
+      <a class="an-promo-go" href="autonav-guide.html?from=app&os=${os}"${canTrial ? ` onclick="Plan.startTrial(); return AutoNav.guideClick('${os}');"` : locked ? ` onclick="event.preventDefault(); Plan.require('autonav');"` : ` onclick="return AutoNav.guideClick('${os}')"`}>
         <span class="an-promo-ic" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17l1.5-5h9L18 17M7.5 12l1.2-3.6A2 2 0 0 1 10.6 7h2.8a2 2 0 0 1 1.9 1.4L16.5 12"/><circle cx="8" cy="17" r="1.6"/><circle cx="16" cy="17" r="1.6"/></svg></span>
         <span class="an-promo-t"><b>차에 타면 길안내가 저절로</b><small>${canTrial ? '7일 무료 체험 · 차에 연결되면 내비 자동 실행' : locked ? '유료 기능 · 무료 체험이 끝났어요' : (Plan.isIndie && Plan.isIndie() && !Plan.isPaid() && Plan.trialActive() ? `무료 체험 중 · ${Plan.trialLeftText()}` : '차에 연결되면 다음 일정 내비 자동 실행')}</small></span>
         <span class="an-promo-btn">${canTrial ? '무료 체험' : locked ? '알아보기' : '1분 설정'}</span>
@@ -425,6 +425,32 @@ const AutoNav = {
     document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(() => this._watchTick(), 1500); else this._keepNotice(); });
     window.addEventListener('pagehide', () => this._keepNotice());
     window.addEventListener('hq-store-change', () => { clearTimeout(this._wt); this._wt = setTimeout(() => this._sendNative(this._can('alerts') ? this._myDriveSteps() : []), 1500); });
+  },
+
+  /** 설정 가이드: 앱을 떠나지 않고 화면 위에 띄움 (위 시계 줄 겹침 없이, 아래 메뉴는 그대로, 광고 줄은 숨김) */
+  guideClick(os) { this.showGuide(os); return false; },
+  showGuide(os) {
+    if (typeof App !== 'undefined' && App.closeModal) { try { App.closeModal(); } catch (e) { } }
+    this.closeGuide();
+    const el = document.createElement('div');
+    el.id = 'an-guide';
+    const nav = document.getElementById('bottom-nav');
+    if (nav && nav.offsetParent !== null) el.style.bottom = nav.getBoundingClientRect().height + 'px';
+    el.innerHTML = `<div class="ang-bar"><button type="button" class="ang-back" onclick="AutoNav.closeGuide()" aria-label="뒤로">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <b>차에 타면 자동 길안내</b></div>
+      <iframe src="autonav-guide.html?from=app&os=${os === 'android' ? 'android' : 'ios'}&embed=1" title="자동 길안내 설정 가이드"></iframe>`;
+    document.body.appendChild(el);
+    document.body.classList.add('guide-open');
+    if (!this._msgHooked) {
+      window.addEventListener('message', e => { if (e.data && e.data.anGuide === 'close') this.closeGuide(); });
+      this._msgHooked = true;
+    }
+  },
+  closeGuide() {
+    const el = document.getElementById('an-guide');
+    if (el) el.remove();
+    document.body.classList.remove('guide-open');
   },
 };
 

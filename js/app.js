@@ -213,6 +213,7 @@ const App = {
   },
 
   navigate(name) {
+    if (typeof AutoNav !== 'undefined' && AutoNav.closeGuide) AutoNav.closeGuide();   // 자동 길안내 가이드가 떠 있으면 닫고 이동
     if (!this.screens.includes(name)) return;
     try { if (window.Chat && window.Chat.st && window.Chat.st.open) window.Chat.close(); } catch (e) { }   // 홈·내 정보로 가면 로드톡 닫기
     this.screens.forEach(s => { const el=U.$(`#screen-${s}`); if(el)el.classList.remove('active'); });
