@@ -26,6 +26,15 @@
       "purpose": "any maskable"
     }
   ],
+  "shortcuts": [
+    {
+      "name": "다음 일정 길안내",
+      "short_name": "길안내",
+      "description": "오늘 다음 일정 장소로 내비를 바로 켭니다",
+      "url": "./?go=next",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ],
   "id": "./",
   "scope": "./",
   "lang": "ko"

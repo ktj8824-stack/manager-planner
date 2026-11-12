@@ -383,12 +383,47 @@ const AutoNav = {
     } catch (e) { if (typeof U !== 'undefined') U.toast('알리지 못했어요. 로드톡으로 직접 보내 주세요.'); }
   },
 
+  // ── 출발 약 1시간 전부터 '다음 일정' 알림을 알림 목록에 남겨 둔다 ──
+  //   서버가 1시간 전·15분 전에 같은 tag(next-일정-단계)로 보냄. 미리 눌러서 사라졌으면
+  //   앱을 떠날 때 다시 올려 두고(소리 없이), [출발]을 누르면 지운다.
+  _noticeTag(s) { return `next-${s.ev.hqScheduleId || s.ev.id}-${s.ev.timelineIdx ?? ''}`; },
+  async _keepNotice() {
+    try {
+      if (!this._can('alerts') || !('serviceWorker' in navigator) || typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (!reg || !reg.showNotification) return;
+      const now = Date.now();
+      const s = this._myDriveSteps().find(x => !x.wake && (x.at - now) / 60000 <= 65 && (x.at - now) / 60000 > -20);
+      const tag = s ? this._noticeTag(s) : '';
+      const all = await reg.getNotifications();
+      all.forEach(n => { if (/^next-/.test(n.tag || '') && n.tag !== tag) n.close(); });   // 끝났거나 지난 단계 알림 정리
+      if (!s || all.some(n => n.tag === tag)) return;
+      const name = String(s.ev.title || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim().replace(/^\[[^\]]+\]\s*/, '');
+      const who = s.sch && !s.sch.isSecret ? (s.sch.artistName ? s.sch.artistName + ' · ' : '') + (s.sch.title || '') : '';
+      await reg.showNotification(`🚗 다음 일정 · ${s.ev.time} 출발`, {
+        body: `${name}${who ? '\n' + who : ''}\n차에 타면 눌러서 바로 길안내`,
+        tag, silent: true, renotify: false,
+        icon: new URL('icon-192.png', reg.scope).href, badge: new URL('icon-192.png', reg.scope).href,
+        data: { url: new URL('./?go=next', reg.scope).href }
+      });
+    } catch (e) { }
+  },
+  // [출발]·[완료]를 누르면 그 일정의 '다음 일정' 알림을 지운다
+  async clearNotice(schId) {
+    try {
+      const reg = 'serviceWorker' in navigator && await navigator.serviceWorker.getRegistration();
+      if (!reg || !reg.getNotifications) return;
+      (await reg.getNotifications()).forEach(n => { if (String(n.tag || '').startsWith(`next-${schId}-`)) n.close(); });
+    } catch (e) { }
+  },
+
   startWatch() {
     if (this._watching) return;
     this._watching = true;
     setTimeout(() => this._watchTick(), 4000);
     setInterval(() => { this._watchTick(); this._delayCheck().catch(() => { }); }, 30000);
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(() => this._watchTick(), 1500); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(() => this._watchTick(), 1500); else this._keepNotice(); });
+    window.addEventListener('pagehide', () => this._keepNotice());
     window.addEventListener('hq-store-change', () => { clearTimeout(this._wt); this._wt = setTimeout(() => this._sendNative(this._can('alerts') ? this._myDriveSteps() : []), 1500); });
   },
 };

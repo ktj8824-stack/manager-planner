@@ -1090,6 +1090,7 @@ const Home = {
     }
 
     this.updateRightTimeline();
+    if (window.AutoNav && AutoNav.clearNotice) AutoNav.clearNotice(hqId);   // [출발]·[완료] → 남겨 둔 '다음 일정' 알림 지움
 
     // [완료]를 눌렀을 때만 → 다음에 할 단계(아직 안 끝난 첫 단계)를 맨 위로 올림. [이동중]은 화면을 그대로 둠
     if (targetStatus !== '완료') return;

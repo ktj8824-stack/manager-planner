@@ -170,7 +170,7 @@ async function hqIds(db: SupabaseClient, co: string, pref: "hq_late" | "hq_eveni
 export async function run(db: SupabaseClient, send: Sender, nowMs: number, route: Route | null = null) {
   const today = kst(nowMs);
   const tomorrow = kst(nowMs + 24 * 3600e3);
-  const out = { departures: 0, evening: 0, pushed: 0, retimed: 0, late: 0 };
+  const out = { departures: 0, pre: 0, evening: 0, pushed: 0, retimed: 0, late: 0 };
   try {
     const { data: urls } = await db.from("app_settings").select("key, value").in("key", ["app_url", "hq_url"]);
     for (const u of (urls ?? []) as Row[]) {
@@ -232,7 +232,7 @@ export async function run(db: SupabaseClient, send: Sender, nowMs: number, route
       const st = tl[i] || {};
       if (st.done || st.moving || !st.time || !DRIVE.test(st.label || "") || /철수|^\[기상/.test(st.label || "")) continue;
       const left = (toMs(s.date, st.time) + (offs[i] || 0) * 86400e3 - nowMs) / 60000;
-      if (left > 16 || left < -21) continue;
+      if (left > 65 || left < -21) continue;
       // 4) 출발 지연: 출발 시간이 5~20분 지났는데 출발/완료 표시가 없음 → 매니저 + 본사
       if (left <= -5 && left > -20) {
         if (!(await claim(db, `late|${s.id}|${i}|${st.time}`))) continue;
@@ -254,6 +254,20 @@ export async function run(db: SupabaseClient, send: Sender, nowMs: number, route
         out.pushed += a.sent + b.sent;
         continue;
       }
+      // 5) 출발 약 1시간 전: '다음 일정' 알림을 미리 남겨 둔다 → 차에 타서 누르면 바로 길안내
+      //    (15분 전 알림이 같은 tag로 이 알림을 바꿔 쓴다. [출발]을 누르면 앱이 지움)
+      if (left > 50 && left <= 65) {
+        if (!(await claim(db, `pre|${s.id}|${i}|${st.time}`))) continue;
+        out.pre++;
+        const who = s.is_secret ? "비공개 일정" : `${s.artists?.name ? s.artists.name + " · " : ""}${s.title}`;
+        const r = await push(db, send, [s.manager_id], {
+          title: `🚗 다음 일정 · ${st.time} 출발`,
+          body: `${stepName(st.label)}\n${who}\n차에 타면 눌러서 바로 길안내`,
+          tag: `next-${s.id}-${i}`, url: APP_URL + "?go=next", kind: "pre",
+        }, 3600);
+        out.pushed += r.sent;
+        continue;
+      }
       if (left <= 9 || left > 16) continue;
       if (!(await claim(db, `dep|${s.id}|${i}|${st.time}`))) continue;
       out.departures++;
@@ -261,7 +275,7 @@ export async function run(db: SupabaseClient, send: Sender, nowMs: number, route
       const r = await push(db, send, [s.manager_id], {
         title: `🚗 ${Math.round(left)}분 뒤 출발 · ${st.time}`,
         body: `${stepName(st.label)}\n${who}\n눌러서 바로 길안내`,
-        tag: `dep-${s.id}-${i}`, url: APP_URL + "?go=next", kind: "departure",
+        tag: `next-${s.id}-${i}`, url: APP_URL + "?go=next", kind: "departure",
       }, 1200);
       out.pushed += r.sent;
     }

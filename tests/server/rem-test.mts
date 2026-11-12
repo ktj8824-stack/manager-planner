@@ -39,3 +39,11 @@ for (const s of sent) console.log(s.title, '|', s.body.replace(/\n/g, ' / '), '|
 prefOff = true; const before = sent.length;
 await run(db, send, t('2026-11-03T21:00:00+09:00'));
 console.log('prefOff hq:', sent.slice(before).filter(x => /manager-planner-web/.test(x.url)).length, 'mgr:', sent.slice(before).filter(x => /manager-planner-app/.test(x.url)).length);
+
+// 출발 약 1시간 전 '다음 일정' 알림 (같은 tag로 15분 전 알림이 바꿔 씀)
+const b2 = sent.length;
+const pr = await run(db, send, t('2026-11-04T09:52:00+09:00'));
+await run(db, send, t('2026-11-04T09:57:00+09:00'));   // 중복 X
+const pre = sent.slice(b2).filter(x => x.kind === 'pre');
+console.log('pre:', pr.pre, pre.length, pre[0] && pre[0].title, pre[0] && pre[0].tag, /go=next/.test(pre[0] && pre[0].url));
+console.log('sameTag:', sent.some(x => x.kind === 'departure' && x.tag === 'next-s1-0'));
