@@ -141,6 +141,18 @@
       const r = window.hqStore.checkConflict?.({ id: val('form-sch-id') || null, date: s.date, startTime: s.startTime, endTime: s.endTime || s.startTime, managerId: mgrId || null, vehicleId: val('form-vehicle') || null });
       (r?.conflicts || []).slice(0, 3).forEach(c => warns.push(`${c.type === 'vehicle' ? '차량 ' + (c.vehicleName || '') : '매니저 ' + (c.managerName || '')} 겹침 · ${c.conflictTime} ${c.conflictArtist ? c.conflictArtist + ' ' : ''}${c.conflictScheduleTitle || ''}`));
     } catch (e) { }
+    // 앞 일정이 끝나기 전에 이 일정 첫 출발이 잡히는지 (같은 날 같은 매니저)
+    try {
+      const f0 = first && String(first.time || '').slice(0, 5);
+      if (hasMgr && s.date && /^\d{2}:\d{2}$/.test(f0 || '') && toMin(f0) < toMin(s.startTime)) {
+        const myId = val('form-sch-id');
+        const prev = (window.hqStore.getSchedules() || []).filter(x => x && x.id !== myId && x.date === s.date && x.managerId === mgrId && x.status !== '취소'
+          && /^\d{2}:\d{2}/.test(String(x.startTime || '')) && toMin(String(x.startTime).slice(0, 5)) < toMin(s.startTime)
+          && /^\d{2}:\d{2}/.test(String(x.endTime || '')) && toMin(String(x.endTime).slice(0, 5)) > toMin(f0));
+        prev.sort((a, b) => toMin(String(b.endTime).slice(0, 5)) - toMin(String(a.endTime).slice(0, 5)));
+        if (prev[0]) { const x = prev[0]; const art = String(x.artistName || '').replace(/\s*\([^)]*\)\s*$/, ''); warns.push(`앞 일정(${art ? art + ' ' : ''}${x.title || ''} ~${String(x.endTime).slice(0, 5)})이 끝나기 전에 ${f0} 출발해야 해요 · 시간이나 담당 매니저를 확인해 주세요`); }
+      }
+    } catch (e) { }
     box.innerHTML = head + basis
       + (first ? `<div class="sr-lead"><span>${hasMgr ? esc(mgr) + ' 출발' : '첫 출발'}</span><b>${esc(first.time)}</b></div>` : '')
       + `<ol class="sr-list${useReal ? '' : ' est'}">${tl.map(x => { const k = KIND(x.label || ''); return `<li class="k-${esc(k)}"><b>${esc(x.time || '')}</b><span><em>${ICON[k] || '•'}</em>${esc(clean(x.label))}${x.desc ? `<small>${esc(x.desc)}</small>` : ''}</span></li>`; }).join('')}</ol>`
@@ -247,6 +259,41 @@
     } catch (e) { expPending = null; }
   }
 
+  // 매니저 위치 동의 상태 · 본사 긴급 전화번호 (본사 '확인할 것'과 매니저 목록에 씀)
+  let hints = null;
+  async function loadHints() {
+    try {
+      const sc = window.SupabaseClient;
+      if (!sc || !sc.isConfigured || !sc.client || !sc.currentUser) return;
+      const [pr, lc] = await Promise.all([
+        sc.client.from('profiles').select('id, name, role, phone'),
+        sc.client.from('location_consents').select('user_id, agreed'),
+      ]);
+      if (pr.error) return;
+      const agreed = {}; (lc.data || []).forEach(r => { agreed[r.user_id] = !!r.agreed; });
+      const people = pr.data || [];
+      hints = {
+        agreed,
+        noConsent: people.filter(p => p.role === 'manager' && agreed[p.id] !== true),
+        hqPhone: people.some(p => ['ceo', 'hq_admin'].includes(p.role) && String(p.phone || '').replace(/[^0-9]/g, '').length >= 8),
+      };
+      window.HqHints = hints;
+    } catch (e) { }
+  }
+  async function setMyPhone() {
+    const v = prompt('매니저 앱 [긴급] 화면에 보일 내 휴대폰 번호를 넣어 주세요', '');
+    if (v === null) return;
+    const tel = String(v).replace(/[^0-9-]/g, '');
+    if (tel.replace(/-/g, '').length < 9) { alert('번호를 다시 확인해 주세요.'); return; }
+    try {
+      const sc = window.SupabaseClient;
+      const { error } = await sc.client.from('profiles').update({ phone: tel }).eq('id', sc.currentUser.id);
+      if (error) throw error;
+      await loadHints(); drawTodo();
+      alert('저장했어요. 매니저 [긴급] 화면에 이 번호로 전화 버튼이 보여요.');
+    } catch (e) { alert('저장하지 못했어요. 인터넷 연결을 확인해 주세요.'); }
+  }
+
   // 경비 창을 해당 경비가 있는 달로 열기 (다른 달 경비면 이번 달 창에 안 보이므로)
   function openExp(month) {
     if (month && /^\d{4}-\d{2}$/.test(month) && window.HqExpenses) HqExpenses.month = month;
@@ -275,6 +322,8 @@
       const un = (st.getSchedules() || []).filter(s => s.date === ymd(tm) && !s.managerId && s.status !== 'cancelled');
       if (un.length) items.push({ k: 'mute', title: `내일 담당 미지정 ${un.length}건`, sub: `${tm.getMonth() + 1}/${tm.getDate()} ${un[0].startTime || ''} ${un[0].title || ''}`, act: '배정', run: () => window.Admin?.openScheduleDetail?.(un[0].id) });
     } catch (e) { }
+    if (hints && !hints.hqPhone) items.push({ k: 'late', title: '긴급 지원 전화가 비어 있어요', sub: '매니저가 [긴급]을 눌러도 본사로 전화할 번호가 없어요', act: '내 번호 넣기', run: setMyPhone });
+    if (hints && hints.noConsent.length) items.push({ k: 'mute', title: `위치 미동의 매니저 ${hints.noConsent.length}명`, sub: `${hints.noConsent.slice(0, 3).map(p => p.name || '이름 없음').join(', ')}${hints.noConsent.length > 3 ? ` 외 ${hints.noConsent.length - 3}명` : ''} · 이동 중 지연 예상이 오지 않아요`, act: '로드톡', run: () => { try { Chat.open({ managerId: hints.noConsent[0].id }); } catch (e) { $('btn-open-chat')?.click(); } } });
     box._items = items;
     box.innerHTML = `<h3>확인할 것 <span>${items.length}</span></h3>` + (items.length
       ? items.map((it, i) => `<div class="hq-todo-row ${it.k}"><span class="d" aria-hidden="true"></span><div class="t"><b>${esc(it.title)}</b><small>${esc(it.sub)}</small></div><button type="button" data-i="${i}">${esc(it.act)}</button></div>`).join('')
@@ -296,8 +345,8 @@
     if (brief) new MutationObserver(() => { drawTodo(); syncHead(); }).observe(brief, { childList: true });
     const cb = $('chat-badge'); if (cb) new MutationObserver(syncHead).observe(cb, { attributes: true, childList: true, characterData: true, subtree: true });
     syncHead(); drawTodo();
-    loadExpPending().then(drawTodo);
-    setInterval(() => { syncHead(); loadExpPending().then(drawTodo); }, 60000);
+    Promise.all([loadExpPending(), loadHints()]).then(drawTodo);
+    setInterval(() => { syncHead(); Promise.all([loadExpPending(), loadHints()]).then(drawTodo); }, 60000);
   };
   window.HqTodo = { draw: drawTodo };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();

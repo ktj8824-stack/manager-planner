@@ -1847,6 +1847,7 @@ class HQDataStore {
         recordedAt: now.toISOString(), label: input.label || '상태 변경', status: input.status || sch.status,
         stepIdx: input.stepIdx !== undefined ? input.stepIdx : null,
         managerName: input.managerName || localStorage.getItem('bp_user_name') || '현장 매니저',
+        ...(input.track ? { track: input.track } : {}),   // 실제 지연 학습용: {kind, plannedAt, at} (구간 종류·계획 시각·실제 시각)
         ...(input.ack ? { ack: input.ack } : {}),          // 본사 변경: 담당 매니저의 '확인' 필요 {need, managerId}
         ...(input.ackOf ? { ackOf: input.ackOf, byId: input.byId || null } : {})   // 매니저의 '확인했습니다'
       };

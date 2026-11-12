@@ -31,7 +31,7 @@ const { chromium, devices } = require('playwright');
   await p.tap('text=수정 창 열기'); await p.waitForTimeout(500);
   R.editForm = await p.evaluate(() => ({ title: document.getElementById('m-sch-title')?.value, start: document.getElementById('m-sch-start')?.value, submit: document.getElementById('m-sch-submit')?.textContent.trim() }));
   await p.evaluate(() => App.closeModal()); await p.waitForTimeout(300);
-  R.done = await p.evaluate(() => document.querySelector('.rpai-card .rpai-btn.done')?.innerText || '');
+  R.done = await p.evaluate(() => document.querySelector('.rpai-card .rpai-btn.done')?.innerText || [...document.querySelectorAll('.rpai-card .rpai-btn')].map(b => b.innerText).find(t => /다시 열기/.test(t)) || '');
   R.noNewSchedule = await p.evaluate(() => window.hqStore.getSchedules().filter(s => s.title === 'AI변경시험 사전녹화').length);
   // 매니저: 본사에 요청 → 로드톡 열림
   await p.evaluate(() => { localStorage.setItem('bp_user_role', 'manager'); window.__opened = 0; const o = App.openMessages; App.openMessages = function () { window.__opened++; }; });

@@ -220,12 +220,13 @@ const AutoNav = {
       if (role === 'ceo' || role === 'hq_admin') return '';
     } catch (e) { return ''; }
     const os = /Android/i.test(navigator.userAgent) ? 'android' : 'ios';
-    const locked = typeof Plan !== 'undefined' && Plan.isIndie && Plan.isIndie() && !Plan.can('autonav');   // 무료 개인 매니저: 설정 전에 유료 기능임을 먼저 알림
+    const locked = typeof Plan !== 'undefined' && Plan.isIndie && Plan.isIndie() && !Plan.can('autonav');   // 무료 개인 매니저: 설정 전에 알림
+    const canTrial = locked && Plan.trialUsed && !Plan.trialUsed();   // 아직 체험 전 → 누르면 7일 무료 체험
     return `<div class="an-promo" role="note">
-      <a class="an-promo-go" href="autonav-guide.html?from=app&os=${os}"${locked ? ` onclick="event.preventDefault(); Plan.require('autonav');"` : ''}>
+      <a class="an-promo-go" href="autonav-guide.html?from=app&os=${os}"${canTrial ? ` onclick="Plan.startTrial();"` : locked ? ` onclick="event.preventDefault(); Plan.require('autonav');"` : ''}>
         <span class="an-promo-ic" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17l1.5-5h9L18 17M7.5 12l1.2-3.6A2 2 0 0 1 10.6 7h2.8a2 2 0 0 1 1.9 1.4L16.5 12"/><circle cx="8" cy="17" r="1.6"/><circle cx="16" cy="17" r="1.6"/></svg></span>
-        <span class="an-promo-t"><b>차에 타면 길안내가 저절로</b><small>${locked ? '유료 기능 · 차에 연결되면 내비 자동 실행' : '차에 연결되면 다음 일정 내비 자동 실행'}</small></span>
-        <span class="an-promo-btn">${locked ? '알아보기' : '1분 설정'}</span>
+        <span class="an-promo-t"><b>차에 타면 길안내가 저절로</b><small>${canTrial ? '7일 무료 체험 · 차에 연결되면 내비 자동 실행' : locked ? '유료 기능 · 무료 체험이 끝났어요' : (Plan.isIndie && Plan.isIndie() && !Plan.isPaid() && Plan.trialActive() ? `무료 체험 중 · ${Plan.trialLeftText()}` : '차에 연결되면 다음 일정 내비 자동 실행')}</small></span>
+        <span class="an-promo-btn">${canTrial ? '무료 체험' : locked ? '알아보기' : '1분 설정'}</span>
       </a>
       <button type="button" class="an-promo-x" aria-label="다시 보지 않기" onclick="AutoNav.hidePromo()">✕</button>
     </div>`;

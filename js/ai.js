@@ -400,7 +400,8 @@ const RoadAI = {
         ${row('샵', a.shop_name)}
         ${row('출발지', a.departure)}
       </div>
-      ${done ? `<div class="rpai-btns"><button class="rpai-btn done" disabled>${a.status === 'done' ? '✓ 등록 창을 열었어요' : '취소됨'}</button></div>`
+      ${a.status === 'done' ? `<p class="rpai-note">등록 창을 열었어요. 저장하지 않고 닫았다면 다시 열 수 있어요.</p><div class="rpai-btns"><button class="rpai-btn ghost" onclick="RoadAI.confirm('${msgId}',${i})">등록 창 다시 열기</button></div>`
+        : done ? `<div class="rpai-btns"><button class="rpai-btn done" disabled>취소됨</button></div>`
         : `<p class="rpai-note">버튼을 누르면 등록 창이 채워져 열려요. 확인 후 [스케줄 등록 완료]를 눌러 주세요.</p>
            <div class="rpai-btns"><button class="rpai-btn" onclick="RoadAI.confirm('${msgId}',${i})">등록 창 열기</button><button class="rpai-btn ghost" onclick="RoadAI.dismiss('${msgId}',${i})">취소</button></div>`}
     </div>`;
@@ -437,7 +438,8 @@ const RoadAI = {
         ${a.cancel ? '' : row('시간', arrow(b.start + (b.end ? ' ~ ' + b.end : ''), (a.new_start || a.new_end) ? (a.new_start || b.start) + ((a.new_end || b.end) ? ' ~ ' + (a.new_end || b.end) : '') : ''))}
         ${row('이유', esc(a.reason))}
       </div>
-      ${done ? `<div class="rpai-btns"><button class="rpai-btn done" disabled>${doneLabel}</button></div>`
+      ${a.status === 'done' && hq && !a.cancel ? `<p class="rpai-note">수정 창을 열었어요. 저장하지 않고 닫았다면 다시 열 수 있어요.</p><div class="rpai-btns"><button class="rpai-btn ghost" onclick="RoadAI.confirm('${msgId}',${i})">수정 창 다시 열기</button></div>`
+        : done ? `<div class="rpai-btns"><button class="rpai-btn done" disabled>${doneLabel}</button></div>`
         : `<p class="rpai-note">${note}</p>
            <div class="rpai-btns"><button class="rpai-btn" onclick="RoadAI.confirm('${msgId}',${i})">${hq ? (a.cancel ? '취소로 바꾸기' : '수정 창 열기') : '본사에 요청'}</button><button class="rpai-btn ghost" onclick="RoadAI.dismiss('${msgId}',${i})">취소</button></div>`}
     </div>`;
@@ -473,6 +475,12 @@ const RoadAI = {
       if (a.new_date && g('m-sch-date')) g('m-sch-date').value = a.new_date;
       if (a.new_start && g('m-sch-start')) g('m-sch-start').value = a.new_start;
       if (a.new_end && g('m-sch-end')) { g('m-sch-end').value = a.new_end; g('m-sch-end').dataset.touched = '1'; }
+      else if (a.new_start && g('m-sch-end') && /^\d{2}:\d{2}/.test(String(sch.startTime || '')) && /^\d{2}:\d{2}/.test(String(sch.endTime || ''))) {
+        // 시작만 미뤄지면 끝 시간도 같은 만큼 밀기 (행사 길이 그대로)
+        const toM = (t) => { const [h, mm] = String(t).slice(0, 5).split(':').map(Number); return h * 60 + mm; };
+        const e = ((toM(sch.endTime) + toM(a.new_start) - toM(sch.startTime)) % 1440 + 1440) % 1440;
+        g('m-sch-end').value = `${String(Math.floor(e / 60)).padStart(2, '0')}:${String(e % 60).padStart(2, '0')}`; g('m-sch-end').dataset.touched = '1';
+      }
       U.toast('바뀐 값을 확인하고 저장해 주세요.');
       a.status = 'done'; this.save(); this._redraw(m);
     }, 60);

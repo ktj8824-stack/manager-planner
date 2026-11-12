@@ -56,7 +56,9 @@ const Profile = {
     const userDept       = localStorage.getItem('bp_dept_name')    || '';
     const indie = typeof Plan !== 'undefined' && Plan.isIndie();   // 개인 매니저 (본사 없음)
     const paid = !indie || Plan.isPaid();
-    const lock = (f) => (indie && !Plan.can(f)) ? '<span style="font-size:12px;font-weight:800;color:#4C57D6;background:#EEF0FD;border:1px solid #D5D9F7;padding:3px 9px;border-radius:999px;white-space:nowrap;">🔒 유료</span>' : ProfileIcons.chevron;
+    const lock = (f) => (indie && f === 'autonav' && !Plan.can(f) && !Plan.trialUsed()) ? '<span style="font-size:12px;font-weight:800;color:#1F7A4C;background:#E7F5EE;border:1px solid #BFE3CF;padding:3px 9px;border-radius:999px;white-space:nowrap;">7일 무료 체험</span>'
+      : (indie && f === 'autonav' && !Plan.isPaid() && Plan.trialActive()) ? `<span style="font-size:12px;font-weight:800;color:#1F7A4C;background:#E7F5EE;border:1px solid #BFE3CF;padding:3px 9px;border-radius:999px;white-space:nowrap;">체험 ${Plan.trialLeftText()}</span>`
+      : (indie && !Plan.can(f)) ? '<span style="font-size:12px;font-weight:800;color:#4C57D6;background:#EEF0FD;border:1px solid #D5D9F7;padding:3px 9px;border-radius:999px;white-space:nowrap;">🔒 유료</span>' : ProfileIcons.chevron;
     if (indie && !this._planChecked) { this._planChecked = true; Plan.refresh().then(() => { if (State.screen === 'profile') this.render(); }); }
     // 담당 아티스트: 본사가 지정한 아티스트 ID → 이름
     const assignedArtists = (() => {

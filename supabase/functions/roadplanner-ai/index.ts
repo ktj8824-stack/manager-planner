@@ -29,7 +29,7 @@ const RP_PUBLISHABLE = "sb_publishable_4BiVB8PhD5kk1Dvtvf6Hkw_8YZL0Mwa"; // 로�
 
 export const CHAT_MODEL = "claude-haiku-5-5";    // 일반 대화: 빠르고 저렴
 export const VISION_MODEL = "claude-sonnet-5-5"; // 스케줄표·콜시트 사진 읽기: 정확도 우선
-const MAX_ROUNDS = 4;
+const MAX_CALLS = 2;   // 말 한 번에 Claude 호출은 최대 2번 (도구 쓰기 1번 + 답 1번, 또는 답 1번 + 다시 받기 1번) — 비용 절약
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -433,12 +433,13 @@ export function cleanReply(reply: string, actionCount: number): string {
 const NOT_SHOWN = "이 제안은 받아들여지지 않아 사용자에게 카드가 보이지 않았습니다. ";
 
 /** 한 번의 대화 (도구 여러 번) — 결과를 모아 돌려줌 */
-async function converse(env: Env, model: string, ctx: Json, messages: Json[], fromPhoto: boolean, f: Fetch, textOnly = false) {
+async function converse(env: Env, model: string, ctx: Json, messages: Json[], fromPhoto: boolean, f: Fetch, budget: { left: number }, textOnly = false) {
   const actions: Json[] = [];
   const places: Json[] = [];
   const seen: Record<string, boolean> = {};
   let reply = "";
-  for (let round = 0; round < MAX_ROUNDS; round++) {
+  while (budget.left > 0) {
+    budget.left--;
     const resp = await callClaude(env, { model, max_tokens: 1200, system: systemBlocks(ctx), tools: TOOLS, ...(textOnly ? { tool_choice: { type: "none" } } : {}), messages }, f);
     const blocks: Json[] = resp.content || [];
     const said = blocks.filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
@@ -548,15 +549,18 @@ export async function handle(req: Request, env: Env, f: Fetch = fetch, nowMs = D
   const model = image ? VISION_MODEL : CHAT_MODEL;
   let out: { reply: string; actions: Json[]; places: Json[] };
   try {
-    out = await converse(env, model, ctx, messages, !!image, f);
+    const budget = { left: MAX_CALLS };
+    out = await converse(env, model, ctx, messages, !!image, f, budget);
     // 안전장치: 한자·[Note 섞임, '카드'라고 했는데 제안 0개 → 한 번 다시 받기
     const problem = replyProblem(out.reply, out.actions.length);
-    if (problem) {
+    if (problem && budget.left > 0) {
+      // 카드가 이미 나왔으면 사진은 다시 보내지 않음 (비싼 모델이 사진을 또 읽지 않게)
+      if (out.actions.length) for (const m of messages) if (Array.isArray(m.content)) m.content = m.content.filter((b: Json) => b.type !== "image");
       const last = messages[messages.length - 1];
       if (last && last.role === "user" && Array.isArray(last.content)) last.content.push({ type: "text", text: problem });
       else messages.push({ role: "user", content: [{ type: "text", text: problem }] });
       // 카드가 이미 나왔으면(한자만 고치는 경우) 글만 다시 받음 → 같은 카드가 두 장 뜨지 않게
-      const again = await converse(env, model, ctx, messages, !!image, f, out.actions.length > 0);
+      const again = await converse(env, model, ctx, messages, !!image, f, budget, out.actions.length > 0);
       out = { reply: again.reply || out.reply, actions: [...out.actions, ...again.actions], places: [...out.places, ...again.places.filter((p: Json) => !out.places.some((q: Json) => q.id === p.id))] };
     }
     out.reply = cleanReply(out.reply, out.actions.length);

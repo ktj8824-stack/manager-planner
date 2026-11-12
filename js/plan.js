@@ -34,7 +34,26 @@ const Plan = {
     return Number.isFinite(t) && t > Date.now();
   },
 
-  can(feature) { return this.isPaid() || !this.FEATURES[feature]; },
+  can(feature) { return this.isPaid() || !this.FEATURES[feature] || (feature === 'autonav' && this.trialActive()); },
+
+  // 자동 길안내 7일 무료 체험 (무료 개인 매니저, 이 기기에서 한 번)
+  TRIAL_DAYS: 7,
+  trialUntil() { try { return Date.parse(localStorage.getItem('rp_autonav_trial_until') || '') || 0; } catch (e) { return 0; } },
+  trialActive() { return this.trialUntil() > Date.now(); },
+  trialUsed() { try { return !!localStorage.getItem('rp_autonav_trial_until'); } catch (e) { return false; } },
+  trialLeftText() {
+    const ms = this.trialUntil() - Date.now();
+    if (ms <= 0) return '';
+    const d = Math.ceil(ms / 86400000);
+    return d <= 1 ? '오늘까지' : `${d}일 남음`;
+  },
+  startTrial() {
+    if (this.trialUsed()) return this.trialActive();
+    const until = new Date(Date.now() + this.TRIAL_DAYS * 86400000);
+    try { localStorage.setItem('rp_autonav_trial_until', until.toISOString()); } catch (e) { return false; }
+    try { U.toast(`🚗 자동 길안내 7일 무료 체험 시작 · ${until.getMonth() + 1}/${until.getDate()}까지`); } catch (e) { }
+    return true;
+  },
 
   // 서버(결제 서버)에서 유료 기간을 다시 받아 옴
   async refresh() {
@@ -65,10 +84,20 @@ const Plan = {
   // 유료 기능을 눌렀을 때 안내 창
   upsell(feature) {
     const what = this.FEATURES[feature] || '이 기능';
+    if (feature === 'autonav' && !this.trialUsed()) {
+      App.showModal('7일 무료로 써 보세요', `
+        <div style="padding:4px 2px; text-align:left;">
+          <p style="font-size:15px; font-weight:700; color:var(--text-100); margin-bottom:8px;">차에 타면 다음 일정으로 내비가 저절로 켜져요.</p>
+          <p style="font-size:14px; color:var(--text-200); margin-bottom:14px;">결제 없이 7일 동안 그대로 써 볼 수 있어요. 체험이 끝나면 유료(월 ${this.FEE.toLocaleString()}원)에서 계속 쓸 수 있어요.</p>
+          <button class="btn-primary" style="width:100%; padding:14px; font-weight:800;" onclick="App.closeModal(); Plan.startTrial(); location.href='autonav-guide.html?from=app&os=' + (/Android/i.test(navigator.userAgent) ? 'android' : 'ios');">7일 무료 체험 시작</button>
+          <button class="btn-secondary" style="width:100%; padding:12px; margin-top:8px;" onclick="App.closeModal()">나중에</button>
+        </div>`);
+      return;
+    }
     const list = Object.values(this.FEATURES).map(t => `<li style="margin:4px 0;">${t}</li>`).join('');
     App.showModal('유료 기능이에요', `
       <div style="padding:4px 2px; text-align:left;">
-        <p style="font-size:15px; font-weight:700; color:var(--text-100); margin-bottom:10px;">‘${what}’은(는) 유료에서 쓸 수 있어요.</p>
+        <p style="font-size:15px; font-weight:700; color:var(--text-100); margin-bottom:10px;">${feature === 'autonav' && this.trialUsed() ? '자동 길안내 무료 체험이 끝났어요. ' : ''}‘${what}’은(는) 유료에서 쓸 수 있어요.</p>
         <div style="background:var(--bg-input); border-radius:12px; padding:12px 14px; margin-bottom:14px;">
           <div style="font-size:13px; font-weight:800; color:var(--accent); margin-bottom:4px;">월 ${this.FEE.toLocaleString()}원 · 부가세 포함 · 매달 자동결제</div>
           <ul style="font-size:14px; color:var(--text-200); padding-left:18px; margin:0;">${list}</ul>

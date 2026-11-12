@@ -1456,6 +1456,7 @@ window.Admin = {
               <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:${esc(mgr.color || '#4C57D6')}; box-shadow:0 0 6px ${esc(mgr.color || '#4C57D6')}60;"></span>
               <strong style="color:#14161A; font-size:15px; font-weight:800;">${esc(mgr.name)}</strong>
               <span class="mgr2-st ${esc(st.cls)}">${esc(st.text)}</span>
+              ${mgr.role !== 'hq_admin' && window.HqHints && window.HqHints.agreed[mgr.id] !== true ? '<span title="위치 정보 이용에 동의하지 않아 이동 중 지연 예상이 오지 않아요" style="font-size:11px; color:#5B616E; background:#F1F2F4; padding:2px 7px; border-radius:4px; font-weight:600;">위치 미동의</span>' : ''}
               <span style="font-size:11px; background:#ffffff; color:#475569; border:1px solid #cbd5e1; padding:2px 8px; border-radius:4px; font-weight:700;">${mgr.role === 'hq_admin' ? '본사 관리자' : '현장 매니저'}</span>
             </div>
             <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">

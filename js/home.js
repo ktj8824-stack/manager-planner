@@ -996,6 +996,28 @@ const Home = {
     } catch (e) { return 'today'; }
   },
 
+  // 실제 지연을 쌓기 위한 기록: 구간 종류 + 계획 시각(ISO, 자정 넘는 단계도 날짜 포함) + 실제 시각
+  _track(sch, stepIdx, now) {
+    try {
+      const st = (sch.timeline || [])[stepIdx] || {};
+      const label = String(st.label || st.title || '');
+      const kind = st.stepCategory === 'rest' || /대기|식사|기상/.test(label) ? 'rest'
+        : /복귀|귀가|퇴근|사옥/.test(label) ? 'return'
+        : /샵|헤어|메이크업|스타일링/.test(label) ? 'shop'
+        : /픽업|출발|숙소|자택/.test(label) ? 'pickup'
+        : /현장|도착|메인|방송|녹화|촬영|공연|행사/.test(label) ? 'venue' : 'other';
+      let plannedAt = null;
+      const t = String(st.time || '').slice(0, 5);
+      if (/^\d{2}:\d{2}$/.test(t) && sch.date) {
+        const offs = State.stepDayOffsets(sch.timeline || [], sch.startTime);
+        const d = new Date(`${sch.date}T${t}:00+09:00`);
+        d.setDate(d.getDate() + (offs[stepIdx] || 0));
+        plannedAt = d.toISOString();
+      }
+      return { kind, plannedAt, at: now.toISOString(), late: plannedAt ? Math.round((now - new Date(plannedAt)) / 60000) : null };
+    } catch (e) { return null; }
+  },
+
   setHQRouteStatus(hqId, stepIdx, targetStatus) {
     if (typeof window.hqStore === 'undefined') return;
     const day = Home._stepDay(hqId, stepIdx);
@@ -1014,6 +1036,7 @@ const Home = {
         sch.timeline[stepIdx].done = true;
         sch.timeline[stepIdx].moving = false; // 완료 시 이동중 해제
         sch.timeline[stepIdx].doneAt = timeStr; // 현장 완료 시각 기록
+        sch.timeline[stepIdx].doneAtIso = now.toISOString();   // 날짜까지 (자정 넘는 일정)
       }
       // 모든 단계가 완료되었으면 스케줄 전체 상태도 '완료'
       const allDone = sch.timeline && sch.timeline.every(t => t.done);
@@ -1025,7 +1048,8 @@ const Home = {
       window.hqStore.addStatusLog(hqId, {
         label: `[${stepName}] 현장 완료 (${timeStr})`,
         status: newStatus,
-        stepIdx: stepIdx
+        stepIdx: stepIdx,
+        track: Home._track(sch, stepIdx, now)
       });
 
       U.toast(`✅ [${stepName}] 단계 완료 (${timeStr}) 기록 완료`);
@@ -1048,13 +1072,16 @@ const Home = {
           });
           sch.timeline[stepIdx].done = false;
           sch.timeline[stepIdx].doneAt = null;
+          sch.timeline[stepIdx].doneAtIso = null;
+          sch.timeline[stepIdx].movingAtIso = now.toISOString();
           window.hqStore.updateSchedule(hqId, { timeline: sch.timeline, status: '이동중' });
           
           const stepName = sch.timeline[stepIdx]?.label || `${stepIdx + 1}단계`;
           window.hqStore.addStatusLog(hqId, {
             label: `[${stepName}] 이동 출발 (${timeStr})`,
             status: '이동중',
-            stepIdx: stepIdx
+            stepIdx: stepIdx,
+            track: Home._track(sch, stepIdx, now)
           });
 
           U.toast(`🚗 [${stepName}] 이동중으로 기록되었습니다. (${timeStr})`);
@@ -1317,13 +1344,32 @@ const Home = {
       if (!n) return;
       try { localStorage.setItem(RK, JSON.stringify([{ n, a: a || '' }, ...recent().filter(x => x.n !== n || (x.a || '') !== (a || ''))].slice(0, 8))); } catch (e) { }
     };
+    // 최근 장소가 모자라면 최근 30일 내 일정에서 이 칸에 맞는 장소를 자주 간 순서로 (새 폰·새 매니저도 첫날부터)
+    const kind = /shop/.test(nameId) ? 'shop' : /dep/.test(nameId) ? 'dep' : 'loc';
+    const split = (v) => { const m = String(v || '').match(/^(.*?)\s*\(([^()]*)\)\s*$/); return m ? { n: m[1].trim(), a: m[2].trim() } : { n: String(v || '').trim(), a: '' }; };
+    const fromSchedules = () => {
+      const out = new Map();
+      const add = (n, a) => { n = String(n || '').trim(); if (!n || n.length > 60) return; const k = n + '|' + (a || ''); const o = out.get(k) || { n, a: a || '', c: 0 }; o.c++; out.set(k, o); };
+      if (kind === 'dep') { try { const d = split(localStorage.getItem('rp_default_departure')); if (d.n) add(d.n, d.a), out.get(d.n + '|' + d.a).c += 1000; } catch (e) { } }
+      const since = new Date(); since.setDate(since.getDate() - 30);
+      const from = `${since.getFullYear()}-${String(since.getMonth() + 1).padStart(2, '0')}-${String(since.getDate()).padStart(2, '0')}`;
+      let list = []; try { list = window.hqStore?.getSchedules?.() || []; } catch (e) { }
+      list.filter(s => s && String(s.date || '') >= from && s.status !== '취소').forEach(s => {
+        if (kind === 'loc') { const v = split(s.location); add(v.n, s.locationAddress || v.a); }
+        else if (kind === 'shop') { const sh = s.shop || {}; if (sh.needed && sh.name) add(sh.name, sh.address); }
+        else { const d = typeof s.departure === 'object' ? (s.departure || {}) : { place: s.departure }; const v = split(d.place); add(v.n, d.address || v.a); }
+      });
+      return [...out.values()].sort((x, y) => y.c - x.c);
+    };
     const showRecent = () => {
       const q = input.value.trim();
-      const r = recent().filter(x => !q || x.n.includes(q) || (x.a || '').includes(q)).slice(0, 5);
+      const mine = recent();
+      const seen = new Set(mine.map(x => x.n));
+      const r = [...mine, ...fromSchedules().filter(x => !seen.has(x.n))].filter(x => !q || x.n.includes(q) || (x.a || '').includes(q)).slice(0, 5);
       if (!r.length) { close(); return; }
       seq++;
       items = r.map(x => ({ place_name: x.n, road_address_name: x.a }));
-      list.innerHTML = `<div class="ps-msg" style="padding:8px 14px 2px;font-size:12px;font-weight:700;text-align:left;color:#5B616E;">최근 쓴 장소</div>` + items.map((d, i) => `
+      list.innerHTML = `<div class="ps-msg" style="padding:8px 14px 2px;font-size:12px;font-weight:700;text-align:left;color:#5B616E;">최근·자주 간 장소</div>` + items.map((d, i) => `
         <button type="button" class="ps-item" data-i="${i}">
           <b>${esc(d.place_name || '')}</b>
           <span>${esc(d.road_address_name || '')}</span>
@@ -1361,7 +1407,7 @@ const Home = {
       if (first) { first.click(); return; }
       clearTimeout(timer); run();
     });
-    input.addEventListener('blur', () => setTimeout(close, 200));
+    input.addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== input) close(); }, 200));   // 금방 다시 누르면 닫지 않음
     list.addEventListener('mousedown', (e) => e.preventDefault());   // 고르기 전에 입력칸 포커스가 빠지지 않게
     list.addEventListener('click', (e) => {
       const btn = e.target.closest('.ps-item');

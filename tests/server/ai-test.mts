@@ -94,7 +94,8 @@ out.hanjaRetry = sent.length === 2 && r.reply === '내일 일정은 오후 7시 
 // 8) '카드'라고 했는데 제안 0개 → 다시 묻기 → 도구 씀
 reset([say('아래 카드에서 확인해 주세요.'), tu('c1', 'propose_schedule', { title: '한양대 축제 리허설', date: '2026-11-13', start: '15:00', place: '한양대학교 노천극장' }), say('아래 카드에서 확인해 주세요.')]);
 r = await (await H({ message: '금요일 3시 한양대 리허설', context: ctx })).json();
-out.cardRetry = sent.length === 3 && r.actions.length === 1 && JSON.stringify(sent[1].messages).includes('받아들여진 제안이 없어');
+// 호출은 최대 2번: 다시 받은 쪽에서 도구를 쓰면 카드는 나오고 거기서 멈춤
+out.cardRetry = sent.length === 2 && r.actions.length === 1 && JSON.stringify(sent[1].messages).includes('받아들여진 제안이 없어') && r.reply === '아래 카드에서 확인해 주세요.';
 out.cleanFallback = cleanReply('아래 카드에서 확인해 주세요.', 0).startsWith('다시 한 번');
 out.cleanStrip = cleanReply('좋아요 [Note: x] 鄭 끝', 1);
 out.replyOk = replyProblem('오후 2시예요.', 0);
@@ -120,7 +121,8 @@ out.serverDate = JSON.stringify(sent[1].messages).includes('이미 지난 날짜
 // 한자 고치려 다시 받을 때 카드가 이미 있으면 글만 (tool_choice none) → 카드 1장
 reset([tu('h1', 'propose_schedule', { title: '화보 촬영', date: '2026-11-09', start: '14:00', place: '청담 스튜디오' }), say('아래 카드 확인 鄭'), say('아래 카드에서 확인해 주세요.')]);
 r = await (await H({ message: '월요일 2시 청담 화보', context: ctx })).json();
-out.noDupCard = r.actions.length === 1 && sent.length === 3 && sent[2].tool_choice?.type === 'none' && !sent[0].tool_choice;
+// 호출 2번(도구 + 답)을 다 썼으면 다시 받지 않고 한자만 지움 → 카드 1장, 호출 2번
+out.noDupCard = r.actions.length === 1 && sent.length === 2 && !/[一-鿿]/.test(r.reply) && !sent[0].tool_choice;
 
 used = 999;
 const lim = await H({ message: '또', context: ctx });
