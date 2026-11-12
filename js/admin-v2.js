@@ -300,36 +300,6 @@
     $('btn-open-expenses')?.click();
   }
 
-  // 오늘 퇴근 (매니저가 '퇴근합시다'를 누른 기록) — 대표·관리자만 서버가 보여 줌
-  let workToday = null;
-  async function loadWork() {
-    try { workToday = window.SupabaseClient && SupabaseClient.workLogsDay ? await SupabaseClient.workLogsDay(ymd(new Date())) : null; } catch (e) { workToday = null; }
-  }
-  const hmOf = (t) => { const d = new Date(t); return isNaN(d) ? '' : `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
-  const KIND = { home: '집', office: '회사', custom: '약속 장소' };
-  async function openWork() {
-    await loadWork();
-    const st = window.hqStore;
-    let mgrs = [];
-    try { mgrs = (await st.getManagers()) || []; } catch (e) { }
-    const today = ymd(new Date());
-    const sch = (st.getSchedules() || []).filter(s => s.date === today);
-    const firstGo = (id) => {   // 그날 처음 [출발]·완료를 누른 시각 = 출근(첫 출발)
-      const t = [];
-      sch.filter(s => s.managerId === id).forEach(s => (s.timeline || []).forEach(x => { if (x.doneAt && /^\d{1,2}:\d{2}/.test(x.doneAt)) t.push(x.doneAt.slice(0, 5).padStart(5, '0')); }));
-      return t.sort()[0] || '';
-    };
-    const logs = workToday || [];
-    const rows = mgrs.map(m => ({ m, log: logs.find(l => l.user_id === m.id), go: firstGo(m.id) }))
-      .sort((a, b) => (a.log ? 0 : 1) - (b.log ? 0 : 1) || String(a.log?.left_at || '').localeCompare(String(b.log?.left_at || '')));
-    const html = rows.length ? rows.map(r => `<div class="hq-todo-row ${r.log ? 'info' : 'mute'}" style="margin-bottom:6px"><span class="d" aria-hidden="true"></span>
-        <div class="t"><b>${esc(r.m.name || '이름 없음')} · ${r.log ? `${hmOf(r.log.left_at)} 퇴근` : '아직 퇴근 전'}</b>
-        <small>${r.go ? `첫 출발 ${esc(r.go)}` : '오늘 출발 기록 없음'}${r.log ? ` · ${esc(KIND[r.log.dest_kind] || '')}${r.log.arrive_est ? ` ${hmOf(r.log.arrive_est)} 도착 예정` : ''}` : ''}</small></div></div>`).join('')
-      : '<p class="hq-todo-empty">매니저가 없어요.</p>';
-    const note = '<p style="margin:10px 2px 0;font-size:13px;color:#5A6172;line-height:1.5">매니저가 앱에서 \'퇴근합시다\'를 누른 시각이에요. 첫 출발은 그날 처음 [출발]을 누른 시각, 도착 예정은 그때 위치 기준이에요. 직접 입력한 약속 장소는 남기지 않아요.</p>';
-    if (typeof App !== 'undefined' && App.showModal) App.showModal(`오늘 퇴근 · ${logs.length}/${mgrs.length}명`, html + note);
-  }
-
   function drawTodo() {
     const box = $('hq-todo'); const st = window.hqStore;
     if (!box || !st) return;
@@ -352,10 +322,6 @@
       const un = (st.getSchedules() || []).filter(s => s.date === ymd(tm) && !s.managerId && s.status !== 'cancelled');
       if (un.length) items.push({ k: 'mute', title: `내일 담당 미지정 ${un.length}건`, sub: `${tm.getMonth() + 1}/${tm.getDate()} ${un[0].startTime || ''} ${un[0].title || ''}`, act: '배정', run: () => window.Admin?.openScheduleDetail?.(un[0].id) });
     } catch (e) { }
-    if (workToday && (workToday.length || new Date().getHours() >= 17)) {
-      const names = workToday.slice().sort((a, b) => String(a.left_at).localeCompare(String(b.left_at))).slice(0, 3);
-      items.push({ k: 'mute', title: `오늘 퇴근 ${workToday.length}명`, sub: workToday.length ? names.map(l => hmOf(l.left_at)).join(', ') + ' 퇴근' + (workToday.length > 3 ? ' 외' : '') : '아직 퇴근한 매니저가 없어요', act: '보기', run: openWork });
-    }
     if (hints && !hints.hqPhone) items.push({ k: 'late', title: '긴급 지원 전화가 비어 있어요', sub: '매니저가 [긴급]을 눌러도 본사로 전화할 번호가 없어요', act: '내 번호 넣기', run: setMyPhone });
     if (hints && hints.noConsent.length) items.push({ k: 'mute', title: `위치 미동의 매니저 ${hints.noConsent.length}명`, sub: `${hints.noConsent.slice(0, 3).map(p => p.name || '이름 없음').join(', ')}${hints.noConsent.length > 3 ? ` 외 ${hints.noConsent.length - 3}명` : ''} · 이동 중 지연 예상이 오지 않아요`, act: '로드톡', run: () => { try { Chat.open({ managerId: hints.noConsent[0].id }); } catch (e) { $('btn-open-chat')?.click(); } } });
     box._items = items;
@@ -379,9 +345,9 @@
     if (brief) new MutationObserver(() => { drawTodo(); syncHead(); }).observe(brief, { childList: true });
     const cb = $('chat-badge'); if (cb) new MutationObserver(syncHead).observe(cb, { attributes: true, childList: true, characterData: true, subtree: true });
     syncHead(); drawTodo();
-    Promise.all([loadExpPending(), loadHints(), loadWork()]).then(drawTodo);
-    setInterval(() => { syncHead(); Promise.all([loadExpPending(), loadHints(), loadWork()]).then(drawTodo); }, 60000);
+    Promise.all([loadExpPending(), loadHints()]).then(drawTodo);
+    setInterval(() => { syncHead(); Promise.all([loadExpPending(), loadHints()]).then(drawTodo); }, 60000);
   };
-  window.HqTodo = { draw: drawTodo, openWork };
+  window.HqTodo = { draw: drawTodo };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();

@@ -500,8 +500,7 @@ const WorkEnd = {
     const row = (k, ic, title, sub, on) => `<button type="button" class="we-opt${on ? '' : ' empty'}" onclick="WorkEnd.pick('${k}')">
       <span class="we-opt-ic" aria-hidden="true">${ic}</span><span class="we-opt-t"><b>${title}</b><small>${sub}</small></span><span class="we-opt-go">›</span></button>`;
     const h = this._place('home'), o = this._place('office');
-    const inCo = !!(window.SupabaseClient && SupabaseClient.currentUser && window.Plan && Plan.isIndie && !Plan.isIndie());
-    App.showModal('퇴근합시다', `<p class="we-lead">어디로 갈까요? 고르는 순간이 퇴근 시각으로 남고 내비가 켜져요.${inCo ? ' 본사에도 퇴근 시각이 보여요.' : ''}</p>
+    App.showModal('퇴근합시다', `<p class="we-lead">어디로 갈까요? 고르는 순간이 퇴근 시각으로 남고 내비가 켜져요.</p>
       ${row('home', '🏠', '집으로', h ? this._esc(h.name || h.address) : '집 주소를 등록하고 출발해요', !!h)}
       ${row('office', '🏢', '회사로', o ? this._esc(o.name || o.address) : '회사 주소를 등록하고 출발해요', !!o)}
       ${row('custom', '📍', '직접 입력', '약속 장소 등 다른 곳 (장소는 기록에 남지 않아요)', true)}`);
