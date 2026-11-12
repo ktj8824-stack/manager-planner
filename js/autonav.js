@@ -468,3 +468,86 @@ const AutoNav = {
 };
 
 window.AutoNav = AutoNav;
+
+
+/* =========================================
+   퇴근합시다 — 매니저가 일을 끝내고 누르면 그 시각이 퇴근 기록이 되고, 고른 곳으로 내비가 켜짐
+   - 집으로 / 회사로 / 직접 입력(약속 장소 등) 중 고름. 직접 입력한 장소 자체는 서버에 남기지 않음(종류만)
+   - 하루 한 줄(work_logs). 다시 누르면 그 시각으로 바뀜. 회사 소속이면 본사(대표·관리자)가 '오늘 퇴근'에서 봄
+   ========================================= */
+const WorkEnd = {
+  FROM_HOUR: 15,   // 오후 3시부터 홈에 보임 (오늘 퇴근 기록이 있으면 언제든 기록 줄)
+  _day(d = new Date()) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; },
+  _hm(t) { const d = new Date(t); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; },
+  _esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); },
+  _place(k) { const a = (typeof State !== 'undefined' && State.userAddresses) || {}; const p = a[k]; return p && (p.name || p.address) ? p : null; },
+  today() { try { const v = JSON.parse(localStorage.getItem('rp_workend') || 'null'); return v && v.day === this._day() ? v : null; } catch (e) { return null; } },
+  KIND: { home: '집', office: '회사', custom: '약속 장소' },
+
+  homeHtml() {
+    const t = this.today();
+    if (t) return `<div class="we-done" role="note"><span class="we-done-ic" aria-hidden="true">✓</span>
+      <span class="we-done-t"><b>오늘 ${this._hm(t.at)} 퇴근</b><small>${this._esc(this.KIND[t.kind] || '')}${t.eta ? ` · ${this._hm(t.at + t.eta * 60000)} 도착 예정` : ''}</small></span>
+      <button type="button" class="we-done-go" onclick="WorkEnd.open()">다시 길안내</button></div>`;
+    if (new Date().getHours() < this.FROM_HOUR) return '';
+    return `<button type="button" class="we-btn" onclick="WorkEnd.open()">
+      <span class="we-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span>
+      <span class="we-t"><b>퇴근합시다</b><small>누르면 지금이 퇴근 시각 · 바로 내비</small></span>
+      <span class="we-go">퇴근</span></button>`;
+  },
+
+  open() {
+    const row = (k, ic, title, sub, on) => `<button type="button" class="we-opt${on ? '' : ' empty'}" onclick="WorkEnd.pick('${k}')">
+      <span class="we-opt-ic" aria-hidden="true">${ic}</span><span class="we-opt-t"><b>${title}</b><small>${sub}</small></span><span class="we-opt-go">›</span></button>`;
+    const h = this._place('home'), o = this._place('office');
+    const inCo = !!(window.SupabaseClient && SupabaseClient.currentUser && window.Plan && Plan.isIndie && !Plan.isIndie());
+    App.showModal('퇴근합시다', `<p class="we-lead">어디로 갈까요? 고르는 순간이 퇴근 시각으로 남고 내비가 켜져요.${inCo ? ' 본사에도 퇴근 시각이 보여요.' : ''}</p>
+      ${row('home', '🏠', '집으로', h ? this._esc(h.name || h.address) : '집 주소를 등록하고 출발해요', !!h)}
+      ${row('office', '🏢', '회사로', o ? this._esc(o.name || o.address) : '회사 주소를 등록하고 출발해요', !!o)}
+      ${row('custom', '📍', '직접 입력', '약속 장소 등 다른 곳 (장소는 기록에 남지 않아요)', true)}`);
+  },
+
+  pick(kind) {
+    if (kind === 'custom') return App.openAddressSearch('퇴근하고 갈 곳', p => this.leave('custom', p));
+    const p = this._place(kind);
+    if (p) return this.leave(kind, p);
+    // 주소가 없으면 먼저 등록 → 바로 출발
+    App.openAddressSearch(kind === 'home' ? '🏠 집 주소 검색' : '🏢 회사 주소 검색', sel => {
+      if (!State.userAddresses) State.userAddresses = {};
+      if (kind === 'home') { State.userAddresses.home = sel; localStorage.setItem('bp_home', JSON.stringify(sel)); }
+      else { State.userAddresses.office = sel; localStorage.setItem('bp_office', JSON.stringify(sel)); }
+      this.leave(kind, sel);
+    });
+  },
+
+  /** 퇴근 기록 → 내비 → (가능하면) 도착 예정 시각을 채움 */
+  async leave(kind, p) {
+    try { App.closeModal(); } catch (e) { }
+    const at = Date.now();
+    const rec = { day: this._day(), at, kind, eta: null };
+    try { localStorage.setItem('rp_workend', JSON.stringify(rec)); } catch (e) { }
+    this._save(rec);
+    if (typeof U !== 'undefined' && U.toast) U.toast(`${this._hm(at)} 퇴근으로 기록했어요. 수고하셨어요!`);
+    if (typeof U !== 'undefined' && U.openNavigation) U.openNavigation(p.name || p.address, p.address || '');
+    this._refreshHome();
+    // 도착 예정: 지금 위치 → 목적지 (위치를 바로 못 받으면 건너뜀)
+    try {
+      if (!(p.lat && p.lng) || !navigator.geolocation || typeof TmapAPI === 'undefined') return;
+      const pos = await new Promise((ok, no) => navigator.geolocation.getCurrentPosition(ok, no, { timeout: 5000, maximumAge: 300000 }));
+      const min = await TmapAPI.getRouteTime(pos.coords.longitude, pos.coords.latitude, p.lng, p.lat);
+      if (!min) return;
+      rec.eta = min;
+      try { localStorage.setItem('rp_workend', JSON.stringify(rec)); } catch (e) { }
+      this._save(rec);
+      this._refreshHome();
+    } catch (e) { /* 위치·경로 실패 → 퇴근 시각만 */ }
+  },
+  async _save(rec) {
+    try { if (window.SupabaseClient && SupabaseClient.workLogSave) await SupabaseClient.workLogSave(rec); }
+    catch (e) { console.warn('[퇴근] 서버 기록 실패', e); }
+  },
+  _refreshHome() {
+    try { const el = document.getElementById('screen-home'); if (el && el.classList.contains('active') && typeof Home !== 'undefined' && Home.render) Home.render(); } catch (e) { }
+  },
+};
+window.WorkEnd = WorkEnd;

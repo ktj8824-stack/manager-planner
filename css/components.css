@@ -1410,3 +1410,25 @@ body.ads-on .bottom-nav { padding-top:58px; }
 #an-guide iframe{flex:1;width:100%;border:0;display:block}
 body.guide-open #bottom-nav{z-index:99995}
 body.guide-open .ad-banner,body.guide-open .home-fab{display:none!important}
+
+/* 퇴근합시다 (홈) */
+.we-btn{width:100%;display:flex;align-items:center;gap:12px;margin:10px 0 0;padding:14px;border:0;border-radius:18px;background:#1E2266;color:#fff;text-align:left;cursor:pointer;font:inherit}
+.we-ic{width:44px;height:44px;border-radius:13px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;flex:none}
+.we-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.we-t b{font-size:17px;font-weight:800}
+.we-t small{font-size:13px;color:rgba(255,255,255,.78)}
+.we-go{flex:none;height:38px;padding:0 16px;border-radius:12px;background:#fff;color:#1E2266;font-weight:800;font-size:15px;display:flex;align-items:center}
+.we-done{display:flex;align-items:center;gap:10px;margin:10px 0 0;padding:12px 14px;border:1px solid #D5D9F7;border-radius:16px;background:#F5F6FE}
+.we-done-ic{width:30px;height:30px;border-radius:50%;background:#3B45C4;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
+.we-done-t{flex:1;min-width:0;display:flex;flex-direction:column}
+.we-done-t b{font-size:15px;font-weight:800;color:#14161A}
+.we-done-t small{font-size:13px;color:#4B5263}
+.we-done-go{flex:none;height:34px;padding:0 12px;border-radius:10px;border:1px solid #D5D9F7;background:#fff;color:#3B45C4;font-weight:700;font-size:13.5px;cursor:pointer}
+.we-lead{margin:0 0 12px;font-size:14.5px;line-height:1.55;color:#4B5263}
+.modal-list .we-opt,.we-opt{width:100%;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:12px;padding:14px!important;margin:0 0 8px!important;min-height:0!important;height:auto!important;border:1.5px solid #E3E6EE;border-radius:16px;background:#fff;text-align:left!important;cursor:pointer;font:inherit;color:#14161A;box-shadow:none}
+.we-opt-ic{width:44px;height:44px;border-radius:12px;background:#F1F3FB;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
+.we-opt-t{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.we-opt-t b{font-size:17px;font-weight:800}
+.we-opt-t small{font-size:13px;color:#5A6172;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.we-opt.empty .we-opt-t small{color:#B45309}
+.we-opt-go{font-size:22px;color:#9AA1B2;flex:none}

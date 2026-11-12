@@ -350,6 +350,7 @@ const Home = {
         <button type="button" onclick="Home.setTab('timeline')" aria-pressed="${this.currentTab === 'timeline'}" class="${this.currentTab === 'timeline' ? 'on' : ''}">동선 타임라인</button>
         <button type="button" onclick="Home.setTab('schedule')" aria-pressed="${this.currentTab === 'schedule'}" class="${this.currentTab === 'schedule' ? 'on' : ''}">${indieMode ? '내 스케줄표' : '회사 스케줄표'}</button>
       </div>
+      ${window.WorkEnd ? WorkEnd.homeHtml() : ''}
       ${window.AutoNav?.promoHtml ? AutoNav.promoHtml() : ''}
     `;
 

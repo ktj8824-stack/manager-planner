@@ -645,6 +645,24 @@ const SupabaseClient = {
   },
 
   // ── 경비 기록 (매니저 본인 / 본사는 같은 회사 전체를 읽기만) ──
+  /** 퇴근 기록 (하루 한 줄, 다시 누르면 새 시각) — rec = { day, at, kind, eta } */
+  async workLogSave(rec) {
+    if (!this.isConfigured || !this.currentUser) return null;
+    const row = {
+      user_id: this.currentUser.id, day: rec.day, left_at: new Date(rec.at).toISOString(), dest_kind: rec.kind,
+      eta_min: rec.eta || null, arrive_est: rec.eta ? new Date(rec.at + rec.eta * 60000).toISOString() : null, updated_at: new Date().toISOString(),
+    };
+    const { error } = await this.client.from('work_logs').upsert(row, { onConflict: 'user_id,day' });
+    if (error) throw error;
+    return true;
+  },
+  /** 본사: 그날 우리 회사 매니저 퇴근 기록 (권한은 서버가 대표·관리자만 허용) */
+  async workLogsDay(day) {
+    if (!this.isConfigured || !this.currentUser) return [];
+    const { data, error } = await this.client.from('work_logs').select('user_id, day, left_at, eta_min, arrive_est, dest_kind').eq('day', day);
+    if (error) throw error;
+    return data || [];
+  },
   async expensesList(from, to) {
     if (!this.isConfigured || !this.currentUser) throw new Error('로그인이 필요합니다.');
     const { data, error } = await this.client.from('expenses').select('*')
