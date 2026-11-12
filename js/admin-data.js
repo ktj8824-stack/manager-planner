@@ -974,6 +974,7 @@ class HQDataStore {
           content: n.content || '',
           date: n.createdAt ? new Date(n.createdAt).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace('. ', '-').replace('.', '') : '',
           urgent: n.isUrgent || false,
+          at: n.createdAt || '',
           targetId: n.targetId || 'ALL'
         }));
     } catch (e) {

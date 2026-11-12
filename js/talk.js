@@ -89,14 +89,22 @@ const Talk = {
       return list.length ? list.map(n => this._card({ id: n.id, title: n.title, text: n.content, when: n.date, urgent: n.urgent, local: true })).join('')
         : `<div class="talk-empty">본사 공지가 없어요.<br>회사 계정으로 로그인하면 본사 공지와 대화를 볼 수 있어요.</div>`;
     }
-    if (this._loading && !this.notices.length) return '<div class="talk-empty">불러오는 중...</div>';
-    if (!this.notices.length) return '<div class="talk-empty">아직 본사 공지가 없어요.</div>';
+    // 본사 [긴급 공지] 보내기(공지 알림)로 온 것도 같이 보여 줌 (전체 공지방 대화와 따로 저장됨)
+    let bc = [];
+    try { bc = (typeof App !== 'undefined' && App._myNotices) ? App._myNotices() : []; } catch (e) { }
+    if (this._loading && !this.notices.length && !bc.length) return '<div class="talk-empty">불러오는 중...</div>';
+    if (!this.notices.length && !bc.length) return '<div class="talk-empty">아직 본사 공지가 없어요.</div>';
     const me = window.SupabaseClient?.currentUser?.id;
     const urgent = this.notices.filter(m => m.is_urgent && m.sender_id !== me && !this._acked(m.id));
     const rest = this.notices.filter(m => !urgent.includes(m));
     const toCard = (m) => { const p = this._split(m.body); return this._card({ id: m.id, title: p.title || (m.is_urgent ? '긴급 공지' : '본사 공지'), text: p.text, when: this._when(m.created_at), urgent: m.is_urgent, mine: m.sender_id === me, sender: m.sender_name, at: m.created_at, needAck: urgent.includes(m) }); };
-    return urgent.map(toCard).join('') + rest.map(toCard).join('') +
-      `<button type="button" class="talk-more" onclick="Talk.openChat('all')">전체 공지방 대화로 보기</button>`;
+    const items = [
+      ...urgent.map(m => ({ t: Date.parse(m.created_at) || 0, top: 1, html: toCard(m) })),
+      ...rest.map(m => ({ t: Date.parse(m.created_at) || 0, top: 0, html: toCard(m) })),
+      ...bc.map(n => ({ t: Date.parse(n.at) || 0, top: 0, html: this._card({ id: n.id, title: String(n.title || '').replace(/^\W+\s*/u, '') || (n.urgent ? '긴급 공지' : '본사 공지'), text: n.content, when: n.at ? this._when(n.at) : n.date, urgent: n.urgent, local: true }) })),
+    ].sort((a, b) => (b.top - a.top) || (b.t - a.t));
+    return items.map(x => x.html).join('') +
+      (this.notices.length ? `<button type="button" class="talk-more" onclick="Talk.openChat('all')">전체 공지방 대화로 보기</button>` : '');
   },
 
   _readCount(at) {

@@ -141,7 +141,7 @@ const App = {
         onAnnouncement: (noti) => {
           console.log('🚨 [App] 실시간 본사 공지 수신:', noti);
           this.showHqToast(noti);
-          if (window.hqStore) window.hqStore.syncFromSupabase().then(() => this.updateNoticeBadge()).catch(() => { });
+          if (window.hqStore) window.hqStore.syncFromSupabase().then(() => { this.updateNoticeBadge(); if (window.Talk && State.screen === 'talk') Talk.draw(); }).catch(() => { });
         }
       });
     }
@@ -541,7 +541,7 @@ const App = {
     if (!noti || !noti.content) return;
     this._toasted = this._toasted || new Set();
     if (noti.id) { if (this._toasted.has(noti.id)) return; this._toasted.add(noti.id); }
-    setTimeout(() => { try { this.updateNoticeBadge(); } catch (e) { } }, 0);
+    setTimeout(() => { try { this.updateNoticeBadge(); if (window.Talk && State.screen === 'talk') { Talk.draw(); if (Talk.online()) Talk.load(); } } catch (e) { } }, 0);
     const container = document.getElementById('hq-toast-container');
     if (!container) return;
 
@@ -649,7 +649,7 @@ const App = {
 
   // 종 버튼: 서버 연결 시 대화창, 아니면 기존 공지함
   openMessages() {
-    if (window.Talk) { Talk.open(); return; }   // 앱: 로드톡 전체 화면 (공지 | 대화)
+    if (window.Talk) { Talk.open('대화'); return; }   // 앱: 아래 [로드톡] → 대화 탭 바로 (공지는 위 종 버튼)
     if (window.Chat && window.Chat.st && window.Chat.st.open) { window.Chat.close(); return; }   // 로드톡을 다시 누르면 닫기
     if (window.Chat && window.Chat.available()) window.Chat.open();
     else this.openNoticeModal();

@@ -23,7 +23,7 @@ const { chromium, devices } = require('playwright');
       chatMarkRead: async () => { window.__read = 1; },
     });
   });
-  await p.tap('#bottom-nav [data-s="talk"]'); await p.waitForTimeout(700);
+  await p.tap('#top-bell'); await p.waitForTimeout(700);   // 종 → 공지 탭 (아래 로드톡은 대화 탭)
   const R = {};
   R.first = await p.evaluate(() => { const c = document.querySelector('.talk-card'); return { urgent: c.classList.contains('need'), title: c.querySelector('h2').textContent, tag: c.querySelector('.talk-tag').textContent, count: c.querySelector('.talk-card-foot span').textContent }; });
   R.noXss = await p.evaluate(() => !document.querySelector('.talk-card img'));
