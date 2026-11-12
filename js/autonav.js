@@ -206,6 +206,7 @@ const AutoNav = {
       <div style="font-weight:800;font-size:15px;margin:18px 0 0;">3. 휴대폰에 자동 실행 등록</div>
       ${isAndroid ? android + ios : ios + android}
       <a href="autonav-guide.html?from=app&os=${isAndroid ? 'android' : 'ios'}" onclick="return AutoNav.guideClick('${isAndroid ? 'android' : 'ios'}')" style="display:flex;align-items:center;justify-content:center;width:100%;height:46px;margin-top:18px;border-radius:12px;background:#3B45C4;color:#fff;font-weight:800;font-size:15px;text-decoration:none;">그림으로 보는 설정 가이드</a>
+      <button type="button" onclick="AutoNav.markDone()" style="width:100%;height:46px;margin-top:8px;border-radius:12px;border:1px solid #3B45C4;background:#fff;color:#3B45C4;font-weight:800;font-size:15px;cursor:pointer;">✓ 설정 완료했어요</button>
       <button type="button" onclick="App.closeModal(); AutoNav.test()" style="width:100%;height:46px;margin-top:8px;border-radius:12px;border:1px solid #D5D9F7;background:#EEF0FD;color:#2B338F;font-weight:800;font-size:15px;cursor:pointer;">지금 시험해 보기</button>`;
     App.showModal('🚗 차에 타면 자동 길안내', html);
   },
@@ -231,6 +232,18 @@ const AutoNav = {
       <button type="button" class="an-promo-x" aria-label="다시 보지 않기" onclick="AutoNav.hidePromo()">✕</button>
     </div>`;
   },
+  /** '설정 완료' 버튼: 홈의 '1분 설정' 안내를 더 띄우지 않음 (가이드 안·설정 창에서 누름) */
+  markDone() {
+    try { localStorage.setItem('rp_autonav_setup_done', '1'); } catch (e) { }
+    this.hidePromo();
+    if (this.closeGuide) this.closeGuide();
+    try { if (typeof App !== 'undefined' && App.closeModal) App.closeModal(); } catch (e) { }
+    try { if (typeof Sheet !== 'undefined' && Sheet.close) Sheet.close(); } catch (e) { }
+    document.querySelectorAll('.modal-back').forEach(m => m.remove());
+    const msg = '설정 완료! 홈에 설정 안내가 더 뜨지 않아요';
+    if (typeof U !== 'undefined' && U.toast) U.toast(msg); else if (typeof App !== 'undefined' && App.toast) App.toast(msg);
+  },
+
   hidePromo() {
     try { localStorage.setItem('rp_autonav_promo_off', '1'); } catch (e) { }
     document.querySelectorAll('.an-promo').forEach(el => el.remove());
@@ -443,7 +456,7 @@ const AutoNav = {
     document.body.appendChild(el);
     document.body.classList.add('guide-open');
     if (!this._msgHooked) {
-      window.addEventListener('message', e => { if (e.data && e.data.anGuide === 'close') this.closeGuide(); });
+      window.addEventListener('message', e => { if (e.data && e.data.anGuide === 'close') this.closeGuide(); else if (e.data && e.data.anGuide === 'done') this.markDone(); });
       this._msgHooked = true;
     }
   },
