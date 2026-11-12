@@ -473,7 +473,7 @@ window.AutoNav = AutoNav;
 /* =========================================
    퇴근합시다 — 매니저가 일을 끝내고 누르면 그 시각이 퇴근 기록이 되고, 고른 곳으로 내비가 켜짐
    - 집으로 / 회사로 / 직접 입력(약속 장소 등) 중 고름. 직접 입력한 장소 자체는 서버에 남기지 않음(종류만)
-   - 하루 한 줄(work_logs). 다시 누르면 그 시각으로 바뀜. 회사 소속이면 본사(대표·관리자)가 '오늘 퇴근'에서 봄
+   - 하루 한 줄(work_logs, 본인만 쓰는 기록). 다시 누르면 그 시각으로 바뀜. 본사 화면에는 보여 주지 않음
    ========================================= */
 const WorkEnd = {
   FROM_HOUR: 15,   // 오후 3시부터 홈에 보임 (오늘 퇴근 기록이 있으면 언제든 기록 줄)
@@ -492,7 +492,7 @@ const WorkEnd = {
     if (new Date().getHours() < this.FROM_HOUR) return '';
     return `<button type="button" class="we-btn" onclick="WorkEnd.open()">
       <span class="we-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span>
-      <span class="we-t"><b>퇴근합시다</b><small>누르면 지금이 퇴근 시각 · 바로 내비</small></span>
+      <span class="we-t"><b>퇴근합시다</b><small>집·회사·원하는 곳으로 바로 내비</small></span>
       <span class="we-go">퇴근</span></button>`;
   },
 
@@ -500,10 +500,10 @@ const WorkEnd = {
     const row = (k, ic, title, sub, on) => `<button type="button" class="we-opt${on ? '' : ' empty'}" onclick="WorkEnd.pick('${k}')">
       <span class="we-opt-ic" aria-hidden="true">${ic}</span><span class="we-opt-t"><b>${title}</b><small>${sub}</small></span><span class="we-opt-go">›</span></button>`;
     const h = this._place('home'), o = this._place('office');
-    App.showModal('퇴근합시다', `<p class="we-lead">어디로 갈까요? 고르는 순간이 퇴근 시각으로 남고 내비가 켜져요.</p>
+    App.showModal('퇴근합시다', `<p class="we-lead">오늘도 수고하셨어요. 어디로 갈까요? 고르면 바로 내비가 켜져요.</p>
       ${row('home', '🏠', '집으로', h ? this._esc(h.name || h.address) : '집 주소를 등록하고 출발해요', !!h)}
       ${row('office', '🏢', '회사로', o ? this._esc(o.name || o.address) : '회사 주소를 등록하고 출발해요', !!o)}
-      ${row('custom', '📍', '직접 입력', '약속 장소 등 다른 곳 (장소는 기록에 남지 않아요)', true)}`);
+      ${row('custom', '📍', '직접 입력', '약속 장소 등 원하는 곳', true)}`);
   },
 
   pick(kind) {
@@ -526,7 +526,7 @@ const WorkEnd = {
     const rec = { day: this._day(), at, kind, eta: null };
     try { localStorage.setItem('rp_workend', JSON.stringify(rec)); } catch (e) { }
     this._save(rec);
-    if (typeof U !== 'undefined' && U.toast) U.toast(`${this._hm(at)} 퇴근으로 기록했어요. 수고하셨어요!`);
+    if (typeof U !== 'undefined' && U.toast) U.toast('오늘도 수고하셨어요! 길안내를 시작할게요');
     if (typeof U !== 'undefined' && U.openNavigation) U.openNavigation(p.name || p.address, p.address || '');
     this._refreshHome();
     // 도착 예정: 지금 위치 → 목적지 (위치를 바로 못 받으면 건너뜀)
