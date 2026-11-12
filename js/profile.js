@@ -323,7 +323,7 @@ const Profile = {
       if (window.Loc) Loc._asked = false;
       localStorage.removeItem('bp_manager_filter');
       localStorage.removeItem('bp_onboarded');
-      ['rp_default_departure', 'bp_user_phone', 'bp_user_vehicle', 'rp_vehicle', 'bp_account', 'rp_pro_until'].forEach(k => localStorage.removeItem(k));
+      ['rp_default_departure', 'bp_user_phone', 'bp_user_vehicle', 'rp_vehicle', 'bp_account', 'rp_pro_until', 'rp_recent_places'].forEach(k => localStorage.removeItem(k));
       try { Profile._planChecked = false; } catch (e) { }
       U.toast('로그아웃 되었습니다.');
       App.navigate('login');

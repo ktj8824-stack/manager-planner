@@ -22,6 +22,8 @@ a{color:var(--acc)}
 
 .top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.96);border-bottom:1px solid var(--line)}
 .top .in{display:flex;align-items:center;justify-content:space-between;min-height:60px;gap:12px}
+.top .back{flex:none;font-weight:700;font-size:15px;color:var(--acc-ink);text-decoration:none;padding:8px 10px 8px 0}
+.top .brand{margin-right:auto}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
 .brand img{width:30px;height:30px;border-radius:8px}
 .brand b{font-size:16px}
@@ -148,6 +150,7 @@ footer{padding:22px 0 32px;color:var(--mute);font-size:13px;text-align:center}
 <body>
 <header class="top">
   <div class="in">
+    <a class="back" id="go-back" href="https://ktj8824-stack.github.io/manager-planner-app/" aria-label="앱으로 돌아가기">‹ 앱으로</a>
     <a class="brand" href="https://ktj8824-stack.github.io/manager-planner-web/intro.html"><img src="icon.svg" alt=""><b>로드플래너</b></a>
     <a class="btn pri sm" href="#setup">1분 설정하기</a>
   </div>
@@ -337,6 +340,12 @@ footer{padding:22px 0 32px;color:var(--mute);font-size:13px;text-align:center}
     });
   });
 })();
+</script>
+<script>
+// 앱 안에서 열었으면 '‹ 앱으로'는 뒤로 가기 (같은 주소에서 왔을 때), 아니면 앱 첫 화면으로
+(function(){var b=document.getElementById('go-back');if(!b)return;var same=false;try{same=!!document.referrer&&new URL(document.referrer).origin===location.origin}catch(e){}
+if(!same&&!/[?&]from=app\b/.test(location.search)&&!(navigator.standalone||matchMedia('(display-mode: standalone)').matches)){b.style.display='none';return}
+b.addEventListener('click',function(e){if(same&&history.length>1){e.preventDefault();history.back()}})})();
 </script>
 </body>
 </html>

@@ -159,6 +159,20 @@
   if (H) {
     const ST = { pending: '승인 대기', approved: '승인', rejected: '반려' };
     H.CATS = Object.assign({}, H.CATS, { repair: '정비·세차' });
+    // 승인 때와 지금을 항목별로 비교해 한 줄로
+    H.editedText = function (x) {
+      const a = x.approved_snapshot || {};
+      const has = (k) => Object.prototype.hasOwnProperty.call(a, k);
+      const parts = [];
+      if (a.date && a.date !== x.date) parts.push(`날짜 ${String(a.date).slice(5).replace('-', '/')}→${String(x.date).slice(5).replace('-', '/')}`);
+      if (a.category && a.category !== x.category) parts.push(`분류 ${this.CATS[a.category] || a.category}→${this.CATS[x.category] || x.category}`);
+      if (a.amount != null && Number(a.amount) !== Number(x.amount)) parts.push(`금액 ${this.won(a.amount)}→${this.won(x.amount)}`);
+      if ((a.memo || '') !== (x.memo || '')) parts.push(`메모 "${a.memo || ''}"→"${x.memo || ''}"`);
+      if (has('receipt_path') && (a.receipt_path || '') !== (x.receipt_path || '')) parts.push(x.receipt_path ? (a.receipt_path ? '영수증 바뀜' : '영수증 추가') : '영수증 지움');
+      if (has('schedule_id') && (a.schedule_id || '') !== (x.schedule_id || '')) parts.push('연결 일정 바뀜');
+      if (parts.length) return parts.join(' · ');
+      return has('receipt_path') ? '승인 때와 같아졌어요' : '영수증·연결 일정이 바뀜';
+    };
     H.draw = function () {
       const body = $('hq-exp-body'); if (!body) return;
       const [y, m] = this.month.split('-').map(Number);
@@ -177,7 +191,7 @@
           <span class="ex2-main"><b>${E(this.CATS[x.category] || x.category)} · ${this.won(x.amount)}</b>
             <small>${E(x.date.slice(5).replace('-', '/').replace(/^0/, ''))} · ${E(this.name(x.user_id))}${art(x) ? ' · ' + E(art(x)) : ''}${x.memo ? ' · ' + E(x.memo) : ''}</small>
             ${x.status === 'rejected' && x.review_note ? `<small class="bad">반려 사유: ${E(x.review_note)}</small>` : ''}
-            ${x.edited_after_approval_at && x.approved_snapshot ? `<small class="ex2-edited">승인 후 수정됨 · 승인 때 ${E([x.approved_snapshot.date && x.approved_snapshot.date !== x.date ? String(x.approved_snapshot.date).slice(5).replace('-', '/') : '', x.approved_snapshot.category !== x.category ? (this.CATS[x.approved_snapshot.category] || x.approved_snapshot.category) : '', Number(x.approved_snapshot.amount) !== Number(x.amount) ? this.won(x.approved_snapshot.amount) : '', (x.approved_snapshot.memo || '') !== (x.memo || '') ? '메모 "' + (x.approved_snapshot.memo || '') + '"' : ''].filter(Boolean).join(' · ') || '영수증·연결 일정이 바뀜')}</small>` : ''}</span>
+            ${x.edited_after_approval_at && x.approved_snapshot ? `<small class="ex2-edited">승인 후 수정됨 · ${E(this.editedText(x))}</small>` : ''}</span>
           ${actions ? `<span class="ex2-act"><button type="button" class="ex2-no" onclick="HqExpenses.review(${J(x.id)}, 'rejected')">반려</button><button type="button" class="ex2-ok" onclick="HqExpenses.review(${J(x.id)}, 'approved')">${actions === 'edited' ? '확인' : '승인'}</button></span>`
                     : `<span class="ex2-st ${E(x.status)}">${E(ST[x.status] || '')}</span>`}
         </div>`;

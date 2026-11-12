@@ -240,11 +240,17 @@
     try {
       const sc = window.SupabaseClient;
       if (!sc || !sc.isConfigured || !sc.client) return;
-      const { data } = await sc.client.from('expenses').select('id, amount').eq('status', 'pending').limit(200);
-      expPending = Array.isArray(data) ? { n: data.length, sum: data.reduce((a, r) => a + (Number(r.amount) || 0), 0) } : null;
-      const ed = await sc.client.from('expenses').select('id').eq('status', 'approved').not('edited_after_approval_at', 'is', null).limit(200);
-      if (expPending && Array.isArray(ed.data)) expPending.edited = ed.data.length;
+      const { data } = await sc.client.from('expenses').select('id, amount, date').eq('status', 'pending').order('date').limit(200);
+      expPending = Array.isArray(data) ? { n: data.length, sum: data.reduce((a, r) => a + (Number(r.amount) || 0), 0), month: String(data[0]?.date || '').slice(0, 7) } : null;
+      const ed = await sc.client.from('expenses').select('id, date').eq('status', 'approved').not('edited_after_approval_at', 'is', null).order('date').limit(200);
+      if (expPending && Array.isArray(ed.data)) { expPending.edited = ed.data.length; expPending.editedMonth = String(ed.data[0]?.date || '').slice(0, 7); }
     } catch (e) { expPending = null; }
+  }
+
+  // 경비 창을 해당 경비가 있는 달로 열기 (다른 달 경비면 이번 달 창에 안 보이므로)
+  function openExp(month) {
+    if (month && /^\d{4}-\d{2}$/.test(month) && window.HqExpenses) HqExpenses.month = month;
+    $('btn-open-expenses')?.click();
   }
 
   function drawTodo() {
@@ -262,8 +268,8 @@
       const ack = (st.getSchedules() || []).filter(s => { const d = new Date((s.date || '') + 'T00:00:00'); if (isNaN(d) || d < t0) return false; const a = st.ackState && st.ackState(s); return a && a.pending; });
       if (ack.length) items.push({ k: 'info', title: `변경 확인 안 함 ${ack.length}건`, sub: `${ack[0].managerName || '담당 미지정'} · ${String(ack[0].artistName || '').replace(/\s*\([^)]*\)\s*$/, '')} ${ack[0].title || ''}${ack.length > 1 ? ` 외 ${ack.length - 1}건` : ''}`, act: '보기', run: () => window.Admin?.openScheduleDetail?.(ack[0].id) });
     } catch (e) { }
-    if (expPending && expPending.n) items.push({ k: 'info', title: `경비 승인 대기 ${expPending.n}건`, sub: `합계 ${expPending.sum.toLocaleString('ko-KR')}원`, act: '승인하기', run: () => $('btn-open-expenses')?.click() });
-    if (expPending && expPending.edited) items.push({ k: 'info', title: `승인 후 수정된 경비 ${expPending.edited}건`, sub: '매니저가 승인된 경비를 고쳤어요', act: '확인하기', run: () => $('btn-open-expenses')?.click() });
+    if (expPending && expPending.n) items.push({ k: 'info', title: `경비 승인 대기 ${expPending.n}건`, sub: `합계 ${expPending.sum.toLocaleString('ko-KR')}원`, act: '승인하기', run: () => openExp(expPending.month) });
+    if (expPending && expPending.edited) items.push({ k: 'info', title: `승인 후 수정된 경비 ${expPending.edited}건`, sub: '매니저가 승인된 경비를 고쳤어요', act: '확인하기', run: () => openExp(expPending.editedMonth) });
     try {
       const tm = new Date(); tm.setDate(tm.getDate() + 1);
       const un = (st.getSchedules() || []).filter(s => s.date === ymd(tm) && !s.managerId && s.status !== 'cancelled');

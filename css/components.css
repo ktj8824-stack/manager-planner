@@ -1273,7 +1273,7 @@ div.art-add.locked button { margin-top:6px; border:0; background:#3B45C4; color:
 .rs-wait { font-size:12px; font-weight:600; color:#6B7180; }
 .rs.done .rs-dot { background:#C9CDD5; border-color:#C9CDD5; }
 .rs.done .rs-title { color:#9AA0AC; text-decoration:line-through; }
-.rs.done .rs-time b { color:#9AA0AC; }
+.rs.done .rs-time b { color:#6B7280; }
 .rs.moving .rs-dot { background:#3B45C4; border-color:#3B45C4; box-shadow:0 0 0 4px #E3E6FA; }
 .rs.moving .rs-body { border-color:#B4BBF0; }
 .rs.main .rs-dot { background:#14161A; border-color:#14161A; }

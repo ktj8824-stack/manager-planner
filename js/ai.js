@@ -426,7 +426,7 @@ const RoadAI = {
     const title = a.cancel ? '🚫 스케줄 취소' : '✏️ 스케줄 변경';
     const doneLabel = a.status === 'done' ? (hq ? (a.cancel ? '✓ 처리했어요' : '✓ 수정 창을 열었어요') : '✓ 로드톡을 열었어요') : '취소됨';
     const note = hq
-      ? (a.cancel ? '버튼을 누르면 이 스케줄을 삭제할지 한 번 더 물어봐요.' : '버튼을 누르면 수정 창이 바뀐 값으로 채워져 열려요. 확인 후 저장해 주세요.')
+      ? (a.cancel ? '버튼을 누르면 이 스케줄을 \'취소\'로 바꿀지 한 번 더 물어봐요. 기록은 남고 담당 매니저에게 알림이 가요.' : '버튼을 누르면 수정 창이 바뀐 값으로 채워져 열려요. 확인 후 저장해 주세요.')
       : '현장 매니저는 스케줄을 직접 바꿀 수 없어요. 버튼을 누르면 로드톡이 열리고 요청 문장이 복사돼요.';
     return `<div class="rpai-card">
       <div class="rpai-card-title">${title}</div>
