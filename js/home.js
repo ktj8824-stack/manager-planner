@@ -1017,7 +1017,7 @@ const Home = {
         </div>`;
       }).join('');
       // 요청했는데 이제 겹치지 않음 → 조정됨
-      (st.getSchedules() || []).filter(s => s.date === date && !busy.has(s.id) && s.managerId === window.SupabaseClient?.currentUser?.id && st.adjustState && st.adjustState(s)).forEach(s => {
+      (st.getSchedules() || []).filter(s => s.date === date && !busy.has(s.id) && !['취소', 'cancelled'].includes(s.status) && s.managerId === window.SupabaseClient?.currentUser?.id && st.adjustState && st.adjustState(s)).forEach(s => {
         html += `<div class="adj-card done"><div class="adj-k">✓ 조정됨</div><div class="adj-l"><b>${esc(nm(s))}</b> 이제 겹치지 않아요</div></div>`;
       });
       return html ? `<div class="adj-wrap">${html}</div>` : '';
