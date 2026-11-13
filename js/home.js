@@ -705,7 +705,7 @@ const Home = {
               <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'tmap')" class="nc-nav"><span class="nc-sq" style="background:#14161A"></span>티맵 길안내</button>
               <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'kakao')" class="nc-nav"><span class="nc-sq" style="background:#FEE500; box-shadow:inset 0 0 0 1px #E5CF00"></span>카카오내비</button>
             </div>` : ''}
-            ${contact ? `<div class="nc-contact"><a href="tel:${esc(contact.phone.replace(/[^0-9+]/g, ''))}" class="nc-tel">${esc(contact.name)} 전화 · ${esc(contact.phone)}</a>${window.DraftSheet && canAct ? `<button type="button" class="nc-tel nc-sms" onclick="DraftSheet.forSchedule(${escJs(nowEv.hqScheduleId)}${lateMin ? ', ' + lateMin : ''})">문자 초안</button>` : ''}</div>` : ''}
+            ${contact ? `<div class="nc-contact"><a href="tel:${esc(contact.phone.replace(/[^0-9+]/g, ''))}" class="nc-tel">${esc(contact.name)} 전화 · ${esc(contact.phone)}</a>${window.DraftSheet && canAct ? `<button type="button" class="nc-tel nc-sms" onclick="DraftSheet.forSchedule(${escJs(nowEv.hqScheduleId)}${lateMin && isDrive ? ', ' + lateMin : ''})">문자 초안</button>` : ''}</div>` : ''}
           </section>`;
         nowShown = nowEv;   // 카드가 다 만들어진 뒤에만 아래 목록에서 뺌
       }
