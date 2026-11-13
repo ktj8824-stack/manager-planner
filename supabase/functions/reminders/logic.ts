@@ -290,6 +290,12 @@ export async function run(db: SupabaseClient, send: Sender, nowMs: number, route
       if (!(await claim(db, `eve|${mid}|${tomorrow.ymd}`))) continue;
       items.sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)));
       const first = items[0];
+      // 내일 일정 중 이 매니저가 아직 '확인했습니다'를 안 누른 변경
+      const myPending = items.filter((s) => {
+        const logs = Array.isArray(s.status_logs) ? s.status_logs : [];
+        const req = logs.find((l: Row) => l && l.ack && l.ack.need);
+        return req && (!req.ack.managerId || req.ack.managerId === mid) && !logs.some((l: Row) => l && l.ackOf === req.id);
+      }).length;
       const tlF = Array.isArray(first.timeline_items) ? first.timeline_items : [];
       const i0 = Math.max(tlF.findIndex((t: Row) => t && t.time && DRIVE.test(String(t.label || ""))), tlF.findIndex((t: Row) => t && t.time));
       const tl0 = i0 >= 0 ? { time: (stepDayOffsets(tlF, first.start_time)[i0] === -1 ? "오늘 " : "") + tlF[i0].time } : null;
@@ -297,7 +303,7 @@ export async function run(db: SupabaseClient, send: Sender, nowMs: number, route
       if (items.length > 4) lines.push(`외 ${items.length - 4}건`);
       const r = await push(db, send, [mid], {
         title: `📅 내일 ${dateLabel(tomorrow.ymd)} 일정 ${items.length}건${tl0 ? ` · 첫 출발 ${tl0.time}` : ""}`,
-        body: lines.join("\n") + (first.vehicles?.name ? `\n차량: ${first.vehicles.name}` : ""),
+        body: lines.join("\n") + (first.vehicles?.name ? `\n차량: ${first.vehicles.name}` : "") + (myPending ? `\n변경 확인 대기 ${myPending}건 · 앱에서 [모두 확인했습니다] 한 번이면 끝` : ""),
         tag: `eve-${tomorrow.ymd}`, url: APP_URL, kind: "evening",
       }, 36000);
       out.evening++; out.pushed += r.sent;

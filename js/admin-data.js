@@ -1145,7 +1145,11 @@ class HQDataStore {
         secretLevel: row.secret_level || (row.is_secret ? 'confidential' : 'public'),
         notes: row.notes || '', timeline: row.timeline_items || [], statusLogs: row.status_logs || [],
         outfit: row.outfit || '', supplies: row.supplies || '', departure: row.departure_info || {},
-        shop: (row.shop_info && Object.keys(row.shop_info).length) ? row.shop_info : existing?.shop
+        shop: (row.shop_info && Object.keys(row.shop_info).length) ? row.shop_info : existing?.shop,
+        // 현장 담당자 연락처 (문자 초안·전화) · 반복 일정 묶음
+        contactName: (row.contact_info && row.contact_info.name) || existing?.contactName || '',
+        contactPhone: (row.contact_info && row.contact_info.phone) || existing?.contactPhone || '',
+        series: row.series || existing?.series || null
       });
       outbox[id] = { ...(entry || {}), remoteId: row.id, created: true, pending: false };
     }
@@ -1514,7 +1518,9 @@ class HQDataStore {
       notes: schedule.notes || '', timeline_items: schedule.timeline || [], status_logs: schedule.statusLogs || [],
       departure_info: schedule.departure || {}, outfit: schedule.outfit || null, supplies: schedule.supplies || null,
       // 샵 상세(주소·소요시간)도 서버에 보관 → 다른 기기·매니저 앱에서도 길안내/동선 계산 가능
-      shop_info: (schedule.shop && typeof schedule.shop === 'object') ? schedule.shop : {}
+      shop_info: (schedule.shop && typeof schedule.shop === 'object') ? schedule.shop : {},
+      contact_info: (schedule.contactName || schedule.contactPhone) ? { name: String(schedule.contactName || '').slice(0, 60), phone: String(schedule.contactPhone || '').slice(0, 30) } : {},
+      series: schedule.series || null
     };
   }
 
@@ -1850,7 +1856,9 @@ class HQDataStore {
         managerName: input.managerName || localStorage.getItem('bp_user_name') || '현장 매니저',
         ...(input.track ? { track: input.track } : {}),   // 실제 지연 학습용: {kind, plannedAt, at} (구간 종류·계획 시각·실제 시각)
         ...(input.ack ? { ack: input.ack } : {}),          // 본사 변경: 담당 매니저의 '확인' 필요 {need, managerId}
-        ...(input.ackOf ? { ackOf: input.ackOf, byId: input.byId || null } : {})   // 매니저의 '확인했습니다'
+        ...(input.ackOf ? { ackOf: input.ackOf, byId: input.byId || null } : {}),   // 매니저의 '확인했습니다'
+        ...(input.adjust ? { adjust: { need: true, byId: input.adjust.byId || null } } : {}),   // 매니저의 일정 조정 요청
+        ...(input.adjustSeenOf ? { adjustSeenOf: input.adjustSeenOf } : {})                    // 본사가 조정 요청을 확인함
       };
       sch.statusLogs = [newLog, ...(Array.isArray(sch.statusLogs) ? sch.statusLogs : [])];
       this._queueSchedule(key, sch);
@@ -1898,6 +1906,34 @@ class HQDataStore {
     });
   }
 
+
+  // ── 일정 조정 요청 (CEO플래너에서 가져옴): 매니저가 겹치는 일정을 본사에 조정 요청 ──
+  //  요청 = 매니저가 남긴 기록(adjust.need) / 본사 확인 = 본사가 남긴 기록(adjustSeenOf = 요청 id)
+  //  단계: asked(요청함) → seen(본사 확인 중) → 겹침이 풀리면 조정됨
+  adjustState(sch) {
+    const logs = Array.isArray(sch?.statusLogs) ? sch.statusLogs : [];
+    const req = logs.find(l => l && l.adjust && l.adjust.need);
+    if (!req) return null;
+    const seen = logs.find(l => l && l.adjustSeenOf === req.id) || null;
+    return { request: req, seen, stage: seen ? 'seen' : 'asked' };
+  }
+
+  async requestAdjust(scheduleId, text) {
+    const me = window.SupabaseClient?.currentUser?.id || null;
+    return this.addStatusLog(scheduleId, {
+      label: '[조정 요청] ' + String(text || '앞뒤 일정이 겹쳐요').slice(0, 160),
+      adjust: { need: true, byId: me },
+      managerName: localStorage.getItem('bp_user_name') || '담당 매니저'
+    });
+  }
+
+  async seeAdjust(scheduleId) {
+    const sch = this.getSchedules().find(s => s.id === scheduleId);
+    const st = sch && this.adjustState(sch);
+    if (!st || st.seen) return null;
+    const who = (localStorage.getItem('admin_bp_user_name') || localStorage.getItem('bp_user_name') || '본사') + ' (본사)';
+    return this.addStatusLog(scheduleId, { label: '[조정 요청 확인] 본사가 확인하고 조정 중이에요', adjustSeenOf: st.request.id, managerName: who });
+  }
 
   // 헬퍼
   getArtistName(artistId) {

@@ -153,7 +153,28 @@
         if (prev[0]) { const x = prev[0]; const art = String(x.artistName || '').replace(/\s*\([^)]*\)\s*$/, ''); warns.push(`앞 일정(${art ? art + ' ' : ''}${x.title || ''} ~${String(x.endTime).slice(0, 5)})이 끝나기 전에 ${f0} 출발해야 해요 · 시간이나 담당 매니저를 확인해 주세요`); }
       }
     } catch (e) { }
-    box.innerHTML = head + basis
+    // 실제 이동 기록 (같은 길을 3번 이상 다녔으면 평균) — CEO플래너 '이동 시간 학습'
+    let learnHtml = '';
+    try {
+      if (window.Learn && s.date && (s.departure.place || s.departure.address) && (s.location || s.locationAddress)) {
+        const all = window.hqStore.getSchedules() || [];
+        const shopOn = s.shop.needed && (s.shop.address || s.shop.name);
+        const legs = [];
+        if (shopOn) legs.push({ name: '집·회사 → 샵', from: s.departure, to: s.shop, step: tl.find(x => /^\[픽업/.test(x.label || '')) });
+        legs.push({ name: shopOn ? '샵 → 현장' : '출발지 → 현장', from: shopOn ? s.shop : s.departure, to: s.locationAddress || s.location, step: tl.find(x => /^\[현장 이동/.test(x.label || '')) });
+        legs.forEach(L => {
+          const hm = String(L.step && L.step.time || '').slice(0, 5);
+          const at = /^\d{2}:\d{2}$/.test(hm) ? `${s.date}T${hm}:00+09:00` : null;
+          const r = Learn.travel(all, { from: L.from, to: L.to, at });
+          if (!r) return;
+          const plan = Number((String(L.step && L.step.desc || '').match(/이동 약 (\d+)분/) || [])[1]) || 0;
+          const diff = plan ? r.avg - plan : 0;
+          learnHtml += `<div class="sr-learn"><b>📊 실제 기록 · ${esc(L.name)}</b> 평균 ${r.avg}분${r.slot ? ` (${esc(r.slot)} ${r.n}번)` : ` (${r.n}번)`}`
+            + (diff >= 5 ? ` · <em>계획(${plan}분)보다 ${diff}분 더 걸렸어요. 출발을 당기는 걸 권해요</em>` : diff <= -10 ? ` · 계획보다 ${-diff}분 빨랐어요` : '') + `</div>`;
+        });
+      }
+    } catch (e) { }
+    box.innerHTML = head + basis + learnHtml
       + (first ? `<div class="sr-lead"><span>${hasMgr ? esc(mgr) + ' 출발' : '첫 출발'}</span><b>${esc(first.time)}</b></div>` : '')
       + `<ol class="sr-list${useReal ? '' : ' est'}">${tl.map(x => { const k = KIND(x.label || ''); return `<li class="k-${esc(k)}"><b>${esc(x.time || '')}</b><span><em>${ICON[k] || '•'}</em>${esc(clean(x.label))}${x.desc ? `<small>${esc(x.desc)}</small>` : ''}</span></li>`; }).join('')}</ol>`
       + warns.map(w => `<div class="sr-warn">⚠️ ${esc(w)}</div>`).join('')
@@ -315,6 +336,14 @@
       const ack = (st.getSchedules() || []).filter(s => { const d = new Date((s.date || '') + 'T00:00:00'); if (isNaN(d) || d < t0) return false; const a = st.ackState && st.ackState(s); return a && a.pending; });
       if (ack.length) items.push({ k: 'info', title: `변경 확인 안 함 ${ack.length}건`, sub: `${ack[0].managerName || '담당 미지정'} · ${String(ack[0].artistName || '').replace(/\s*\([^)]*\)\s*$/, '')} ${ack[0].title || ''}${ack.length > 1 ? ` 외 ${ack.length - 1}건` : ''}`, act: '보기', run: () => window.Admin?.openScheduleDetail?.(ack[0].id) });
     } catch (e) { }
+    // 매니저의 일정 조정 요청 (겹침) — 아직 본사가 확인 안 한 것
+    try {
+      const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+      const adj = (st.getSchedules() || []).filter(s => { const d = new Date((s.date || '') + 'T00:00:00'); if (isNaN(d) || d < t0) return false; const a = st.adjustState && st.adjustState(s); return a && a.stage === 'asked'; })
+        .sort((a, b) => (a.date + a.startTime).localeCompare(b.date + b.startTime));
+      adj.slice(0, 3).forEach(s => items.unshift({ k: 'late', title: `조정 요청 · ${s.managerName || '매니저'}`, sub: `${String(s.date).slice(5).replace('-', '/')} ${String(s.artistName || '').replace(/\s*\([^)]*\)\s*$/, '')} ${s.title || ''} · ${String(st.adjustState(s).request.label || '').replace(/^\[[^\]]+\]\s*/, '')}`, act: '확인했어요',
+        run: async () => { try { await st.seeAdjust(s.id); } catch (e) { } drawTodo(); window.Admin?.openScheduleDetail?.(s.id); } }));
+    } catch (e) { }
     if (expPending && expPending.n) items.push({ k: 'info', title: `경비 승인 대기 ${expPending.n}건`, sub: `합계 ${expPending.sum.toLocaleString('ko-KR')}원`, act: '승인하기', run: () => openExp(expPending.month) });
     if (expPending && expPending.edited) items.push({ k: 'info', title: `승인 후 수정된 경비 ${expPending.edited}건`, sub: '매니저가 승인된 경비를 고쳤어요', act: '확인하기', run: () => openExp(expPending.editedMonth) });
     try {
@@ -349,5 +378,146 @@
     setInterval(() => { syncHead(); Promise.all([loadExpPending(), loadHints()]).then(drawTodo); }, 60000);
   };
   window.HqTodo = { draw: drawTodo };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
+/* 반복 일정 (CEO플래너에서 가져옴): 매주 · 평일 · 격주 · 매월
+   - 새 일정 등록 창의 날짜 줄 아래에 [반복] 고르기 + 몇 번
+   - 저장하면 나머지 날짜도 같은 내용으로 만들고(날짜마다 동선은 그날 교통으로 따로 계산), 묶음(series)으로 기억
+   - 반복 일정을 고치거나 지우면 "이후 반복 일정도 같이?" 물어봄 */
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+  const short = (d) => { const x = new Date(d + 'T12:00:00'); return `${x.getMonth() + 1}/${x.getDate()}(${DAYS[x.getDay()]})`; };
+  const isUuid = (v) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v || '');
+  const who = () => (localStorage.getItem('admin_bp_user_name') || localStorage.getItem('bp_user_name') || '본사') + ' (본사)';
+  const ackFor = (mid) => (isUuid(mid) && mid !== window.SupabaseClient?.currentUser?.id) ? { need: true, managerId: mid } : null;
+  // 이후 반복 일정에 같이 옮기는 칸 (날짜·묶음·동선·기록·진행 상태는 그대로)
+  const SHARED = ['title', 'artistId', 'artistIds', 'artistName', 'targetMembers', 'category', 'startTime', 'endTime', 'durationMin', 'managerId', 'managerName', 'vehicleId', 'vehicleName',
+    'location', 'locationAddress', 'lat', 'lng', 'outfit', 'contactName', 'contactPhone', 'notes', 'isSecret', 'secretLevel', 'shop', 'departure'];
+
+  const ensureRow = () => {
+    const date = $('form-date'); if (!date) return null;
+    let row = $('sch-repeat-row');
+    if (!row) {
+      row = document.createElement('div');
+      row.id = 'sch-repeat-row'; row.className = 'sch-repeat';
+      row.innerHTML = `<label class="form-label" for="form-repeat">반복</label>
+        <div class="sch-repeat-in">
+          <select id="form-repeat" class="form-input"><option value="">안 함</option>${Object.entries(Repeat.KINDS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
+          <label class="sch-repeat-n"><input type="number" id="form-repeat-count" class="form-input" min="2" max="${Repeat.MAX}" value="4"> 번</label>
+        </div>
+        <div id="sch-repeat-hint" class="sch-repeat-hint"></div>`;
+      const formRow = date.closest('.form-row') || date.closest('.form-group');
+      formRow.insertAdjacentElement('afterend', row);
+      row.addEventListener('input', draw); row.addEventListener('change', draw);
+    }
+    return row;
+  };
+  const current = () => { try { return (window.hqStore.getSchedules() || []).find(x => x.id === $('form-sch-id')?.value) || null; } catch (e) { return null; } };
+  const draw = () => {
+    const row = ensureRow(); if (!row || !window.Repeat) return;
+    const editing = !!$('form-sch-id')?.value;
+    const sel = $('form-repeat'), cnt = $('form-repeat-count'), hint = $('sch-repeat-hint');
+    const inp = row.querySelector('.sch-repeat-in');
+    if (editing) {
+      const s = current();
+      const later = s && s.series ? Repeat.later(window.hqStore.getSchedules(), s) : [];
+      inp.hidden = true;
+      row.hidden = !(s && s.series);
+      hint.innerHTML = s && s.series ? `🔁 ${esc(Repeat.KINDS[s.series.kind] || '반복')} 반복 일정${later.length ? ` · 이후 ${later.length}건 (저장할 때 같이 바꿀지 물어봐요)` : ''}` : '';
+      return;
+    }
+    row.hidden = false; inp.hidden = false;
+    cnt.style.visibility = sel.value ? 'visible' : 'hidden';
+    if (!sel.value || !$('form-date').value) { hint.textContent = ''; return; }
+    const ds = Repeat.dates($('form-date').value, sel.value, cnt.value);
+    hint.textContent = `${ds.length}건 등록: ${ds.slice(0, 6).map(short).join(', ')}${ds.length > 6 ? ` … ${short(ds[ds.length - 1])}` : ''}`;
+  };
+
+  const AdminRepeat = {
+    /** 저장 직전: 새 일정에 반복을 골랐으면 묶음 표시를 붙이고 날짜 목록을 돌려줌 */
+    decorate(schData) {
+      if (!window.Repeat || $('form-sch-id')?.value) return null;
+      const kind = $('form-repeat')?.value;
+      if (!kind) return null;
+      const dates = Repeat.dates(schData.date, kind, $('form-repeat-count')?.value);
+      if (dates.length < 2) return null;
+      schData.series = { id: 'ser_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), kind, idx: 0, count: dates.length };
+      return dates;
+    },
+    /** 저장한 뒤: 나머지 반복 일정 만들기 / 이후 반복 일정 같이 바꾸기 */
+    async afterSave(prev, schData, dates, btn) {
+      const st = window.hqStore;
+      // 1) 새 반복 일정
+      if (!prev && dates && dates.length > 1 && schData.series) {
+        let made = 0;
+        for (let i = 1; i < dates.length; i++) {
+          if (btn) btn.textContent = `반복 일정 저장 중… (${i + 1}/${dates.length})`;
+          const copy = JSON.parse(JSON.stringify(schData));
+          delete copy.timeline; delete copy.statusLogs; delete copy.remoteId; delete copy.syncStatus;
+          copy.id = 'sch_' + Date.now() + '_' + i;
+          copy.date = dates[i];
+          copy.series = { ...schData.series, idx: i };
+          try {
+            await st.saveSchedule(copy);
+            await st.addStatusLog(copy.id, { label: '[일정 등록] 본사에서 반복 일정을 등록했습니다', managerName: who(), ack: ackFor(copy.managerId) });
+            made++;
+          } catch (e) { if (e && e.localSaved) made++; else console.warn('반복 일정 저장 실패', dates[i], e); }
+        }
+        return `🔁 반복 일정 ${made + 1}건을 등록했어요 (${short(dates[0])} ~ ${short(dates[dates.length - 1])}).`;
+      }
+      // 2) 반복 일정을 고침 → 이후 것도 같이?
+      if (prev && prev.series) {
+        const later = Repeat.later(st.getSchedules(), prev);
+        if (!later.length) return '';
+        const changed = SHARED.filter(k => JSON.stringify(prev[k] ?? '') !== JSON.stringify(schData[k] ?? ''));
+        if (!changed.length) return '';
+        if (!confirm(`이후 반복 일정 ${later.length}건(${short(later[0].date)}~)도 같이 바꿀까요?\n\n날짜는 그대로 두고 바꾼 내용(시간·장소·담당 등)만 옮겨요.\n[취소]를 누르면 이 일정만 바뀌어요.`)) return '';
+        let n = 0;
+        for (const sib of later) {
+          if (btn) btn.textContent = `이후 반복 일정 바꾸는 중… (${n + 1}/${later.length})`;
+          const before = JSON.parse(JSON.stringify(sib));
+          const next = { ...JSON.parse(JSON.stringify(sib)) };
+          changed.forEach(k => { next[k] = schData[k] === undefined ? undefined : JSON.parse(JSON.stringify(schData[k])); });
+          try {
+            await st.saveSchedule(next);
+            const diff = window.ScheduleNotify?.historyDiff ? window.ScheduleNotify.historyDiff(before, next) : null;
+            if (diff && diff.length) await st.addStatusLog(next.id, { label: '[일정 수정] ' + diff.join(' · ') + ' (반복 일정 함께)', managerName: who(), ack: ackFor(next.managerId) });
+            if (window.ScheduleNotify) window.ScheduleNotify.afterSave(before, next).catch(() => { });
+            n++;
+          } catch (e) { if (e && e.localSaved) n++; }
+        }
+        return `🔁 이후 반복 일정 ${n}건도 같이 바꿨어요.`;
+      }
+      return '';
+    },
+    /** 지운 뒤: 이후 반복 일정도 같이 지울지 */
+    async afterDelete(del) {
+      if (!del || !del.series) return '';
+      const st = window.hqStore;
+      const later = Repeat.later(st.getSchedules(), del);
+      if (!later.length || !confirm(`이후 반복 일정 ${later.length}건(${short(later[0].date)}~)도 같이 지울까요?`)) return '';
+      let n = 0;
+      for (const sib of later) {
+        try { await st.deleteSchedule(sib.id); if (window.ScheduleNotify) window.ScheduleNotify.afterDelete(sib).catch(() => { }); n++; } catch (e) { }
+      }
+      return `🔁 이후 반복 일정 ${n}건도 지웠어요.`;
+    },
+  };
+  window.AdminRepeat = AdminRepeat;
+
+  const start = () => {
+    const modal = $('modal-schedule-form');
+    if (!modal) return;
+    new MutationObserver(() => {
+      if (!modal.classList.contains('active')) return;
+      ensureRow();
+      if ($('form-repeat') && !$('form-sch-id')?.value) $('form-repeat').value = '';
+      setTimeout(draw, 300);
+    }).observe(modal, { attributes: true, attributeFilter: ['class'] });
+    $('form-date')?.addEventListener('change', draw);
+  };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();

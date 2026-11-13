@@ -1247,6 +1247,9 @@ div.art-add.locked button { margin-top:6px; border:0; background:#3B45C4; color:
 .nc-navs { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; }
 .nc-nav { height:40px; border:1px solid #E6E7EB; background:#F6F7F9; color:#14161A; border-radius:10px; font:inherit; font-size:13.5px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:7px; cursor:pointer; }
 .nc-sq { width:10px; height:10px; border-radius:3px; display:inline-block; }
+.nc-contact { display:flex; gap:8px; }
+.nc-contact .nc-tel { flex:1; }
+.nc-contact .nc-sms { flex:0 0 96px; background:#fff; color:#3B45C4; border-color:#D5D9F7; font-family:inherit; cursor:pointer; font-weight:700; }
 .nc-tel { min-height:40px; border:1px solid #E6E7EB; border-radius:10px; color:#14161A; text-decoration:none; font-size:13.5px; font-weight:600; display:flex; align-items:center; justify-content:center; }
 
 /* 동선 단계 줄 */
@@ -1432,3 +1435,14 @@ body.guide-open .ad-banner,body.guide-open .home-fab{display:none!important}
 .we-opt-t small{font-size:13px;color:#5A6172;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .we-opt.empty .we-opt-t small{color:#B45309}
 .we-opt-go{font-size:22px;color:#9AA1B2;flex:none}
+/* 일정 겹침 → 본사 조정 요청 */
+.adj-wrap { margin: 0 0 12px; display: flex; flex-direction: column; gap: 8px; }
+.adj-card { background: #fff; border: 1.5px solid #fca5a5; border-radius: 14px; padding: 12px 14px; }
+.adj-card.done { border-color: #a7f3d0; background: #f0fdf4; }
+.adj-k { font-size: 13.5px; font-weight: 800; color: #b91c1c; margin-bottom: 6px; }
+.adj-card.done .adj-k { color: #047857; }
+.adj-l { font-size: 14px; color: #334155; line-height: 1.5; word-break: keep-all; }
+.adj-l b { color: #14161A; }
+.adj-btn { margin-top: 10px; width: 100%; min-height: 44px; border: 0; border-radius: 10px; background: #dc2626; color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; }
+.adj-stage { display: block; margin-top: 10px; text-align: center; font-size: 14px; font-weight: 800; color: #c2410c; background: #fff7ed; border-radius: 10px; padding: 10px; }
+.adj-stage.seen { color: #2B338F; background: #EEF0FD; }

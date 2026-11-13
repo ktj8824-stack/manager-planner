@@ -4019,6 +4019,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 동선(교통 예측)은 saveSchedule 안에서 한 번만 계산 (10초 넘으면 추정값)
 
+      // 반복 일정: 새 일정에 반복을 골랐으면 묶음 표시 (나머지 날짜는 저장 뒤에 만듦)
+      let repeatDates = null, repeatMsg = '';
+      try { repeatDates = window.AdminRepeat ? window.AdminRepeat.decorate(schData) : null; } catch (e) { repeatDates = null; }
+
       // 알림용: 저장 전의 일정 (새 일정이면 없음)
       let prevSch = null;
       try { prevSch = (await window.hqStore.getSchedules()).find(x => x.id === schData.id) || null; if (prevSch) prevSch = JSON.parse(JSON.stringify(prevSch)); } catch (e) { }
@@ -4038,6 +4042,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (!prevSch) await window.hqStore.addStatusLog(schData.id, { label: '[일정 등록] 본사에서 새 일정을 등록했습니다', managerName: who, ack });
           else if (changes && changes.length) await window.hqStore.addStatusLog(schData.id, { label: '[일정 수정] ' + changes.join(' · '), managerName: who, ack });
         } catch (e) { console.warn('변경 이력 기록 실패', e); }   // (알림은 기다리지 않음)
+        try { if (window.AdminRepeat) repeatMsg = await window.AdminRepeat.afterSave(prevSch, schData, repeatDates, submitBtn); } catch (e) { console.warn('반복 일정 처리 실패', e); }
       } catch (err) {
         console.warn('saveSchedule warning (로컬 저장 유지):', err);
         if (!err.localSaved) {
@@ -4053,7 +4058,9 @@ document.addEventListener('DOMContentLoaded', () => {
       await renderCurrentView();
       alert(queuedOnly
         ? `⏳ [${schData.title || '스케줄'}] 이 컴퓨터에 저장했지만 아직 서버에 올라가지 않았습니다.\n인터넷이 연결되면 자동으로 올라가며, 화면 아래 노란 표시가 사라지면 완료입니다.`
-        : `✅ [${schData.title || '스케줄'}] 일정이 서버에 저장되었습니다.`);
+        : `✅ [${schData.title || '스케줄'}] 일정이 서버에 저장되었습니다.` + (repeatMsg ? '\n' + repeatMsg : ''));
+      // 시간을 바꾸거나 취소했으면 현장 담당자에게 보낼 문자 초안 (연락처가 있는 일정만)
+      if (prevSch && window.DraftSheet) window.DraftSheet.afterHqChange(prevSch, schData);
       } finally {
         Admin._savingSchedule = false;
         if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = submitLabel; }
@@ -4146,6 +4153,8 @@ document.addEventListener('DOMContentLoaded', () => {
           try { delSch = (await window.hqStore.getSchedules()).find(x => x.id === schId) || null; if (delSch) delSch = JSON.parse(JSON.stringify(delSch)); } catch (e) { }
           await window.hqStore.deleteSchedule(schId);
           if (window.ScheduleNotify) window.ScheduleNotify.afterDelete(delSch).then(m => { if (m) alert(m); }).catch(() => { });
+          try { if (window.AdminRepeat) { const m = await window.AdminRepeat.afterDelete(delSch); if (m) alert(m); } } catch (e) { }
+          if (delSch && window.DraftSheet) window.DraftSheet.afterHqChange(delSch, null, true);   // 현장 담당자에게 취소 안내 문자 초안
           el.modalScheduleDetail.classList.remove('active');
           await renderSidebar();
           await renderKPI();

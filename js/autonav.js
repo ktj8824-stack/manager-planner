@@ -378,7 +378,8 @@ const AutoNav = {
       <div class="an-b">
         <button type="button" class="an-x" onclick="AutoNav.cancel()">닫기</button>
         <button type="button" class="an-go" style="background:#dc2626;" onclick="AutoNav.reportDelay()">본사에 지연 알리기</button>
-      </div>`, true);
+      </div>
+      ${sch.contactPhone && window.DraftSheet ? `<button type="button" class="an-x" style="width:100%;margin-top:8px;" onclick="AutoNav.cancel(); DraftSheet.forSchedule(${JSON.stringify(sch.id).replace(/"/g, '&quot;')}, ${late})">${esc(sch.contactName || '현장 담당자')}에게 늦는다고 문자</button>` : ''}`, true);
   },
 
   async reportDelay() {

@@ -366,6 +366,7 @@ const Home = {
       }
     } catch (e) { }
     html += this.renderAckCards();
+    html += this.renderAdjustCards();
     html += this.renderPushCard();
 
     if (events.length === 0 && rawSchedules.length === 0) {
@@ -704,7 +705,7 @@ const Home = {
               <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'tmap')" class="nc-nav"><span class="nc-sq" style="background:#14161A"></span>티맵 길안내</button>
               <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'kakao')" class="nc-nav"><span class="nc-sq" style="background:#FEE500; box-shadow:inset 0 0 0 1px #E5CF00"></span>카카오내비</button>
             </div>` : ''}
-            ${contact ? `<a href="tel:${esc(contact.phone.replace(/[^0-9+]/g, ''))}" class="nc-tel">${esc(contact.name)} 전화 · ${esc(contact.phone)}</a>` : ''}
+            ${contact ? `<div class="nc-contact"><a href="tel:${esc(contact.phone.replace(/[^0-9+]/g, ''))}" class="nc-tel">${esc(contact.name)} 전화 · ${esc(contact.phone)}</a>${window.DraftSheet && canAct ? `<button type="button" class="nc-tel nc-sms" onclick="DraftSheet.forSchedule(${escJs(nowEv.hqScheduleId)}${lateMin ? ', ' + lateMin : ''})">문자 초안</button>` : ''}</div>` : ''}
           </section>`;
         nowShown = nowEv;   // 카드가 다 만들어진 뒤에만 아래 목록에서 뺌
       }
@@ -951,6 +952,7 @@ const Home = {
       return `
         <div style="margin:0 0 12px;">
           <div style="font-size:14px; font-weight:800; color:#14161A; margin:0 2px 8px; display:flex; align-items:center; gap:6px;">📢 본사 변경 확인 <span style="background:#f97316; color:#fff; font-size:12px; padding:1px 8px; border-radius:999px;">${list.length}</span></div>
+          ${list.length >= 2 ? `<button type="button" class="ack-all" onclick="Home.ackAll(this)" style="width:100%; min-height:46px; margin:0 0 8px; border:0; border-radius:12px; background:#14161A; color:#fff; font-size:15px; font-weight:800; cursor:pointer;">모두 확인했습니다 (${list.length}건)</button>` : ''}
           ${cards}
           ${list.length > 5 ? `<div style="font-size:12.5px; color:#5B616E; text-align:center;">외 ${list.length - 5}건</div>` : ''}
         </div>`;
@@ -966,6 +968,91 @@ const Home = {
     } catch (e) {
       U.toast(e?.localSaved ? '확인을 저장했어요. 연결되면 본사에 전달됩니다.' : '확인을 보내지 못했어요. 다시 눌러 주세요.');
     }
+    this.render && this.render();
+  },
+
+  // ── 겹치는 일정 → 본사에 조정 요청 (요청함 → 본사 확인 중 → 조정됨) ──
+  //  같은 날 내 일정 중, 앞 일정이 끝나기 전에 다음 일정 첫 출발(픽업·현장 이동)이 잡힌 것
+  _overlaps(date) {
+    const me = window.SupabaseClient?.currentUser?.id;
+    const st = window.hqStore;
+    if (!me || !st || !st.getSchedules) return [];
+    const toMin = (v) => { const m = /^(\d{1,2}):(\d{2})/.exec(String(v || '')); return m ? +m[1] * 60 + +m[2] : NaN; };
+    const mine = st.getSchedules().filter(s => s && s.date === date && s.managerId === me && !['취소', 'cancelled'].includes(s.status))
+      .sort((a, b) => toMin(a.startTime) - toMin(b.startTime));
+    const out = [];
+    for (let i = 1; i < mine.length; i++) {
+      const b = mine[i];
+      const tl = Array.isArray(b.timeline) ? b.timeline : [];
+      const offs = State.stepDayOffsets ? State.stepDayOffsets(tl, b.startTime) : [];
+      const fi = tl.findIndex((x, k) => x && /^\[(픽업|현장 이동)/.test(x.label || '') && !(offs[k] < 0) && x.time);
+      const dep = fi >= 0 ? toMin(tl[fi].time) : toMin(b.startTime);
+      // 바로 앞이 아니라 앞의 모든 일정 중 가장 늦게 끝나는 것
+      const prev = mine.slice(0, i).filter(a => toMin(a.endTime) > toMin(a.startTime)).sort((x, y) => toMin(y.endTime) - toMin(x.endTime))[0];
+      if (prev && Number.isFinite(dep) && toMin(prev.endTime) > dep) out.push({ a: prev, b, dep: fi >= 0 ? tl[fi].time : b.startTime, over: toMin(prev.endTime) - dep });
+    }
+    return out;
+  },
+  renderAdjustCards() {
+    try {
+      if (typeof Plan !== 'undefined' && Plan.isIndie && Plan.isIndie()) return '';
+      const d = this.selectedDate || new Date();
+      const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (date < (() => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; })()) return '';
+      const st = window.hqStore;
+      const nm = (s) => s.isSecret ? '비공개 일정' : `${s.artistName ? String(s.artistName).replace(/\s*\([^)]*\)\s*$/, '') + ' ' : ''}${s.title || '일정'}`;
+      const list = this._overlaps(date);
+      const busy = new Set(list.map(x => x.b.id));
+      let html = list.map(x => {
+        const a = st.adjustState ? st.adjustState(x.b) : null;
+        const stage = a ? a.stage : '';
+        const right = stage === 'seen' ? `<span class="adj-stage seen">✓ ${esc(String(a.seen.managerName || '본사').replace(/\s*\(본사\)$/, ''))} 확인 중</span>`
+          : stage === 'asked' ? '<span class="adj-stage">조정 요청함 · 본사 확인 기다리는 중</span>'
+          : `<button type="button" class="adj-btn" onclick="Home.askAdjust(${escJs(x.b.id)}, ${escJs(x.a.id)}, this)">본사에 조정 요청</button>`;
+        return `<div class="adj-card">
+          <div class="adj-k">⚠️ 일정이 ${x.over}분 겹쳐요</div>
+          <div class="adj-l"><b>${esc(nm(x.a))}</b> ~${esc(String(x.a.endTime).slice(0, 5))} 끝</div>
+          <div class="adj-l"><b>${esc(nm(x.b))}</b> ${esc(x.dep)} 출발</div>
+          ${right}
+        </div>`;
+      }).join('');
+      // 요청했는데 이제 겹치지 않음 → 조정됨
+      (st.getSchedules() || []).filter(s => s.date === date && !busy.has(s.id) && s.managerId === window.SupabaseClient?.currentUser?.id && st.adjustState && st.adjustState(s)).forEach(s => {
+        html += `<div class="adj-card done"><div class="adj-k">✓ 조정됨</div><div class="adj-l"><b>${esc(nm(s))}</b> 이제 겹치지 않아요</div></div>`;
+      });
+      return html ? `<div class="adj-wrap">${html}</div>` : '';
+    } catch (e) { return ''; }
+  },
+  async askAdjust(bId, aId, btn) {
+    const st = window.hqStore;
+    const all = st.getSchedules();
+    const a = all.find(s => s.id === aId), b = all.find(s => s.id === bId);
+    if (!a || !b) return;
+    const x = this._overlaps(b.date).find(o => o.b.id === bId) || { dep: b.startTime, over: 0 };
+    const nm = (s) => s.isSecret ? '비공개 일정' : `${s.artistName ? String(s.artistName).replace(/\s*\([^)]*\)\s*$/, '') + ' ' : ''}${s.title || '일정'}`;
+    const text = `앞 일정(${nm(a)} ~${String(a.endTime).slice(0, 5)})이 끝나기 전에 ${x.dep} 출발이에요 · ${x.over}분 겹침`;
+    if (btn) { btn.disabled = true; btn.textContent = '보내는 중…'; }
+    try {
+      await st.requestAdjust(bId, text);
+      try { if (window.Chat && Chat.available && Chat.available() && !Chat.isHq()) await Chat.sendNotice({ title: '🔁 일정 조정 요청', content: `${b.date.slice(5).replace('-', '/')} ${nm(b)}\n${text}` }); } catch (e) { }
+      U.toast('본사에 조정 요청을 보냈어요.');
+    } catch (e) { U.toast(e?.localSaved ? '요청을 저장했어요. 연결되면 본사에 전달됩니다.' : '보내지 못했어요. 다시 눌러 주세요.'); }
+    this.render && this.render();
+  },
+
+  // 여러 건을 한 번에 '확인했습니다' (밤에 내일 일정 변경을 한 번에 확인)
+  async ackAll(btn) {
+    const me = window.SupabaseClient?.currentUser?.id;
+    const list = me && window.hqStore?.getPendingAcks ? window.hqStore.getPendingAcks(me) : [];
+    if (!list.length) return;
+    if (btn) { btn.disabled = true; btn.textContent = `보내는 중… (0/${list.length})`; }
+    let ok = 0, saved = 0;
+    for (const s of list) {
+      try { await window.hqStore.ackSchedule(s.id); ok++; } catch (e) { if (e?.localSaved) saved++; }
+      if (btn) btn.textContent = `보내는 중… (${ok + saved}/${list.length})`;
+    }
+    U.toast(ok + saved === list.length ? (saved ? `${list.length}건 확인을 저장했어요. 연결되면 본사에 전달됩니다.` : `${list.length}건 모두 본사에 확인을 보냈어요.`) : `${ok + saved}건 보냈어요. 나머지는 다시 눌러 주세요.`);
+    U.haptic && U.haptic();
     this.render && this.render();
   },
 
