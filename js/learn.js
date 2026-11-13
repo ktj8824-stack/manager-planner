@@ -108,8 +108,10 @@
     me(p) {
       const art = String((p && p.artist) || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
       const mgr = String((p && p.manager) || '').trim();
-      if (art && art !== '전체 아티스트' && !/전원/.test(art)) return `${art} ${mgr ? mgr + ' ' : ''}매니저입니다.`;
-      return `${mgr ? mgr + ' ' : ''}매니저입니다.`;
+      // 이름에 직함이 붙어 있으면(김태현 본부장) '매니저'를 또 붙이지 않음
+      const who = !mgr ? '매니저' : /(매니저|팀장|실장|본부장|부장|차장|과장|대리|주임|이사|대표|사원|님)$/.test(mgr) ? mgr : mgr + ' 매니저';
+      if (art && art !== '전체 아티스트' && !/전원/.test(art)) return `${art} ${who}입니다.`;
+      return `${who}입니다.`;
     },
     place(s) { return String((s && s.location) || '현장').replace(/\s*\([^()]*\d[^()]*\)\s*$/, '').trim() || '현장'; },
 

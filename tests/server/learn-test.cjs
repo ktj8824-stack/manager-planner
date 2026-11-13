@@ -18,6 +18,7 @@ const p = { artist: '루나스 (LUNAS)', manager: '김태현' };
 console.log('late:', Drafts.late(s, 15, p).replace(/\n/g, ' / '));
 console.log('change:', Drafts.change(s, { date: '2026-11-20', start: '14:00' }, { date: '2026-11-21', start: '15:00' }, p).replace(/\n/g, ' / '));
 console.log('cancel:', Drafts.cancel(s, p).replace(/\n/g, ' / '));
+console.log('title:', Drafts.me({ artist: '루나스 (LUNAS)', manager: '김태현 본부장' }), Drafts.me({ manager: '' }));
 console.log('sms:', Drafts.smsUrl('010-1234-5678', '안녕 & 하세요', 'iPhone'), Drafts.smsUrl('010-1234-5678', 'a', 'Android'));
 console.log('weekly:', Repeat.dates('2026-11-13', 'weekly', 3).join(','));
 console.log('weekdays:', Repeat.dates('2026-11-13', 'weekdays', 4).join(','));
