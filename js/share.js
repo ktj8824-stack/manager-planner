@@ -50,7 +50,7 @@
       const exp = new Date(data.expires_at);
       const expTxt = isNaN(exp) ? '' : `${exp.getMonth() + 1}월 ${exp.getDate()}일 0시`;
       const when = [s.date ? s.date.slice(5).replace('-', '/') : '', s.startTime || ''].filter(Boolean).join(' ');
-      const msg = `[로드플래너 일정 공유]\n${s.title || '일정'}${s.artistName ? ' · ' + s.artistName : ''}\n${when}${s.location ? ' · ' + s.location : ''}\n${url}`;
+      const msg = `🎬 [로드플래너] ${s.title || '일정'}${s.artistName ? ' · ' + s.artistName : ''}\n▪ 현장  ${s.location || '-'}\n▪ 일시  ${when}\n출발지만 고르면 출발 시간·길안내가 맞춰져요\n\n▶ 눌러서 받기\n${url}`;
 
       const el = sheet(`
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">

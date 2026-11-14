@@ -39,11 +39,43 @@
     .note { font-size:12.5px; color:var(--sub); text-align:center; line-height:1.6; margin-top:8px; }
     .msg { text-align:center; padding:60px 20px; color:var(--sub); font-size:15px; line-height:1.7; }
     .msg b { display:block; color:var(--ink); font-size:19px; margin-bottom:6px; }
+    /* 받은 사람: 내 출발 시간 맞추기 (버디플래너와 같은 단계 안내) */
+    .rs-step { margin:0 -8px 10px; padding:12px 10px; border-radius:14px; border:2px solid transparent; scroll-margin-top:12px; transition:background .25s,border-color .25s,opacity .25s; }
+    .rs-q { display:flex; align-items:center; gap:8px; font-weight:800; font-size:16px; margin-bottom:8px; }
+    .rs-q em { font-style:normal; width:24px; height:24px; border-radius:50%; background:#cbd5e1; color:#fff; font-size:13px; display:flex; align-items:center; justify-content:center; flex:none; }
+    .rs-now { display:none; font-size:14px; font-weight:800; color:#059669; margin:-4px 0 10px 32px; }
+    .rs-now::before { content:''; display:inline-block; width:7px; height:7px; border-right:2.5px solid currentColor; border-bottom:2.5px solid currentColor; transform:rotate(45deg); margin:0 8px 3px 2px; vertical-align:middle; }
+    .rs-step.now { background:#ecfdf5; border-color:#10b981; box-shadow:0 0 0 4px rgba(16,185,129,.15); }
+    .rs-step.now .rs-now { display:block; animation:rsBob 1.2s ease-in-out infinite; }
+    .rs-step.now .rs-q em { background:#10b981; animation:rsPulse 1.4s ease-out infinite; }
+    .rs-step.done .rs-q em { background:#10b981; }
+    .rs-step.wait { opacity:.4; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; }
+    .pills button { height:42px; padding:0 14px; border-radius:12px; border:1.5px solid #e2e6ec; background:#fff; font-size:15px; font-weight:700; color:#334155; cursor:pointer; font-family:inherit; }
+    .pills button.on { background:#1e1b4b; border-color:#1e1b4b; color:#fff; }
+    .opt { width:100%; display:flex; align-items:center; gap:12px; padding:12px; border:1.5px solid #e2e6ec; border-radius:14px; background:#fff; margin-bottom:8px; text-align:left; font-family:inherit; cursor:pointer; }
+    .opt .ic { width:38px; height:38px; border-radius:50%; background:#EEF0FD; color:#1e1b4b; display:flex; align-items:center; justify-content:center; flex:none; }
+    .opt.on { border-color:#1e1b4b; background:#f3f4fd; } .opt.on .ic { background:#1e1b4b; color:#fff; }
+    .opt b { display:block; font-size:15px; } .opt small { color:var(--sub); font-size:13px; }
+    .srch { display:flex; gap:8px; margin-top:8px; } .srch input { flex:1; height:42px; border:1.5px solid #e2e6ec; border-radius:12px; padding:0 12px; font-size:15px; font-family:inherit; }
+    .srch button { height:42px; padding:0 14px; border:0; border-radius:12px; background:#1e1b4b; color:#fff; font-weight:800; font-family:inherit; }
+    .res { margin-top:6px; } .res button { display:block; width:100%; text-align:left; padding:10px 4px; border:0; border-bottom:1px solid #f1f5f9; background:none; font-size:14.5px; font-family:inherit; cursor:pointer; }
+    .res button small { display:block; color:var(--sub); font-size:12px; }
+    .plan { background:#0f172a; color:#fff; border-radius:16px; padding:16px; margin-top:6px; }
+    .plan .big { font-size:30px; font-weight:800; letter-spacing:-.02em; } .plan .big small { font-size:15px; font-weight:700; margin-left:6px; opacity:.85; }
+    .plan .sub { font-size:13.5px; opacity:.8; margin-top:4px; line-height:1.6; }
+    .plan .btns .btn { background:#fff; border-color:#fff; }
+    .go-btn { width:100%; height:52px; border:0; border-radius:14px; background:#1e1b4b; color:#fff; font-size:16px; font-weight:800; margin-top:6px; font-family:inherit; cursor:pointer; }
+    .go-btn.ready { background:#10b981; animation:rsPulse 1.4s ease-out infinite; }
+    .again { display:block; margin:10px auto 0; border:0; background:none; color:var(--sub); font-size:13.5px; text-decoration:underline; font-family:inherit; }
+    @keyframes rsPulse { 0% { box-shadow:0 0 0 0 rgba(16,185,129,.55); } 100% { box-shadow:0 0 0 10px rgba(16,185,129,0); } }
+    @keyframes rsBob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(3px); } }
   </style>
 </head>
 <body>
   <header><b>Road<i>Planner</i></b><span>일정 공유</span></header>
   <main id="root"><div class="msg">일정을 불러오는 중…</div></main>
+  <script src="js/api.js"></script>
   <script>
   (function () {
     'use strict';
@@ -74,6 +106,7 @@
       var loc = cleanPlace(d.location), shop = cleanPlace(d.shop), dep = cleanPlace(d.departure);
       var h = '<div class="card">' + (d.artist ? '<span class="tag">' + esc(d.artist) + '</span>' : '') +
         '<h1>' + esc(d.title) + '</h1><div class="when">' + esc(dateTxt) + ' · ' + esc(d.start_time) + (d.end_time ? ' ~ ' + esc(d.end_time) : '') + '</div></div>';
+      h += '<div class="card" id="recv">' + Recv.html(d) + '</div>';
       h += '<div class="card">';
       if (loc) h += '<div class="row"><div class="k">장소</div><div class="v">' + esc(loc) + '</div></div>';
       if (shop) h += '<div class="row"><div class="k">헤어·메이크업</div><div class="v">' + esc(shop) + '</div></div>';
@@ -96,9 +129,106 @@
       h += '<div class="note">일정이 바뀌면 이 화면에도 바로 반영됩니다' + (isNaN(up) ? '' : ' · ' + (up.getMonth() + 1) + '/' + up.getDate() + ' ' + String(up.getHours()).padStart(2, '0') + ':' + String(up.getMinutes()).padStart(2, '0') + ' 기준') +
         '<br>' + (isNaN(exp) ? '' : (exp.getMonth() + 1) + '월 ' + exp.getDate() + '일 0시까지 열리는 링크입니다. 다른 사람에게 전달하지 말아 주세요.') + '</div>';
       root.innerHTML = h;
+      if (Recv.step() === 'done' && Recv.travel == null && !Recv.calc) Recv.compute();
       root.querySelectorAll('a[data-go]').forEach(function (a) { a.setAttribute('href', a.getAttribute('data-go')); });
     }
 
+
+    /* ── 받은 사람: 내 출발 시간 맞추기 ① 출발지 ② 준비 시간 ③ 샵 들렀다/현장 바로 ── */
+    var IC = {
+      pin: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0C18.5 15.4 12 21 12 21Z"/><circle cx="12" cy="10" r="2.3"/></svg>',
+      shop: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M8 7.5 20 17M8 16.5 20 7"/></svg>',
+      flag: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 21V4M5.5 4.5h12l-2.2 4 2.2 4h-12"/></svg>'
+    };
+    var KEY_ = 'rp_recv_' + token.slice(0, 16);
+    var Recv = {
+      d: null, g: null, results: [], searching: false, travel: null, calc: false,
+      load: function () { try { this.g = JSON.parse(localStorage.getItem(KEY_) || 'null'); } catch (e) { } if (!this.g) this.g = { origin: null, prep: null, route: null }; },
+      save: function () { try { localStorage.setItem(KEY_, JSON.stringify(this.g)); } catch (e) { } },
+      home: function () { try { return JSON.parse(localStorage.getItem('rp_home') || 'null'); } catch (e) { return null; } },
+      shopTime: function (d) {
+        var tl = Array.isArray(d.timeline) ? d.timeline : [];
+        for (var i = 0; i < tl.length; i++) if (/샵|헤어|메이크업|헤메/.test(tl[i].label || '') && tl[i].time) return tl[i].time;
+        return null;
+      },
+      opts: function (d) {
+        var o = [], shop = cleanPlace(d.shop), loc = cleanPlace(d.location);
+        if (shop) o.push({ k: 'shop', ic: IC.shop, t: '샵 들렀다 가기', sub: shop + (this.shopTime(d) ? ' · ' + this.shopTime(d) + ' 도착' : ''), place: shop, at: this.shopTime(d) });
+        if (loc) o.push({ k: 'site', ic: IC.flag, t: '현장으로 바로', sub: loc + ' · ' + d.start_time + ' 도착', place: loc, at: d.start_time });
+        return o;
+      },
+      step: function () { var g = this.g; if (!g.origin) return 'origin'; if (g.prep == null) return 'prep'; if (!g.route) return 'route'; return 'done'; },
+      html: function (d) {
+        this.d = d; if (!this.g) this.load();
+        var g = this.g, now = this.step(), order = ['origin', 'prep', 'route'], ni = now === 'done' ? 99 : order.indexOf(now);
+        function cls(k) { var i = order.indexOf(k); return i === ni ? 'now' : i < ni ? 'done' : 'wait'; }
+        function num(k) { var i = order.indexOf(k); return i < ni ? '✓' : String(i + 1); }
+        var hm = this.home(), P = [20, 30, 40, 50, 60, 70, 80, 90], opts = this.opts(d);
+        if (now === 'done') return this.planHTML(d);
+        var h = '<div class="sec" style="color:#111;font-size:17px;margin-bottom:10px">내 출발 시간 맞추기</div>';
+        h += '<div class="rs-step ' + cls('origin') + '" id="st-origin"><div class="rs-q"><em>' + num('origin') + '</em>어디서 출발하세요?</div><div class="rs-now">출발지를 골라 주세요</div><div class="pills">' +
+          (hm ? '<button data-r="home" class="' + (g.originLabel === '집' ? 'on' : '') + '">집</button>' : '') +
+          '<button data-r="here" class="' + (g.originLabel === '지금 위치' ? 'on' : '') + '">지금 위치</button>' +
+          '<button data-r="search" class="' + (g.originLabel === '직접' ? 'on' : '') + '">' + (g.originLabel === '직접' && g.origin ? esc(g.origin.name) : '직접 입력') + '</button></div>' +
+          (this.searching ? '<div class="srch"><input id="rq" placeholder="동네·건물·역 이름" enterkeyhint="search"><button data-r="find">검색</button></div><div class="res">' +
+            this.results.map(function (p, i) { return '<button data-pick="' + i + '"><b>' + esc(p.place_name) + '</b><small>' + esc(p.address_name || '') + '</small></button>'; }).join('') + '</div>' : '') + '</div>';
+        h += '<div class="rs-step ' + cls('prep') + '" id="st-prep"><div class="rs-q"><em>' + num('prep') + '</em>나가기 전 준비 시간</div><div class="rs-now">준비 시간을 골라 주세요</div><div class="pills">' +
+          P.map(function (v) { return '<button data-prep="' + v + '" class="' + (g.prep === v ? 'on' : '') + '">' + v + '분</button>'; }).join('') + '</div></div>';
+        h += '<div class="rs-step ' + cls('route') + '" id="st-route"><div class="rs-q"><em>' + num('route') + '</em>어디로 먼저 가세요?</div><div class="rs-now">먼저 갈 곳을 골라 주세요</div>' +
+          opts.map(function (o) { return '<button class="opt ' + (g.route === o.k ? 'on' : '') + '" data-route="' + o.k + '"><span class="ic">' + o.ic + '</span><span><b>' + o.t + '</b><small>' + esc(o.sub) + '</small></span></button>'; }).join('') + '</div>';
+        return h;
+      },
+      planHTML: function (d) {
+        var g = this.g, o = this.opts(d).filter(function (x) { return x.k === g.route; })[0];
+        if (!o) { g.route = null; return this.html(d); }
+        var at = o.at || d.start_time, travel = this.travel;
+        var toMin = function (t) { var p = String(t).split(':'); return (+p[0]) * 60 + (+p[1]); };
+        var hmS = function (m) { m = ((m % 1440) + 1440) % 1440; return ('0' + Math.floor(m / 60)).slice(-2) + ':' + ('0' + (m % 60)).slice(-2); };
+        var body;
+        if (travel == null) { body = '<div class="sub">' + (this.calc ? '길을 찾는 중…' : '이동 시간을 계산하지 못했어요. 아래 길안내로 확인해 주세요.') + '</div>'; }
+        else {
+          var dep = toMin(at) - travel - 10, prep = dep - g.prep;
+          body = '<div class="big">' + hmS(dep) + '<small>출발</small></div><div class="sub">' + hmS(prep) + ' 준비 시작 (' + g.prep + '분) · 차로 약 ' + travel + '분 · ' + at + ' 도착 (여유 10분)<br>' + esc(g.origin.name) + ' → ' + esc(o.place) + '</div>';
+        }
+        return '<div class="sec" style="color:#111;font-size:17px;margin-bottom:10px">내 출발 시간</div><div class="plan">' + body + nav(o.place) + '</div>' +
+          '<button class="again" data-r="reset">출발지·준비 시간 다시 고르기</button>';
+      },
+      draw: function (scrollTo) {
+        var el = document.getElementById('recv'); if (!el || !this.d) return;
+        el.innerHTML = this.html(this.d);
+        el.querySelectorAll('a[data-go]').forEach(function (a) { a.setAttribute('href', a.getAttribute('data-go')); });
+        if (scrollTo) setTimeout(function () { var t = document.getElementById('st-' + Recv.step()) || el; t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 120);
+      },
+      setOrigin: function (o, label) { var first = !this.g.origin; this.g.origin = o; this.g.originLabel = label; this.searching = false; this.travel = null; this.save(); if (label !== '지금 위치') try { localStorage.setItem('rp_home', JSON.stringify(o)); } catch (e) { } this.after(first); },
+      after: function (adv) { if (this.step() === 'done') this.compute(); this.draw(adv); },
+      compute: function () {
+        var g = this.g, o = this.opts(this.d).filter(function (x) { return x.k === g.route; })[0]; if (!o || !g.origin) return;
+        var self = this; this.calc = true; this.travel = null;
+        KakaoAPI.searchPlace(o.place).then(function (r) {
+          var p = r && r[0]; if (!p) throw 0;
+          return TmapAPI.getRouteTime(g.origin.lng, g.origin.lat, p.x, p.y).then(function (m) { return m || KakaoAPI.getRouteTime(g.origin.lng, g.origin.lat, p.x, p.y); });
+        }).then(function (m) { self.travel = m || null; }).catch(function () { self.travel = null; }).then(function () { self.calc = false; self.draw(false); });
+      },
+      click: function (e) {
+        var b = e.target.closest('button'); if (!b || !document.getElementById('recv').contains(b)) return;
+        var g = this.g, self = this;
+        if (b.dataset.prep) { var f = g.prep == null; g.prep = +b.dataset.prep; this.save(); return this.after(f); }
+        if (b.dataset.route) { var f2 = !g.route; g.route = b.dataset.route; this.save(); return this.after(f2); }
+        if (b.dataset.pick) { var p = this.results[+b.dataset.pick]; return this.setOrigin({ name: p.place_name, lat: +p.y, lng: +p.x }, '직접'); }
+        var r = b.dataset.r;
+        if (r === 'home') return this.setOrigin(this.home(), '집');
+        if (r === 'here') {
+          if (!navigator.geolocation) return alert('이 기기에서는 위치를 쓸 수 없어요. 직접 입력해 주세요.');
+          navigator.geolocation.getCurrentPosition(function (pos) { self.setOrigin({ name: '지금 위치', lat: pos.coords.latitude, lng: pos.coords.longitude }, '지금 위치'); },
+            function () { alert('위치를 가져오지 못했어요. 직접 입력해 주세요.'); }, { timeout: 8000 });
+          return;
+        }
+        if (r === 'search') { this.searching = true; this.results = []; this.draw(false); setTimeout(function () { var i = document.getElementById('rq'); if (i) i.focus(); }, 50); return; }
+        if (r === 'find') { var q = (document.getElementById('rq') || {}).value || ''; KakaoAPI.searchPlace(q).then(function (res) { self.results = (res || []).slice(0, 6); self.draw(false); var i = document.getElementById('rq'); if (i) i.value = q; }); return; }
+        if (r === 'reset') { this.g = { origin: null, prep: null, route: null }; this.travel = null; this.save(); return this.draw(true); }
+      }
+    };
+    document.addEventListener('click', function (e) { if (e.target.closest('#recv')) Recv.click(e); });
     function load() {
       // 10초 안에 응답이 없으면 멈추지 않고 안내 + 다시 시도
       var ctl = window.AbortController ? new AbortController() : null;
@@ -117,7 +247,7 @@
         });
     }
     load();
-    setInterval(function () { if (!document.hidden) load(); }, 60000);
+    setInterval(function () { if (!document.hidden && !Recv.searching) load(); }, 60000);
   })();
   </script>
 </body>
