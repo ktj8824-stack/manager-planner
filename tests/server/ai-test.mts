@@ -65,7 +65,7 @@ reset([
   say('아래 카드에서 확인해 주세요.'),
 ]);
 r = await (await H({ message: '뮤뱅 6시 반', context: ctx })).json();
-out.dupBlocked = JSON.stringify(sent[1].messages).includes('이미 스케줄이 있습니다 (idx 0');
+out.dupBlocked = JSON.stringify(sent[1].messages).includes('이미 일정이 있습니다 (idx 0');
 out.dupThenUpdate = r.actions.map((a: any) => a.type).join(',');
 
 // 4) 넓은 장소 이름 → 되묻게 함 (search_nearby도)
