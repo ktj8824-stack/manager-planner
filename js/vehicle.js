@@ -53,7 +53,7 @@ const Vehicle = {
               <div><dt>연료</dt><dd>${esc(v.fuel || '-')}</dd></div>
               <div><dt>보험사</dt><dd>${esc(v.insurer || '-')}</dd></div>
             </dl>
-            ${tel.length >= 4 ? `<a class="veh-call" href="tel:${esc(tel)}">📞 ${esc(v.insurer || '보험사')} 긴급출동 전화 <small>${esc(v.insTel)}</small></a>` : `<button type="button" class="veh-call none" onclick="Vehicle.openForm()">긴급출동 번호를 넣어 두면 사고·고장 때 바로 걸 수 있어요</button>`}`
+            ${tel.length >= 4 ? `<a class="veh-call" href="tel:${esc(tel)}">📞 ${esc(v.insurer || '보험사')} 긴급출동 전화 <small>${esc(v.insTel)}</small></a>` : `<button type="button" class="veh-call none" onclick="Vehicle.openForm()"><b>+ 긴급출동 번호 넣기</b><small>사고·고장 때 바로 전화할 수 있어요</small></button>`}`
           : `
             <div class="veh-empty"><span class="veh-ico">🚗</span><b>아직 등록한 차량이 없어요</b><span>차종·번호·보험사 긴급출동 번호를 넣어 두세요.</span>
               <button type="button" class="btn-primary" style="width:auto; padding:10px 18px; font-weight:800;" onclick="Vehicle.openForm()">차량 등록</button></div>`}
@@ -71,7 +71,7 @@ const Vehicle = {
             <div id="exp-body"><div class="exp-empty">불러오는 중...</div></div>`
           : `
             <div class="art-add locked" style="display:flex;">
-              <span class="art-lock-t">🔒 경비 기록은 유료예요</span>
+              <span class="art-lock-t">🔒 경비 기록은 유료 기능이에요</span>
               <span class="art-lock-s">주유·주차·통행료·정비·식비 영수증을 사진과 함께 남기고, 달마다 합계를 정산용으로 받을 수 있어요</span>
               <button type="button" onclick="App.navigate('upgrade')">유료 혜택 보기</button>
             </div>`}

@@ -1146,7 +1146,8 @@ div.art-add.locked button { margin-top:6px; border:0; background:#3B45C4; color:
 .veh-info dd { margin:2px 0 0; font-size:14.5px; font-weight:700; color:var(--text-100); }
 .veh-call { display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap; width:100%; min-height:48px; border-radius:12px; background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; font-size:15px; font-weight:800; text-decoration:none; cursor:pointer; font-family:inherit; }
 .veh-call small { font-weight:600; opacity:.8; }
-.veh-call.none { background:var(--bg-input); border-color:var(--border-default); color:var(--text-400); font-size:13px; font-weight:600; padding:8px 12px; }
+.veh-call.none { background:#F5F6FE; border:1px dashed #B9C0F0; color:#3B45C4; font-size:14.5px; font-weight:700; padding:8px 12px; flex-direction:column; gap:1px; }
+.veh-call.none small { font-size:12.5px; color:var(--text-400); opacity:1; }
 .veh-empty { display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; padding:8px 0; color:var(--text-400); font-size:13.5px; }
 .veh-empty b { color:var(--text-100); font-size:16px; }
 .veh-empty .btn-primary { margin-top:6px; }

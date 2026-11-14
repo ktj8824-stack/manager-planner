@@ -49,7 +49,7 @@ const Ads = {
       ? `<span class="ad-tag">광고</span>${this._adfit(this.UNIT_BANNER, 320, 50)}`
       : `<span class="ad-tag">광고</span>
          <button type="button" class="ad-house" onclick="Ads.toUpgrade('banner')">
-           <span class="ad-house-t"><b>광고 없이 로드플래너</b><small>아침 교통 재계산 · 자동 길안내 · 월 2만원</small></span>
+           <span class="ad-house-t"><b>광고 없이 쓰기 · 월 2만원</b><small>아침 교통 다시 계산 · 차 타면 자동 길안내</small></span>
            <span class="ad-house-go">보기</span>
          </button>`;
     document.body.appendChild(bar);
@@ -100,7 +100,7 @@ const Ads = {
           <div class="ad-house-box">
             <img src="icon.svg" alt="" width="52" height="52">
             <b>광고 없이, 더 빠르게</b>
-            <p>유료로 바꾸면 광고가 사라지고<br>아침 교통 재계산 · 차 타면 자동 길안내 · 아티스트 여러 명을 쓸 수 있어요.</p>
+            <p>유료로 바꾸면 광고가 사라지고<br>아침 교통 다시 계산 · 차 타면 자동 길안내 · 아티스트 여러 명을 쓸 수 있어요.</p>
             <span class="ad-house-price">월 20,000원</span>
           </div>`}
         </div>
