@@ -430,7 +430,7 @@
       return;
     }
     row.hidden = false; inp.hidden = false;
-    cnt.style.visibility = sel.value ? 'visible' : 'hidden';
+    cnt.closest('.sch-repeat-n').style.visibility = sel.value ? 'visible' : 'hidden';   // '번' 글자까지 같이 숨김
     if (!sel.value || !$('form-date').value) { hint.textContent = ''; return; }
     const ds = Repeat.dates($('form-date').value, sel.value, cnt.value);
     hint.textContent = `${ds.length}건 등록: ${ds.slice(0, 6).map(short).join(', ')}${ds.length > 6 ? ` … ${short(ds[ds.length - 1])}` : ''}`;
