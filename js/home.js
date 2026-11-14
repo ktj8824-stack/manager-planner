@@ -163,11 +163,11 @@ const Home = {
 
     centerSelectedDate() { },   // 주간 한 줄이라 스크롤할 것이 없음
 
-  // 이번 주(월~일) 7칸. 일정 있는 날은 점, 오늘은 테두리, 고른 날은 남색
+  // 이번 주(일~토) 7칸 — 본사 웹·달력과 같은 순서. 일정 있는 날은 점, 오늘은 테두리, 고른 날은 남색
   renderMiniCal() {
     const sel = this.selectedDate;
     const start = new Date(sel.getFullYear(), sel.getMonth(), sel.getDate());
-    start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+    start.setDate(start.getDate() - start.getDay());
     const today = new Date();
     const same = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
     let html = '';
@@ -348,6 +348,11 @@ const Home = {
     const selArt = this.artistFilter && this.artistFilter !== 'ALL' ? allArtists.find(a => a.id === this.artistFilter) : null;
     const pillLabel = selArt ? cleanArtName(selArt.name) : (myArts.length === 1 ? cleanArtName(myArts[0].name) : `${indieMode ? '내 아티스트' : '담당'} ${myArts.length}팀`);
     const scope = this.scope();
+    // [퇴근합시다]는 오늘 할 일이 남아 있으면 목록 아래에, 다 끝났거나 이미 퇴근했으면 위에 (위쪽에 배너가 겹겹이 쌓이지 않게)
+    const _now = new Date();
+    const weBusy = !!window.WorkEnd && !WorkEnd.today() && this.currentTab !== 'schedule'
+      && y === _now.getFullYear() && m === _now.getMonth() && d === _now.getDate()
+      && events.some(ev => ev && !ev.done && ev.stepCategory !== 'rest');
     let html = `
       <!-- 상단: 담당 아티스트 버튼 + (소속 매니저) 내 일정 / 본사 전체 -->
       <div class="home-filters">
@@ -359,6 +364,8 @@ const Home = {
           <button type="button" aria-pressed="${scope === 'mine'}" class="${scope === 'mine' ? 'on' : ''}" onclick="Home.setScope('mine')">내 일정</button>
           <button type="button" aria-pressed="${scope === 'all'}" class="${scope === 'all' ? 'on' : ''}" onclick="Home.setScope('all')">본사 전체</button>
         </div>` : ''}
+        <!-- 작은 화면: 떠 있는 [+] 대신 여기에 (목록 버튼을 가리지 않게) -->
+        <button type="button" class="hf-new" onclick="Home.openScheduleRegisterModal()">+ 일정</button>
       </div>
 
       <!-- 보기 바꾸기: 내 동선 / 스케줄표 -->
@@ -366,7 +373,7 @@ const Home = {
         <button type="button" onclick="Home.setTab('timeline')" aria-pressed="${this.currentTab === 'timeline'}" class="${this.currentTab === 'timeline' ? 'on' : ''}">동선 타임라인</button>
         <button type="button" onclick="Home.setTab('schedule')" aria-pressed="${this.currentTab === 'schedule'}" class="${this.currentTab === 'schedule' ? 'on' : ''}">${indieMode ? '내 스케줄표' : '회사 스케줄표'}</button>
       </div>
-      ${window.WorkEnd ? WorkEnd.homeHtml() : ''}
+      ${window.WorkEnd && !weBusy ? WorkEnd.homeHtml() : ''}
       ${window.AutoNav?.promoHtml ? AutoNav.promoHtml() : ''}
     `;
 
@@ -401,6 +408,7 @@ const Home = {
       html += this.renderScheduleGrid(rawSchedules, y, m, d);
     } else {
       html += this.renderManagerRoute(events);
+      if (weBusy) html += `<div style="margin:-26px 4px 24px;">${WorkEnd.homeHtml()}</div>`;
     }
 
     return html;
@@ -706,7 +714,7 @@ const Home = {
         } catch (e) { lateMin = 0; }
         const lateTxt = lateMin >= 60 ? `${Math.floor(lateMin / 60)}시간 ${lateMin % 60}분 지남` : `${lateMin}분 지남`;
         // 제목은 장소 이름만, 주소는 아래 줄로
-        const shortName = String(name).replace(/\s*\((?=[^)]*\d)[^)]*\)\s*/g, ' ').replace(/\s{2,}/g, ' ').trim() || name;
+        const shortName = String(name).replace(/\s*\((?=[^)]*\d)[^)]*\)\s*/g, ' ').replace(/픽업(\s*\([^()]*\))?\s+픽업 및 출발/, '픽업$1 출발').replace(/\s{2,}/g, ' ').trim() || name;
         const SB = 'min-height:46px; border-radius:12px; font-size:14.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; font-family:inherit;';
         const dayTag = nowEv.forNextDay ? '내일 일정 · ' : nowEv.dayOffset === -1 ? '전날 ' : nowEv.dayOffset === 1 ? '다음날 ' : '';
         html += `
@@ -773,7 +781,9 @@ const Home = {
 
       // 1. 타이틀 및 태그 스마트 분류 사전 처리
       let rawTitle = (ev.title || '').trim();
-      const cleanTitle = rawTitle.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '').trim();
+      const cleanTitle = rawTitle.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '').trim()
+        // 제목에는 장소 이름만: 괄호 속 주소(숫자가 든 괄호)는 빼고, '픽업 … 픽업 및 출발'처럼 겹친 말은 한 번만
+        .replace(/\s*\((?=[^()]*\d)[^()]*\)/g, '').replace(/픽업(\s*\([^()]*\))?\s+픽업 및 출발/, '픽업$1 출발').replace(/\s{2,}/g, ' ').trim();
       
       const getLineIcon = (type) => {
         const strokeStyle = 'width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"';
@@ -869,8 +879,8 @@ const Home = {
             ${(isHQ && ev.hqScheduleId) || isDriveStep ? `<div class="rs-acts">
               ${isHQ && ev.hqScheduleId && dayState === 'future' ? '<span class="rs-wait">당일에 표시</span>' : ''}
               ${isHQ && ev.hqScheduleId && dayState !== 'future' ? `
-                ${isDriveStep && dayState === 'today' ? `<button type="button" class="rs-btn${isMoving ? ' on-move' : ''}" onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '이동중')">이동중</button>` : ''}
-                <button type="button" class="rs-btn${isDone ? ' on-done' : ''}" onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '완료')">완료</button>` : ''}
+                ${isDriveStep && dayState === 'today' ? `<button type="button" class="rs-btn${isMoving ? ' on-move' : ''}" onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '이동중')">${isMoving ? '● 이동중' : '출발'}</button>` : ''}
+                <button type="button" class="rs-btn${isDone ? ' on-done' : ''}" onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '완료')">${isDriveStep && !isDone ? '도착' : '완료'}</button>` : ''}
               ${isDriveStep ? `<span class="rs-navs">
                 <button type="button" class="rs-btn ghost" onclick="U.openNavigation(${escJs(destinationTarget)}, '', 'tmap')" title="티맵 길안내">티맵</button>
                 <button type="button" class="rs-btn ghost" onclick="U.openNavigation(${escJs(destinationTarget)}, '', 'kakao')" title="카카오내비 길안내">카카오</button>

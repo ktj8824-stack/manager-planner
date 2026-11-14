@@ -148,3 +148,6 @@ img { max-width: 100%; display: block; }
 @media (pointer: coarse) {
   input:not([type=checkbox]):not([type=radio]):not([type=range]), select, textarea { font-size: 16px !important; }
 }
+
+/* 한글은 단어 중간에서 줄바꿈하지 않음 (예: '로드/톡이' → '로드톡이'). 아주 긴 글자만 예외로 끊음 */
+body { word-break: keep-all; overflow-wrap: break-word; }

@@ -557,7 +557,7 @@ const App = {
         <div style="line-height:1.45; font-size:14px; color:#f1f5f9; word-break:break-word;">${safeContent}</div>
         <div style="font-size:12px; color:#94a3b8; margin-top:6px;">${esc(timeStr)}</div>
       </div>
-      <button style="background:transparent; border:none; color:#94a3b8; font-size:16px; cursor:pointer; padding:2px 4px; line-height:1;" onclick="this.parentElement.remove()" title="닫기">✕</button>
+      <button style="background:transparent; border:none; color:#94a3b8; font-size:16px; cursor:pointer; min-width:40px; min-height:40px; line-height:1; flex-shrink:0;" onclick="this.parentElement.remove()" aria-label="닫기" title="닫기">✕</button>
     `;
     
     container.appendChild(toast);

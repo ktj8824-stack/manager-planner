@@ -79,10 +79,10 @@ const VenueNotes = {
     const text = el.getAttribute('data-venue') || '';
     const compact = el.hasAttribute('data-venue-compact');
     const arg = this._esc(JSON.stringify(text));
-    const addBtn = `<button type="button" onclick="event.stopPropagation(); VenueNotes.add(${arg})" style="border:0;background:none;color:#3B45C4;font-size:13px;font-weight:700;cursor:pointer;padding:4px 0;">+ 메모 남기기</button>`;
+    const addBtn = `<button type="button" onclick="event.stopPropagation(); VenueNotes.add(${arg})" style="border:0;background:none;color:#3B45C4;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 4px;min-height:40px;white-space:nowrap;font-family:inherit;">+ 메모 남기기</button>`;
     const put = (html) => { if (el._vHtml !== html) { el.innerHTML = html; el._vHtml = html; } };
     if (!rows.length) {
-      put(compact ? `<div style="display:flex;justify-content:flex-end;margin:-6px 0 -4px;">${addBtn.replace('+ 메모 남기기', '+ 현장 메모 남기기')}</div>` : `<div style="margin-top:8px;font-size:13px;color:#5B616E;display:flex;align-items:center;gap:6px;">📌 <span>현장 메모 없음</span> ${addBtn}</div>`);
+      put(compact ? `<div style="display:flex;justify-content:flex-end;margin:-12px 0 -10px;">${addBtn.replace('+ 메모 남기기', '+ 현장 메모 남기기')}</div>` : `<div style="margin-top:8px;font-size:13px;color:#5B616E;display:flex;align-items:center;gap:6px;">📌 <span>현장 메모 없음</span> ${addBtn}</div>`);
       return;
     }
     const me = this._me(), hq = this._isHq();
@@ -94,7 +94,7 @@ const VenueNotes = {
         </div>
         ${shown.map(r => `
           <div style="display:flex;gap:6px;align-items:flex-start;font-size:13.5px;color:#334155;line-height:1.45;padding:3px 0;border-top:1px dashed #fde68a;">
-            <span style="flex:1;word-break:keep-all;">${this._esc(r.note)}${compact ? '' : ` <span style="font-size:11.5px;color:#a16207;white-space:nowrap;">· ${this._esc(r.author_name || '')} ${this._date(r.created_at)}</span>`}</span>
+            <span style="flex:1;word-break:keep-all;">${this._esc(r.note)}${compact ? '' : ` <span style="font-size:12.5px;color:#a16207;white-space:nowrap;">· ${this._esc(r.author_name || '')} ${this._date(r.created_at)}</span>`}</span>
             ${(r.author_id === me || hq) ? `<button type="button" onclick="event.stopPropagation(); VenueNotes.remove(${this._esc(JSON.stringify(r.id))})" title="지우기" style="border:0;background:none;color:#b45309;cursor:pointer;font-size:14px;line-height:1;padding:0 2px;">×</button>` : ''}
           </div>`).join('')}
         ${rows.length > shown.length ? `<div style="font-size:12px;color:#a16207;">외 ${rows.length - shown.length}개</div>` : ''}

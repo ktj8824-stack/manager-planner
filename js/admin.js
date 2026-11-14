@@ -598,11 +598,11 @@ window.Admin = {
         <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; transition: all 0.15s;">
           <div style="flex: 1; min-width: 0; padding-right: 12px;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 3px;">
-              <span style="font-size: 11px; font-weight: 700; color: ${esc(meta.color)}; background: ${esc(meta.bg)}; padding: 2px 8px; border-radius: 4px;">
+              <span style="font-size: 12px; font-weight: 700; color: ${esc(meta.color)}; background: ${esc(meta.bg)}; padding: 2px 8px; border-radius: 4px;">
                 ${esc(meta.label)}
               </span>
               <strong style="font-size: 13px; color: var(--text-main);">${esc(p.name)}</strong>
-              ${p.contact ? `<span style="font-size: 11px; color: var(--text-dim);">(${esc(p.contact)})</span>` : ''}
+              ${p.contact ? `<span style="font-size: 12px; color: var(--text-dim);">(${esc(p.contact)})</span>` : ''}
             </div>
             <div style="font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4C57D6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
@@ -611,13 +611,13 @@ window.Admin = {
           </div>
           <div style="display: flex; gap: 6px; flex-shrink: 0;">
             <button type="button" onclick="Admin.editPlace(${escJs(p.id)})" 
-              style="background: transparent; border: 1px solid rgba(59, 69, 196, 0.4); color: #4C57D6; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s;"
+              style="background: transparent; border: 1px solid rgba(59, 69, 196, 0.4); color: #4C57D6; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s;"
               onmouseover="this.style.background='#4C57D6'; this.style.color='#fff';"
               onmouseout="this.style.background='transparent'; this.style.color='#4C57D6';">
               수정
             </button>
             <button type="button" onclick="Admin.deletePlace(${escJs(p.id)})" 
-              style="background: transparent; border: 1px solid rgba(239, 68, 68, 0.25); color: #ef4444; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s;"
+              style="background: transparent; border: 1px solid rgba(239, 68, 68, 0.25); color: #ef4444; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s;"
               onmouseover="this.style.background='#ef4444'; this.style.color='#fff';"
               onmouseout="this.style.background='transparent'; this.style.color='#ef4444';">
               삭제
@@ -911,14 +911,14 @@ window.Admin = {
             <div>
               <div style="font-size:14px; font-weight:800; color:#f8fafc; display:flex; align-items:center; gap:8px;">
                 <span>${esc(r.name)}</span>
-                <span style="font-size:11px; background:${esc(r.color)}25; color:${esc(r.color)}; padding:1px 6px; border-radius:4px; font-weight:700;">${esc(r.shortBadge)}</span>
+                <span style="font-size:12px; background:${esc(r.color)}25; color:${esc(r.color)}; padding:1px 6px; border-radius:4px; font-weight:700;">${esc(r.shortBadge)}</span>
               </div>
               <div style="font-size:12px; color:#94a3b8; margin-top:2px;">${esc(r.desc)}</div>
             </div>
           </div>
           <div>
             ${isActive
-          ? `<span style="background:${esc(r.color)}; color:#fff; font-size:11px; font-weight:800; padding:5px 10px; border-radius:20px;">선택됨 ✓</span>`
+          ? `<span style="background:${esc(r.color)}; color:#fff; font-size:12px; font-weight:800; padding:5px 10px; border-radius:20px;">선택됨 ✓</span>`
           : '<span style="color:#5B616E; font-size:12px; font-weight:700;">전환 ➔</span>'}
           </div>
         </div>
@@ -1025,9 +1025,9 @@ window.Admin = {
             <div style="flex:1; min-width:0;">
               <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                 <strong style="color:#14161A; font-size:15px; font-weight:800;">${esc(art.name)}</strong>
-                <span style="font-size:11px; background:#E3E6FA; color:#2B338F; border:1px solid #D5D9F7; padding:2px 8px; border-radius:4px; font-weight:700;">${esc(art.type || '그룹')} · ${esc(art.members || 1)}명</span>
-                <span style="font-size:11px; background:${art.status === '활동중' ? '#ecfdf5' : art.status === '컴백준비' ? '#fdf4ff' : '#f1f5f9'}; color:${art.status === '활동중' ? '#059669' : art.status === '컴백준비' ? '#c026d3' : '#475569'}; border:1px solid ${art.status === '활동중' ? '#a7f3d0' : art.status === '컴백준비' ? '#f5d0fe' : '#cbd5e1'}; padding:2px 8px; border-radius:4px; font-weight:700;">${esc(art.status || '활동중')}</span>
-                <span style="font-size:11px; background:#ffffff; color:#475569; border:1px solid #cbd5e1; padding:2px 8px; border-radius:4px; font-weight:600;">스케줄 ${esc(artSchedules.length)}건</span>
+                <span style="font-size:12px; background:#E3E6FA; color:#2B338F; border:1px solid #D5D9F7; padding:2px 8px; border-radius:4px; font-weight:700;">${esc(art.type || '그룹')} · ${esc(art.members || 1)}명</span>
+                <span style="font-size:12px; background:${art.status === '활동중' ? '#ecfdf5' : art.status === '컴백준비' ? '#fdf4ff' : '#f1f5f9'}; color:${art.status === '활동중' ? '#059669' : art.status === '컴백준비' ? '#c026d3' : '#475569'}; border:1px solid ${art.status === '활동중' ? '#a7f3d0' : art.status === '컴백준비' ? '#f5d0fe' : '#cbd5e1'}; padding:2px 8px; border-radius:4px; font-weight:700;">${esc(art.status || '활동중')}</span>
+                <span style="font-size:12px; background:#ffffff; color:#475569; border:1px solid #cbd5e1; padding:2px 8px; border-radius:4px; font-weight:600;">스케줄 ${esc(artSchedules.length)}건</span>
               </div>
               ${careText ? `<div style="font-size:12px; color:#475569; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:flex; align-items:center; gap:4px; font-weight:500;" title="${esc(careText)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2"><path d="M10.5 20.5l10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></svg> 케어: ${esc(careText)}</div>` : `<div style="font-size:12px; color:#5B616E; margin-top:4px;">케어 정보 미등록</div>`}
             </div>
@@ -1456,8 +1456,8 @@ window.Admin = {
               <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:${esc(mgr.color || '#4C57D6')}; box-shadow:0 0 6px ${esc(mgr.color || '#4C57D6')}60;"></span>
               <strong style="color:#14161A; font-size:15px; font-weight:800;">${esc(mgr.name)}</strong>
               <span class="mgr2-st ${esc(st.cls)}">${esc(st.text)}</span>
-              ${mgr.role !== 'hq_admin' && window.HqHints && window.HqHints.agreed[mgr.id] !== true ? '<span title="위치 정보 이용에 동의하지 않아 이동 중 지연 예상이 오지 않아요" style="font-size:11px; color:#5B616E; background:#F1F2F4; padding:2px 7px; border-radius:4px; font-weight:600;">위치 미동의</span>' : ''}
-              <span style="font-size:11px; background:#ffffff; color:#475569; border:1px solid #cbd5e1; padding:2px 8px; border-radius:4px; font-weight:700;">${mgr.role === 'hq_admin' ? '본사 관리자' : '현장 매니저'}</span>
+              ${mgr.role !== 'hq_admin' && window.HqHints && window.HqHints.agreed[mgr.id] !== true ? '<span title="위치 정보 이용에 동의하지 않아 이동 중 지연 예상이 오지 않아요" style="font-size:12px; color:#5B616E; background:#F1F2F4; padding:2px 7px; border-radius:4px; font-weight:600;">위치 미동의</span>' : ''}
+              <span style="font-size:12px; background:#ffffff; color:#475569; border:1px solid #cbd5e1; padding:2px 8px; border-radius:4px; font-weight:700;">${mgr.role === 'hq_admin' ? '본사 관리자' : '현장 매니저'}</span>
             </div>
             <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
               <span style="font-size:12px; color:#2563eb; font-family:monospace; background:#eff6ff; padding:3px 8px; border-radius:4px; border:1px solid #bfdbfe; font-weight:700;">🆔 ${esc(emailDisplay)}</span>
@@ -1595,9 +1595,9 @@ window.Admin = {
             <div style="flex:1; min-width:0;">
               <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                 <strong style="color:#14161A; font-size:15px; font-weight:800;">${esc(veh.name)}</strong>
-                <span style="font-size:11px; background:#ffffff; color:#14161A; padding:2px 8px; border-radius:4px; font-weight:800; border:1px solid #cbd5e1;">${esc(veh.number || '번호미등록')}</span>
-                <span style="font-size:11px; background:${esc(statusBg)}; color:${esc(statusColor)}; border:1px solid ${esc(statusBorder)}; padding:2px 8px; border-radius:4px; font-weight:700;">${esc(isDispatchedToday ? '오늘 배차 ' + todayDispatches.length + '건' : (veh.status || '운행가능'))}</span>
-                <span style="font-size:11px; background:#ffffff; color:#475569; border:1px solid #cbd5e1; padding:2px 8px; border-radius:4px; font-weight:600;">${esc(veh.type || '밴')} · ${esc(veh.seats || 7)}인승</span>
+                <span style="font-size:12px; background:#ffffff; color:#14161A; padding:2px 8px; border-radius:4px; font-weight:800; border:1px solid #cbd5e1;">${esc(veh.number || '번호미등록')}</span>
+                <span style="font-size:12px; background:${esc(statusBg)}; color:${esc(statusColor)}; border:1px solid ${esc(statusBorder)}; padding:2px 8px; border-radius:4px; font-weight:700;">${esc(isDispatchedToday ? '오늘 배차 ' + todayDispatches.length + '건' : (veh.status || '운행가능'))}</span>
+                <span style="font-size:12px; background:#ffffff; color:#475569; border:1px solid #cbd5e1; padding:2px 8px; border-radius:4px; font-weight:600;">${esc(veh.type || '밴')} · ${esc(veh.seats || 7)}인승</span>
               </div>
               <div style="font-size:12px; color:#475569; margin-top:4px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-weight:500;">
                 ${veh.defaultArtist ? `<span>⭐ 전담: <strong style="color:#14161A;">${esc(veh.defaultArtist)}</strong></span>` : `<span>공용 차량</span>`}
@@ -1829,7 +1829,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let popHtml = `
           <div style="font-size:13px; font-weight:800; border-bottom:1px solid #cbd5e1; padding-bottom:8px; margin-bottom:10px; color:#14161A; display:flex; justify-content:space-between; align-items:center;">
             <span style="display:flex; align-items:center;">${c.iconSvg} ${esc(c.title)}</span>
-            <span style="background:${esc(c.color)}; color:#fff; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:800;">${esc(dataList.length)}${c.key === 'artist' ? '팀' : '건'}</span>
+            <span style="background:${esc(c.color)}; color:#fff; padding:2px 8px; border-radius:6px; font-size:12px; font-weight:800;">${esc(dataList.length)}${c.key === 'artist' ? '팀' : '건'}</span>
           </div>
         `;
 
@@ -1850,11 +1850,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     </span>
                     <strong style="color:#14161A; font-size:13.5px; font-weight:800;">${esc(art.name)}</strong>
                   </div>
-                  <span style="font-size:11px; background:#ffffff; color:#475569; border:1px solid #cbd5e1; padding:2px 6px; border-radius:4px; font-weight:700;">${esc(art.type || '그룹')} · ${esc(art.members || 1)}명</span>
+                  <span style="font-size:12px; background:#ffffff; color:#475569; border:1px solid #cbd5e1; padding:2px 6px; border-radius:4px; font-weight:700;">${esc(art.type || '그룹')} · ${esc(art.members || 1)}명</span>
                 </div>
               `).join('')}
             </div>
-            <div style="font-size:11px; color:#5B616E; text-align:center; margin-top:8px; background:#f8fafc; padding:7px; border-radius:8px; border:1px solid #e2e8f0; font-weight:500;">
+            <div style="font-size:12px; color:#5B616E; text-align:center; margin-top:8px; background:#f8fafc; padding:7px; border-radius:8px; border:1px solid #e2e8f0; font-weight:500;">
               💡 클릭 시 <strong>[아티스트 관리]</strong> 모달이 열립니다.
             </div>
           `;
@@ -1864,24 +1864,24 @@ document.addEventListener('DOMContentLoaded', () => {
               ${dataList.map(sch => `
                 <div class="kpi-popover-item" data-id="${esc(sch.id)}" onclick="Admin.openScheduleDetail(${escJs(sch.id)})" style="background:#e2e8f0; padding:10px 12px; border-radius:8px; cursor:pointer; font-size:12px; border:1px solid #cbd5e1; transition:all 0.15s; box-shadow:0 1px 2px rgba(0,0,0,0.03);" onmouseenter="this.style.background='#dbeafe'; this.style.borderColor=${escJs(c.color)}; this.style.transform='translateY(-1px)';" onmouseleave="this.style.background='#e2e8f0'; this.style.borderColor='#cbd5e1'; this.style.transform='none';">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <span style="font-weight:800; color:#2563eb; font-family:monospace; font-size:11.5px; display:inline-flex; align-items:center; gap:4px;">
+                    <span style="font-weight:800; color:#2563eb; font-family:monospace; font-size:12.5px; display:inline-flex; align-items:center; gap:4px;">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                       ${esc(sch.startTime)} ~ ${esc(sch.endTime || '')}
                     </span>
-                    <span style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:700; background:#ffffff; color:#475569; border:1px solid #cbd5e1;">${esc(sch.status || '확정')}</span>
+                    <span style="font-size:12px; padding:2px 6px; border-radius:4px; font-weight:700; background:#ffffff; color:#475569; border:1px solid #cbd5e1;">${esc(sch.status || '확정')}</span>
                   </div>
                   <div style="font-weight:800; color:#14161A; margin-bottom:4px; font-size:13.5px; display:flex; align-items:center; gap:6px;">
-                    <span style="background:${esc(c.color)}; color:#fff; font-size:10px; padding:1px 6px; border-radius:4px; font-weight:700;">${esc(sch.artistName || '아티스트')}</span>
+                    <span style="background:${esc(c.color)}; color:#fff; font-size:12px; padding:1px 6px; border-radius:4px; font-weight:700;">${esc(sch.artistName || '아티스트')}</span>
                     <span>${esc(sch.title)}</span>
                   </div>
-                  <div style="font-size:11.5px; color:#475569; display:flex; justify-content:space-between; align-items:center; font-weight:500;">
+                  <div style="font-size:12.5px; color:#475569; display:flex; justify-content:space-between; align-items:center; font-weight:500;">
                     <span style="display:inline-flex; align-items:center; gap:3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(sch.location || '장소 미지정')}</span>
                     <span style="display:inline-flex; align-items:center; gap:3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${esc(sch.managerName || '미배정')}</span>
                   </div>
                 </div>
               `).join('')}
             </div>
-            <div style="font-size:11px; color:#5B616E; text-align:center; margin-top:8px; background:#f8fafc; padding:7px; border-radius:8px; border:1px solid #e2e8f0; font-weight:500;">
+            <div style="font-size:12px; color:#5B616E; text-align:center; margin-top:8px; background:#f8fafc; padding:7px; border-radius:8px; border:1px solid #e2e8f0; font-weight:500;">
               💡 일정을 클릭하시면 <strong>상세 정보 및 역산 동선</strong>이 열립니다.
             </div>
           `;
@@ -2781,12 +2781,12 @@ document.addEventListener('DOMContentLoaded', () => {
               ${esc(displayArtName)}
             </span>
             ${(sch.targetMembers && sch.targetMembers !== 'ALL' && Array.isArray(sch.targetMembers)) ? `
-              <span style="background:#fdf2f8; color:#db2777; border:1px solid #fbcfe8; font-size:11.5px; padding:2px 8px; border-radius:6px; font-weight:800; display:inline-flex; align-items:center; gap:3px;">
+              <span style="background:#fdf2f8; color:#db2777; border:1px solid #fbcfe8; font-size:12.5px; padding:2px 8px; border-radius:6px; font-weight:800; display:inline-flex; align-items:center; gap:3px;">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 참여 멤버: ${sch.targetMembers.join(', ')}
               </span>
             ` : `
-              <span style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; font-size:11px; padding:2px 7px; border-radius:6px; font-weight:700;">
+              <span style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; font-size:12px; padding:2px 7px; border-radius:6px; font-weight:700;">
                 완전체(전원)
               </span>
             `}
@@ -2804,7 +2804,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <span style="color:#475569; font-weight:600;">메인 장소:</span> <strong style="color:#14161A;">${esc(sch.location || '미정')}</strong>
           </div>
           ${sch.locationAddress ? `
-            <div style="font-size:11px; color:#5B616E; padding-left:23px; word-break:break-all;">
+            <div style="font-size:12px; color:#5B616E; padding-left:23px; word-break:break-all;">
               📍 ${esc(sch.locationAddress)}
             </div>
           ` : ''}
@@ -2920,18 +2920,18 @@ document.addEventListener('DOMContentLoaded', () => {
             return `
               <div style="display:flex; gap:10px; align-items:center; background:#e2e8f0; padding:9px 12px; border-radius:8px; font-size:13px; border:1px solid #cbd5e1; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
                 <span style="color:#2563eb; font-weight:800; font-family:monospace; min-width:44px;">${esc(item.time)}</span>
-                <span style="display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:800; background:${esc(badgeBg)}; color:${esc(badgeColor)}; border:1px solid ${esc(badgeBorder)}; flex-shrink:0;">
+                <span style="display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:6px; font-size:12px; font-weight:800; background:${esc(badgeBg)}; color:${esc(badgeColor)}; border:1px solid ${esc(badgeBorder)}; flex-shrink:0;">
                   ${iconSvg}
                   <span>${esc(tag)}</span>
                 </span>
                 <span style="color:${item.done ? '#94a3b8' : '#14161A'}; text-decoration:${item.done ? 'line-through' : 'none'}; font-weight:600; flex:1;">${esc(restText)}</span>
                 ${item.done ? `
-                  <span style="margin-left:auto; font-size:11px; color:#059669; font-weight:700; display:inline-flex; align-items:center; gap:3px; background:#ecfdf5; padding:2px 6px; border-radius:4px; border:1px solid #a7f3d0;">
+                  <span style="margin-left:auto; font-size:12px; color:#059669; font-weight:700; display:inline-flex; align-items:center; gap:3px; background:#ecfdf5; padding:2px 6px; border-radius:4px; border:1px solid #a7f3d0;">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    완료 ${item.doneAt ? `<span style="font-size:10px; opacity:0.8;">(${esc(item.doneAt)})</span>` : ''}
+                    완료 ${item.doneAt ? `<span style="font-size:12px; opacity:0.8;">(${esc(item.doneAt)})</span>` : ''}
                   </span>
                 ` : (item.moving ? `
-                  <span style="margin-left:auto; font-size:11px; color:#d97706; font-weight:700; display:inline-flex; align-items:center; gap:4px; background:#fffbeb; padding:2px 6px; border-radius:4px; border:1px solid #fde68a;">
+                  <span style="margin-left:auto; font-size:12px; color:#d97706; font-weight:700; display:inline-flex; align-items:center; gap:4px; background:#fffbeb; padding:2px 6px; border-radius:4px; border:1px solid #fde68a;">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l2-6h10l2 6"/><rect x="3" y="11" width="18" height="8" rx="2"/></svg>
                     이동중
                   </span>
@@ -2960,7 +2960,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="margin-top:16px; border-top:1px solid #cbd5e1; padding-top:14px;">
           <h4 style="font-size:14px; color:#14161A; margin-bottom:8px; display:flex; align-items:center; gap:6px; font-weight:800;">
             <span>⏱️ 변경·진행 이력 (본사 수정 + 현장 기록)</span>
-            <span style="font-size:11px; color:#5B616E; font-weight:normal;">(총 ${esc(sch.statusLogs.length)}회 기록)</span>
+            <span style="font-size:12px; color:#5B616E; font-weight:normal;">(총 ${esc(sch.statusLogs.length)}회 기록)</span>
           </h4>
           <div style="display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto;">
             ${sch.statusLogs.map(log => `
@@ -2968,7 +2968,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div style="color:#14161A; font-weight:600;">
                   ${esc(log.label)}
                 </div>
-                <div style="font-size:11px; color:#5B616E; font-family:monospace;">
+                <div style="font-size:12px; color:#5B616E; font-family:monospace;">
                   ${esc(log.date && log.date !== fmtDate(new Date()) ? log.date.slice(5).replace('-', '/') + ' ' : '')}${esc(log.time)} (${esc(log.managerName || '현장매니저')})
                 </div>
               </div>
@@ -3015,7 +3015,7 @@ document.addEventListener('DOMContentLoaded', () => {
           shopDropdown.innerHTML = '<div style="padding:10px; text-align:center; color:#5B616E; font-size:12px;">등록된 추천 샵이 없습니다. [샵 검색] 버튼으로 검색해보세요.</div>';
         } else {
           shopDropdown.innerHTML = `
-            <div style="padding:4px 8px; font-size:11px; color:#94a3b8; font-weight:700; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between;">
+            <div style="padding:4px 8px; font-size:12px; color:#94a3b8; font-weight:700; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between;">
               <span>⭐ 등록된 헤메샵 목록</span>
               <span>[샵 검색]으로 추가 검색 가능</span>
             </div>
@@ -3026,9 +3026,9 @@ document.addEventListener('DOMContentLoaded', () => {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg>
                   <span>${esc(s.name)}</span>
                 </div>
-                <div style="font-size:11px; color:#5B616E; margin-top:2px;">${esc(s.address || '')}</div>
+                <div style="font-size:12px; color:#5B616E; margin-top:2px;">${esc(s.address || '')}</div>
               </div>
-              <button type="button" style="padding:4px 8px; font-size:11px; background:#fdf2f8; color:#db2777; border:1px solid #fbcfe8; border-radius:4px; font-weight:700; cursor:pointer; flex-shrink:0;">선택</button>
+              <button type="button" style="padding:4px 8px; font-size:12px; background:#fdf2f8; color:#db2777; border:1px solid #fbcfe8; border-radius:4px; font-weight:700; cursor:pointer; flex-shrink:0;">선택</button>
             </div>
           `).join('');
 
@@ -3102,7 +3102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         shopDropdown.innerHTML = `
-          <div style="padding:4px 8px; font-size:11px; color:#94a3b8; font-weight:700; border-bottom:1px solid #f1f5f9;">
+          <div style="padding:4px 8px; font-size:12px; color:#94a3b8; font-weight:700; border-bottom:1px solid #f1f5f9;">
             <span>🔍 카카오·티맵 검색 결과 (${esc(results.length)}건)</span>
           </div>
         ` + results.map(item => `
@@ -3111,11 +3111,11 @@ document.addEventListener('DOMContentLoaded', () => {
               <div style="font-weight:700; color:#14161A; font-size:13px; display:flex; align-items:center; gap:6px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="m14 4 6 6-9 9H5v-6l9-9z"/><path d="M18 8l-2-2"/></svg>
                 <span>${esc(item.name)}</span>
-                <span style="font-size:10px; background:#fdf2f8; color:#db2777; border:1px solid #fbcfe8; padding:1px 5px; border-radius:4px; font-weight:700;">${esc(item.provider)}</span>
+                <span style="font-size:12px; background:#fdf2f8; color:#db2777; border:1px solid #fbcfe8; padding:1px 5px; border-radius:4px; font-weight:700;">${esc(item.provider)}</span>
               </div>
-              <div style="font-size:11px; color:#5B616E; margin-top:2px;">${esc(item.address || '주소 정보 없음')}</div>
+              <div style="font-size:12px; color:#5B616E; margin-top:2px;">${esc(item.address || '주소 정보 없음')}</div>
             </div>
-            <button type="button" style="padding:4px 8px; font-size:11px; background:#fdf2f8; color:#db2777; border:1px solid #fbcfe8; border-radius:4px; font-weight:700; cursor:pointer; flex-shrink:0;">선택</button>
+            <button type="button" style="padding:4px 8px; font-size:12px; background:#fdf2f8; color:#db2777; border:1px solid #fbcfe8; border-radius:4px; font-weight:700; cursor:pointer; flex-shrink:0;">선택</button>
           </div>
         `).join('');
 
@@ -3186,9 +3186,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${iconSvg}
                     <span>${esc(p.name)}</span>
                   </div>
-                  <div style="font-size:11px; color:#5B616E; margin-top:2px;">${esc(p.address || '')}</div>
+                  <div style="font-size:12px; color:#5B616E; margin-top:2px;">${esc(p.address || '')}</div>
                 </div>
-                <button type="button" style="padding:4px 8px; font-size:11px; background:#ecfeff; color:#0891b2; border:1px solid #a5f3fc; border-radius:4px; font-weight:700; cursor:pointer; flex-shrink:0;">선택</button>
+                <button type="button" style="padding:4px 8px; font-size:12px; background:#ecfeff; color:#0891b2; border:1px solid #a5f3fc; border-radius:4px; font-weight:700; cursor:pointer; flex-shrink:0;">선택</button>
               </div>
             `;
           }).join('');
@@ -3556,7 +3556,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
               ${esc(y)}년 ${Number(m)}월 ${Number(d)}일 (${esc(dayName)})
             </div>
-            <span style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px;">
+            <span style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-size:12px; font-weight:700; padding:2px 8px; border-radius:12px;">
               총 ${esc(daySchedules.length)}건
             </span>
           </div>
@@ -3580,19 +3580,19 @@ document.addEventListener('DOMContentLoaded', () => {
               onmouseover="this.style.background='#cbd5e1'; this.style.borderColor='#94a3b8'; this.style.transform='translateY(-1px)';"
               onmouseout="this.style.background='#e2e8f0'; this.style.borderColor='#cbd5e1'; this.style.transform='none';">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                <span style="font-size:11.5px; font-weight:800; color:#2563eb; font-family:monospace; display:flex; align-items:center; gap:4px;">
+                <span style="font-size:12.5px; font-weight:800; color:#2563eb; font-family:monospace; display:flex; align-items:center; gap:4px;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                   ${esc(sch.startTime)} ~ ${esc(sch.endTime)}
                 </span>
-                <span style="font-size:10.5px; padding:2px 6px; border-radius:4px; font-weight:700; ${sch.status === '진행중' || sch.status === '이동중' ? 'background:#10b981; color:#fff;' : 'background:#ffffff; color:#475569; border:1px solid #cbd5e1;'}">
+                <span style="font-size:12px; padding:2px 6px; border-radius:4px; font-weight:700; ${sch.status === '진행중' || sch.status === '이동중' ? 'background:#10b981; color:#fff;' : 'background:#ffffff; color:#475569; border:1px solid #cbd5e1;'}">
                   ${esc(sch.status || '예정')}
                 </span>
               </div>
               <div style="font-size:13px; font-weight:800; color:#14161A; margin-bottom:6px; display:flex; align-items:flex-start; gap:6px;">
-                <span style="background:${esc(artColor)}; color:#ffffff; font-size:10.5px; padding:2px 7px; border-radius:4px; font-weight:700; white-space:nowrap; flex-shrink:0; line-height:1.3;">${esc(badgeText)}</span>
+                <span style="background:${esc(artColor)}; color:#ffffff; font-size:12px; padding:2px 7px; border-radius:4px; font-weight:700; white-space:nowrap; flex-shrink:0; line-height:1.3;">${esc(badgeText)}</span>
                 <span style="line-height:1.4; word-break:keep-all; flex:1; min-width:0; color:#14161A;">${esc(sch.title)}</span>
               </div>
-              <div style="font-size:11.5px; color:#475569; display:flex; flex-direction:column; gap:4px;">
+              <div style="font-size:12.5px; color:#475569; display:flex; flex-direction:column; gap:4px;">
                 <div style="display:flex; align-items:center; gap:5px;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${esc(artColor)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                   <span style="color:#334155; font-weight:500; word-break:keep-all;">${esc(sch.location || '장소 미지정')}</span>
@@ -3613,7 +3613,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         popHtml += `</div>
-          <div style="font-size:11px; color:#5B616E; text-align:center; margin-top:10px; background:#f8fafc; padding:8px; border-radius:8px; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:center; gap:5px;">
+          <div style="font-size:12px; color:#5B616E; text-align:center; margin-top:10px; background:#f8fafc; padding:8px; border-radius:8px; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:center; gap:5px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
             <span>일정을 클릭하시면 <strong>상세 정보 및 역산 동선</strong>이 열립니다.</span>
           </div>
@@ -4435,11 +4435,11 @@ document.addEventListener('DOMContentLoaded', () => {
               <div style="font-weight:700; color:#14161A; font-size:13px; display:flex; align-items:center; gap:6px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 <span>${esc(item.name)}</span>
-                <span style="font-size:10px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; padding:1px 5px; border-radius:4px; font-weight:700;">${esc(item.provider)}</span>
+                <span style="font-size:12px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; padding:1px 5px; border-radius:4px; font-weight:700;">${esc(item.provider)}</span>
               </div>
-              <div style="font-size:11px; color:#5B616E; margin-top:2px;">${esc(item.address || '주소 정보 없음')}</div>
+              <div style="font-size:12px; color:#5B616E; margin-top:2px;">${esc(item.address || '주소 정보 없음')}</div>
             </div>
-            <button type="button" style="padding:4px 8px; font-size:11px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; border-radius:4px; font-weight:700; cursor:pointer; flex-shrink:0;">선택</button>
+            <button type="button" style="padding:4px 8px; font-size:12px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; border-radius:4px; font-weight:700; cursor:pointer; flex-shrink:0;">선택</button>
           </div>
         `).join('');
 

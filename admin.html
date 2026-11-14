@@ -14,9 +14,9 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/calendar.css">
-  <link rel="stylesheet" href="css/admin.css?v=339">
-  <link rel="stylesheet" href="css/admin-v2.css?v=339">
-  <link rel="stylesheet" href="css/chat.css?v=339">
+  <link rel="stylesheet" href="css/admin.css?v=340">
+  <link rel="stylesheet" href="css/admin-v2.css?v=340">
+  <link rel="stylesheet" href="css/chat.css?v=340">
   <link rel="stylesheet" href="css/timeline.css">
   <style>
     /* ── 사용자 드롭다운 (헤더 화이트 테마 & 호버 인터랙션) ── */
@@ -56,13 +56,13 @@
     }
 
     .user-chip-role {
-      font-size: 10px;
+      font-size: 12px;
       color: #4C57D6;
       font-weight: 600;
     }
 
     .user-chip-arrow {
-      font-size: 9px;
+      font-size: 12px;
       color: #5B616E;
       transition: transform 0.2s;
     }
@@ -148,14 +148,14 @@
     }
 
     .dropdown-user-info .d-company {
-      font-size: 11px;
+      font-size: 12px;
       color: #4C57D6;
       font-weight: 700;
       margin-bottom: 2px;
     }
 
     .dropdown-user-info .d-email {
-      font-size: 11px;
+      font-size: 12px;
       color: #5B616E;
       margin-top: 2px;
     }
@@ -185,7 +185,7 @@
     }
 
     .dropdown-sub-card .sub-slots {
-      font-size: 11px;
+      font-size: 12px;
       color: #5B616E;
       margin-top: 3px;
       font-weight: 500;
@@ -305,12 +305,12 @@
       border-color: #4C57D6;
     }
   </style>
-<script src="js/site-config.js?v=339"></script>
-<script src="js/icons.js?v=339"></script>
+<script src="js/site-config.js?v=340"></script>
+<script src="js/icons.js?v=340"></script>
 </head>
 
 <body>
-<script src="js/splash.js?v=339"></script>
+<script src="js/splash.js?v=340"></script>
   <div class="app-container">
     <aside class="hq-sidebar" id="hq-sidebar">
       <button type="button" class="hq-drawer-x" id="hq-drawer-x" aria-label="메뉴 닫기">✕</button>
@@ -336,7 +336,7 @@
         <div class="sidebar-title" style="display:flex; justify-content:space-between; align-items:center;">
           <span>소속 아티스트</span>
           <button type="button" onclick="Admin.openArtistModal()"
-            style="background:transparent; border:1px solid #334155; color:#818cf8; font-size:11px; cursor:pointer; font-weight:700; padding:2px 8px; border-radius:4px; transition:all 0.15s;"
+            style="background:transparent; border:1px solid #334155; color:#818cf8; font-size:12px; cursor:pointer; font-weight:700; padding:2px 8px; border-radius:4px; transition:all 0.15s;"
             onmouseover="this.style.background='#334155'; this.style.color='#fff';"
             onmouseout="this.style.background='transparent'; this.style.color='#818cf8';">+ 관리</button>
         </div>
@@ -348,7 +348,7 @@
         <div class="sidebar-title" style="display:flex; justify-content:space-between; align-items:center;">
           <span>매니저 · 지금 상태</span>
           <button type="button" onclick="Admin.openManagerModal()"
-            style="background:transparent; border:1px solid #334155; color:#818cf8; font-size:11px; cursor:pointer; font-weight:700; padding:2px 8px; border-radius:4px; transition:all 0.15s;"
+            style="background:transparent; border:1px solid #334155; color:#818cf8; font-size:12px; cursor:pointer; font-weight:700; padding:2px 8px; border-radius:4px; transition:all 0.15s;"
             onmouseover="this.style.background='#334155'; this.style.color='#fff';"
             onmouseout="this.style.background='transparent'; this.style.color='#818cf8';">+ 관리</button>
         </div>
@@ -405,7 +405,7 @@
               <div class="dropdown-sub-card" onclick="Admin.openSubscriptionModal()" title="구독 플랜 및 매니저 슬롯 관리">
                 <div class="sub-title">
                   <span>💳 구독: Standard</span>
-                  <span style="font-size:11px; color:#818cf8; font-weight:700;">관리 &gt;</span>
+                  <span style="font-size:12px; color:#818cf8; font-weight:700;">관리 &gt;</span>
                 </div>
                 <div class="sub-slots" id="header-slot-text">매니저 - / -자리</div>
               </div>
@@ -555,7 +555,7 @@
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <label class="form-label" style="margin:0; font-size:12px; font-weight:700; color:#14161A;">참여 멤버
                   선택</label>
-                <span style="font-size:11px; color:#5B616E;">개인/유닛 스케줄 시 해당 멤버를 선택하세요</span>
+                <span style="font-size:12px; color:#5B616E;">개인/유닛 스케줄 시 해당 멤버를 선택하세요</span>
               </div>
               <div id="form-member-chips" style="display:flex; gap:6px; flex-wrap:wrap;">
                 <!-- Dynamically populated member chips -->
@@ -632,7 +632,7 @@
                 </div>
 
                 <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-                  <span style="font-size: 11px; color: #5B616E;">위아래 롤러 스크롤</span>
+                  <span style="font-size: 12px; color: #5B616E;">위아래 롤러 스크롤</span>
                   <button type="button" id="btn-apply-wheel-picker"
                     style="padding: 5px 14px; font-size: 12px; font-weight: 700; background: #4C57D6; color: #ffffff; border: none; border-radius: 6px; cursor: pointer;">확인</button>
                 </div>
@@ -643,7 +643,7 @@
               <div class="form-group" style="position: relative;">
                 <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
                   <span>메인 행사장 / 촬영 위치 <span style="color:#ef4444;">*</span></span>
-                  <span style="font-size: 11px; color: #2563eb; font-weight: 600;">※ 카카오·티맵 검색 지원</span>
+                  <span style="font-size: 12px; color: #2563eb; font-weight: 600;">※ 카카오·티맵 검색 지원</span>
                 </label>
                 <div style="display: flex; gap: 8px;">
                   <input type="text" id="form-location" class="form-input"
@@ -672,7 +672,7 @@
             <div class="form-group" style="margin-top: 10px;">
               <label class="form-label" style="display: flex; justify-content: space-between;">
                 <span>행사장 상세 도로명 주소 (네비게이션 연동)</span>
-                <span style="font-size: 11px; color: #5B616E; font-weight: 500;">검색 시 자동 입력 또는 직접 입력</span>
+                <span style="font-size: 12px; color: #5B616E; font-weight: 500;">검색 시 자동 입력 또는 직접 입력</span>
               </label>
               <input type="text" id="form-location-address" class="form-input" placeholder="예: 서울 마포구 상암산로 82 (도로명 주소)">
               <input type="hidden" id="form-location-lat">
@@ -707,7 +707,7 @@
                 <div class="form-group" style="position: relative;">
                   <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
                     <span>샵 이름 (선택 또는 직접 입력)</span>
-                    <span style="font-size: 11px; color: #ec4899; font-weight: 600;">※ 카카오·티맵 검색 지원</span>
+                    <span style="font-size: 12px; color: #ec4899; font-weight: 600;">※ 카카오·티맵 검색 지원</span>
                   </label>
                   <div style="display: flex; gap: 8px;">
                     <input type="text" id="form-shop-name" class="form-input" placeholder="예: 순수 청담본점, 빗앤붓, 제니하우스"
@@ -770,7 +770,7 @@
             <div class="form-group" style="position: relative;">
               <label class="form-label" style="display: flex; justify-content: space-between;">
                 <span>출발 장소 / 픽업 장소 (숙소/거점)</span>
-                <span style="font-size: 11px; color: var(--primary); font-weight: 600;">※ 클릭 시 등록된 숙소/거점 목록 노출</span>
+                <span style="font-size: 12px; color: var(--primary); font-weight: 600;">※ 클릭 시 등록된 숙소/거점 목록 노출</span>
               </label>
               <input type="text" id="form-departure-place" class="form-input" placeholder="예: 한남 숙소, 청담 사옥 지하주차장, 직접 입력"
                 autocomplete="off">
@@ -982,7 +982,7 @@
           style="background:#ffffff; border-radius:12px; padding:14px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; border:1px solid #cbd5e1; gap:16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
           <div style="flex:1; min-width:0;">
             <div style="font-weight:700; color:#14161A; font-size:13.5px;">소속 아티스트 및 그룹 목록</div>
-            <div style="font-size:11.5px; color:#5B616E; margin-top:2px;">등록된 아티스트의 스케줄, 담당 매니저 배정 및 케어(라이더) 카드를 관리합니다.
+            <div style="font-size:12.5px; color:#5B616E; margin-top:2px;">등록된 아티스트의 스케줄, 담당 매니저 배정 및 케어(라이더) 카드를 관리합니다.
             </div>
           </div>
           <button type="button" class="btn-primary" onclick="Admin.openArtistFormModal()"
@@ -1072,11 +1072,11 @@
             <div id="artist-member-list-group" style="margin-bottom: 14px;">
               <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
                 <span>소속 멤버 명단</span>
-                <span style="font-size:11px; color:#5B616E;">쉼표(,)로 구분하여 입력</span>
+                <span style="font-size:12px; color:#5B616E;">쉼표(,)로 구분하여 입력</span>
               </label>
               <input type="text" id="new-artist-member-list" class="form-input" placeholder="예: 지수, 민아, 수연, 유진"
                 oninput="Admin.onMemberListInput(this.value)">
-              <div style="font-size:11px; color:#5B616E; margin-top:4px;">
+              <div style="font-size:12px; color:#5B616E; margin-top:4px;">
                 💡 멤버명을 입력해두면 스케줄 등록 시 <strong>'완전체'</strong> 또는 <strong>'개별 멤버 스케줄'</strong>을 지정할 수 있습니다.
               </div>
             </div>
@@ -1089,12 +1089,12 @@
             <div style="margin-bottom: 14px;">
               <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
                 <span>대표 아이콘 (유형별 심볼)</span>
-                <span style="font-size:11px; color:#5B616E;">원하는 아이콘을 클릭하여 선택</span>
+                <span style="font-size:12px; color:#5B616E;">원하는 아이콘을 클릭하여 선택</span>
               </label>
               <div id="artist-icon-picker"
                 style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; background:#f8fafc; padding:10px; border-radius:10px; border:1px solid #cbd5e1;">
                 <div class="artist-icon-opt active" data-icon="star" onclick="Admin.selectArtistIcon('star')"
-                  style="padding:8px 6px; border-radius:8px; border:1.5px solid #ec4899; background:#ffffff; color:#ec4899; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:11px; font-weight:700; transition:all 0.15s ease;">
+                  style="padding:8px 6px; border-radius:8px; border:1.5px solid #ec4899; background:#ffffff; color:#ec4899; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:12px; font-weight:700; transition:all 0.15s ease;">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <polygon
@@ -1103,7 +1103,7 @@
                   <span>별/걸그룹</span>
                 </div>
                 <div class="artist-icon-opt" data-icon="zap" onclick="Admin.selectArtistIcon('zap')"
-                  style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#5B616E; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:11px; font-weight:700; transition:all 0.15s ease;">
+                  style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#5B616E; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:12px; font-weight:700; transition:all 0.15s ease;">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
@@ -1111,7 +1111,7 @@
                   <span>번개/보이</span>
                 </div>
                 <div class="artist-icon-opt" data-icon="mic" onclick="Admin.selectArtistIcon('mic')"
-                  style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#5B616E; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:11px; font-weight:700; transition:all 0.15s ease;">
+                  style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#5B616E; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:12px; font-weight:700; transition:all 0.15s ease;">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
@@ -1122,7 +1122,7 @@
                   <span>마이크/솔로</span>
                 </div>
                 <div class="artist-icon-opt" data-icon="film" onclick="Admin.selectArtistIcon('film')"
-                  style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#5B616E; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:11px; font-weight:700; transition:all 0.15s ease;">
+                  style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#5B616E; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:12px; font-weight:700; transition:all 0.15s ease;">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <rect x="2" y="4" width="20" height="16" rx="2" />
@@ -1134,7 +1134,7 @@
                   <span>슬레이트/배우</span>
                 </div>
                 <div class="artist-icon-opt" data-icon="crown" onclick="Admin.selectArtistIcon('crown')"
-                  style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#5B616E; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:11px; font-weight:700; transition:all 0.15s ease;">
+                  style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#5B616E; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:12px; font-weight:700; transition:all 0.15s ease;">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
@@ -1142,7 +1142,7 @@
                   <span>왕관/MC</span>
                 </div>
                 <div class="artist-icon-opt" data-icon="music" onclick="Admin.selectArtistIcon('music')"
-                  style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#5B616E; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:11px; font-weight:700; transition:all 0.15s ease;">
+                  style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#5B616E; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:12px; font-weight:700; transition:all 0.15s ease;">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path d="M9 18V5l12-2v13"></path>
@@ -1152,7 +1152,7 @@
                   <span>음표/밴드</span>
                 </div>
                 <div class="artist-icon-opt" data-icon="heart" onclick="Admin.selectArtistIcon('heart')"
-                  style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#5B616E; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:11px; font-weight:700; transition:all 0.15s ease;">
+                  style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#5B616E; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:12px; font-weight:700; transition:all 0.15s ease;">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path
@@ -1161,7 +1161,7 @@
                   <span>하트</span>
                 </div>
                 <div class="artist-icon-opt" data-icon="sparkle" onclick="Admin.selectArtistIcon('sparkle')"
-                  style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#5B616E; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:11px; font-weight:700; transition:all 0.15s ease;">
+                  style="padding:8px 6px; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; color:#5B616E; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; font-size:12px; font-weight:700; transition:all 0.15s ease;">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path
@@ -1187,7 +1187,7 @@
             <div class="form-group">
               <label class="form-label" style="display:flex; justify-content:space-between;">
                 <span>특이사항 및 케어 가이드</span>
-                <span style="font-size:11px; color:#5B616E; font-weight:500;">식습관, 알레르기, 대기실 요청사항</span>
+                <span style="font-size:12px; color:#5B616E; font-weight:500;">식습관, 알레르기, 대기실 요청사항</span>
               </label>
               <textarea id="new-artist-care" class="form-input" rows="3"
                 placeholder="예: 견과류 알레르기 있음, 특정 브랜드 생수 상온 유지, 대기실 가습기 필수 등"></textarea>
@@ -1225,7 +1225,7 @@
             현장 매니저 계정 & 담당 아티스트 배정
           </h3>
           <div id="mgr-modal-slot-badge"
-            style="font-size:11.5px; font-weight:700; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; padding:2px 8px; border-radius:6px; margin-left:6px;">
+            style="font-size:12.5px; font-weight:700; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; padding:2px 8px; border-radius:6px; margin-left:6px;">
             슬롯: -/-</div>
         </div>
         <button type="button" class="btn-secondary" data-close="modal-manager-management"
@@ -1361,7 +1361,7 @@
             <div class="form-group">
               <label class="form-label" style="display:flex; justify-content:space-between;">
                 <span>새 비밀번호</span>
-                <span style="font-size:11px; color:#5B616E; font-weight:500;">변경 시에만 6자 이상 입력</span>
+                <span style="font-size:12px; color:#5B616E; font-weight:500;">변경 시에만 6자 이상 입력</span>
               </label>
               <input type="password" id="edit-mgr-pw" class="form-input" placeholder="미입력 시 기존 비밀번호 유지"
                 autocomplete="new-password">
@@ -1411,7 +1411,7 @@
           style="background:#ffffff; border-radius:12px; padding:14px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; border:1px solid #cbd5e1; gap:16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
           <div style="flex:1; min-width:0;">
             <div style="font-weight:700; color:#14161A; font-size:13.5px;">소속 의전 및 이동 지원 차량 목록</div>
-            <div style="font-size:11.5px; color:#5B616E; margin-top:2px;">스케줄 이동에 투입되는 차량, 정원 및 배차 상태를 실시간으로 관리합니다.
+            <div style="font-size:12.5px; color:#5B616E; margin-top:2px;">스케줄 이동에 투입되는 차량, 정원 및 배차 상태를 실시간으로 관리합니다.
             </div>
           </div>
           <button type="button" class="btn-primary" onclick="Admin.openVehicleFormModal()"
@@ -1536,7 +1536,7 @@
             <div class="form-group">
               <label class="form-label" style="display:flex; justify-content:space-between;">
                 <span>차량 특이사항 / 비치 물품 메모</span>
-                <span style="font-size:11px; color:#5B616E; font-weight:500;">옵션 장비, 편의 용품</span>
+                <span style="font-size:12px; color:#5B616E; font-weight:500;">옵션 장비, 편의 용품</span>
               </label>
               <textarea id="new-vehicle-notes" class="form-input" rows="3"
                 placeholder="예: 암막 커튼 완비, 트렁크 옷걸이 랙 장착, VIP 핀조명 세팅, 하이패스 단말기 장착 등"></textarea>
@@ -1590,7 +1590,7 @@
             </div>
 
             <div class="form-group" style="margin-bottom: 12px;">
-              <label class="form-label" style="font-weight:700; color:#14161A;">공지 제목 <span style="color:#5B616E; font-weight:400; font-size:11.5px;">(선택)</span></label>
+              <label class="form-label" style="font-weight:700; color:#14161A;">공지 제목 <span style="color:#5B616E; font-weight:400; font-size:12.5px;">(선택)</span></label>
               <input type="text" id="msg-title" class="form-input"
                 placeholder="예: [전사 공지] 아티스트 해외 투어 스케줄 지침"
                 style="width:100%;">
@@ -1666,20 +1666,20 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/notify.js?v=339"></script>
-  <script src="js/supabase-client.js?v=339"></script>
-  <script src="js/ask.js?v=339"></script>
-  <script src="js/share.js?v=339"></script>
-  <script src="js/chat.js?v=339"></script>
-  <script src="js/schedule-notify.js?v=339"></script>
-  <script src="js/api.js?v=339"></script>
-  <script src="js/venue.js?v=339"></script>
-  <script src="js/learn.js?v=339"></script>
-  <script src="js/draft-sheet.js?v=339"></script>
-  <script src="js/admin-data.js?v=339"></script>
-  <script src="js/admin.js?v=339"></script>
+  <script src="js/notify.js?v=340"></script>
+  <script src="js/supabase-client.js?v=340"></script>
+  <script src="js/ask.js?v=340"></script>
+  <script src="js/share.js?v=340"></script>
+  <script src="js/chat.js?v=340"></script>
+  <script src="js/schedule-notify.js?v=340"></script>
+  <script src="js/api.js?v=340"></script>
+  <script src="js/venue.js?v=340"></script>
+  <script src="js/learn.js?v=340"></script>
+  <script src="js/draft-sheet.js?v=340"></script>
+  <script src="js/admin-data.js?v=340"></script>
+  <script src="js/admin.js?v=340"></script>
   <script src="js/admin-v2.js?v=14"></script>
-  <script src="js/hq-expenses.js?v=339"></script>
+  <script src="js/hq-expenses.js?v=340"></script>
   <script src="js/admin-panels.js?v=7"></script>
 
 
@@ -1860,13 +1860,13 @@
           </div>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
             <div>
-              <label style="font-size:11.5px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">소속사 /
+              <label style="font-size:12.5px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">소속사 /
                 엔터테인먼트명</label>
               <input type="text" id="setting-company-name" placeholder="예: STAR ENTERTAINMENT"
                 style="width:100%; padding:9px 12px; border-radius:6px; border:1px solid #cbd5e1; font-size:12.5px; font-weight:600; color:#14161A; background:#f8fafc;">
             </div>
             <div>
-              <label style="font-size:11.5px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">관리자 /
+              <label style="font-size:12.5px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">관리자 /
                 대표자명</label>
               <input type="text" id="setting-ceo-name" placeholder="예: 홍길동 이사"
                 style="width:100%; padding:9px 12px; border-radius:6px; border:1px solid #cbd5e1; font-size:12.5px; font-weight:600; color:#14161A; background:#f8fafc;">
@@ -1881,24 +1881,24 @@
             style="font-size:14px; font-weight:800; color:#14161A; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
             동선 계산 기본값
           </div>
-          <div style="font-size:11.5px; color:#5B616E; margin-bottom:12px; line-height:1.4;">
+          <div style="font-size:12.5px; color:#5B616E; margin-bottom:12px; line-height:1.4;">
             스케줄 등록 시 헤어/메이크업 샵, 이동 시간, 사전 대기 시간에 적용될 기본 분(minute) 단위 값입니다.
           </div>
           <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
             <div>
-              <label style="font-size:11px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">헤어/메이크업
+              <label style="font-size:12px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">헤어/메이크업
                 (분)</label>
               <input type="number" id="setting-buffer-shop" value="120" min="0" max="300" step="10"
                 style="width:100%; padding:9px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px; font-weight:700; color:#14161A; background:#f8fafc; text-align:center;">
             </div>
             <div>
-              <label style="font-size:11px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">이동 여유 버퍼
+              <label style="font-size:12px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">이동 여유 버퍼
                 (분)</label>
               <input type="number" id="setting-buffer-travel" value="30" min="0" max="120" step="5"
                 style="width:100%; padding:9px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px; font-weight:700; color:#14161A; background:#f8fafc; text-align:center;">
             </div>
             <div>
-              <label style="font-size:11px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">현장 사전대기
+              <label style="font-size:12px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">현장 사전대기
                 (분)</label>
               <input type="number" id="setting-buffer-wait" value="10" min="0" max="60" step="5"
                 style="width:100%; padding:9px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px; font-weight:700; color:#14161A; background:#f8fafc; text-align:center;">
@@ -1990,20 +1990,20 @@
               <span style="color:#10b981; font-size:16px;">☁️</span> 1. Supabase 클라우드 DB 연동
             </div>
             <span id="system-supabase-badge"
-              style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px; background:#dcfce7; color:#15803d; border:1px solid #bbf7d0;">연결
+              style="font-size:12px; font-weight:700; padding:2px 8px; border-radius:12px; background:#dcfce7; color:#15803d; border:1px solid #bbf7d0;">연결
               상태 확인됨</span>
           </div>
           <div style="display:flex; flex-direction:column; gap:10px;">
             <div>
               <label
-                style="font-size:11.5px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">Supabase
+                style="font-size:12.5px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">Supabase
                 Project URL</label>
               <input type="text" id="sys-supabase-url" placeholder="https://xxxx.supabase.co"
                 style="width:100%; padding:9px 12px; border-radius:6px; border:1px solid #cbd5e1; font-size:12px; font-family:monospace; color:#14161A; background:#f8fafc;">
             </div>
             <div>
               <label
-                style="font-size:11.5px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">Supabase
+                style="font-size:12.5px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">Supabase
                 Anon API Key</label>
               <input type="password" id="sys-supabase-key" placeholder="sb_publishable_..."
                 style="width:100%; padding:9px 12px; border-radius:6px; border:1px solid #cbd5e1; font-size:12px; font-family:monospace; color:#14161A; background:#f8fafc;">
@@ -2018,7 +2018,7 @@
             style="font-size:14px; font-weight:800; color:#14161A; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
             <span style="color:#3b82f6; font-size:16px;">💾</span> 2. 데이터 백업 및 복원 (JSON)
           </div>
-          <div style="font-size:11.5px; color:#5B616E; margin-bottom:12px; line-height:1.4;">
+          <div style="font-size:12.5px; color:#5B616E; margin-bottom:12px; line-height:1.4;">
             소속 아티스트, 매니저, 차량 및 스케줄 데이터를 JSON 파일로 안전하게 백업하거나 복원합니다.
           </div>
           <div style="display:flex; gap:10px;">
