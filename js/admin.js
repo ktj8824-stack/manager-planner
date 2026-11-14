@@ -2794,7 +2794,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ${getStatusBadge(sch.status)}
       </div>
 
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:16px; font-size:13px;">
+      <div class="sd-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:16px; font-size:13px;">
         <div style="background:#e2e8f0; padding:10px 12px; border-radius:8px; border:1px solid #cbd5e1; display:flex; flex-direction:column; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
           <div style="display:flex; align-items:center; gap:8px;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>

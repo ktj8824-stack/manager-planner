@@ -263,10 +263,12 @@
     const t = $('hq-page-title'); if (t && t.textContent !== TITLE[v]) t.textContent = TITLE[v] || '오늘 현황';
     const d = new Date();
     const pd = $('hq-page-date'); if (pd) pd.textContent = `${d.getMonth() + 1}월 ${d.getDate()}일 ${DAYS[d.getDay()]}요일 · ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-    document.querySelectorAll('.hq-menu [data-go]').forEach(b => b.classList.toggle('on', (b.dataset.go === 'month' && v !== 'gantt') || b.dataset.go === v));
+    document.querySelectorAll('.hq-menu [data-go], .hq-mtabs [data-go]').forEach(b => b.classList.toggle('on', (b.dataset.go === 'month' && v !== 'gantt') || b.dataset.go === v));
     document.body.classList.toggle('hq-today-view', v === 'gantt');
     const cb = $('chat-badge'), mb = $('hq-menu-chat-badge');
     if (cb && mb) { mb.hidden = cb.hidden || !cb.textContent || cb.textContent === '0'; mb.textContent = cb.textContent; }
+    const tb = $('hq-mtabs-chat-badge');
+    if (cb && tb) { tb.hidden = cb.hidden || !cb.textContent || cb.textContent === '0'; tb.textContent = cb.textContent; }
   };
 
   async function loadExpPending() {
@@ -359,12 +361,26 @@
       : '<p class="hq-todo-empty">지금 확인할 것이 없어요.</p>');
   }
 
+  /* 휴대폰·태블릿: 왼쪽 메뉴를 서랍처럼 열고 닫기 */
+  const drawer = (open) => {
+    document.body.classList.toggle('hq-drawer-open', !!open);
+    const bk = $('hq-drawer-back'); if (bk) bk.hidden = !open;
+    document.querySelector('.hq-mtabs [data-act="menu"]')?.setAttribute('aria-expanded', open ? 'true' : 'false');
+  };
+
   const start = () => {
-    document.querySelectorAll('.hq-menu button').forEach(b => b.addEventListener('click', () => {
-      if (b.dataset.go) document.querySelector(`.view-tab-btn[data-view="${b.dataset.go}"]`)?.click();
+    document.querySelectorAll('.hq-menu button, .hq-mtabs button').forEach(b => b.addEventListener('click', () => {
+      if (b.dataset.act === 'menu') return drawer(!document.body.classList.contains('hq-drawer-open'));
+      drawer(false);
+      if (b.dataset.go) { document.querySelector(`.view-tab-btn[data-view="${b.dataset.go}"]`)?.click(); window.scrollTo(0, 0); document.querySelector('.hq-main')?.scrollTo?.(0, 0); }
       else if (b.dataset.click) $(b.dataset.click)?.click();
       setTimeout(syncHead, 50);
     }));
+    $('hq-drawer-back')?.addEventListener('click', () => drawer(false));
+    $('hq-drawer-x')?.addEventListener('click', () => drawer(false));
+    // 서랍 안에서 아티스트·매니저를 고르면 바로 결과가 보이게 닫기
+    document.querySelector('.hq-sidebar')?.addEventListener('click', (e) => { if (e.target.closest('.artist-chip, .artist-chip-list > *')) setTimeout(() => drawer(false), 120); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') drawer(false); });
     $('hq-todo')?.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-i]'); if (!btn) return;
       const it = ($('hq-todo')._items || [])[+btn.dataset.i]; if (it && it.run) it.run();

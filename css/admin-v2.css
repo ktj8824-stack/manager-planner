@@ -585,3 +585,117 @@ body.hq-today-view .hq-todo { display: block; }
 .sch-repeat-n input { width: 72px; height: 38px; }
 .sch-repeat-hint { font-size: 12.5px; color: #3B45C4; font-weight: 700; margin-top: 6px; word-break: keep-all; }
 .sch-repeat-hint:empty { display: none; }
+
+/* ============================================================
+   휴대폰·태블릿 (1024px 이하)
+   - 왼쪽 메뉴(아티스트·매니저 목록 포함)는 접어 두고 [전체 메뉴]로 엶
+   - 아래 탭: 오늘 · 캘린더 · 일정 등록 · 로드톡 · 전체 메뉴
+   ============================================================ */
+.hq-mtabs, .hq-drawer-back, .hq-drawer-x { display: none; }
+@media (max-width: 1024px) {
+  .app-container { display: block !important; }
+  .hq-sidebar { position: fixed !important; top: 0; left: 0; bottom: 0; width: min(310px, 86vw) !important; height: 100vh; height: 100dvh; z-index: 900;
+    transform: translateX(-104%); transition: transform .22s ease; overflow-y: auto !important; overscroll-behavior: contain; box-shadow: 12px 0 32px rgba(15, 23, 42, .18);
+    padding: 16px 12px calc(20px + env(safe-area-inset-bottom)) !important; }
+  body.hq-drawer-open .hq-sidebar { transform: none; }
+  body.hq-drawer-open { overflow: hidden; }
+  .hq-sidebar .sidebar-section, .hq-sidebar .artist-chip-list { flex: 0 0 auto !important; max-height: none !important; overflow: visible !important; }
+  .hq-drawer-back { display: block; position: fixed; inset: 0; background: rgba(15, 23, 42, .42); z-index: 899; }
+  .hq-drawer-back[hidden] { display: none; }
+  .hq-drawer-x { display: flex; position: absolute; top: 12px; right: 10px; width: 40px; height: 40px; align-items: center; justify-content: center; border: 0; background: #F1F2F5; color: #14161A; border-radius: 10px; font-size: 16px; cursor: pointer; }
+
+  .hq-main { display: block !important; overflow: visible !important; padding: 14px 14px calc(86px + env(safe-area-inset-bottom)) !important; min-height: 100vh; box-sizing: border-box; }
+  .main-header { align-items: center; gap: 8px; margin-bottom: 12px; }
+  .header-title-group h2 { font-size: 22px; }
+  .header-actions { gap: 6px; flex-wrap: nowrap; }
+  #btn-open-add-schedule { display: none !important; }      /* 아래 탭에 있음 */
+  .hq-act { height: 40px; padding: 0 12px; }
+  .user-chip-name { max-width: 84px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .calendar-wrapper { padding: 12px; }
+  .calendar-toolbar { gap: 8px; }
+  .date-nav-group { width: 100%; gap: 10px; }
+  .date-nav-group h3 { font-size: 18px !important; white-space: nowrap; }
+  .today-btn { white-space: nowrap; flex-shrink: 0; }
+  .nav-btn-box { flex-shrink: 0; }
+  .view-tabs { width: 100%; flex-wrap: nowrap !important; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; box-sizing: border-box; }
+  .view-tabs::-webkit-scrollbar { display: none; }
+  .view-tab-btn { flex: 1 0 auto; white-space: nowrap; min-height: 38px; }
+  .hq-body > .calendar-wrapper { flex: 1 1 100%; }
+  .hq-todo { flex: 1 1 100%; max-width: none; }
+
+  .hq-mtabs { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 800; background: #FFFFFF; border-top: 1px solid #E6E7EB;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 16px rgba(15, 23, 42, .06); }
+  .hq-mtabs button { all: unset; box-sizing: border-box; flex: 1 1 0; min-width: 0; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    font-size: 12.5px; font-weight: 600; color: #5B616E; cursor: pointer; border-radius: 10px; position: relative; -webkit-tap-highlight-color: transparent; }
+  .hq-mtabs button span { white-space: nowrap; }
+  .hq-mtabs button svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .hq-mtabs button.on { color: #3B45C4; font-weight: 700; }
+  .hq-mtabs button.add { color: #3B45C4; }
+  .hq-mtabs button.add svg { background: #3B45C4; color: #fff; border-radius: 9px; padding: 3px; box-sizing: border-box; stroke-width: 2.2; }
+  .hq-mtabs button:focus-visible { outline: 2px solid #3B45C4; outline-offset: -2px; }
+  .hq-mtabs-badge { position: absolute; top: 4px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: #D92D20; color: #fff; font-size: 11.5px; font-style: normal; font-weight: 700; line-height: 18px; text-align: center; }
+  .hq-mtabs-badge[hidden] { display: none; }
+}
+@media (max-width: 480px) {
+  .hq-page-date { font-size: 12.5px; }
+  .hq-act-urgent { padding: 0 10px; }
+  .user-chip-name { display: none; }
+}
+
+/* 일정 상세 창: 이름표(메인 장소: 등)가 글자 중간에서 줄바꿈되지 않게 */
+.sd-grid > div { min-width: 0; }
+.sd-grid > div > div { min-width: 0; }
+.sd-grid span { white-space: nowrap; flex-shrink: 0; }
+.sd-grid svg { flex-shrink: 0; }
+.sd-grid strong { min-width: 0; overflow-wrap: anywhere; word-break: keep-all; }
+.sd-grid button { white-space: nowrap; }
+.sd-foot { flex-wrap: wrap; gap: 8px; }
+.sd-foot > div { flex-wrap: wrap; justify-content: flex-end; }
+.sd-foot button { white-space: nowrap; min-height: 40px; font-size: 13px !important; padding: 0 12px !important; }
+@media (max-width: 640px) {
+  .sd-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
+  .sd-grid > div { grid-column: auto !important; }
+  .sd-foot { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 14px calc(12px + env(safe-area-inset-bottom)) !important; }
+  .sd-foot > div { display: contents !important; }
+  .sd-foot button { justify-content: center; min-height: 44px; padding: 0 10px !important; }
+  .sd-foot #btn-edit-schedule { grid-column: 1 / -1; order: -1; }
+  .sd-foot #btn-delete-schedule { order: 9; }
+}
+
+/* 휴대폰: 창(모달)을 화면 폭에 맞춤 */
+@media (max-width: 640px) {
+  .modal-overlay { align-items: flex-end; }
+  .modal-overlay > .modal-content { width: 100% !important; max-width: 100% !important; max-height: 92vh; max-height: 92dvh; border-radius: 18px 18px 0 0 !important; box-sizing: border-box; }
+  .modal-header { padding: 14px 16px !important; gap: 8px; }
+  .modal-header h3 { font-size: 17px !important; min-width: 0; }
+  .modal-body { padding: 14px 16px !important; }
+  .modal-footer { padding: 12px 16px calc(12px + env(safe-area-inset-bottom)) !important; flex-wrap: wrap; }
+  .modal-footer button { min-height: 44px; }
+  .view-tab-btn { padding: 0 9px !important; font-size: 13px !important; }
+  .tb-pop { left: 12px !important; right: 12px !important; width: auto !important; }
+}
+
+/* 휴대폰: 오늘 현황 숫자판은 '오늘' 화면에서만, 월간은 화면 폭에 맞춤 */
+@media (max-width: 1024px) {
+  body:not(.hq-today-view) .today-brief { display: none !important; }
+}
+@media (max-width: 640px) {
+  .date-nav-group h3 { font-size: 16.5px !important; white-space: normal; word-break: keep-all; line-height: 1.3; }
+  .mv2 { overflow-x: visible; }
+  .mv2-head, .mv2-grid { min-width: 0; gap: 3px; }
+  .mv2-legend { min-width: 0; gap: 10px; }
+  .mv2-cell, .mv2-empty { min-height: 78px; }
+  .mv2-cell { padding: 4px 3px; border-radius: 8px; gap: 3px; }
+  .mv2-num { font-size: 13px; margin-left: 2px; }
+  .mv2-cell.today .mv2-num { padding: 0 6px; margin-left: 0; }
+  .mv2-ev { padding: 2px 3px; gap: 3px; border-radius: 5px; }
+  .mv2-dot { width: 6px; height: 6px; }
+  .mv2-tm { display: none; }
+  .mv2-tt { font-size: 11.5px; font-weight: 600; text-overflow: clip; letter-spacing: -0.3px; }
+  .mv2-more { padding: 0 3px; font-size: 11.5px; }
+  .mp2-nopos { flex-direction: column; align-items: stretch; }
+  .mp2-chip { border-radius: 12px; flex-wrap: wrap; padding: 9px 12px; line-height: 1.45; text-align: left; }
+  .mp2-chip b, .mp2-chip strong { white-space: nowrap; }
+}
+.badge-status { white-space: nowrap; flex-shrink: 0; }
