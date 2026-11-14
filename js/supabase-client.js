@@ -30,13 +30,13 @@ const SupabaseClient = {
       try {
         this.client = supabase.createClient(url, key);
         this.isConfigured = true;
-        console.log('✅ Supabase 클라이언트가 정상적으로 초기화되었습니다.');
+        console.log('✅ Supabase 클라이언트가 정상적으로 초기화됐어요.');
       } catch (err) {
         console.error('❌ Supabase 초기화 오류:', err);
         this.isConfigured = false;
       }
     } else {
-      console.log('ℹ️ Supabase 키가 설정되지 않아 로컬/데모 모드로 동작합니다.');
+      console.log('ℹ️ Supabase 키가 설정되지 않아 로컬/데모 모드로 동작해요.');
       this.isConfigured = false;
     }
   },
@@ -44,7 +44,7 @@ const SupabaseClient = {
   // 설정 저장 및 재초기화
   setConfig(url, anonKey) {
     if (!url || !anonKey) {
-      throw new Error('Supabase URL과 Anon Key를 모두 입력해주세요.');
+      throw new Error('서버 연결 설정이 비어 있어요. 운영팀에 알려 주세요.');
     }
     localStorage.setItem(this.STORAGE_KEY_URL, url.trim());
     localStorage.setItem(this.STORAGE_KEY_ANON_KEY, anonKey.trim());
@@ -73,7 +73,7 @@ const SupabaseClient = {
   async invokeUserManagement(body) {
     const session = await this.getCurrentSession();
     if (!session || !['ceo', 'hq_admin'].includes(session.profile?.role)) {
-      throw new Error('본사 관리자 인증이 필요합니다.');
+      throw new Error('본사 관리자 인증이 필요해요.');
     }
     const { data, error } = await this.client.functions.invoke('manage-users', { body });
     if (error) {
@@ -89,15 +89,15 @@ const SupabaseClient = {
           detail = 'HTTP ' + res.status;
         }
       } catch (e) { }
-      if (/SLOT_LIMIT/.test(detail)) throw new Error('매니저 슬롯이 모두 사용 중입니다. 슬롯을 추가한 뒤 등록해 주세요.');
-      throw new Error('계정 관리 서버 요청에 실패했습니다.' + (detail ? ' (' + detail.trim() + ')' : ' (서버에 연결하지 못했습니다)'));
+      if (/SLOT_LIMIT/.test(detail)) throw new Error('매니저 슬롯이 모두 사용 중이에요. 슬롯을 추가한 뒤 등록해 주세요.');
+      throw new Error('계정 관리 서버 요청에 실패했어요.' + (detail ? ' (' + detail.trim() + ')' : ' (서버에 연결하지 못했어요)'));
     }
-    if (!data || data.error) throw new Error(data?.error?.message || (typeof data?.error === 'string' ? data.error : '계정 관리 서버 응답이 올바르지 않습니다.'));
+    if (!data || data.error) throw new Error(data?.error?.message || (typeof data?.error === 'string' ? data.error : '계정 관리 서버 응답이 올바르지 않아요.'));
     return data;
   },
 
   async adminCreateUser(email, password, name, role = 'manager', phone = '') {
-    if (!['manager', 'staff'].includes(role)) throw new Error('관리자 권한 부여는 신뢰할 수 있는 서버에서만 가능합니다.');
+    if (!['manager', 'staff'].includes(role)) throw new Error('관리자 권한 부여는 신뢰할 수 있는 서버에서만 가능해요.');
     return this.invokeUserManagement({ action: 'create', email: email.trim(), password, name, role, phone });
   },
 
@@ -107,14 +107,14 @@ const SupabaseClient = {
 
   // 결제 서버 (금액 확정·토스 승인·요금제 반영은 모두 서버가 함)
   async invokePayments(body) {
-    if (!this.isConfigured) throw new Error('서버에 연결되지 않았습니다.');
+    if (!this.isConfigured) throw new Error('서버에 연결되지 않았어요.');
     const { data: s } = await this.client.auth.getSession();
-    if (!s?.session) throw new Error('로그인이 필요합니다. 앱에서 다시 로그인한 뒤 결제해 주세요.');
+    if (!s?.session) throw new Error('로그인이 필요해요. 앱에서 다시 로그인한 뒤 결제해 주세요.');
     const { data, error } = await this.client.functions.invoke('payments', { body });
     if (error) {
       let msg = '';
       try { const j = await error.context.clone().json(); msg = j?.error?.message || ''; } catch (e) { }
-      throw new Error(msg || '결제 서버에 연결하지 못했습니다.');
+      throw new Error(msg || '결제 서버에 연결하지 못했어요.');
     }
     return data;
   },
@@ -128,7 +128,7 @@ const SupabaseClient = {
   },
 
   async signIn(email, password) {
-    if (!this.isConfigured) throw new Error('Supabase 설정이 필요합니다.');
+    if (!this.isConfigured) throw new Error('Supabase 설정이 필요해요.');
 
     const { data, error } = await this.client.auth.signInWithPassword({
       email,
@@ -164,7 +164,7 @@ const SupabaseClient = {
     if (error) throw error;
     if (data?.session) {
       const verified = await this.client.auth.getUser();
-      if (verified.error || !verified.data?.user) throw new Error('로그인 세션이 유효하지 않습니다.');
+      if (verified.error || !verified.data?.user) throw new Error('로그인 세션이 유효하지 않아요.');
       data.session.user = verified.data.user;
     }
     if (data && data.session) {
@@ -194,12 +194,12 @@ const SupabaseClient = {
     // (user_metadata 나 이메일 글자로 권한을 추측하지 않습니다. 가입자가 직접 정할 수 있는 값이기 때문입니다.)
     if (!profileData) {
       localStorage.removeItem('bp_user_role');
-      throw new Error('계정 권한을 확인할 수 없습니다. 본사 관리자에게 문의해주세요.');
+      throw new Error('계정 권한을 확인할 수 없어요. 본사 관리자에게 문의해 주세요.');
     }
 
     if (!profileData || !['ceo', 'hq_admin', 'manager', 'staff', 'indie_manager'].includes(profileData.role)) {
       localStorage.removeItem('bp_user_role');
-      throw new Error('계정 권한을 확인할 수 없습니다. 본사 관리자에게 문의해주세요.');
+      throw new Error('계정 권한을 확인할 수 없어요. 본사 관리자에게 문의해 주세요.');
     }
 
     this.currentProfile = profileData;
@@ -403,7 +403,7 @@ const SupabaseClient = {
     return true;
   },
 
-  // ── 6. 통합 스케줄 API ──
+  // ── 6. 통합 일정 API ──
 
   async getSchedules(filter = {}) {
     if (!this.isConfigured) {
@@ -509,7 +509,7 @@ const SupabaseClient = {
         content: announcement.content || '',
         is_urgent: announcement.is_urgent || false,
         target_role: announcement.target_role || 'all',
-        sender_name: announcement.sender_name || '본사 관제팀',
+        sender_name: announcement.sender_name || '본사',
         created_at: new Date().toISOString()
       };
       history.unshift(newNoti);
@@ -523,7 +523,7 @@ const SupabaseClient = {
       is_urgent: !!announcement.is_urgent,
       target_role: announcement.target_role || 'all',
       target_manager_id: announcement.target_manager_id || null,
-      sender_name: announcement.sender_name || '본사 관제팀'
+      sender_name: announcement.sender_name || '본사'
     };
     if (announcement.id) row.id = announcement.id;
     if (announcement.created_at) row.created_at = announcement.created_at;
@@ -559,7 +559,7 @@ const SupabaseClient = {
   // ── 9. 대화창 (대표↔매니저 1:1 + 전체방, 사진 전송) ──
 
   _chatReady() {
-    if (!this.isConfigured || !this.client || !this.currentUser?.id) throw new Error('서버에 연결되어 로그인해야 대화를 사용할 수 있습니다.');
+    if (!this.isConfigured || !this.client || !this.currentUser?.id) throw new Error('서버에 연결되어 로그인해야 대화를 사용할 수 있어요.');
   },
 
   async chatRooms() {
@@ -584,13 +584,13 @@ const SupabaseClient = {
     const found = await find();
     if (found) return found;
     const companyId = this.currentProfile?.company_id;
-    if (!companyId) throw new Error('회사 정보가 없는 계정은 대화를 사용할 수 없습니다.');
+    if (!companyId) throw new Error('회사 정보가 없는 계정은 대화를 사용할 수 없어요.');
     const row = { company_id: companyId, kind };
     if (kind === 'direct') row.manager_id = managerId;
     const { error } = await this.client.from('chat_rooms').insert([row]);
     if (error && error.code !== '23505') throw error;
     const created = await find();
-    if (!created) throw new Error('대화방을 만들지 못했습니다.');
+    if (!created) throw new Error('대화방을 만들지 못했어요.');
     return created;
   },
 
@@ -664,14 +664,14 @@ const SupabaseClient = {
     return data || [];
   },
   async expensesList(from, to) {
-    if (!this.isConfigured || !this.currentUser) throw new Error('로그인이 필요합니다.');
+    if (!this.isConfigured || !this.currentUser) throw new Error('로그인이 필요해요.');
     const { data, error } = await this.client.from('expenses').select('*')
       .gte('date', from).lte('date', to).order('date', { ascending: false }).order('created_at', { ascending: false });
     if (error) throw error;
     return data || [];
   },
   async expenseSave(row) {
-    if (!this.isConfigured || !this.currentUser) throw new Error('로그인이 필요합니다.');
+    if (!this.isConfigured || !this.currentUser) throw new Error('로그인이 필요해요.');
     const clean = {
       date: row.date, category: row.category, amount: Math.round(Number(row.amount) || 0),
       memo: row.memo || null, schedule_id: row.schedule_id || null, artist_id: row.artist_id || null,
@@ -690,7 +690,7 @@ const SupabaseClient = {
   },
   async expenseUploadReceipt(blob) {
     const uid = this.currentUser?.id;
-    if (!uid) throw new Error('로그인이 필요합니다.');
+    if (!uid) throw new Error('로그인이 필요해요.');
     const id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
     const path = uid + '/' + id + '.jpg';
     const up = await this.client.storage.from('expense-receipts').upload(path, blob, { contentType: 'image/jpeg', upsert: false });
@@ -781,14 +781,14 @@ const SupabaseClient = {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'schedules' },
         (payload) => {
-          console.log('⚡ [Realtime] 스케줄 변경 감지:', payload);
+          console.log('⚡ [Realtime] 일정 변경 감지:', payload);
           if (typeof onUpdate === 'function') {
             onUpdate(payload);
           }
         }
       )
       .subscribe((status) => {
-        console.log('⚡ [Realtime] 스케줄 구독 상태:', status);
+        console.log('⚡ [Realtime] 일정 구독 상태:', status);
       });
 
     return this.realtimeChannel;

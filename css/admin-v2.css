@@ -703,3 +703,8 @@ body { word-break: keep-all; overflow-wrap: break-word; }
 /* 본사 웹: 안내 문구는 아래쪽에 (위에 뜨면 창 제목을 가림) */
 .chat-toast { top: auto; bottom: 28px; }
 @media (max-width: 1024px) { .chat-toast { bottom: calc(92px + env(safe-area-inset-bottom)); } }
+@media (max-width: 640px) {
+  .form-row[style*="2fr"] { grid-template-columns: 1fr !important; }
+  .form-label[style*="space-between"] { flex-wrap: wrap; gap: 2px 8px; }
+  .form-input, .form-select { font-size: 16px !important; min-height: 44px; }   /* 아이폰에서 누를 때 화면이 확대되지 않게 */
+}

@@ -46,7 +46,7 @@ const Upgrade = {
               <div class="feat-icon "><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12h8M12 8v8"/></svg></div>
               <div class="feat-text">
                 <h4>로드비서 하루 60번</h4>
-                <p>말 한마디로 일정 등록·변경, 스케줄표 사진 읽기, 현장 주변 찾기 (무료는 하루 3번)</p>
+                <p>말 한마디로 일정 등록·변경, 일정표 사진 읽기, 현장 주변 찾기 (무료는 하루 3번)</p>
               </div>
             </div>
             <div class="feat-item stag">

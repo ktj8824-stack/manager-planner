@@ -77,7 +77,7 @@ const AutoNav = {
       const r = this._loggedIn() ? this.nextStep() : null;
       if (r && r.ev) return this._ready(r);
       if (Date.now() - began < this.WAIT_MS) { this._timer = setTimeout(tick, 500); return; }
-      if (!this._loggedIn()) return this._message('로그인이 필요해요', '앱에서 한 번 로그인해 두면 다음부터 바로 안내됩니다.');
+      if (!this._loggedIn()) return this._message('로그인이 필요해요', '앱에서 한 번 로그인해 두면 다음부터 바로 안내돼요.');
       if (r && r.total) return this._message('오늘 일정이 모두 끝났어요', '수고하셨습니다.');
       return this._message('오늘 남은 일정이 없어요', '');
     };
@@ -89,14 +89,14 @@ const AutoNav = {
     const target = r.dest || r.name;
     const pref = localStorage.getItem('bp_preferred_navi') || 'choice';
     const app = pref === 'tmap' ? '티맵' : pref === 'kakao' ? '카카오내비' : '';
-    if (!target) return this._message('목적지가 비어 있어요', '일정에 장소를 넣어 주면 자동 안내됩니다.');
+    if (!target) return this._message('목적지가 비어 있어요', '일정에 장소를 넣어 주면 자동 안내돼요.');
     this._target = target;
     let left = this.COUNTDOWN;
     const body = () => `
       <div class="an-k">다음 일정${r.time ? ' · ' + esc(r.time) : ''}</div>
       <div class="an-t">${esc(r.name)}</div>
       <div class="an-d">📍 ${esc(target)}</div>
-      <div class="an-c">${app ? `<b>${left}</b>초 뒤 ${app}${app === '티맵' ? '으로' : '로'} 안내를 시작합니다` : '어느 내비로 안내할까요?'}</div>
+      <div class="an-c">${app ? `<b>${left}</b>초 뒤 ${app}${app === '티맵' ? '으로' : '로'} 안내를 시작해요` : '어느 내비로 안내할까요?'}</div>
       <div class="an-b">
         <button type="button" class="an-x" onclick="AutoNav.cancel()">취소</button>
         <button type="button" class="an-go" onclick="AutoNav.go()">${app ? '지금 안내' : '내비 고르기'}</button>
@@ -186,7 +186,7 @@ const AutoNav = {
         <li><b>CarPlay</b> 선택 → <b>연결될 때</b> → <b>즉시 실행</b></li>
         <li>동작에서 <b>URL 열기</b> 추가 → 아래 링크 붙여넣기</li>
       </ol>
-      <div style="font-size:12.5px;color:#5B616E;margin-top:6px;">CarPlay가 없으면 2번에서 <b>블루투스</b> → 차량 이름을 고르세요. 로드플래너 앱(아이폰 앱)이나 로그인된 Safari에서 열려야 합니다.</div>`;
+      <div style="font-size:12.5px;color:#5B616E;margin-top:6px;">CarPlay가 없으면 2번에서 <b>블루투스</b> → 차량 이름을 고르세요. 로드플래너 앱(아이폰 앱)이나 로그인된 Safari에서 열려야 해요.</div>`;
     const android = `
       <div style="font-weight:800;font-size:15px;margin:14px 0 6px;">갤럭시</div>
       <ol style="${S}padding-left:22px;margin:0;list-style:decimal;">
@@ -196,7 +196,7 @@ const AutoNav = {
       </ol>
       <div style="font-size:13px;color:#5B616E;margin-top:6px;">앱 대신 브라우저로 쓰는 경우: 실행을 <b>웹페이지 열기</b>(또는 링크 열기) → 아래 링크로 하세요. 앱 아이콘을 길게 누르면 나오는 <b>다음 일정 길안내</b>도 같은 기능이에요.</div>`;
     const html = `
-      <div style="${S}">차에 타서 휴대폰이 차와 연결되면, 로드플래너가 열리면서 <b>오늘 다음 일정</b>으로 내비가 자동으로 켜집니다.</div>
+      <div style="${S}">차에 타서 휴대폰이 차와 연결되면, 로드플래너가 열리면서 <b>오늘 다음 일정</b>으로 내비가 자동으로 켜져요.</div>
       <div style="font-weight:800;font-size:15px;margin:16px 0 8px;">1. 기본 내비</div>
       <div class="setting-options" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">${opt('tmap', '티맵')}${opt('kakao', '카카오내비')}${opt('choice', '매번 선택')}</div>
       <div style="font-weight:800;font-size:15px;margin:18px 0 8px;">2. 자동 실행 링크</div>

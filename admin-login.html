@@ -227,7 +227,7 @@
     .supabase-notice strong { font-weight: 800; }
   @media (pointer: coarse) { input:not([type=checkbox]):not([type=radio]), select, textarea { font-size: 16px !important; } }
   </style>
-<script src="js/icons.js?v=340"></script>
+<script src="js/icons.js?v=341"></script>
 </head>
 <body>
 
@@ -249,27 +249,27 @@
   <div class="card">
     <div class="logo-wrap">
       <img src="icon.svg" alt="로드플래너" class="logo-img">
-      <div class="title">본사 관제 포털</div>
+      <div class="title">본사 웹</div>
       <div class="subtitle">ROADPLANNER HQ</div>
     </div>
 
     <div class="supabase-notice" id="supabase-notice">
-      <strong>⚠️ 오프라인 모드:</strong> Supabase 연결이 필요합니다. 관제 포털 설정에서 Supabase URL과 Key를 먼저 입력해 주세요.
+      <strong>⚠️ 서버에 연결하지 못했어요.</strong> 인터넷 연결을 확인한 뒤 다시 열어 주세요. 계속 안 되면 운영팀에 알려 주세요.
     </div>
 
     <form id="admin-login-form">
       <div class="form-group">
-        <label class="form-label" for="admin-email">사내 그룹웨어 이메일 (ID)</label>
+        <label class="form-label" for="admin-email">이메일</label>
         <input type="email" id="admin-email" class="form-input"
           placeholder="회사 이메일 (ID)" required autocomplete="email">
       </div>
       <div class="form-group">
-        <label class="form-label" for="admin-pw">보안 비밀번호</label>
+        <label class="form-label" for="admin-pw">비밀번호</label>
         <input type="password" id="admin-pw" class="form-input"
           placeholder="비밀번호 입력" required autocomplete="current-password">
       </div>
 
-      <button type="submit" class="btn-submit" id="btn-login">포털 접속 (Sign In)</button>
+      <button type="submit" class="btn-submit" id="btn-login">로그인</button>
       <button type="button" id="quick-ceo-btn" onclick="quickCeoLogin()" hidden
         style="width: 100%; margin-top: 10px; padding: 13px; border-radius: 12px; border: 1.5px dashed rgba(59, 69, 196,0.5); background: rgba(59, 69, 196,0.06); color: #3B45C4; font-weight: 800; font-size: 13.5px; cursor: pointer; transition: all 0.2s; font-family: 'IBM Plex Sans KR', 'Pretendard', sans-serif;">
         ⚡ 테스트 대표 계정 1초 바로 접속 (ceo@kjm-ent.com)
@@ -319,7 +319,7 @@
 
       // Supabase 미연결 시
       if (!window.SupabaseClient || !SupabaseClient.isConfigured) {
-        errEl.textContent = '⚠️ Supabase 연결이 필요합니다. 관리자에게 문의하세요.';
+        errEl.textContent = '⚠️ Supabase 연결이 필요해요. 관리자에게 문의하세요.';
         errEl.style.display = 'block';
         return;
       }
@@ -376,7 +376,7 @@
             localStorage.setItem('reg_company_name', meta.company_name);
           }
 
-          successEl.textContent = '✅ 본사 총괄 관리자 로그인 성공! 관제 포털로 이동합니다...';
+          successEl.textContent = '✅ 본사 총괄 관리자 로그인 성공! 본사 웹로 이동해요...';
           successEl.style.display = 'block';
 
           setTimeout(() => {
@@ -385,24 +385,24 @@
 
         } else {
           // 매니저 / 스태프 권한인 경우 알림
-          errEl.textContent = '⚠️ 현장 매니저 계정입니다. 현장 매니저는 모바일 플래너 앱에서 로그인해 주세요.';
+          errEl.textContent = '⚠️ 현장 매니저 계정이에요. 현장 매니저는 모바일 플래너 앱에서 로그인해 주세요.';
           errEl.style.display = 'block';
           btnLogin.disabled = false;
-          btnLogin.innerHTML = '포털 접속 (Sign In)';
+          btnLogin.innerHTML = '로그인';
         }
 
       } catch (err) {
         console.error('로그인 오류:', err);
-        let msg = err.message === 'HQ_ROLE_REQUIRED' ? '본사 관리자 권한이 필요합니다. 현장 계정은 매니저 앱에서 로그인해주세요.' : '로그인에 실패했습니다. 이메일·비밀번호와 계정 권한을 확인해주세요.';
+        let msg = err.message === 'HQ_ROLE_REQUIRED' ? '본사 관리자 권한이 필요해요. 현장 계정은 매니저 앱에서 로그인해 주세요.' : '로그인에 실패했어요. 이메일·비밀번호와 계정 권한을 확인해 주세요.';
         if (err.message && err.message.includes('Email not confirmed')) {
-          msg = '📧 이메일 인증이 필요합니다. 가입 시 받은 인증 메일을 확인해 주세요.';
+          msg = '📧 이메일 인증이 필요해요. 가입 시 받은 인증 메일을 확인해 주세요.';
         } else if (err.message && err.message.includes('Invalid login credentials')) {
-          msg = '이메일 또는 비밀번호가 일치하지 않습니다.';
+          msg = '이메일 또는 비밀번호가 일치하지 않아요.';
         }
         errEl.textContent = msg;
         errEl.style.display = 'block';
         btnLogin.disabled = false;
-        btnLogin.innerHTML = '포털 접속 (Sign In)';
+        btnLogin.innerHTML = '로그인';
       }
     });
 
@@ -422,7 +422,7 @@
       localStorage.setItem('admin_bp_onboarded', 'true');
       
       const successEl = document.getElementById('login-success');
-      successEl.textContent = '✅ 공진문 대표님 테스트 세션으로 즉시 이동합니다...';
+      successEl.textContent = '✅ 공진문 대표님 테스트 세션으로 즉시 이동해요...';
       successEl.style.display = 'block';
 
       setTimeout(() => {

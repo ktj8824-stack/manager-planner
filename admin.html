@@ -14,9 +14,9 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/calendar.css">
-  <link rel="stylesheet" href="css/admin.css?v=340">
-  <link rel="stylesheet" href="css/admin-v2.css?v=340">
-  <link rel="stylesheet" href="css/chat.css?v=340">
+  <link rel="stylesheet" href="css/admin.css?v=341">
+  <link rel="stylesheet" href="css/admin-v2.css?v=341">
+  <link rel="stylesheet" href="css/chat.css?v=341">
   <link rel="stylesheet" href="css/timeline.css">
   <style>
     /* ── 사용자 드롭다운 (헤더 화이트 테마 & 호버 인터랙션) ── */
@@ -305,12 +305,12 @@
       border-color: #4C57D6;
     }
   </style>
-<script src="js/site-config.js?v=340"></script>
-<script src="js/icons.js?v=340"></script>
+<script src="js/site-config.js?v=341"></script>
+<script src="js/icons.js?v=341"></script>
 </head>
 
 <body>
-<script src="js/splash.js?v=340"></script>
+<script src="js/splash.js?v=341"></script>
   <div class="app-container">
     <aside class="hq-sidebar" id="hq-sidebar">
       <button type="button" class="hq-drawer-x" id="hq-drawer-x" aria-label="메뉴 닫기">✕</button>
@@ -375,11 +375,11 @@
         <div class="header-title-group">
           <p id="hq-page-date" class="hq-page-date"></p>
           <h2 id="hq-page-title">오늘 현황</h2>
-          <p id="header-company-sub" hidden>통합 스케줄 관리</p>
+          <p id="header-company-sub" hidden>통합 일정 관리</p>
         </div>
         <div class="header-actions">
           <div class="hq-tools" role="group" aria-label="관리">
-            <button id="btn-header-settings" type="button" onclick="Admin.openAdminSettingsModal()" title="소속사/관리자 프로필 및 스케줄 역산 동선 설정">설정</button>
+            <button id="btn-header-settings" type="button" onclick="Admin.openAdminSettingsModal()" title="소속사/관리자 프로필 및 동선 기본값 설정">설정</button>
             <button id="btn-open-add-artist" type="button" onclick="Admin.openArtistModal()">아티스트</button>
             <button id="btn-open-add-manager" type="button" onclick="Admin.openManagerModal()">매니저</button>
             <button id="btn-open-add-vehicle" type="button" onclick="Admin.openVehicleModal()">차량</button>
@@ -404,7 +404,7 @@
 
               <div class="dropdown-sub-card" onclick="Admin.openSubscriptionModal()" title="구독 플랜 및 매니저 슬롯 관리">
                 <div class="sub-title">
-                  <span>💳 구독: Standard</span>
+                  <span>💳 구독: 기본</span>
                   <span style="font-size:12px; color:#818cf8; font-weight:700;">관리 &gt;</span>
                 </div>
                 <div class="sub-slots" id="header-slot-text">매니저 - / -자리</div>
@@ -484,7 +484,7 @@
             <line x1="12" y1="13" x2="12" y2="17" />
             <line x1="10" y1="15" x2="14" y2="15" />
           </svg>
-          신규 스케줄 등록
+          신규 일정 등록
         </h3>
         <div style="display: flex; align-items: center; gap: 10px;">
           <button type="button" class="btn-secondary" onclick="Admin.openPlaceModal()"
@@ -520,11 +520,11 @@
                 <line x1="16" y1="13" x2="8" y2="13" />
                 <line x1="16" y1="17" x2="8" y2="17" />
               </svg>
-              기본 스케줄 정보
+              기본 일정 정보
             </div>
 
             <div class="form-group" style="margin-bottom: 12px;">
-              <label class="form-label">스케줄명 (행사 / 방송 / 일정명) <span style="color:#ef4444;">*</span></label>
+              <label class="form-label">일정명 (행사 / 방송 / 일정명) <span style="color:#ef4444;">*</span></label>
               <input type="text" id="form-title" class="form-input" required placeholder="예: 뮤직뱅크 사전녹화, 브랜드 팝업 행사">
             </div>
 
@@ -535,7 +535,7 @@
                 <select id="form-artist" class="form-select" required></select>
               </div>
               <div class="form-group">
-                <label class="form-label">스케줄 분류 <span style="color:#ef4444;">*</span></label>
+                <label class="form-label">일정 분류 <span style="color:#ef4444;">*</span></label>
                 <select id="form-category" class="form-select" required>
                   <option value="music_show">음악방송 / 생방송</option>
                   <option value="broadcast">예능 / 라디오 / 인터뷰</option>
@@ -555,7 +555,7 @@
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <label class="form-label" style="margin:0; font-size:12px; font-weight:700; color:#14161A;">참여 멤버
                   선택</label>
-                <span style="font-size:12px; color:#5B616E;">개인/유닛 스케줄 시 해당 멤버를 선택하세요</span>
+                <span style="font-size:12px; color:#5B616E;">개인/유닛 일정 시 해당 멤버를 선택하세요</span>
               </div>
               <div id="form-member-chips" style="display:flex; gap:6px; flex-wrap:wrap;">
                 <!-- Dynamically populated member chips -->
@@ -565,9 +565,9 @@
 
             <div class="form-row"
               style="display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 10px; margin-bottom: 12px; position: relative;">
-              <!-- 1. 스케줄 일자 -->
+              <!-- 1. 일정 일자 -->
               <div class="form-group">
-                <label class="form-label">스케줄 일자 <span style="color:#ef4444;">*</span></label>
+                <label class="form-label">일정 일자 <span style="color:#ef4444;">*</span></label>
                 <input type="date" id="form-date" class="form-input" required style="font-weight: 700; height: 38px;">
               </div>
 
@@ -982,7 +982,7 @@
           style="background:#ffffff; border-radius:12px; padding:14px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; border:1px solid #cbd5e1; gap:16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
           <div style="flex:1; min-width:0;">
             <div style="font-weight:700; color:#14161A; font-size:13.5px;">소속 아티스트 및 그룹 목록</div>
-            <div style="font-size:12.5px; color:#5B616E; margin-top:2px;">등록된 아티스트의 스케줄, 담당 매니저 배정 및 케어(라이더) 카드를 관리합니다.
+            <div style="font-size:12.5px; color:#5B616E; margin-top:2px;">등록된 아티스트의 일정, 담당 매니저 배정 및 케어(라이더) 카드를 관리해요.
             </div>
           </div>
           <button type="button" class="btn-primary" onclick="Admin.openArtistFormModal()"
@@ -1077,7 +1077,7 @@
               <input type="text" id="new-artist-member-list" class="form-input" placeholder="예: 지수, 민아, 수연, 유진"
                 oninput="Admin.onMemberListInput(this.value)">
               <div style="font-size:12px; color:#5B616E; margin-top:4px;">
-                💡 멤버명을 입력해두면 스케줄 등록 시 <strong>'완전체'</strong> 또는 <strong>'개별 멤버 스케줄'</strong>을 지정할 수 있습니다.
+                💡 멤버명을 입력해두면 일정 등록 시 <strong>'완전체'</strong> 또는 <strong>'개별 멤버 일정'</strong>을 지정할 수 있어요.
               </div>
             </div>
 
@@ -1245,7 +1245,7 @@
               <line x1="12" y1="16" x2="12" y2="12"></line>
               <line x1="12" y1="8" x2="12.01" y2="8"></line>
             </svg>
-            각 매니저에게 소속 아티스트를 배정하면, 매니저 로그인 시 배정된 아티스트 일정만 격리됩니다.
+            각 매니저에게 소속 아티스트를 배정하면, 매니저 로그인 시 배정된 아티스트 일정만 격리돼요.
           </div>
           <button class="btn-secondary" onclick="Admin.openSubscriptionModal()"
             style="padding:6px 12px; font-size:12px; font-weight:700; border:1px solid #cbd5e1; background:#ffffff; color:#14161A; border-radius:8px; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
@@ -1411,7 +1411,7 @@
           style="background:#ffffff; border-radius:12px; padding:14px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; border:1px solid #cbd5e1; gap:16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
           <div style="flex:1; min-width:0;">
             <div style="font-weight:700; color:#14161A; font-size:13.5px;">소속 의전 및 이동 지원 차량 목록</div>
-            <div style="font-size:12.5px; color:#5B616E; margin-top:2px;">스케줄 이동에 투입되는 차량, 정원 및 배차 상태를 실시간으로 관리합니다.
+            <div style="font-size:12.5px; color:#5B616E; margin-top:2px;">일정 이동에 투입되는 차량, 정원 및 배차 상태를 실시간으로 관리해요.
             </div>
           </div>
           <button type="button" class="btn-primary" onclick="Admin.openVehicleFormModal()"
@@ -1592,7 +1592,7 @@
             <div class="form-group" style="margin-bottom: 12px;">
               <label class="form-label" style="font-weight:700; color:#14161A;">공지 제목 <span style="color:#5B616E; font-weight:400; font-size:12.5px;">(선택)</span></label>
               <input type="text" id="msg-title" class="form-input"
-                placeholder="예: [전사 공지] 아티스트 해외 투어 스케줄 지침"
+                placeholder="예: [전사 공지] 아티스트 해외 투어 일정 지침"
                 style="width:100%;">
             </div>
 
@@ -1666,20 +1666,20 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/notify.js?v=340"></script>
-  <script src="js/supabase-client.js?v=340"></script>
-  <script src="js/ask.js?v=340"></script>
-  <script src="js/share.js?v=340"></script>
-  <script src="js/chat.js?v=340"></script>
-  <script src="js/schedule-notify.js?v=340"></script>
-  <script src="js/api.js?v=340"></script>
-  <script src="js/venue.js?v=340"></script>
-  <script src="js/learn.js?v=340"></script>
-  <script src="js/draft-sheet.js?v=340"></script>
-  <script src="js/admin-data.js?v=340"></script>
-  <script src="js/admin.js?v=340"></script>
+  <script src="js/notify.js?v=341"></script>
+  <script src="js/supabase-client.js?v=341"></script>
+  <script src="js/ask.js?v=341"></script>
+  <script src="js/share.js?v=341"></script>
+  <script src="js/chat.js?v=341"></script>
+  <script src="js/schedule-notify.js?v=341"></script>
+  <script src="js/api.js?v=341"></script>
+  <script src="js/venue.js?v=341"></script>
+  <script src="js/learn.js?v=341"></script>
+  <script src="js/draft-sheet.js?v=341"></script>
+  <script src="js/admin-data.js?v=341"></script>
+  <script src="js/admin.js?v=341"></script>
   <script src="js/admin-v2.js?v=14"></script>
-  <script src="js/hq-expenses.js?v=340"></script>
+  <script src="js/hq-expenses.js?v=341"></script>
   <script src="js/admin-panels.js?v=7"></script>
 
 
@@ -1699,7 +1699,7 @@
             <line x1="16" y1="17" x2="8" y2="17"></line>
             <polyline points="10 9 9 9 8 9"></polyline>
           </svg>
-          스케줄 상세 정보
+          일정 상세 정보
         </h3>
         <button type="button" class="btn-secondary" data-close="modal-schedule-detail"
           style="padding: 7px 16px; font-size: 13.5px; font-weight: 800; cursor: pointer; border-radius: 8px; background: #ffffff; border: 1px solid #cbd5e1; color: #475569; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
@@ -1716,10 +1716,10 @@
         <button type="button" id="btn-delete-schedule"
           style="padding:8px 16px; border-radius:8px; border:1px solid #fca5a5; background:#fee2e2; color:#dc2626; font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s;"
           onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'">
-          스케줄 삭제
+          일정 삭제
         </button>
         <div style="display:flex; gap:8px;">
-          <button type="button" id="btn-retime-schedule" title="그 날짜·시간의 예측 교통으로 출발 시간을 다시 계산합니다"
+          <button type="button" id="btn-retime-schedule" title="그 날짜·시간의 예측 교통으로 출발 시간을 다시 계산해요"
             style="padding:8px 16px; border-radius:8px; border:1px solid #fde68a; background:#fffbeb; color:#b45309; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M12 7v5l3 2"/></svg>
             동선 다시 계산
@@ -1740,7 +1740,7 @@
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
             </svg>
-            스케줄 수정
+            일정 수정
           </button>
         </div>
       </div>
@@ -1840,7 +1840,7 @@
           </div>
           <div>
             <div style="font-size:16px; font-weight:800; color:#14161A;">환경 설정</div>
-            <div style="font-size:12px; color:#5B616E; font-weight:500;">소속사 프로필 및 스케줄 자동 역산 동선 기본값 관리</div>
+            <div style="font-size:12px; color:#5B616E; font-weight:500;">소속사 프로필 및 동선 자동 계산 기본값 관리</div>
           </div>
         </div>
         <button onclick="Admin.closeAdminSettingsModal()"
@@ -1874,7 +1874,7 @@
           </div>
         </div>
 
-        <!-- 2. 스케줄 역산 동선 버퍼 기본값 -->
+        <!-- 2. 일정 역산 동선 버퍼 기본값 -->
         <div
           style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
           <div
@@ -1882,7 +1882,7 @@
             동선 계산 기본값
           </div>
           <div style="font-size:12.5px; color:#5B616E; margin-bottom:12px; line-height:1.4;">
-            스케줄 등록 시 헤어/메이크업 샵, 이동 시간, 사전 대기 시간에 적용될 기본 분(minute) 단위 값입니다.
+            일정 등록 시 헤어/메이크업 샵, 이동 시간, 사전 대기 시간에 적용될 기본 분(minute) 단위 값이에요.
           </div>
           <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
             <div>
@@ -2019,7 +2019,7 @@
             <span style="color:#3b82f6; font-size:16px;">💾</span> 2. 데이터 백업 및 복원 (JSON)
           </div>
           <div style="font-size:12.5px; color:#5B616E; margin-bottom:12px; line-height:1.4;">
-            소속 아티스트, 매니저, 차량 및 스케줄 데이터를 JSON 파일로 안전하게 백업하거나 복원합니다.
+            소속 아티스트, 매니저, 차량 및 일정 데이터를 JSON 파일로 안전하게 백업하거나 복원해요.
           </div>
           <div style="display:flex; gap:10px;">
             <button type="button" onclick="Admin.exportAllDataBackup()"
@@ -2104,7 +2104,7 @@
       const cachedCompany = localStorage.getItem('admin_bp_company_name') || localStorage.getItem('bp_company_name');
       if (cachedCompany) {
         if (brandEl) brandEl.textContent = cachedCompany;
-        if (compSubEl) compSubEl.textContent = `${cachedCompany} 통합 스케줄 관리`;
+        if (compSubEl) compSubEl.textContent = `${cachedCompany} 통합 일정 관리`;
       }
 
       const cachedName = localStorage.getItem('admin_bp_user_name') || localStorage.getItem('bp_user_name');
@@ -2133,7 +2133,7 @@
           localStorage.setItem('admin_bp_company_name', finalComp);
           localStorage.setItem('reg_company_name', finalComp);
           if (brandEl) brandEl.textContent = finalComp;
-          if (compSubEl) compSubEl.textContent = `${finalComp} 통합 스케줄 관리`;
+          if (compSubEl) compSubEl.textContent = `${finalComp} 통합 일정 관리`;
         }
 
         // 대표자 이름 업데이트

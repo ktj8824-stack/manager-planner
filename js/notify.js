@@ -1,5 +1,5 @@
 /* 관리자 화면 알림: 브라우저 기본 alert() 팝업 대신 화면 아래에 잠깐 떴다 사라지는 알림을 보여줍니다.
-   (alert 는 화면을 멈추게 하지만 이 알림은 멈추지 않습니다) */
+   (alert 는 화면을 멈추게 하지만 이 알림은 멈추지 않아요) */
 (function () {
   'use strict';
   if (window.__notifyInstalled) return; window.__notifyInstalled = true;
@@ -13,7 +13,7 @@
   function show(msg) {
     const text = String(msg ?? '').trim(); if (!text) return;
     if (!wrap) { wrap = document.createElement('div'); wrap.className = 'np-wrap'; wrap.setAttribute('role', 'status'); wrap.setAttribute('aria-live', 'polite'); document.body.appendChild(wrap); }
-    const kind = /^(✅|✨|🎉)/.test(text) ? 'ok' : /^(⚠️|🔒)/.test(text) ? 'warn' : /^❌|실패|오류|못했|없습니다|해주세요|입력/.test(text) ? 'err' : '';
+    const kind = /^(✅|✨|🎉)/.test(text) ? 'ok' : /^(⚠️|🔒)/.test(text) ? 'warn' : /^❌|실패|오류|못했|없어요|없어요|않아요|해 ?주세요|입력/.test(text) ? 'err' : '';
     const t = document.createElement('div'); t.className = 'np-toast ' + kind; t.textContent = text;
     wrap.appendChild(t); requestAnimationFrame(() => t.classList.add('show'));
     const close = () => { t.classList.remove('show'); setTimeout(() => t.remove(), 220); };

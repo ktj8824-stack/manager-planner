@@ -35,9 +35,9 @@ const App = {
     window.addEventListener('hq-store-change', (event) => {
       const type = event.detail?.type;
       const rejected = type === 'SCHEDULE_SYNC_FAILED' && (event.detail?.payload?.failures || []).some(f => f.permanent);
-      if (rejected) U.toast('서버가 변경을 받아주지 않아 저장되지 않았어요. 서버 내용으로 되돌립니다.');
-      else if (type === 'SCHEDULE_SYNC_FAILED') U.toast('기기에 저장됨 · 연결되면 서버로 자동 전송합니다.');
-      else if (type === 'SUPABASE_SYNC_FAILED' && Date.now() - (this._lastSyncFailToast || 0) > 300000 && (this._lastSyncFailToast = Date.now())) U.toast('서버에서 최신 내용을 받아오지 못했어요. 잠시 후 자동으로 다시 시도합니다.');
+      if (rejected) U.toast('서버가 변경을 받아주지 않아 저장되지 않았어요. 서버 내용으로 되돌려요.');
+      else if (type === 'SCHEDULE_SYNC_FAILED') U.toast('기기에 저장됨 · 연결되면 서버로 자동 전송해요.');
+      else if (type === 'SUPABASE_SYNC_FAILED' && Date.now() - (this._lastSyncFailToast || 0) > 300000 && (this._lastSyncFailToast = Date.now())) U.toast('서버에서 최신 내용을 받아오지 못했어요. 잠시 후 자동으로 다시 시도해요.');
       else if (type === 'SCHEDULE_SYNC_PENDING') U.toast('기기에 저장됨 · 서버 전송 대기 중');
       this.refreshActiveScreens();
     });
@@ -58,11 +58,11 @@ const App = {
         if (!session) return;
         const result = await window.hqStore?.flushPendingSchedules();
         await window.hqStore?.syncFromSupabase();
-        if (result?.pending || result?.deferred) U.toast('기기에 저장됨 · 아직 동기화 대기 중인 일정이 있습니다.');
+        if (result?.pending || result?.deferred) U.toast('기기에 저장됨 · 아직 동기화 대기 중인 일정이 있어요.');
         else U.toast('서버 동기화를 확인했습니다.');
         this.refreshActiveScreens();
       } catch (error) {
-        U.toast('기기에 저장된 일정을 유지합니다. 서버 동기화를 다시 시도해주세요.');
+        U.toast('기기에 저장된 일정을 유지해요. 서버 동기화를 다시 시도해 주세요.');
       }
     });
     window.addEventListener('offline', () => {
@@ -82,7 +82,7 @@ const App = {
     } catch (error) {
       localStorage.removeItem('bp_logged_in');
       localStorage.removeItem('bp_user_role');
-      U.toast('로그인 권한을 확인할 수 없습니다. 다시 로그인해주세요.');
+      U.toast('로그인 권한을 확인할 수 없어요. 다시 로그인해 주세요.');
     }
 
     // 결제 후 돌아오는 주소(#profile)면 로그인 확인 뒤 내 정보로
@@ -132,7 +132,7 @@ const App = {
     if (typeof window.SupabaseClient !== 'undefined') {
       window.SupabaseClient.subscribeAll({
         onScheduleChange: async (payload) => {
-          console.log('⚡ [App] 실시간 스케줄 변경 감지:', payload);
+          console.log('⚡ [App] 실시간 일정 변경 감지:', payload);
           if (window.hqStore) {
             try { await window.hqStore.requestSync(500); } catch (e) { }
             this.refreshActiveScreens();
@@ -203,7 +203,7 @@ const App = {
 
   openNavi(name, lat, lng) {
     if (!lat || !lng) {
-      U.toast('목적지의 위치(좌표) 정보가 없어 길안내를 시작할 수 없습니다.');
+      U.toast('목적지의 위치(좌표) 정보가 없어 길안내를 시작할 수 없어요.');
       return;
     }
     const url = `https://map.kakao.com/link/to/${encodeURIComponent(name)},${lat},${lng}`;
@@ -465,14 +465,14 @@ const App = {
     window._searchAddress = async () => {
       const input = U.$('#addr-search-input');
       const keyword = input.value.trim();
-      if (!keyword) { U.toast('검색어를 입력해주세요'); return; }
+      if (!keyword) { U.toast('검색어를 입력해 주세요'); return; }
       
       const resContainer = U.$('#addr-search-results');
       resContainer.innerHTML = '<div style="padding:var(--sp-4);text-align:center;color:var(--text-light)">검색 중...</div>';
       
       const places = await TmapAPI.searchPlace(keyword, false);
       if (!places || places.length === 0) {
-        resContainer.innerHTML = '<div style="padding:var(--sp-4);text-align:center;color:var(--text-light)">검색 결과가 없습니다.</div>';
+        resContainer.innerHTML = '<div style="padding:var(--sp-4);text-align:center;color:var(--text-light)">검색 결과가 없어요.</div>';
         return;
       }
       
@@ -552,7 +552,7 @@ const App = {
       <div style="flex:1; min-width:0;">
         <div style="font-weight:700; font-size:14px; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
           <span>${noti.isUrgent ? '본사 긴급 공지' : '본사 알림'}</span>
-          <span style="font-size:12px; font-weight:700; padding:1px 6px; border-radius:10px; ${noti.isUrgent ? 'background:#ef4444; color:#fff;' : 'background:#3B45C4; color:#fff;'}">${noti.isUrgent ? 'URGENT' : 'NOTICE'}</span>
+          <span style="font-size:12px; font-weight:700; padding:1px 6px; border-radius:10px; ${noti.isUrgent ? 'background:#ef4444; color:#fff;' : 'background:#3B45C4; color:#fff;'}">${noti.isUrgent ? '긴급' : '공지'}</span>
         </div>
         <div style="line-height:1.45; font-size:14px; color:#f1f5f9; word-break:break-word;">${safeContent}</div>
         <div style="font-size:12px; color:#94a3b8; margin-top:6px;">${esc(timeStr)}</div>
@@ -649,9 +649,9 @@ const App = {
     const isDevHost = ['localhost', '127.0.0.1', ''].includes(location.hostname) || location.protocol === 'file:';
     if ((!notices || notices.length === 0) && isDevHost) {
       notices = [
-        { id: 'n1', title: '📢 [전사 공지] 아티스트 해외 투어 스케줄 및 의전 동선 지침', content: '공항 출입국 및 현지 의전 차량 동선 사전 점검 필수입니다. 비상 연락망을 항시 유지해 주세요.', date: '2025-10-15', urgent: true },
-        { id: 'n2', title: '🚗 [운영] 법인 차량 가을철 정기 점검 및 소모품 교체 안내', content: '지정 정비소(성수/강남) 방문 후 영수증 정산 등록 부탁드립니다.', date: '2025-10-12', urgent: false },
-        { id: 'n3', title: '🎬 [방송] 음악방송 사전녹화 인원 출입 비표 발급 공지', content: 'KBS 뮤직뱅크 및 SBS 인기가요 출입 비표 명단이 본사 관제 포털에 업데이트되었습니다.', date: '2025-10-10', urgent: false }
+        { id: 'n1', title: '📢 [전사 공지] 아티스트 해외 투어 일정 및 의전 동선 지침', content: '공항 출입국 및 현지 의전 차량 동선 사전 점검 필수예요. 비상 연락망을 항시 유지해 주세요.', date: '2025-10-15', urgent: true },
+        { id: 'n2', title: '🚗 [운영] 법인 차량 가을철 정기 점검 및 소모품 교체 안내', content: '지정 정비소(성수/강남) 방문 후 영수증 정산 등록 부탁드려요.', date: '2025-10-12', urgent: false },
+        { id: 'n3', title: '🎬 [방송] 음악방송 사전녹화 인원 출입 비표 발급 공지', content: 'KBS 뮤직뱅크 및 SBS 인기가요 출입 비표 명단이 본사 웹에 업데이트됐어요.', date: '2025-10-10', urgent: false }
       ];
     }
 
@@ -672,7 +672,7 @@ const App = {
           </div>
           
           <div style="display:flex; flex-direction:column; gap:12px; overflow-y:auto; max-height:55vh;">
-            ${(!notices || notices.length === 0) ? '<div style="text-align:center;padding:36px 12px;color:var(--text-400);font-size:14px;">등록된 공지가 없습니다.</div>' : ''}
+            ${(!notices || notices.length === 0) ? '<div style="text-align:center;padding:36px 12px;color:var(--text-400);font-size:14px;">등록된 공지가 없어요.</div>' : ''}
             ${notices.map(n => `
               <div style="background:var(--bg-card); border:1px solid ${n.urgent ? 'rgba(239,68,68,0.35)' : 'var(--border-subtle)'}; border-radius:var(--r-lg); padding:14px; position:relative;">
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
@@ -726,7 +726,7 @@ const App = {
               </div>
               <div style="flex:1;">
                 <div style="font-size:14px;font-weight:700;color:var(--text-100);">현장 돌발상황 / 사고 긴급 보고</div>
-                <div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">본사 관제 포털로 실시간 긴급 푸시 전송</div>
+                <div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">본사 웹로 실시간 긴급 푸시 전송</div>
               </div>
               <span style="background:rgba(245,158,11,0.12);color:#f59e0b;font-size:12px;font-weight:700;padding:3px 9px;border-radius:6px;white-space:nowrap;">보고서</span>
             </div>
@@ -748,18 +748,18 @@ const App = {
     const note = (t) => { box.innerHTML = `<div style="font-size:13px;line-height:1.55;color:var(--text-400);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:14px;padding:12px 14px;">${esc(t)}</div>`; };
     try {
       const sc = window.SupabaseClient;
-      if (!sc?.client || !sc.currentUser) { note('서버에 연결되면 본사 연락처가 표시됩니다. 아래 "긴급 보고"로 먼저 알릴 수 있습니다.'); return; }
+      if (!sc?.client || !sc.currentUser) { note('서버에 연결되면 본사 연락처가 표시돼요. 아래 "긴급 보고"로 먼저 알릴 수 있어요.'); return; }
       const { data, error } = await sc.client.from('profiles').select('name, phone, role').in('role', ['ceo', 'hq_admin']);
       if (error) throw error;
       const rows = (data || []).filter(p => p.phone && String(p.phone).replace(/[^0-9+]/g, '').length >= 8);
-      if (!rows.length) { note('본사 연락처가 아직 등록되지 않았습니다. 본사 관리자에게 프로필에 전화번호를 등록해 달라고 요청하세요. 지금은 아래 "긴급 보고"로 알릴 수 있습니다.'); return; }
+      if (!rows.length) { note('본사 연락처가 아직 등록되지 않았어요. 본사 관리자에게 프로필에 전화번호를 등록해 달라고 요청하세요. 지금은 아래 "긴급 보고"로 알릴 수 있어요.'); return; }
       box.innerHTML = rows.map(p => {
         const tel = String(p.phone).replace(/[^0-9+]/g, '');
         return `<a href="tel:${esc(tel)}" style="text-decoration:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
           <div style="flex:1;"><div style="font-size:14px;font-weight:700;color:#f87171;">📞 ${esc(p.name || '본사')} ${p.role === 'ceo' ? '(대표)' : '(관리자)'}</div>
           <div style="font-size:13px;color:var(--text-400);margin-top:2px;">${esc(p.phone)} · 누르면 전화 연결</div></div></a>`;
       }).join('');
-    } catch (e) { note('본사 연락처를 불러오지 못했습니다. 아래 "긴급 보고"를 이용해 주세요.'); }
+    } catch (e) { note('본사 연락처를 불러오지 못했어요. 아래 "긴급 보고"를 이용해 주세요.'); }
   }
 };
 

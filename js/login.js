@@ -34,7 +34,7 @@ const Login = {
         <div class="lg-head">
           <img src="icon.svg" alt="" class="lg-logo">
           <h1 class="login-title">로드플래너</h1>
-          <p class="login-subtitle">현장 매니저를 위한 스케줄 · 동선 앱</p>
+          <p class="login-subtitle">현장 매니저를 위한 일정 · 동선 앱</p>
         </div>
 
         <!-- 1) 어떻게 쓰시나요? -->
@@ -85,7 +85,7 @@ const Login = {
         <div class="lg-foot">
           <a href="${typeof U !== 'undefined' && U.getHQLoginUrl ? U.getHQLoginUrl() : 'admin-login.html'}" class="lg-hq">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
-            본사 관리자라면 관제 포털로
+            본사 관리자라면 본사 웹로
           </a>
           <div class="lg-legal"><a href="terms.html" target="_blank">이용약관</a> · <a href="privacy.html" target="_blank">개인정보처리방침</a> · <a href="location-terms.html" target="_blank">위치 이용약관</a></div>
         </div>
@@ -113,16 +113,16 @@ const Login = {
     button.disabled = true;
     button.textContent = '로그인 확인 중...';
     try {
-      if (!window.SupabaseClient?.isConfigured) throw new Error('로그인 서버에 연결할 수 없습니다. 연결 상태를 확인해주세요.');
+      if (!window.SupabaseClient?.isConfigured) throw new Error('로그인 서버에 연결할 수 없어요. 연결 상태를 확인해 주세요.');
       const result = await window.SupabaseClient.signIn(email, password);
       this.finishLogin('supabase', { ...result.profile, id: result.user.id, email: result.user.email });
     } catch (error) {
       const raw = String(error?.message || '');
-      let msg = '로그인하지 못했습니다. 이메일·비밀번호, 이메일 인증 및 계정 권한을 확인해주세요.';
-      if (/email not confirmed/i.test(raw)) msg = '이메일 인증이 완료되지 않은 계정입니다. 관리자에게 문의해주세요. (이메일 인증 설정)';
-      else if (/invalid login credentials/i.test(raw)) msg = '이메일 또는 비밀번호가 올바르지 않습니다.';
-      else if (/profile|프로필|권한/i.test(raw)) msg = '계정 권한 정보를 확인하지 못했습니다. 관리자에게 문의해주세요.';
-      else if (/rate limit|too many/i.test(raw)) msg = '시도 횟수가 많습니다. 잠시 후 다시 시도해주세요.';
+      let msg = '로그인하지 못했어요. 이메일·비밀번호, 이메일 인증 및 계정 권한을 확인해 주세요.';
+      if (/email not confirmed/i.test(raw)) msg = '이메일 인증이 완료되지 않은 계정이에요. 관리자에게 문의해 주세요. (이메일 인증 설정)';
+      else if (/invalid login credentials/i.test(raw)) msg = '이메일 또는 비밀번호가 올바르지 않아요.';
+      else if (/profile|프로필|권한/i.test(raw)) msg = '계정 권한 정보를 확인하지 못했어요. 관리자에게 문의해 주세요.';
+      else if (/rate limit|too many/i.test(raw)) msg = '시도 횟수가 많아요. 잠시 후 다시 시도해 주세요.';
       if (navigator.onLine === false || /failed to fetch|network|load failed/i.test(raw)) msg = '인터넷 연결을 확인해 주세요.';
       console.warn('로그인 실패:', raw);
       errorEl.textContent = msg;
@@ -147,8 +147,8 @@ const Login = {
 
   async startOAuth(provider) {
     try {
-      if (!window.SupabaseClient?.isConfigured || !['google', 'kakao'].includes(provider)) throw new Error('로그인 서버 연결이 필요합니다.');
-      if (!['http:', 'https:'].includes(window.location.protocol)) throw new Error('소셜 로그인은 앱 서버 주소에서 이용해주세요.');
+      if (!window.SupabaseClient?.isConfigured || !['google', 'kakao'].includes(provider)) throw new Error('로그인 서버 연결이 필요해요.');
+      if (!['http:', 'https:'].includes(window.location.protocol)) throw new Error('소셜 로그인은 앱 서버 주소에서 이용해 주세요.');
       // 서버에서 아직 켜지지 않은 로그인이면 오류 화면으로 보내지 않고 안내만
       try {
         const sc = window.SupabaseClient;
@@ -180,7 +180,7 @@ const Login = {
     const verified = window.SupabaseClient?.currentUser;
     const profile = window.SupabaseClient?.currentProfile;
     if (provider !== 'supabase' || !verified || !profile || user.id !== verified.id) {
-      throw new Error('검증된 로그인 세션이 필요합니다.');
+      throw new Error('검증된 로그인 세션이 필요해요.');
     }
     user = { ...profile, id: verified.id, email: verified.email };
     const mgrId = user.id;
@@ -221,7 +221,7 @@ const Login = {
     }
 
     try { sessionStorage.removeItem('rp_fresh_login'); } catch (e) { }
-    U.toast(`✅ ${user.name}님 환영합니다!`);
+    U.toast(`✅ ${user.name}님 환영해요!`);
     localStorage.setItem('bp_onboarded', 'true');
     if (window.hqStore) window.hqStore.flushPendingSchedules()
       .then(() => window.hqStore.syncFromSupabase())
@@ -236,7 +236,7 @@ const Login = {
       })
       .then(() => indie && window.Plan ? Plan.refresh() : null)
       .then(() => App.refreshActiveScreens())
-      .catch(() => U.toast('기기 저장 데이터를 유지합니다. 서버 동기화를 확인해주세요.'));
+      .catch(() => U.toast('기기 저장 데이터를 유지해요. 서버 동기화를 확인해 주세요.'));
     // 화면·실시간 연결에서 오류가 나도 로그인 자체는 성공으로 처리 (로그인 화면에 오류가 남지 않게)
     try { App.renderNav(); } catch (e) { console.warn('메뉴 표시 오류', e); }
     try { App.initRealtimeSync(); } catch (e) { console.warn('실시간 연결 오류', e); }
@@ -264,7 +264,7 @@ const Login = {
     localStorage.setItem('bp_user_role', 'ceo');
     localStorage.setItem('bp_assigned_artists', JSON.stringify(assigned));
     localStorage.setItem('bp_onboarded', 'true');
-    U.toast('✅ 공진문 대표님 테스트 모드로 진입했습니다.');
+    U.toast('✅ 공진문 대표님 테스트 모드로 진입했어요.');
     if (typeof App !== 'undefined') {
       App.renderNav();
       App.navigate('home');

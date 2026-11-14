@@ -112,7 +112,7 @@ const Onboarding = {
     localStorage.setItem('bp_home', homeVal);
     localStorage.setItem('bp_office', officeVal);
     
-    U.toast('✅ 설정이 완료되었습니다!');
+    U.toast('✅ 설정이 완료됐어요!');
     
     setTimeout(() => {
       App.navigate('home');

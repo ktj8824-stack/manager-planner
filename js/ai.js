@@ -2,7 +2,7 @@
    로드플래너 — 로드비서 '로디' (버디플래너 로드비서와 같은 구조)
 
    앱 → 서버 함수(roadplanner-ai, 버디플래너 프로젝트) → Claude
-   - 말·글·사진(스케줄표, 콜시트)으로 스케줄 등록을 '제안' → 확인 카드 → 누르면 등록 창이 채워져 열림
+   - 말·글·사진(일정표, 콜시트)으로 일정 등록을 '제안' → 확인 카드 → 누르면 등록 창이 채워져 열림
    - 현장 주변 밥집·카페·주차장은 서버가 카카오에서 찾은 실제 장소만 카드로 보여줌
    - 저장·동선 계산은 기존 등록 창(Home.submitScheduleFromModal)이 그대로 함
    ========================================= */
@@ -44,8 +44,8 @@ const RoadAI = {
           <div class="rpai-head-l">
             <div class="rpai-ava" aria-hidden="true">🤖</div>
             <div style="min-width:0;">
-              <div class="rpai-title">로드비서 로디 <span class="rpai-badge">BETA</span></div>
-              <div class="rpai-sub">스케줄 등록 · 스케줄표 사진 · 현장 주변 찾기</div>
+              <div class="rpai-title">로드비서 로디 <span class="rpai-badge">시험 운영</span></div>
+              <div class="rpai-sub">일정 등록 · 일정표 사진 · 현장 주변 찾기</div>
             </div>
           </div>
           <button class="rpai-iconbtn" onclick="RoadAI.clearChat()" aria-label="대화 지우기" title="대화 지우기">
@@ -58,7 +58,7 @@ const RoadAI = {
           <div id="rpai-lock"></div>
           <input type="file" id="rpai-photo" accept="image/*" style="display:none" onchange="RoadAI.onPhoto(this)" />
           <div class="rpai-bar" id="rpai-bar">
-            <button class="rpai-iconbtn" onclick="RoadAI.pickPhoto()" aria-label="스케줄표 사진 올리기" title="스케줄표·콜시트 사진">
+            <button class="rpai-iconbtn" onclick="RoadAI.pickPhoto()" aria-label="일정표 사진 올리기" title="일정표·콜시트 사진">
               <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             </button>
             <button class="rpai-iconbtn" id="rpai-mic" onclick="RoadAI.toggleListening()" aria-label="말로 하기" title="말로 하기">
@@ -85,11 +85,11 @@ const RoadAI = {
     lock.innerHTML = ok ? '' : demo ? `
       <div class="rpai-lock">
         <b>둘러보기에서는 AI를 쓸 수 없어요</b>
-        <span>회사 계정으로 로그인하면 말 한마디로 스케줄 등록, 스케줄표 사진 읽기, 현장 주변 찾기를 할 수 있어요.</span>
+        <span>회사 계정으로 로그인하면 말 한마디로 일정 등록, 일정표 사진 읽기, 현장 주변 찾기를 할 수 있어요.</span>
       </div>` : `
       <div class="rpai-lock">
         <b>로그인하면 로드비서를 쓸 수 있어요</b>
-        <span>말 한마디로 스케줄 등록, 스케줄표 사진 읽기, 현장 주변 찾기까지.</span>
+        <span>말 한마디로 일정 등록, 일정표 사진 읽기, 현장 주변 찾기까지.</span>
         <button onclick="App.navigate('login')">로그인하기</button>
       </div>`;
     const left = U.$('#rpai-left');
@@ -108,8 +108,8 @@ const RoadAI = {
     return {
       id: 'welcome', from: 'bot', time: this.now(), chips: true,
       html: `${name ? esc(name) + '님, ' : ''}안녕하세요! 매니저 업무를 돕는 <b>로드비서 로디</b>예요.<br><br>
-        <b>"내일 2시 KBS 뮤뱅 사녹"</b>처럼 말하면 스케줄 등록 창을 채워 드리고,
-        📷 버튼으로 <b>스케줄표·콜시트 사진</b>을 올리면 읽어서 정리해 드려요. 현장 근처 밥집·카페·주차장도 찾아 드릴게요.`
+        <b>"내일 2시 KBS 뮤뱅 사녹"</b>처럼 말하면 일정 등록 창을 채워 드리고,
+        📷 버튼으로 <b>일정표·콜시트 사진</b>을 올리면 읽어서 정리해 드려요. 현장 근처 밥집·카페·주차장도 찾아 드릴게요.`
     };
   },
 
@@ -162,12 +162,12 @@ const RoadAI = {
   chipsHTML() {
     const c = (label, say) => `<button class="rpai-chip" onclick="RoadAI.ask(${escJs(say)})">${esc(label)}</button>`;
     return `<div class="rpai-chips-label">💡 눌러서 바로 물어보기</div><div class="rpai-chips">
-      ${c('📅 내일 스케줄 알려줘', '내일 스케줄이랑 출발 시간 알려줘')}
-      ${c('🗓️ 이번 주 일정 정리', '이번 주 스케줄 날짜순으로 정리해줘')}
-      ${c('➕ 말로 스케줄 등록', '토요일 오후 6시 한양대 축제 일정 잡아줘')}
-      <button class="rpai-chip" onclick="RoadAI.pickPhoto()">📷 스케줄표 사진으로 등록</button>
-      ${c('🍚 다음 현장 근처 밥집', '다음 스케줄 현장 근처에서 빨리 먹을 수 있는 밥집 찾아줘')}
-      ${c('🅿️ 현장 근처 주차장', '다음 스케줄 현장 근처 주차장 찾아줘')}
+      ${c('📅 내일 일정 알려줘', '내일 일정이랑 출발 시간 알려줘')}
+      ${c('🗓️ 이번 주 일정 정리', '이번 주 일정 날짜순으로 정리해줘')}
+      ${c('➕ 말로 일정 등록', '토요일 오후 6시 한양대 축제 일정 잡아줘')}
+      <button class="rpai-chip" onclick="RoadAI.pickPhoto()">📷 일정표 사진으로 등록</button>
+      ${c('🍚 다음 현장 근처 밥집', '다음 일정 현장 근처에서 빨리 먹을 수 있는 밥집 찾아줘')}
+      ${c('🅿️ 현장 근처 주차장', '다음 일정 현장 근처 주차장 찾아줘')}
     </div>`;
   },
 
@@ -305,12 +305,12 @@ const RoadAI = {
       .map(m => ({
         role: m.from === 'user' ? 'user' : 'assistant',
         content: m.from === 'user'
-          ? [m.hadImage ? '[스케줄표 사진 첨부]' : '', m.text || ''].filter(Boolean).join(' ')
+          ? [m.hadImage ? '[일정표 사진 첨부]' : '', m.text || ''].filter(Boolean).join(' ')
           : (m.plain || String(m.html || '').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, ''))
       }));
   },
 
-  /** AI에게 줄 내 정보 (앞으로 2주 스케줄, 계산된 출발 시각 포함) */
+  /** AI에게 줄 내 정보 (앞으로 2주 일정, 계산된 출발 시각 포함) */
   context() {
     const pad = n => String(n).padStart(2, '0');
     const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -324,7 +324,7 @@ const RoadAI = {
       .filter(s => s && s.date && s.date >= today && s.date <= until && !['취소', 'cancelled'].includes(s.status))
       .sort((a, b) => (a.date + (a.startTime || '')).localeCompare(b.date + (b.startTime || '')))
       .slice(0, 30);
-    // 목록 순서(idx) ↔ 스케줄 id 짝 — AI가 '변경' 제안을 하면 이 짝으로 어느 스케줄인지 찾음
+    // 목록 순서(idx) ↔ 일정 id 짝 — AI가 '변경' 제안을 하면 이 짝으로 어느 일정인지 찾음
     this._lastIds = picked.map(s => s.id);
     const upcoming = picked
       .map((s, idx) => {
@@ -388,9 +388,9 @@ const RoadAI = {
     const addr = a.address || a.found?.addr || '';
     const row = (k, v) => v ? `<span>${esc(k)}</span><b>${esc(v)}</b>` : '';
     return `<div class="rpai-card">
-      <div class="rpai-card-title">📅 스케줄 등록</div>
+      <div class="rpai-card-title">📅 일정 등록</div>
       <div class="rpai-kv">
-        ${row('스케줄', a.title)}
+        ${row('일정', a.title)}
         ${row('날짜', when)}
         ${row('시간', a.start + (a.end ? ' ~ ' + a.end : ''))}
         ${row('장소', a.place)}
@@ -402,13 +402,13 @@ const RoadAI = {
       </div>
       ${a.status === 'done' ? `<p class="rpai-note">등록 창을 열었어요. 저장하지 않고 닫았다면 다시 열 수 있어요.</p><div class="rpai-btns"><button class="rpai-btn ghost" onclick="RoadAI.confirm('${msgId}',${i})">등록 창 다시 열기</button></div>`
         : done ? `<div class="rpai-btns"><button class="rpai-btn done" disabled>취소됨</button></div>`
-        : `<p class="rpai-note">버튼을 누르면 등록 창이 채워져 열려요. 확인 후 [스케줄 등록 완료]를 눌러 주세요.</p>
+        : `<p class="rpai-note">버튼을 누르면 등록 창이 채워져 열려요. 확인 후 [일정 등록 완료]를 눌러 주세요.</p>
            <div class="rpai-btns"><button class="rpai-btn" onclick="RoadAI.confirm('${msgId}',${i})">등록 창 열기</button><button class="rpai-btn ghost" onclick="RoadAI.dismiss('${msgId}',${i})">취소</button></div>`}
     </div>`;
   },
 
   isHQ() { const r = localStorage.getItem('bp_user_role') || 'manager'; return r === 'ceo' || r === 'hq_admin'; },
-  // 스케줄을 직접 고칠 수 있는 사람: 본사, 그리고 자기 일정만 있는 개인 매니저
+  // 일정을 직접 고칠 수 있는 사람: 본사, 그리고 자기 일정만 있는 개인 매니저
   canEdit() { return this.isHQ() || (typeof Plan !== 'undefined' && Plan.isIndie()); },
 
   _md(ymd) {
@@ -417,22 +417,22 @@ const RoadAI = {
     return ymd || '';
   },
 
-  /** 기존 스케줄 변경·취소 확인 카드 */
+  /** 기존 일정 변경·취소 확인 카드 */
   updateHTML(a, msgId, i) {
     const b = a.before || {};
     const done = a.status !== 'pending';
     const row = (k, v) => v ? `<span>${esc(k)}</span><b>${v}</b>` : '';
     const arrow = (from, to) => to && to !== from ? `${esc(from || '-')} → <span style="color:#3B45C4">${esc(to)}</span>` : esc(from || '');
     const hq = this.canEdit();
-    const title = a.cancel ? '🚫 스케줄 취소' : '✏️ 스케줄 변경';
+    const title = a.cancel ? '🚫 일정 취소' : '✏️ 일정 변경';
     const doneLabel = a.status === 'done' ? (hq ? (a.cancel ? '✓ 처리했어요' : '✓ 수정 창을 열었어요') : '✓ 로드톡을 열었어요') : '취소됨';
     const note = hq
-      ? (a.cancel ? '버튼을 누르면 이 스케줄을 \'취소\'로 바꿀지 한 번 더 물어봐요. 기록은 남고 담당 매니저에게 알림이 가요.' : '버튼을 누르면 수정 창이 바뀐 값으로 채워져 열려요. 확인 후 저장해 주세요.')
-      : '현장 매니저는 스케줄을 직접 바꿀 수 없어요. 버튼을 누르면 로드톡이 열리고 요청 문장이 복사돼요.';
+      ? (a.cancel ? '버튼을 누르면 이 일정을 \'취소\'로 바꿀지 한 번 더 물어봐요. 기록은 남고 담당 매니저에게 알림이 가요.' : '버튼을 누르면 수정 창이 바뀐 값으로 채워져 열려요. 확인 후 저장해 주세요.')
+      : '현장 매니저는 일정을 직접 바꿀 수 없어요. 버튼을 누르면 로드톡이 열리고 요청 문장이 복사돼요.';
     return `<div class="rpai-card">
       <div class="rpai-card-title">${title}</div>
       <div class="rpai-kv">
-        ${row('스케줄', esc(b.title))}
+        ${row('일정', esc(b.title))}
         ${row('장소', esc(b.place))}
         ${row('날짜', arrow(this._md(b.date), a.new_date ? this._md(a.new_date) : ''))}
         ${a.cancel ? '' : row('시간', arrow(b.start + (b.end ? ' ~ ' + b.end : ''), (a.new_start || a.new_end) ? (a.new_start || b.start) + ((a.new_end || b.end) ? ' ~ ' + (a.new_end || b.end) : '') : ''))}
@@ -450,13 +450,13 @@ const RoadAI = {
     const id = (m.ids || [])[a.idx];
     const sch = id && (window.hqStore?.getSchedules?.() || []).find(s => s.id === id);
     const b = a.before || {};
-    if (!sch || (b.title && !sch.isSecret && !String(sch.title || '').startsWith(b.title))) { U.toast('그 스케줄을 찾지 못했어요. 스케줄 화면에서 직접 확인해 주세요.'); return; }
+    if (!sch || (b.title && !sch.isSecret && !String(sch.title || '').startsWith(b.title))) { U.toast('그 일정을 찾지 못했어요. 일정 화면에서 직접 확인해 주세요.'); return; }
     const req = a.cancel
-      ? `[변경 요청] ${this._md(sch.date)} ${sch.startTime} "${sch.title}" 스케줄이 취소됐어요.${a.reason ? ' (' + a.reason + ')' : ''}`
+      ? `[변경 요청] ${this._md(sch.date)} ${sch.startTime} "${sch.title}" 일정이 취소됐어요.${a.reason ? ' (' + a.reason + ')' : ''}`
       : `[변경 요청] ${this._md(sch.date)} ${sch.startTime} "${sch.title}" → ${a.new_date ? this._md(a.new_date) + ' ' : ''}${a.new_start || sch.startTime}${a.new_end ? '~' + a.new_end : ''}로 바뀌었어요.${a.reason ? ' (' + a.reason + ')' : ''}`;
     if (!this.canEdit()) {
       try { await navigator.clipboard.writeText(req); U.toast('요청 문장을 복사했어요. 로드톡에 붙여 넣어 보내 주세요.'); }
-      catch (e) { U.toast(esc(req), 6000); }   // 요청 문장에 스케줄명·AI 글이 들어가서 글자 처리
+      catch (e) { U.toast(esc(req), 6000); }   // 요청 문장에 일정명·AI 글이 들어가서 글자 처리
       if (typeof App !== 'undefined' && App.openMessages) App.openMessages();
       a.status = 'done'; this.save(); this._redraw(m);
       return;
@@ -504,7 +504,7 @@ const RoadAI = {
     a.status = 'dismissed'; this.save(); this._redraw(m);
   },
 
-  /** 기존 스케줄 등록 창을 AI가 읽은 내용으로 채워서 열기 (저장·동선 계산은 기존 흐름) */
+  /** 기존 일정 등록 창을 AI가 읽은 내용으로 채워서 열기 (저장·동선 계산은 기존 흐름) */
   confirm(msgId, i) {
     const { m, a } = this._find(msgId, i);
     if (a && a.type === 'update') return this.confirmUpdate(m, a);

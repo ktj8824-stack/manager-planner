@@ -44,10 +44,10 @@ function addWakeStep(timeline) {
 
 // 기본 회사 구독 정보 (월 10만 / 기본 2인 포함 + 1인당 월 2만 추가)
 const DEFAULT_SUBSCRIPTION = {
-  get companyName() { return localStorage.getItem('bp_company_name') || 'My Entertainment'; },
+  get companyName() { return localStorage.getItem('bp_company_name') || '우리 회사'; },
   get ceoName() { return localStorage.getItem('bp_user_name') || '대표자'; },
   bizNumber: '-',
-  planName: 'Enterprise Standard',
+  planName: '기업 기본',
   baseFee: 100000,          // 기본 월 10만 원
   baseSlots: 2,             // 기본 2명 포함
   additionalSlotFee: 20000, // 추가 1인당 월 2만 원
@@ -140,7 +140,7 @@ const DEFAULT_VEHICLES = [
   { id: 'veh_5', name: '벤츠 스프린터 투어 5호차', number: '90마 9999', type: '대형 밴', seats: 13, driver: '김태현 본부장', defaultArtist: '공용 (투어/행사)', status: '운행가능', notes: '전국 투어/대형 행사 스태프 전용 버스' }
 ];
 
-// 스케줄 표준 카테고리 (8대 분류)
+// 일정 표준 카테고리 (8대 분류)
 const SCHEDULE_CATEGORIES = {
   MUSIC_SHOW: { id: 'music_show', name: '음악방송 / 생방송', color: '#4C57D6', icon: '📺' },
   BROADCAST: { id: 'broadcast', name: '예능 / 라디오 / 인터뷰', color: '#3b82f6', icon: '🎙️' },
@@ -152,7 +152,7 @@ const SCHEDULE_CATEGORIES = {
   MEETING: { id: 'meeting', name: '미팅 / 기획회의 / 기타', color: '#5B616E', icon: '💼' }
 };
 
-// 기본 데모 스케줄 생성 (2026년 10월 당월 오늘 일정 + 11월 메인 캘린더 기준 총 14건 완벽 동기화)
+// 기본 데모 일정 생성 (2026년 10월 당월 오늘 일정 + 11월 메인 캘린더 기준 총 14건 완벽 동기화)
 function getInitialMockSchedules() {
   const schedules = [
     // [10월 당월 일정 - 오늘 및 이번 주 현장 일정]
@@ -210,7 +210,7 @@ function getInitialMockSchedules() {
       departure: { place: '자택 픽업', time: '07:00' },
       outfit: '극중 수트 및 캐주얼 코트 2벌',
       supplies: '대본집 3~4권, 디카페인 온커피 텀블러',
-      notes: '스튜디오 실내 세트 촬영 10:00부터 슛 들어갑니다.'
+      notes: '스튜디오 실내 세트 촬영 10:00부터 슛 들어가요.'
     },
     // [11월 메인 일정 - 12건 컴백 및 활동 풀 캘린더]
     // 1. 11월 2일 (월) - 유나 신곡 녹음 및 믹싱
@@ -710,7 +710,7 @@ class HQDataStore {
     const schKey = this.getUserStorageKey(HQ_STORAGE_KEYS.SCHEDULES);
     const subKey = this.getUserStorageKey(HQ_STORAGE_KEYS.SUBSCRIPTION);
 
-    // 🔒 테스트 스케줄 및 목업 데이터는 CEO 및 KJM 엔터 계정에 폭넓게 적용
+    // 🔒 테스트 일정 및 목업 데이터는 CEO 및 KJM 엔터 계정에 폭넓게 적용
     const isTargetTestAccount = DEMO_ALLOWED && (rawEmail === 'ceo@kjm-ent.com' || !rawEmail || artKey.includes('kjm_ent'));   // 데모 데이터는 테스트 대표 계정에만
 
     // 헬퍼: 타깃 테스트 계정이 아닌 다른 계정은 빈 데이터로 시작
@@ -744,7 +744,7 @@ class HQDataStore {
       if (isTargetTestAccount) localStorage.setItem(HQ_STORAGE_KEYS.VEHICLES, JSON.stringify(initialVeh));
     }
 
-    // 스케줄 데이터 초기화 및 구버전(11월 미포함) 자동 마이그레이션
+    // 일정 데이터 초기화 및 구버전(11월 미포함) 자동 마이그레이션
     const existingRaw = localStorage.getItem(schKey);
     let needScheduleRefresh = false;
     if (!existingRaw || existingRaw === '[]' || existingRaw === 'null') {
@@ -847,7 +847,7 @@ class HQDataStore {
   // 영업 / CEO 데모 데이터 전체 강제 리셋 및 세팅
   async seedDemoData() {
     if (!DEMO_ALLOWED) return; // 실제 배포 주소에서는 예시 자료를 만들지 않음
-    console.log('🌱 영업 및 프레젠테이션용 풀 데모 데이터를 세팅합니다...');
+    console.log('🌱 영업 및 프레젠테이션용 풀 데모 데이터를 세팅해요...');
     this.saveArtists(DEFAULT_ARTISTS);
     this.saveManagers(DEFAULT_MANAGERS);
     this.saveVehicles(DEFAULT_VEHICLES);
@@ -864,7 +864,7 @@ class HQDataStore {
         console.error('❌ Supabase 데모 데이터 세팅 일부 실패 (로컬 유지):', err);
       }
     }
-    alert('✨ 데모용 전체 데이터(아티스트, 매니저, 차량, 스케줄)가 현재 계정에 세팅되었습니다!');
+    alert('✨ 데모용 전체 데이터(아티스트, 매니저, 차량, 일정)가 현재 계정에 세팅됐어요!');
   }
 
   // Supabase 비동기 백그라운드 동기화 (계정별 분리 저장)
@@ -927,7 +927,7 @@ class HQDataStore {
         .filter(({ result }) => result.status === 'rejected' || !Array.isArray(result.value))
         .map(({ index }) => ['artists', 'managers', 'vehicles', 'schedules'][index]);
       if (failures.length) {
-        const error = new Error('서버 데이터 새로고침에 실패했습니다. 로컬 자료는 유지됩니다.');
+        const error = new Error('서버 데이터 새로고침에 실패했어요. 로컬 자료는 유지돼요.');
         error.resources = failures;
         throw error;
       }
@@ -1029,7 +1029,7 @@ class HQDataStore {
     } else {
       ids = this.getManagers().filter(m => isUuid(m.id) && !['ceo', 'hq_admin'].includes(m.role)).map(m => m.id);
     }
-    if (!ids.length) { this._reportServerError('공지 저장', new Error('서버 계정이 있는 받는 사람이 없습니다.')); return; }
+    if (!ids.length) { this._reportServerError('공지 저장', new Error('서버 계정이 있는 받는 사람이 없어요.')); return; }
     for (const managerId of ids) {
       try {
         await sc.createAnnouncement({
@@ -1180,12 +1180,12 @@ class HQDataStore {
     const loggedIn = !!(sc?.isConfigured && sc.currentUser?.id);
     if (!loggedIn) return null; // 로그인 전·체험 모드: 이 기기에만 저장
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-      throw new Error('인터넷 연결이 없어 저장하지 못했습니다. 연결된 뒤 다시 시도해 주세요.');
+      throw new Error('인터넷 연결이 없어 저장하지 못했어요. 연결된 뒤 다시 시도해 주세요.');
     }
     try { return await fn(sc); }
     catch (e) {
       this._reportServerError(what, e);
-      const err = new Error('서버에 저장하지 못했습니다 (' + what + '). 잠시 후 다시 시도해 주세요.' + (e?.message ? '\n· ' + e.message : ''));
+      const err = new Error('서버에 저장하지 못했어요 (' + what + '). 잠시 후 다시 시도해 주세요.' + (e?.message ? '\n· ' + e.message : ''));
       err.cause = e;
       throw err;
     }
@@ -1324,7 +1324,7 @@ class HQDataStore {
   async updateManager(id, data) {
     const managers = this.getManagers();
     const target = managers.find(m => m.id === id || (id === 'mgr_1' && m.email === 'th.kim@entplanner.com'));
-    if (!target) throw new Error('매니저 계정을 찾을 수 없습니다.');
+    if (!target) throw new Error('매니저 계정을 찾을 수 없어요.');
 
     const { password, ...safeData } = data;
 
@@ -1432,8 +1432,8 @@ class HQDataStore {
     }
     try {
       const list = JSON.parse(raw);
-      if (!Array.isArray(list)) throw new Error('로컬 일정 저장 형식이 올바르지 않습니다.');
-      // 11월 스케줄이 누락된 구버전 데이터 자동 복구 (개발용 서버에서만)
+      if (!Array.isArray(list)) throw new Error('로컬 일정 저장 형식이 올바르지 않아요.');
+      // 11월 일정이 누락된 구버전 데이터 자동 복구 (개발용 서버에서만)
       if (DEMO_ALLOWED && list.length > 0 && !list.some(s => s.date && s.date.startsWith('2026-11'))) {
         const defaults = getInitialMockSchedules();
         this._writeSchedules(key, defaults);
@@ -1467,7 +1467,7 @@ class HQDataStore {
   _readScheduleOutbox(key) {
     const raw = localStorage.getItem(key + '_SYNC_V1');
     const state = raw === null ? {} : JSON.parse(raw);
-    if (!state || typeof state !== 'object' || Array.isArray(state)) throw new Error('일정 동기화 대기열이 올바르지 않습니다.');
+    if (!state || typeof state !== 'object' || Array.isArray(state)) throw new Error('일정 동기화 대기열이 올바르지 않아요.');
     return state;
   }
 
@@ -1477,7 +1477,7 @@ class HQDataStore {
 
   _scheduleUuid() {
     if (window.crypto?.randomUUID) return window.crypto.randomUUID();
-    if (!window.crypto?.getRandomValues) throw new Error('안전한 일정 식별자를 생성할 수 없습니다.');
+    if (!window.crypto?.getRandomValues) throw new Error('안전한 일정 식별자를 생성할 수 없어요.');
     const bytes = window.crypto.getRandomValues(new Uint8Array(16));
     bytes[6] = (bytes[6] & 15) | 64;
     bytes[8] = (bytes[8] & 63) | 128;
@@ -1531,7 +1531,7 @@ class HQDataStore {
     const after = this._schedulePayload(next);
     const workflow = ['status', 'timeline_items', 'status_logs'];
     if (Object.keys(after).some(field => !workflow.includes(field) && JSON.stringify(after[field]) !== JSON.stringify(before[field]))) {
-      throw new Error('회사 매니저는 기존 일정의 상태, 타임라인, 상태 기록만 수정할 수 있습니다.');
+      throw new Error('회사 매니저는 기존 일정의 상태, 타임라인, 상태 기록만 수정할 수 있어요.');
     }
   }
 
@@ -1619,15 +1619,15 @@ class HQDataStore {
         if (entry.deleted) {
           if (entry.created !== false) {
             const result = await client.deleteSchedule(entry.remoteId);
-            if (result !== true) throw new Error('원격 일정 삭제가 확인되지 않았습니다.');
+            if (result !== true) throw new Error('원격 일정 삭제가 확인되지 않았어요.');
           } else {
             // An insert response may have been lost. Delete the reserved UUID too.
             const result = await client.deleteSchedule(entry.remoteId);
-            if (result !== true) throw new Error('원격 일정 삭제가 확인되지 않았습니다.');
+            if (result !== true) throw new Error('원격 일정 삭제가 확인되지 않았어요.');
           }
         } else {
           const schedule = this._readSchedules(key).find(s => s.id === id);
-          if (!schedule) throw new Error('대기 중인 로컬 일정을 찾을 수 없습니다.');
+          if (!schedule) throw new Error('대기 중인 로컬 일정을 찾을 수 없어요.');
           let payload = this._schedulePayload(schedule);
           if (entry.created && client.currentProfile?.role === 'manager') {
             payload = { status: payload.status, timeline_items: payload.timeline_items, status_logs: payload.status_logs };
@@ -1640,7 +1640,7 @@ class HQDataStore {
               remote = await client.updateSchedule(entry.remoteId, payload);
             }
           }
-          if (!remote || remote.id !== entry.remoteId) throw new Error('원격 일정 저장이 확인되지 않았습니다.');
+          if (!remote || remote.id !== entry.remoteId) throw new Error('원격 일정 저장이 확인되지 않았어요.');
         }
         const current = this._readScheduleOutbox(key);
         const latest = current[id];
@@ -1691,11 +1691,11 @@ class HQDataStore {
     if (failures.some(f => f.permanent)) this.syncFromSupabase().catch(() => { });
     if (failures.length) {
       this.notifyChange('SCHEDULE_SYNC_FAILED', result);
-      this._reportServerError('스케줄 저장', new Error((failures[0].code || '') + ' ' + (failures[0].message || '')));
+      this._reportServerError('일정 저장', new Error((failures[0].code || '') + ' ' + (failures[0].message || '')));
       const rejected = failures.some(f => f.permanent);
       const error = new Error(rejected
-        ? '서버가 이 변경을 받아주지 않아 저장되지 않았습니다. (권한이 없거나 입력값 오류) 화면을 서버 내용으로 되돌립니다.'
-        : '일정은 이 기기에 저장되었고, 서버 전송은 대기 중입니다. 연결되면 자동으로 다시 보냅니다.');
+        ? '서버가 이 변경을 받아주지 않아 저장되지 않았어요. (권한이 없거나 입력값 오류) 화면을 서버 내용으로 되돌려요.'
+        : '일정은 이 기기에 저장되었고, 서버 전송은 대기 중이에요. 연결되면 자동으로 다시 보내요.');
       error.localSaved = !rejected;
       error.rejected = rejected;
       error.syncResult = result;
@@ -1794,7 +1794,7 @@ class HQDataStore {
 
     const conflicts = [];
 
-    // 같은 날짜의 다른 스케줄 탐색
+    // 같은 날짜의 다른 일정 탐색
     allSchedules.forEach(sch => {
       if (sch.id === targetId || sch.date !== targetSchedule.date) return;
       if (sch.status === '취소' || sch.status === 'cancelled') return;
@@ -2118,7 +2118,7 @@ class HQDataStore {
     }
   }
 
-  // 매니저용 스마트 동선 타임라인 비동기 정밀 역산 생성기 (스케줄 날짜/시간대별 교통 예측 반영)
+  // 매니저용 스마트 동선 타임라인 비동기 정밀 역산 생성기 (일정 날짜/시간대별 교통 예측 반영)
   async generateSmartTimelineAsync(schedule) {
     const timeline = [];
     const mainStartTime = schedule.startTime || '10:00';
@@ -2190,7 +2190,7 @@ class HQDataStore {
         done: false
       });
     } else {
-      // 샵 미경유: [숙소/출발지 ➡️ 메인 현장] 스케줄 날짜/시간대별 정밀 예측
+      // 샵 미경유: [숙소/출발지 ➡️ 메인 현장] 일정 날짜/시간대별 정밀 예측
       const travelDepartToMainInfo = await this.getTravelDuration(departureAddress, mainLocation, 40, dayOf(targetArriveMinutes), fmt(targetArriveMinutes));
       const travelDepartToMain = travelDepartToMainInfo.minutes;
       const totalDepartToMain = travelDepartToMain + travelBuffer;
@@ -2387,7 +2387,7 @@ window.AuthPersona = {
       shortBadge: '👑 CEO',
       color: '#f59e0b',
       assignedArtists: ['art_1', 'art_2', 'art_3', 'art_4', 'art_5'],
-      desc: '전사 스케줄 & 비공개 일정, 전사 통계 열람'
+      desc: '전사 일정 & 비공개 일정, 전사 통계 열람'
     },
     hq_admin: {
       key: 'hq_admin',
@@ -2399,7 +2399,7 @@ window.AuthPersona = {
       shortBadge: '🏢 HQ 총괄',
       color: '#4C57D6',
       assignedArtists: ['art_1', 'art_2', 'art_3', 'art_4', 'art_5'],
-      desc: '전체 스케줄 등록/수정, 배차 관제, 비공개 관리'
+      desc: '전체 일정 등록/수정, 배차 관리, 비공개 관리'
     },
     manager: {
       key: 'manager',
@@ -2452,7 +2452,7 @@ window.AuthPersona = {
   },
 
   login() {
-    return { success: false, message: '로컬 계정 로그인은 지원하지 않습니다. Supabase 인증을 이용해주세요.' };
+    return { success: false, message: '이 방법으로는 로그인할 수 없어요. 회사 이메일로 로그인해 주세요.' };
   },
 
   async logout(redirectUrl = 'index.html') {

@@ -1,4 +1,4 @@
-/* 본사가 스케줄을 만들거나 바꾸거나 지우면, 담당 매니저의 로드톡 1:1방으로 자동 알림(+푸시)을 보냅니다. */
+/* 본사가 일정을 만들거나 바꾸거나 지우면, 담당 매니저의 로드톡 1:1방으로 자동 알림(+푸시)을 보냅니다. */
 (function () {
   'use strict';
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -49,18 +49,18 @@
 
   // 결과: { ok:true } 또는 { ok:false, reason:'사유' }  (화면에 안내하기 위해 사유를 돌려준다)
   async function send(managerId, title, body, urgent) {
-    if (!managerId) return { ok: false, reason: '담당 매니저가 지정되지 않았습니다.' };
-    if (!window.Chat || !window.Chat.available()) return { ok: false, reason: '서버에 연결되어 있지 않습니다. 새로고침 후 다시 시도해 주세요.' };
-    if (managerId === myId()) return { ok: false, reason: '담당자가 로그인한 본인입니다.' };
-    if (!UUID.test(managerId)) return { ok: false, reason: '선택한 담당자는 서버 계정이 없어 알림을 보낼 수 없습니다. (서버에서 만든 매니저를 선택하세요)' };
-    if (!isMember(managerId)) return { ok: false, reason: '본사 계정에는 알림을 보내지 않습니다.' };
+    if (!managerId) return { ok: false, reason: '담당 매니저가 지정되지 않았어요.' };
+    if (!window.Chat || !window.Chat.available()) return { ok: false, reason: '서버에 연결되어 있지 않아요. 새로고침 후 다시 시도해 주세요.' };
+    if (managerId === myId()) return { ok: false, reason: '담당자가 로그인한 본인이에요.' };
+    if (!UUID.test(managerId)) return { ok: false, reason: '선택한 담당자는 서버 계정이 없어 알림을 보낼 수 없어요. (서버에서 만든 매니저를 선택하세요)' };
+    if (!isMember(managerId)) return { ok: false, reason: '본사 계정에는 알림을 보내지 않아요.' };
     try { await window.Chat.sendNotice({ targetId: managerId, title, content: body, isUrgent: !!urgent }); return { ok: true }; }
     catch (e) { console.warn('일정 알림 전송 실패', e); return { ok: false, reason: e.message || '전송 오류' }; }
   }
-  const note = (r) => r ? (r.ok ? '🔔 담당 매니저에게 알림을 보냈습니다.' : '⚠️ 담당 매니저 알림을 보내지 못했습니다: ' + r.reason) : null;
+  const note = (r) => r ? (r.ok ? '🔔 담당 매니저에게 알림을 보냈어요.' : '⚠️ 담당 매니저 알림을 보내지 못했어요: ' + r.reason) : null;
 
   // 비공개 일정은 알림 미리보기에 내용을 싣지 않는다
-  function secretMsg(s, what) { return [`🔒 비공개 일정이 ${what}되었습니다.`, '앱에서 일정을 확인해 주세요.']; }
+  function secretMsg(s, what) { return [`🔒 비공개 일정이 ${what}됐어요.`, '앱에서 일정을 확인해 주세요.']; }
 
   const ScheduleNotify = {
     diff, when,
@@ -74,7 +74,7 @@
           const lines = secret ? secretMsg(next, '배정') : [when(next) + (next.location ? ' · ' + next.location : ''), next.vehicleName ? '차량: ' + next.vehicleName : '', next.notes ? '메모: ' + String(next.notes).slice(0, 80) : ''].filter(Boolean);
           const r = await send(newMgr, '📅 새 일정 배정 · ' + (secret ? '비공개' : head(next)), lines.concat([ACK_HINT]).join('\n'), urgent);
           if (prev && oldMgr && oldMgr !== newMgr) {  // 이전 담당에게 "해제"
-            await send(oldMgr, '📅 일정 담당 해제 · ' + (prev.isSecret ? '비공개' : head(prev)), prev.isSecret ? '비공개 일정 담당에서 제외되었습니다.' : `${when(prev)} 일정은 다른 매니저가 담당합니다.`, false);
+            await send(oldMgr, '📅 일정 담당 해제 · ' + (prev.isSecret ? '비공개' : head(prev)), prev.isSecret ? '비공개 일정 담당에서 제외됐어요.' : `${when(prev)} 일정은 다른 매니저가 담당해요.`, false);
           }
           return note(r);
         }
@@ -84,15 +84,15 @@
         const canceled = isCx(next.status) && !isCx(prev.status);
         const lines = secret ? secretMsg(next, canceled ? '취소' : '변경') : [when(next) + (next.location ? ' · ' + next.location : ''), ...changes];
         return note(await send(newMgr, (canceled ? '❌ 일정 취소 · ' : '📅 일정 변경 · ') + (secret ? '비공개' : head(next)), lines.concat([ACK_HINT]).join('\n'), urgent || canceled && startsWithin(next, 24)));
-      } catch (e) { console.warn('일정 알림 오류', e); return '⚠️ 담당 매니저 알림을 보내지 못했습니다: ' + (e.message || '오류'); }
+      } catch (e) { console.warn('일정 알림 오류', e); return '⚠️ 담당 매니저 알림을 보내지 못했어요: ' + (e.message || '오류'); }
     },
     // 삭제 직후
     async afterDelete(sch) {
       try {
         if (!sch) return null;
-        const body = sch.isSecret ? '비공개 일정이 삭제되었습니다.' : `${when(sch)}${sch.location ? ' · ' + sch.location : ''}\n이 일정은 삭제되었습니다.`;
+        const body = sch.isSecret ? '비공개 일정이 삭제됐어요.' : `${when(sch)}${sch.location ? ' · ' + sch.location : ''}\n이 일정은 삭제됐어요.`;
         return note(await send(sch.managerId, '❌ 일정 삭제 · ' + (sch.isSecret ? '비공개' : head(sch)), body, startsWithin(sch, 3)));
-      } catch (e) { console.warn('일정 알림 오류', e); return '⚠️ 담당 매니저 알림을 보내지 못했습니다: ' + (e.message || '오류'); }
+      } catch (e) { console.warn('일정 알림 오류', e); return '⚠️ 담당 매니저 알림을 보내지 못했어요: ' + (e.message || '오류'); }
     }
   };
   // 변경 이력용 비교 (알림 항목 + 담당 매니저)

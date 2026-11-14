@@ -185,7 +185,7 @@ window.Admin = {
     if (brandEl) brandEl.textContent = comp === 'STAR' ? '본사' : comp;
 
     const compSubEl = document.getElementById('header-company-sub');
-    if (compSubEl) compSubEl.textContent = `${comp} 통합 스케줄 관리`;
+    if (compSubEl) compSubEl.textContent = `${comp} 통합 일정 관리`;
 
     const dropComp = document.getElementById('dropdown-user-company');
     if (dropComp) dropComp.textContent = comp;
@@ -199,7 +199,7 @@ window.Admin = {
     this.checkSystemAdminAccess();
   },
 
-  // ── ⚙️ 상단 환경 설정 (소속사/대표자 프로필 및 스케줄 역산 버퍼) ──
+  // ── ⚙️ 상단 환경 설정 (소속사/대표자 프로필 및 일정 역산 버퍼) ──
   openAdminSettingsModal() {
     const modal = document.getElementById('modal-admin-settings');
     if (!modal) return;
@@ -275,7 +275,7 @@ window.Admin = {
     const lateAlert = document.getElementById('setting-late-alert');
     if (lateAlert) localStorage.setItem('hq_late_alert', lateAlert.checked ? '1' : '0');
 
-    // 저장된 버퍼값으로 기존 스케줄들의 역산 타임라인 일괄 재계산
+    // 저장된 버퍼값으로 기존 일정들의 동선 시간표 일괄 재계산
     if (window.hqStore && window.hqStore.getSchedules) {
       const schedules = window.hqStore.getSchedules();
       let updated = false;
@@ -297,7 +297,7 @@ window.Admin = {
       }
     }
 
-    alert('✅ 환경 설정이 성공적으로 저장 및 적용되었습니다!');
+    alert('✅ 환경 설정이 성공적으로 저장 및 적용됐어요!');
     this.closeAdminSettingsModal();
     window.location.reload();
   },
@@ -316,7 +316,7 @@ window.Admin = {
   // ── 🔧 사이드바 시스템 관리자 설정 (Supabase 클라우드 연동 및 백업/복원) ──
   openSystemSettingsModal() {
     if (!this.checkSystemAdminAccess()) {
-      alert('🔒 시스템 관리자(대표자) 권한이 있는 계정만 접근할 수 있습니다.');
+      alert('🔒 시스템 관리자(대표자) 권한이 있는 계정만 접근할 수 있어요.');
       return;
     }
 
@@ -363,7 +363,7 @@ window.Admin = {
       }
     }
 
-    alert('✅ 클라우드 데이터베이스 설정이 성공적으로 저장되었습니다!');
+    alert('✅ 클라우드 데이터베이스 설정이 성공적으로 저장됐어요!');
     this.closeSystemSettingsModal();
   },
 
@@ -392,7 +392,7 @@ window.Admin = {
       downloadAnchor.click();
       downloadAnchor.remove();
     } catch (e) {
-      alert('백업 파일 생성 중 오류가 발생했습니다: ' + e.message);
+      alert('백업 파일 생성 중 오류가 발생했어요: ' + e.message);
     }
   },
 
@@ -400,7 +400,7 @@ window.Admin = {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!confirm('현재 등록된 데이터를 백업 파일 데이터로 교체 및 복원하시겠습니까?')) {
+    if (!confirm('현재 등록된 데이터를 백업 파일 데이터로 교체 및 복원할까요?')) {
       e.target.value = '';
       return;
     }
@@ -418,10 +418,10 @@ window.Admin = {
           localStorage.setItem('bp_company_name', data.companyName);
         }
 
-        alert('✅ 데이터 백업 복원이 완료되었습니다! 화면을 새로고침합니다.');
+        alert('✅ 데이터 백업 복원이 완료됐어요! 화면을 새로고침해요.');
         setTimeout(() => window.location.reload(), 1200);
       } catch (err) {
-        alert('❌ 백업 파일 복원 실패: JSON 형식이 올바르지 않습니다.');
+        alert('❌ 백업 파일 복원 실패: JSON 형식이 올바르지 않아요.');
       }
     };
     reader.readAsText(file);
@@ -436,7 +436,7 @@ window.Admin = {
   },
 
   resetSupabaseConfig() {
-    if (confirm('Supabase 설정을 초기화하고 브라우저 로컬 데이터 모드로 전환하시겠습니까?')) {
+    if (confirm('Supabase 설정을 초기화하고 브라우저 로컬 데이터 모드로 전환할까요?')) {
       window.SupabaseClient.clearConfig();
       document.getElementById('modal-supabase-config').classList.remove('active');
       window.Admin.updateSupabaseBadge();
@@ -506,7 +506,7 @@ window.Admin = {
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (e) {
       console.error('엑셀 내보내기 실패:', e);
-      alert('엑셀 파일을 만들지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      alert('엑셀 파일을 만들지 못했어요. 잠시 후 다시 시도해 주세요.');
     }
   },
 
@@ -579,7 +579,7 @@ window.Admin = {
     if (places.length === 0) {
       listEl.innerHTML = `
         <div style="text-align: center; padding: 30px; color: var(--text-dim); font-size: 13px; background: rgba(0,0,0,0.02); border-radius: 8px;">
-          등록된 거점이 없습니다. 위 폼에서 새로운 거점을 등록해 보세요!
+          등록된 거점이 없어요. 위 폼에서 새로운 거점을 등록해 보세요!
         </div>
       `;
       return;
@@ -681,7 +681,7 @@ window.Admin = {
     const contact = document.getElementById('new-place-contact').value.trim();
 
     if (!name || !address) {
-      alert('거점 이름과 주소를 입력해주세요.');
+      alert('거점 이름과 주소를 입력해 주세요.');
       return;
     }
 
@@ -702,7 +702,7 @@ window.Admin = {
       window.Admin.savePlaces(places);
       window.Admin.cancelEditPlace();
       window.Admin.renderPlaceList();
-      alert(`✅ [${name}] 거점 정보가 수정되었습니다!`);
+      alert(`✅ [${name}] 거점 정보가 수정됐어요!`);
     } else {
       // 신규 등록 모드
       const newPlace = {
@@ -720,12 +720,12 @@ window.Admin = {
       document.getElementById('new-place-contact').value = '';
 
       window.Admin.renderPlaceList();
-      alert(`✅ [${name}] 거점이 등록되었습니다! 스케줄 등록에서 바로 검색할 수 있습니다.`);
+      alert(`✅ [${name}] 거점이 등록됐어요! 일정 등록에서 바로 검색할 수 있어요.`);
     }
   },
 
   deletePlace(id) {
-    if (!confirm('해당 거점을 삭제하시겠습니까?')) return;
+    if (!confirm('해당 거점을 삭제할까요?')) return;
     let places = window.Admin.getPlaces();
     places = places.filter(p => p.id !== id);
     window.Admin.savePlaces(places);
@@ -811,7 +811,7 @@ window.Admin = {
     const dropCompEl = document.getElementById('dropdown-user-company');
     if (cachedCompany) {
       if (brandEl) brandEl.textContent = cachedCompany;
-      if (compSubEl) compSubEl.textContent = `${cachedCompany} 통합 스케줄 관리`;
+      if (compSubEl) compSubEl.textContent = `${cachedCompany} 통합 일정 관리`;
       if (dropCompEl) dropCompEl.textContent = cachedCompany;
     }
 
@@ -844,7 +844,7 @@ window.Admin = {
             if (companyName) {
               localStorage.setItem('admin_bp_company_name', companyName);
               if (brandEl) brandEl.textContent = companyName;
-              if (compSubEl) compSubEl.textContent = `${companyName} 통합 스케줄 관리`;
+              if (compSubEl) compSubEl.textContent = `${companyName} 통합 일정 관리`;
               if (dropCompEl) dropCompEl.textContent = companyName;
             }
 
@@ -874,7 +874,7 @@ window.Admin = {
   },
 
   async logout() {
-    if (confirm('로그아웃 하시겠습니까?')) {
+    if (confirm('로그아웃 할까요?')) {
       // 관리자 세션 정보 완전 제거 (매니저 앱 세션은 보존)
       localStorage.removeItem('admin_bp_user_name');
       localStorage.removeItem('admin_bp_user_email');
@@ -993,7 +993,7 @@ window.Admin = {
           <div style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:12px; background:rgba(59, 69, 196,0.1); color:#4C57D6; margin-bottom:8px;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
           </div>
-          <div style="font-weight:700; color:#14161A; margin-bottom:4px;">등록된 소속 아티스트가 없습니다.</div>
+          <div style="font-weight:700; color:#14161A; margin-bottom:4px;">등록된 소속 아티스트가 없어요.</div>
           <div style="font-size:12px; color:#475569;">우측 상단의 <strong>[+ 신규 아티스트 등록]</strong> 버튼을 눌러 추가해보세요.</div>
         </div>
       `;
@@ -1027,7 +1027,7 @@ window.Admin = {
                 <strong style="color:#14161A; font-size:15px; font-weight:800;">${esc(art.name)}</strong>
                 <span style="font-size:12px; background:#E3E6FA; color:#2B338F; border:1px solid #D5D9F7; padding:2px 8px; border-radius:4px; font-weight:700;">${esc(art.type || '그룹')} · ${esc(art.members || 1)}명</span>
                 <span style="font-size:12px; background:${art.status === '활동중' ? '#ecfdf5' : art.status === '컴백준비' ? '#fdf4ff' : '#f1f5f9'}; color:${art.status === '활동중' ? '#059669' : art.status === '컴백준비' ? '#c026d3' : '#475569'}; border:1px solid ${art.status === '활동중' ? '#a7f3d0' : art.status === '컴백준비' ? '#f5d0fe' : '#cbd5e1'}; padding:2px 8px; border-radius:4px; font-weight:700;">${esc(art.status || '활동중')}</span>
-                <span style="font-size:12px; background:#ffffff; color:#475569; border:1px solid #cbd5e1; padding:2px 8px; border-radius:4px; font-weight:600;">스케줄 ${esc(artSchedules.length)}건</span>
+                <span style="font-size:12px; background:#ffffff; color:#475569; border:1px solid #cbd5e1; padding:2px 8px; border-radius:4px; font-weight:600;">일정 ${esc(artSchedules.length)}건</span>
               </div>
               ${careText ? `<div style="font-size:12px; color:#475569; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:flex; align-items:center; gap:4px; font-weight:500;" title="${esc(careText)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2"><path d="M10.5 20.5l10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></svg> 케어: ${esc(careText)}</div>` : `<div style="font-size:12px; color:#5B616E; margin-top:4px;">케어 정보 미등록</div>`}
             </div>
@@ -1127,7 +1127,7 @@ window.Admin = {
   },
 
   async deleteArtist(id, name) {
-    // 삭제하면 이 아티스트의 스케줄도 함께 사라지므로, 몇 건인지 보여 주고 이름을 직접 입력해야 지워집니다.
+    // 삭제하면 이 아티스트의 일정도 함께 사라지므로, 몇 건인지 보여 주고 이름을 직접 입력해야 지워집니다.
     let mine = [];
     try { mine = (await window.hqStore.getSchedules()).filter(s => s.artistId === id || (Array.isArray(s.artistIds) && s.artistIds.includes(id) && s.artistId !== 'ALL')); } catch (e) {}
     const label = name || '해당 아티스트';
@@ -1137,11 +1137,11 @@ window.Admin = {
         validate: (x) => String(x).trim() === String(label).trim() ? '' : '이름이 달라요. 똑같이 적어 주세요.' });
       ok = typed !== null;
     } else {
-      ok = confirm(`'${label}' 아티스트를 삭제하시겠습니까?\n등록된 스케줄은 없습니다.`);
+      ok = confirm(`'${label}' 아티스트를 삭제할까요?\n등록된 일정은 없어요.`);
     }
     if (ok) {
       try { await window.hqStore.deleteArtist(id); }
-      catch (e) { alert(e.message || '삭제하지 못했습니다.'); return; }
+      catch (e) { alert(e.message || '삭제하지 못했어요.'); return; }
       await this.renderArtistManagementList();
       const selectPop = document.querySelector('#form-artist');
       if (selectPop) {
@@ -1182,7 +1182,7 @@ window.Admin = {
         const artists = await window.hqStore.getArtists();
         kpiArtist.textContent = `${artists.length}팀`;
       }
-      alert(`✅ ${name || '아티스트'} 정보가 삭제되었습니다.`);
+      alert(`✅ ${name || '아티스트'} 정보가 삭제됐어요.`);
     }
   },
 
@@ -1239,7 +1239,7 @@ window.Admin = {
     // 레거시 sub-badge-text (모달 내부용)
     const badgeText = document.getElementById('sub-badge-text');
     if (badgeText) {
-      badgeText.textContent = `구독: ${sub.planName || 'Standard'} (${sub.activeManagerCount}/${sub.totalSlots}명 · 월 ${(sub.monthlyFee / 10000).toLocaleString()}만)`;
+      badgeText.textContent = `구독: ${sub.planName || '기본'} (${sub.activeManagerCount}/${sub.totalSlots}명 · 월 ${(sub.monthlyFee / 10000).toLocaleString()}만)`;
     }
   },
 
@@ -1509,19 +1509,19 @@ window.Admin = {
     }
 
     try { await window.hqStore.updateManagerAssignment(managerId, assigned); }
-    catch (e) { alert(e.message || '배정을 저장하지 못했습니다.'); }
+    catch (e) { alert(e.message || '배정을 저장하지 못했어요.'); }
     await this.renderManagerManagementList();
   },
 
   async deleteManager(id) {
-    if (confirm('해당 매니저를 삭제하시겠습니까?\n매니저가 삭제되면 앱 로그인이 차단되며 담당 배차 내역에도 영향을 줄 수 있습니다.')) {
+    if (confirm('해당 매니저를 삭제할까요?\n매니저가 삭제되면 앱 로그인이 차단되며 담당 배차 내역에도 영향을 줄 수 있어요.')) {
       try { await window.hqStore.deleteManager(id); }
-      catch (e) { alert(e.message || '매니저를 삭제하지 못했습니다.'); return; }
+      catch (e) { alert(e.message || '매니저를 삭제하지 못했어요.'); return; }
       this.updateManagerSlotUI();
       await this.renderManagerManagementList();
       await populateSelectOptions();
       await renderSidebar();
-      alert('매니저 계정이 삭제되었습니다.');
+      alert('매니저 계정이 삭제됐어요.');
     }
   },
 
@@ -1562,7 +1562,7 @@ window.Admin = {
           <div style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:12px; background:rgba(37,99,235,0.1); color:#2563eb; margin-bottom:8px;">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 7.5 C8.2 4.5 15.8 4.5 16.5 7.5 L17.5 10.8 C19.5 10.5 20.5 11.2 20.5 12.2 C20.5 13.2 19.5 13.8 18 13.8 V18 C18 18.8 17.5 19.5 16.5 19.5 H15.2 C14.5 19.5 14.2 19 14.2 18.2 V16.2 H9.8 V18.2 C9.8 19 9.5 19.5 8.8 19.5 H7.5 C6.5 19.5 6 18.8 6 18 V13.8 C4.5 13.8 3.5 13.2 3.5 12.2 C3.5 11.2 4.5 10.5 6.5 10.8 Z"/><path d="M6.2 11.8 C9 12.6 15 12.6 17.8 11.8"/><path d="M7.2 14.2 C8.6 13.8 9.8 14.3 9.8 15.4 C9.8 16.5 8.5 16.8 7.2 16.2 C6.8 15.6 6.8 14.8 7.2 14.2 Z"/><path d="M16.8 14.2 C15.4 13.8 14.2 14.3 14.2 15.4 C14.2 16.5 15.5 16.8 16.8 16.2 C17.2 15.6 17.2 14.8 16.8 14.2 Z"/></svg>
           </div>
-          <div style="font-weight:700; color:#14161A; margin-bottom:4px;">등록된 지원 차량이 없습니다.</div>
+          <div style="font-weight:700; color:#14161A; margin-bottom:4px;">등록된 지원 차량이 없어요.</div>
           <div style="font-size:12px; color:#475569;">우측 상단의 <strong>[+ 신규 차량 등록]</strong> 버튼을 눌러 차량을 추가해보세요.</div>
         </div>
       `;
@@ -1657,16 +1657,16 @@ window.Admin = {
   },
 
   async deleteVehicle(id, name) {
-    if (confirm(`'${name || '해당'}' 차량을 정말 삭제하시겠습니까?\n스케줄 배차 내역에 영향을 줄 수 있습니다.`)) {
+    if (confirm(`'${name || '해당'}' 차량을 정말 삭제할까요?\n일정 배차 내역에 영향을 줄 수 있어요.`)) {
       try { await window.hqStore.deleteVehicle(id); }
-      catch (e) { alert(e.message || '차량을 삭제하지 못했습니다.'); return; }
+      catch (e) { alert(e.message || '차량을 삭제하지 못했어요.'); return; }
       await this.renderVehicleManagementList();
       const vehSelect = document.getElementById('form-vehicle');
       if (vehSelect) {
         const vehicles = await window.hqStore.getVehicles();
         vehSelect.innerHTML = '<option value="">차량 미지정 / 도보·대중교통</option>' + vehicles.map(v => `<option value="${esc(v.id)}">${esc(v.name)} (${esc(v.number || v.type || '')})</option>`).join('');
       }
-      alert(`✅ [${name || '차량'}]이 정상적으로 삭제되었습니다.`);
+      alert(`✅ [${name || '차량'}]이 정상적으로 삭제됐어요.`);
     }
   }
 };
@@ -1812,8 +1812,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const cards = [
-      { id: 'kpi-card-today', key: 'today', title: '오늘 총 스케줄', color: '#4C57D6', iconSvg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' },
-      { id: 'kpi-card-shop', key: 'shop', title: '헤메샵 경유 스케줄', color: '#be185d', iconSvg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#be185d" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M6 2.5 L6.8 4.8 L9 5.5 L6.8 6.2 L6 8.5 L5.2 6.2 L3 5.5 L5.2 4.8 Z" fill="#be185d" stroke="none"/><path d="m11.5 12.5-6 6a1.77 1.77 0 1 0 2.5 2.5l6-6"/><path d="m9.5 10.5 4 4"/><path d="M13.5 10.5c-.8-3.2 1-6 4.5-6s4.5 2 4 5.5c-.6 3.2-3.5 4.5-5.5 3.5"/></svg>' },
+      { id: 'kpi-card-today', key: 'today', title: '오늘 총 일정', color: '#4C57D6', iconSvg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' },
+      { id: 'kpi-card-shop', key: 'shop', title: '헤메샵 경유 일정', color: '#be185d', iconSvg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#be185d" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M6 2.5 L6.8 4.8 L9 5.5 L6.8 6.2 L6 8.5 L5.2 6.2 L3 5.5 L5.2 4.8 Z" fill="#be185d" stroke="none"/><path d="m11.5 12.5-6 6a1.77 1.77 0 1 0 2.5 2.5l6-6"/><path d="m9.5 10.5 4 4"/><path d="M13.5 10.5c-.8-3.2 1-6 4.5-6s4.5 2 4 5.5c-.6 3.2-3.5 4.5-5.5 3.5"/></svg>' },
       { id: 'kpi-card-active', key: 'active', title: '현재 가동중인 차량/팀', color: '#0891b2', iconSvg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M7.5 7.5 C8.2 4.5 15.8 4.5 16.5 7.5 L17.5 10.8 C19.5 10.5 20.5 11.2 20.5 12.2 C20.5 13.2 19.5 13.8 18 13.8 V18 C18 18.8 17.5 19.5 16.5 19.5 H15.2 C14.5 19.5 14.2 19 14.2 18.2 V16.2 H9.8 V18.2 C9.8 19 9.5 19.5 8.8 19.5 H7.5 C6.5 19.5 6 18.8 6 18 V13.8 C4.5 13.8 3.5 13.2 3.5 12.2 C3.5 11.2 4.5 10.5 6.5 10.8 Z"/><path d="M6.2 11.8 C9 12.6 15 12.6 17.8 11.8"/><path d="M7.2 14.2 C8.6 13.8 9.8 14.3 9.8 15.4 C9.8 16.5 8.5 16.8 7.2 16.2 C6.8 15.6 6.8 14.8 7.2 14.2 Z"/><path d="M16.8 14.2 C15.4 13.8 14.2 14.3 14.2 15.4 C14.2 16.5 15.5 16.8 16.8 16.2 C17.2 15.6 17.2 14.8 16.8 14.2 Z"/></svg>' },
       { id: 'kpi-card-artist', key: 'artist', title: '등록된 소속 아티스트', color: '#10b981', iconSvg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' }
     ];
@@ -1836,7 +1836,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dataList.length === 0) {
           popHtml += `
             <div style="text-align:center; padding:18px 10px; color:#5B616E; font-size:12px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">
-              해당하는 내역이 없습니다.
+              해당하는 내역이 없어요.
             </div>
           `;
         } else if (c.key === 'artist') {
@@ -1855,7 +1855,7 @@ document.addEventListener('DOMContentLoaded', () => {
               `).join('')}
             </div>
             <div style="font-size:12px; color:#5B616E; text-align:center; margin-top:8px; background:#f8fafc; padding:7px; border-radius:8px; border:1px solid #e2e8f0; font-weight:500;">
-              💡 클릭 시 <strong>[아티스트 관리]</strong> 모달이 열립니다.
+              💡 클릭 시 <strong>[아티스트 관리]</strong> 모달이 열려요.
             </div>
           `;
         } else {
@@ -1882,7 +1882,7 @@ document.addEventListener('DOMContentLoaded', () => {
               `).join('')}
             </div>
             <div style="font-size:12px; color:#5B616E; text-align:center; margin-top:8px; background:#f8fafc; padding:7px; border-radius:8px; border:1px solid #e2e8f0; font-weight:500;">
-              💡 일정을 클릭하시면 <strong>상세 정보 및 역산 동선</strong>이 열립니다.
+              💡 일정을 클릭하시면 <strong>상세 정보와 동선 시간표</strong>이 열려요.
             </div>
           `;
         }
@@ -2212,7 +2212,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="r2">${esc(s.artistName || '')} <span>${esc(s.title || '')}</span></div>
           <div class="r3">${esc(s.managerName || '담당 미지정')}${s.vehicleName ? ' · ' + esc(s.vehicleName) : ''}${late && note ? ' · ' + esc(note) : ''}</div>
         </div>`).join('');
-      pop.innerHTML = `<div class="tb-pop-h">${TITLE[k]} <b>${list.length}건</b></div>${items || '<div class="tb-pop-empty">해당하는 일정이 없습니다.</div>'}<div class="tb-pop-f">일정을 클릭하면 상세 정보가 열립니다.</div>`;
+      pop.innerHTML = `<div class="tb-pop-h">${TITLE[k]} <b>${list.length}건</b></div>${items || '<div class="tb-pop-empty">해당하는 일정이 없어요.</div>'}<div class="tb-pop-f">일정을 클릭하면 상세 정보가 열려요.</div>`;
       const r = tile.getBoundingClientRect();
       pop.style.display = 'block';
       const w = pop.offsetWidth;
@@ -2462,7 +2462,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── 4. 실시간 관제 칸반 보드 뷰 (Kanban View) ──
   async function renderKanbanView() {
     const todayStr = fmtDate(state.currentDate);
-    if (el.calendarTitle) el.calendarTitle.textContent = `${todayStr} 실시간 상황판 (Kanban Control)`;
+    if (el.calendarTitle) el.calendarTitle.textContent = `${todayStr} 실시간 상황판`;
     if (el.currentDateText) {
       const y = state.currentDate.getFullYear();
       const m = state.currentDate.getMonth() + 1;
@@ -2555,7 +2555,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── 5. 종합 관제 지도 뷰 (Map View) ──
   async function renderMapView() {
     const todayStr = fmtDate(state.currentDate);
-    if (el.calendarTitle) el.calendarTitle.textContent = `${todayStr} 종합 관제 지도 (Control Map)`;
+    if (el.calendarTitle) el.calendarTitle.textContent = `${todayStr} 오늘 일정 지도`;
     if (el.currentDateText) {
       const y = state.currentDate.getFullYear();
       const m = state.currentDate.getMonth() + 1;
@@ -2610,7 +2610,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const busy = vehicles.filter(v => schedules.some(s => s.vehicleId === v.id || s.vehicleName === v.name)).length;
     el.scheduleViewport.innerHTML = `
       <div class="mp2">
-        <div id="mp2-map" class="mp2-map" aria-label="관제 지도"></div>
+        <div id="mp2-map" class="mp2-map" aria-label="오늘 일정 지도"></div>
         ${!pins.length ? '<div class="mp2-empty">이 날은 표시할 일정이 없어요.</div>' : onlyLate && !shown.length ? '<div class="mp2-empty">지연된 일정이 없어요.</div>' : ''}
         <div class="mp2-ctl">
           <button type="button" class="${onlyLate ? '' : 'on'}" onclick="Admin.mapFilter(false)">전체 보기 ${pins.length}</button>
@@ -2727,14 +2727,14 @@ document.addEventListener('DOMContentLoaded', () => {
     el.scheduleViewport.innerHTML = `
       <div class="an2">
         <div class="an2-kpis">
-          <div class="an2-kpi"><span>누적 스케줄</span><b>${total}건</b><small>이번 달 · 완료 ${done}건</small></div>
+          <div class="an2-kpi"><span>누적 일정</span><b>${total}건</b><small>이번 달 · 완료 ${done}건</small></div>
           <div class="an2-kpi"><span>활동 아티스트</span><b>${artRows.filter(r => !r.all).length}팀</b><small>${top ? `최다: ${esc(top.name)} ${top.n}건` : '이번 달 일정 없음'}</small></div>
           <div class="an2-kpi"><span>운영 배차 차량</span><b>${vehicles.length}대</b><small>이번 달 배차된 차량 ${usedVeh}대</small></div>
           <div class="an2-kpi"><span>현장 지원 매니저</span><b>${managers.length}명</b><small>이번 달 담당 ${usedMgr}명</small></div>
         </div>
         <div class="an2-two">
-          <section class="an2-card"><h3>분야별 스케줄 · ${month}월 ${total}건</h3>${cats.map(([k, n]) => bar(CAT[k], n, maxCat, '#3B45C4')).join('') || '<p class="an2-empty">이번 달 일정이 없어요.</p>'}</section>
-          <section class="an2-card"><h3>아티스트별 스케줄</h3>${artRows.map(r => bar(r.name, r.n, maxArt, r.color)).join('') || '<p class="an2-empty">이번 달 일정이 없어요.</p>'}${allN ? `<p class="an2-note">'전원'은 소속 아티스트 모두가 참여하는 일정이에요</p>` : ''}</section>
+          <section class="an2-card"><h3>분야별 일정 · ${month}월 ${total}건</h3>${cats.map(([k, n]) => bar(CAT[k], n, maxCat, '#3B45C4')).join('') || '<p class="an2-empty">이번 달 일정이 없어요.</p>'}</section>
+          <section class="an2-card"><h3>아티스트별 일정</h3>${artRows.map(r => bar(r.name, r.n, maxArt, r.color)).join('') || '<p class="an2-empty">이번 달 일정이 없어요.</p>'}${allN ? `<p class="an2-note">'전원'은 소속 아티스트 모두가 참여하는 일정이에요</p>` : ''}</section>
         </div>
         <div class="an2-two">
           <section class="an2-card"><h3>많이 간 장소 Top 5</h3>${topLoc.map(([l, n], i) => `<div class="an2-loc"><span class="rk">${i + 1}</span><span class="nm">${esc(l)}</span><b>${n}회</b></div>`).join('') || '<p class="an2-empty">장소 기록이 없어요.</p>'}</section>
@@ -2743,7 +2743,7 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>`;
   }
 
-  // ── 스케줄 상세 모달 열기 ──
+  // ── 일정 상세 모달 열기 ──
   async function openScheduleDetailModal(schId) {
     const schedules = await window.hqStore.getSchedules();
     const sch = schedules.find(s => s.id === schId);
@@ -2791,7 +2791,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </span>
             `}
           </div>
-          <h2 style="font-size:20px; color:#14161A; font-weight:800; margin:8px 0 4px 0;">${esc(sch.title || '스케줄명 없음')}</h2>
+          <h2 style="font-size:20px; color:#14161A; font-weight:800; margin:8px 0 4px 0;">${esc(sch.title || '일정명 없음')}</h2>
           <div style="font-size:13px; color:#5B616E; font-weight:600;">📅 ${esc(sch.date)} (${esc(sch.startTime)} ~ ${esc(sch.endTime)})</div>
         </div>
         ${getStatusBadge(sch.status)}
@@ -2843,7 +2843,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ${sch.isSecret ? `
           <div style="background:#fff1f2; border:1px solid #fecdd3; padding:8px 10px; border-radius:6px; grid-column: span 2; display:flex; align-items:center; gap:6px;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-            <span style="color:#e11d48; font-weight:700;">대외비 (비공개 스케줄)</span>
+            <span style="color:#e11d48; font-weight:700;">대외비 (비공개 일정)</span>
           </div>
         ` : ''}
       </div>
@@ -2861,7 +2861,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div style="margin-top:16px;">
         <h4 style="font-size:14px; color:#14161A; margin-bottom:10px; display:flex; align-items:center; gap:6px; font-weight:800;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4C57D6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-          스마트 역산 타임라인
+          자동 동선 시간표
         </h4>
         <div style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto;">
           ${(sch.timeline || []).map(item => {
@@ -2949,7 +2949,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const at = (l) => (l.date && l.date !== fmtDate(new Date()) ? l.date.slice(5).replace('-', '/') + ' ' : '') + (l.time || '');
         return st.pending
           ? `<div style="margin-top:14px; display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:10px; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; font-size:13.5px; font-weight:700;">
-               <span style="font-size:16px;">⏳</span><span style="flex:1;">담당 매니저(${esc(sch.managerName || '')})가 아직 확인하지 않았습니다 <span style="font-weight:500; color:#c2410c;">· ${esc(at(req))} 변경</span></span>
+               <span style="font-size:16px;">⏳</span><span style="flex:1;">담당 매니저(${esc(sch.managerName || '')})가 아직 확인하지 않았어요 <span style="font-weight:500; color:#c2410c;">· ${esc(at(req))} 변경</span></span>
              </div>`
           : `<div style="margin-top:14px; display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:10px; background:#ecfdf5; border:1px solid #a7f3d0; color:#047857; font-size:13.5px; font-weight:700;">
                <span style="font-size:16px;">✅</span><span style="flex:1;">${esc(res.managerName || sch.managerName || '담당 매니저')} 확인 완료 <span style="font-weight:500; color:#059669;">· ${esc(at(res))}</span></span>
@@ -2988,7 +2988,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.Admin.openScheduleDetailModal = openScheduleDetailModal;
   }
 
-  // ── 스케줄 등록/수정 모달 열기 ──
+  // ── 일정 등록/수정 모달 열기 ──
   function openScheduleFormModal(dateStr = null, editSch = null) {
     el.formSchedule.reset();
     if (window.Admin && window.Admin.updatePlaceDatalists) {
@@ -3012,7 +3012,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const filtered = query ? shops.filter(s => s.name.includes(query) || (s.address && s.address.includes(query))) : shops;
 
         if (filtered.length === 0) {
-          shopDropdown.innerHTML = '<div style="padding:10px; text-align:center; color:#5B616E; font-size:12px;">등록된 추천 샵이 없습니다. [샵 검색] 버튼으로 검색해보세요.</div>';
+          shopDropdown.innerHTML = '<div style="padding:10px; text-align:center; color:#5B616E; font-size:12px;">등록된 추천 샵이 없어요. [샵 검색] 버튼으로 검색해보세요.</div>';
         } else {
           shopDropdown.innerHTML = `
             <div style="padding:4px 8px; font-size:12px; color:#94a3b8; font-weight:700; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between;">
@@ -3094,8 +3094,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (results.length === 0) {
           shopDropdown.innerHTML = `
             <div style="padding:14px; text-align:center; color:#5B616E; font-size:12px;">
-              <div style="color:#ef4444; font-weight:600; margin-bottom:4px;">'${esc(query)}' 검색 결과가 없습니다.</div>
-              <div>직접 주소를 입력하거나 다른 키워드로 검색해주세요.</div>
+              <div style="color:#ef4444; font-weight:600; margin-bottom:4px;">'${esc(query)}' 검색 결과가 없어요.</div>
+              <div>직접 주소를 입력하거나 다른 키워드로 검색해 주세요.</div>
             </div>
           `;
           return;
@@ -3167,7 +3167,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const filtered = query ? places.filter(p => p.name.includes(query) || (p.address && p.address.includes(query))) : places;
 
         if (filtered.length === 0) {
-          departureDropdown.innerHTML = '<div style="padding:10px; text-align:center; color:#5B616E; font-size:12px;">등록된 거점이 없습니다. 직접 입력해주세요.</div>';
+          departureDropdown.innerHTML = '<div style="padding:10px; text-align:center; color:#5B616E; font-size:12px;">등록된 거점이 없어요. 직접 입력해 주세요.</div>';
         } else {
           departureDropdown.innerHTML = filtered.map(p => {
             let iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
@@ -3231,7 +3231,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (editSch) {
-      el.scheduleFormTitle.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4C57D6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> 스케줄 정보 수정`;
+      el.scheduleFormTitle.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4C57D6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> 일정 정보 수정`;
       el.formSchId.value = editSch.id;
       el.formTitle.value = editSch.title || '';
       if (el.formArtist) {
@@ -3252,7 +3252,7 @@ document.addEventListener('DOMContentLoaded', () => {
       el.formCategory.value = normCat(editSch.category);
       el.formDate.value = editSch.date || '';
       
-      // 스케줄 일자 및 시간 분리 설정
+      // 일정 일자 및 시간 분리 설정
       const curDate = editSch.date || fmtDate(state.currentDate);
       el.formDate.value = curDate;
 
@@ -3327,7 +3327,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.Admin.renderScheduleMemberSelector(editSch.artistId, editSch.targetMembers || 'ALL');
       }
     } else {
-      el.scheduleFormTitle.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4C57D6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> 신규 스케줄 등록`;
+      el.scheduleFormTitle.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4C57D6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> 신규 일정 등록`;
       el.formSchId.value = '';
       try { document.getElementById('sch-more-shop').open = false; document.getElementById('sch-more-extra').open = false; } catch (e) { }
       const baseDate = dateStr || fmtDate(state.currentDate);
@@ -3399,7 +3399,7 @@ document.addEventListener('DOMContentLoaded', () => {
               if (window.Chat) window.Chat.open(targetId && targetId !== 'ALL' ? { managerId: targetId } : { kind: 'all' });
               return;
             }
-          } catch (err) { alert('발송하지 못했습니다. ' + (err.message || '')); return; }
+          } catch (err) { alert('발송하지 못했어요. ' + (err.message || '')); return; }
         } else {
           // fallback: 직접 저장
           const notiData = {
@@ -3417,7 +3417,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
-        alert(`✅ [${targetName}]에게 ${isUrgent ? '긴급 공지' : '공지'}가 발송되었습니다.`);
+        alert(`✅ [${targetName}]에게 ${isUrgent ? '긴급 공지' : '공지'}가 발송됐어요.`);
         Admin.closeSendMsgModal();
       });
     }
@@ -3615,7 +3615,7 @@ document.addEventListener('DOMContentLoaded', () => {
         popHtml += `</div>
           <div style="font-size:12px; color:#5B616E; text-align:center; margin-top:10px; background:#f8fafc; padding:8px; border-radius:8px; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:center; gap:5px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-            <span>일정을 클릭하시면 <strong>상세 정보 및 역산 동선</strong>이 열립니다.</span>
+            <span>일정을 클릭하시면 <strong>상세 정보와 동선 시간표</strong>이 열려요.</span>
           </div>
         `;
 
@@ -3657,7 +3657,7 @@ document.addEventListener('DOMContentLoaded', () => {
       scheduleHide(300);
     });
 
-    // 스케줄 클릭 위임
+    // 일정 클릭 위임
     el.scheduleViewport.addEventListener('click', (e) => {
       if (popover) { popover.style.display = 'none'; popover.style.opacity = '0'; }
       const pill = e.target.closest('.cal-event-pill');
@@ -3671,7 +3671,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // 신규 스케줄 버튼
+    // 신규 일정 버튼
     el.btnOpenAddSchedule.addEventListener('click', () => {
       openScheduleFormModal();
     });
@@ -3922,7 +3922,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // 스케줄 폼 제출
+    // 일정 폼 제출
     el.formSchedule.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (Admin._savingSchedule) return;   // 두 번 눌러도 한 번만 저장
@@ -4010,13 +4010,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (conflictResult.hasConflict) {
           const warnMsgs = conflictResult.conflicts.map(c => {
             if (c.type === 'vehicle') {
-              return `• 🚗 [${c.vehicleName}] 차량이 동일 시간대(${c.conflictTime}) [${c.conflictArtist}] '${c.conflictScheduleTitle}'에 이미 배정되어 있습니다.`;
+              return `• 🚗 [${c.vehicleName}] 차량이 동일 시간대(${c.conflictTime}) [${c.conflictArtist}] '${c.conflictScheduleTitle}'에 이미 배정되어 있어요.`;
             } else {
-              return `• 👤 [${c.managerName}] 매니저가 동일 시간대(${c.conflictTime}) [${c.conflictArtist}] '${c.conflictScheduleTitle}'에 이미 배정되어 있습니다.`;
+              return `• 👤 [${c.managerName}] 매니저가 동일 시간대(${c.conflictTime}) [${c.conflictArtist}] '${c.conflictScheduleTitle}'에 이미 배정되어 있어요.`;
             }
           }).join('\n');
 
-          if (!confirm('⚠️ 같은 시간대에 겹치는 배정이 있습니다.\n\n' + warnMsgs + '\n\n그래도 저장할까요?')) return;
+          if (!confirm('⚠️ 같은 시간대에 겹치는 배정이 있어요.\n\n' + warnMsgs + '\n\n그래도 저장할까요?')) return;
         }
       }
 
@@ -4042,14 +4042,14 @@ document.addEventListener('DOMContentLoaded', () => {
           const mid = schData.managerId;
           const me = window.SupabaseClient?.currentUser?.id;
           const ack = (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(mid || '') && mid !== me) ? { need: true, managerId: mid } : null;
-          if (!prevSch) await window.hqStore.addStatusLog(schData.id, { label: '[일정 등록] 본사에서 새 일정을 등록했습니다', managerName: who, ack });
+          if (!prevSch) await window.hqStore.addStatusLog(schData.id, { label: '[일정 등록] 본사에서 새 일정을 등록했어요', managerName: who, ack });
           else if (changes && changes.length) await window.hqStore.addStatusLog(schData.id, { label: '[일정 수정] ' + changes.join(' · '), managerName: who, ack });
         } catch (e) { console.warn('변경 이력 기록 실패', e); }   // (알림은 기다리지 않음)
         try { if (window.AdminRepeat) repeatMsg = await window.AdminRepeat.afterSave(prevSch, schData, repeatDates, submitBtn); } catch (e) { console.warn('반복 일정 처리 실패', e); }
       } catch (err) {
         console.warn('saveSchedule warning (로컬 저장 유지):', err);
         if (!err.localSaved) {
-          alert('스케줄을 저장하지 못했습니다: ' + (err.message || '알 수 없는 오류'));
+          alert('일정을 저장하지 못했어요: ' + (err.message || '알 수 없는 오류'));
           return;
         }
         queuedOnly = true;
@@ -4060,8 +4060,8 @@ document.addEventListener('DOMContentLoaded', () => {
       await renderKPI();
       await renderCurrentView();
       alert(queuedOnly
-        ? `⏳ [${schData.title || '스케줄'}] 이 컴퓨터에 저장했지만 아직 서버에 올라가지 않았습니다.\n인터넷이 연결되면 자동으로 올라가며, 화면 아래 노란 표시가 사라지면 완료입니다.`
-        : `✅ [${schData.title || '스케줄'}] 일정이 서버에 저장되었습니다.` + (repeatMsg ? '\n' + repeatMsg : ''));
+        ? `⏳ [${schData.title || '일정'}] 이 컴퓨터에 저장했지만 아직 서버에 올라가지 않았어요.\n인터넷이 연결되면 자동으로 올라가며, 화면 아래 노란 표시가 사라지면 완료예요.`
+        : `✅ [${schData.title || '일정'}] 일정이 서버에 저장됐어요.` + (repeatMsg ? '\n' + repeatMsg : ''));
       // 시간을 바꾸거나 취소했으면 현장 담당자에게 보낼 문자 초안 (연락처가 있는 일정만)
       if (prevSch && window.DraftSheet) window.DraftSheet.afterHqChange(prevSch, schData);
       } finally {
@@ -4070,7 +4070,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // 스케줄 수정 버튼
+    // 일정 수정 버튼
     if (el.btnEditSchedule) {
       el.btnEditSchedule.addEventListener('click', async () => {
         const schId = state.activeScheduleId || window.Admin.currentDetailScheduleId;
@@ -4103,8 +4103,8 @@ document.addEventListener('DOMContentLoaded', () => {
           });
           const changes = merged.map((st, i) => (old[i] && old[i].time !== st.time) ? `${String(st.label || '').replace(/^\[([^\]]+)\].*$/, '$1')} ${old[i].time}→${st.time}` : null).filter(Boolean);
           const notes = merged.filter(st => /예측|기준|추정/.test(st.desc || '')).map(st => '· ' + String(st.label || '').replace(/^\[([^\]]+)\].*$/, '$1') + ': ' + (String(st.desc).match(/이동 약 \d+분/) || [''])[0] + ' (' + (String(st.desc).match(/· ([^·]+?)\)\s*$/) || ['', ''])[1] + ')');
-          if (!changes.length) { alert('✅ 그날 교통 예측으로 다시 계산해 봤는데 바뀐 시간이 없습니다.\n\n' + notes.join('\n')); return; }
-          if (!confirm('그날 교통 예측으로 다시 계산한 결과입니다.\n\n' + changes.join('\n') + '\n\n' + notes.join('\n') + '\n\n이대로 바꿀까요? (담당 매니저에게 확인 요청이 갑니다)')) return;
+          if (!changes.length) { alert('✅ 그날 교통 예측으로 다시 계산해 봤는데 바뀐 시간이 없어요.\n\n' + notes.join('\n')); return; }
+          if (!confirm('그날 교통 예측으로 다시 계산한 결과예요.\n\n' + changes.join('\n') + '\n\n' + notes.join('\n') + '\n\n이대로 바꿀까요? (담당 매니저에게 확인 요청이 가요)')) return;
           await window.hqStore.updateSchedule(schId, { timeline: merged });
           const mid = sch.managerId, me = window.SupabaseClient?.currentUser?.id;
           const ack = (/^[0-9a-f-]{36}$/i.test(mid || '') && mid !== me) ? { need: true, managerId: mid } : null;
@@ -4113,7 +4113,7 @@ document.addEventListener('DOMContentLoaded', () => {
           await renderCurrentView(); await renderKPI();
           if (window.Admin.openScheduleDetail) await window.Admin.openScheduleDetail(schId);
         } catch (e) {
-          alert('동선을 다시 계산하지 못했습니다: ' + (e.message || '오류'));
+          alert('동선을 다시 계산하지 못했어요: ' + (e.message || '오류'));
         } finally { btnRetime.disabled = false; btnRetime.innerHTML = label; }
       });
     }
@@ -4143,15 +4143,15 @@ document.addEventListener('DOMContentLoaded', () => {
         el.modalScheduleDetail.classList.remove('active');
         openScheduleFormModal(null, copy);
         el.formSchId.value = '';
-        el.scheduleFormTitle.textContent = '일정 복사 (새 일정으로 저장됩니다)';
+        el.scheduleFormTitle.textContent = '일정 복사 (새 일정으로 저장돼요)';
       });
     }
 
-    // 스케줄 삭제 버튼
+    // 일정 삭제 버튼
     if (el.btnDeleteSchedule) {
       el.btnDeleteSchedule.addEventListener('click', async () => {
         const schId = state.activeScheduleId || window.Admin.currentDetailScheduleId;
-        if (confirm('이 스케줄을 삭제하시겠습니까? 로드플래너에서도 즉시 삭제됩니다.')) {
+        if (confirm('이 일정을 삭제할까요? 로드플래너에서도 즉시 삭제돼요.')) {
           let delSch = null;
           try { delSch = (await window.hqStore.getSchedules()).find(x => x.id === schId) || null; if (delSch) delSch = JSON.parse(JSON.stringify(delSch)); } catch (e) { }
           await window.hqStore.deleteSchedule(schId);
@@ -4184,25 +4184,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const phone = document.getElementById('new-mgr-phone').value.trim();
 
         if (!email || !email.includes('@')) {
-          alert('올바른 회사 이메일 주소를 입력해주세요. (예: user@company.com)');
+          alert('올바른 회사 이메일 주소를 입력해 주세요. (예: user@company.com)');
           return;
         }
 
         if (pw.length < 8) {
-          alert('비밀번호는 최소 8자 이상이어야 합니다.');
+          alert('비밀번호는 최소 8자 이상이어야 해요.');
           return;
         }
 
         const submitButton = el.formCreateManager.querySelector('button[type="submit"]');
         if (submitButton) submitButton.disabled = true;
         try {
-          if (!window.SupabaseClient?.isConfigured) throw new Error('계정 관리 서버에 연결할 수 없습니다.');
+          if (!window.SupabaseClient?.isConfigured) throw new Error('계정 관리 서버에 연결할 수 없어요.');
           const result = await window.SupabaseClient.signUp(email, pw, name, 'manager', phone);
-          if (!result.user?.id) throw new Error('서버 계정 생성이 확인되지 않았습니다.');
+          if (!result.user?.id) throw new Error('서버 계정 생성이 확인되지 않았어요.');
           await window.hqStore.addManager({ id: result.user.id, name, email, phone, role: 'manager', assignedArtists: [] });
-          alert('✅ 매니저 계정이 생성되었습니다. 입력한 이메일과 비밀번호로 바로 로그인할 수 있습니다.');
+          alert('✅ 매니저 계정이 생성됐어요. 입력한 이메일과 비밀번호로 바로 로그인할 수 있어요.');
         } catch (error) {
-          alert(error.message || '계정 생성에 실패했습니다. 서버 설정을 확인해주세요.');
+          alert(error.message || '계정 생성에 실패했어요. 서버 설정을 확인해 주세요.');
           return;
         } finally {
           if (submitButton) submitButton.disabled = false;
@@ -4230,12 +4230,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = pwEl ? pwEl.value : '';
 
         if (!email || !email.includes('@')) {
-          alert('올바른 이메일 주소를 입력해주세요.');
+          alert('올바른 이메일 주소를 입력해 주세요.');
           return;
         }
 
         if (password && password.length < 8) {
-          alert('비밀번호는 최소 8자 이상이어야 합니다.');
+          alert('비밀번호는 최소 8자 이상이어야 해요.');
           return;
         }
 
@@ -4247,7 +4247,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
           await window.hqStore.updateManager(id, updatePayload);
         } catch (error) {
-          alert(error.message || '계정 수정에 실패했습니다.');
+          alert(error.message || '계정 수정에 실패했어요.');
           return;
         }
         const modal = document.getElementById('modal-manager-edit');
@@ -4256,7 +4256,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await window.Admin.renderManagerManagementList();
         await populateSelectOptions();
         await renderSidebar();
-        alert(`✅ [${name}] 매니저 정보${password ? ' 및 비밀번호' : ''}가 성공적으로 수정되었습니다.`);
+        alert(`✅ [${name}] 매니저 정보${password ? ' 및 비밀번호' : ''}가 성공적으로 수정됐어요.`);
       });
     }
 
@@ -4292,7 +4292,7 @@ document.addEventListener('DOMContentLoaded', () => {
             careInfo: care,
             care: care
           });
-          alert(`✅ [${name}] 아티스트 정보가 수정되었습니다.`);
+          alert(`✅ [${name}] 아티스트 정보가 수정됐어요.`);
         } else {
           const newArt = {
             id: 'art_' + Date.now(),
@@ -4309,9 +4309,9 @@ document.addEventListener('DOMContentLoaded', () => {
             care: care
           };
           await window.hqStore.addArtist(newArt);
-          alert(`✅ [${name}] 아티스트가 성공적으로 등록되었습니다.`);
+          alert(`✅ [${name}] 아티스트가 성공적으로 등록됐어요.`);
         }
-        } catch (err) { alert(err.message || '아티스트를 저장하지 못했습니다.'); return; }
+        } catch (err) { alert(err.message || '아티스트를 저장하지 못했어요.'); return; }
 
         el.modalArtistForm.classList.remove('active');
         await window.Admin.renderArtistManagementList();
@@ -4352,13 +4352,13 @@ document.addEventListener('DOMContentLoaded', () => {
           if (editId) {
             vehPayload.id = editId;
             await window.hqStore.saveVehicle(vehPayload);
-            alert(`✅ [${name}] 차량 정보가 수정되었습니다.`);
+            alert(`✅ [${name}] 차량 정보가 수정됐어요.`);
           } else {
             vehPayload.id = 'veh_' + Date.now();
             await window.hqStore.saveVehicle(vehPayload);
-            alert(`✅ [${name}] 차량이 성공적으로 등록되었습니다.`);
+            alert(`✅ [${name}] 차량이 성공적으로 등록됐어요.`);
           }
-        } catch (err) { alert(err.message || '차량을 저장하지 못했습니다.'); return; }
+        } catch (err) { alert(err.message || '차량을 저장하지 못했어요.'); return; }
 
         const modal = document.getElementById('modal-vehicle-form');
         if (modal) modal.classList.remove('active');
@@ -4372,7 +4372,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const doLocationSearch = async () => {
         const query = el.formLocation.value.trim();
         if (!query) {
-          alert('검색할 행사장 명칭이나 키워드를 입력해주세요. (예: 상암 SBS, KBS 신관, 올림픽홀)');
+          alert('검색할 행사장 명칭이나 키워드를 입력해 주세요. (예: 상암 SBS, KBS 신관, 올림픽홀)');
           el.formLocation.focus();
           return;
         }
@@ -4422,8 +4422,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (results.length === 0) {
           el.locationSearchResults.innerHTML = `
             <div style="padding:14px; text-align:center; color:#5B616E; font-size:12px;">
-              <div style="color:#ef4444; font-weight:600; margin-bottom:4px;">검색 결과가 없습니다.</div>
-              <div>도로명 주소를 직접 입력창에 입력하실 수 있습니다.</div>
+              <div style="color:#ef4444; font-weight:600; margin-bottom:4px;">검색 결과가 없어요.</div>
+              <div>도로명 주소를 직접 입력창에 입력하실 수 있어요.</div>
             </div>
           `;
           return;

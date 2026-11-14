@@ -1,4 +1,4 @@
-// AI 비서 변경 카드: 본사는 [수정 창 열기] → 기존 스케줄 수정 창이 바뀐 시간으로 채워짐 / 매니저는 [본사에 요청] → 로드톡 열림
+// AI 비서 변경 카드: 본사는 [수정 창 열기] → 기존 일정 수정 창이 바뀐 시간으로 채워짐 / 매니저는 [본사에 요청] → 로드톡 열림
 const { chromium, devices } = require('playwright');
 (async () => {
   const b = await chromium.launch(); const p = await (await b.newContext({ ...devices['iPhone 14'] })).newPage();
@@ -10,7 +10,7 @@ const { chromium, devices } = require('playwright');
   await p.goto(process.argv[2] + '/index.html'); await p.waitForTimeout(900);
   await p.tap('text=1초 둘러보기'); await p.waitForTimeout(1500);
   const R = {};
-  // 앞으로 2주 안에 스케줄이 하나는 있도록 (데모 데이터 날짜와 무관하게)
+  // 앞으로 2주 안에 일정이 하나는 있도록 (데모 데이터 날짜와 무관하게)
   const target = await p.evaluate(async () => {
     const d = new Date(); d.setDate(d.getDate() + 1);
     const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -27,7 +27,7 @@ const { chromium, devices } = require('playwright');
   await p.fill('#rpai-input', '내일 사녹 6시 반으로 당겨졌어'); await p.tap('#rpai-send'); await p.waitForTimeout(700);
   R.secretHidden = !/AI비밀시험|비밀스튜디오|비밀아티스트/.test(JSON.stringify(sentCtx)) && JSON.stringify(sentCtx).includes('비공개 일정');
   R.ctxIdx = sentCtx.upcoming.every((u, i) => u.idx === i && /^\d{4}-\d\d-\d\d$/.test(u.date));
-  R.card = await p.evaluate(() => { const c = document.querySelector('.rpai-card'); return c && c.innerText.includes('스케줄 변경') && c.innerText.includes('19:00') && c.innerText.includes('18:30') && c.innerText.includes('수정 창 열기'); });
+  R.card = await p.evaluate(() => { const c = document.querySelector('.rpai-card'); return c && c.innerText.includes('일정 변경') && c.innerText.includes('19:00') && c.innerText.includes('18:30') && c.innerText.includes('수정 창 열기'); });
   await p.tap('text=수정 창 열기'); await p.waitForTimeout(500);
   R.editForm = await p.evaluate(() => ({ title: document.getElementById('m-sch-title')?.value, start: document.getElementById('m-sch-start')?.value, submit: document.getElementById('m-sch-submit')?.textContent.trim() }));
   await p.evaluate(() => App.closeModal()); await p.waitForTimeout(300);

@@ -20,7 +20,7 @@ const Home = {
   selectedDate: new Date(),
   calMonth: new Date().getMonth(),
   calYear: new Date().getFullYear(),
-  currentTab: 'timeline', // 'schedule' (회사 스케줄표) | 'timeline' (매니저 동선 타임라인)
+  currentTab: 'timeline', // 'schedule' (회사 일정표) | 'timeline' (매니저 동선 타임라인)
   broadcastBound: false,
 
   init() { 
@@ -29,7 +29,7 @@ const Home = {
     this.calMonth = this.selectedDate.getMonth();
     this.calYear = this.selectedDate.getFullYear();
     
-    // BroadcastChannel 실시간 리스너 등록 (본사 웹에서 스케줄 추가/수정 시 즉시 리렌더링)
+    // BroadcastChannel 실시간 리스너 등록 (본사 웹에서 일정 추가/수정 시 즉시 리렌더링)
     if (!this.broadcastBound && window.hqStore && window.hqStore.broadcast) {
       window.hqStore.broadcast.addEventListener('message', (event) => {
         if (event.data && event.data.type === 'MANAGER_ASSIGNED') {
@@ -51,7 +51,7 @@ const Home = {
 
   copyBriefing() {
     if (!this.currentEvents || this.currentEvents.length === 0) {
-      U.toast('복사할 일정이 없습니다.');
+      U.toast('복사할 일정이 없어요.');
       return;
     }
     
@@ -76,7 +76,7 @@ const Home = {
     let text = '';
     
     schedulesMap.forEach((info, id) => {
-      text += `[오늘 ${info.title} 스케줄 안내]\n`;
+      text += `[오늘 ${info.title} 일정 안내]\n`;
       info.steps.forEach(t => {
         let label = t.title.replace(/🎬 |🏁 |💄 |🚗 |📌 /g, '');
         if (label.includes('픽업')) label = `숙소 픽업 (${info.vehicle || '차량 미지정'})`;
@@ -92,12 +92,12 @@ const Home = {
     
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text.trim()).then(() => {
-        U.toast('📋 카카오톡 일정 브리핑 텍스트가 복사되었습니다!');
+        U.toast('📋 카카오톡 일정 브리핑 텍스트가 복사됐어요!');
       }).catch(err => {
-        U.toast('텍스트 복사에 실패했습니다.');
+        U.toast('텍스트 복사에 실패했어요.');
       });
     } else {
-      U.toast('클립보드 API를 지원하지 않는 기기입니다.');
+      U.toast('클립보드 API를 지원하지 않는 기기예요.');
     }
   },
 
@@ -126,7 +126,7 @@ const Home = {
           </div>
         </div>
       </div>
-      <button type="button" class="home-fab" onclick="Home.openScheduleRegisterModal()" aria-label="스케줄 추가">
+      <button type="button" class="home-fab" onclick="Home.openScheduleRegisterModal()" aria-label="일정 추가">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
       </button>
     `;
@@ -368,10 +368,10 @@ const Home = {
         <button type="button" class="hf-new" onclick="Home.openScheduleRegisterModal()">+ 일정</button>
       </div>
 
-      <!-- 보기 바꾸기: 내 동선 / 스케줄표 -->
+      <!-- 보기 바꾸기: 내 동선 / 일정표 -->
       <div class="seg" role="group" aria-label="보기">
         <button type="button" onclick="Home.setTab('timeline')" aria-pressed="${this.currentTab === 'timeline'}" class="${this.currentTab === 'timeline' ? 'on' : ''}">동선 타임라인</button>
-        <button type="button" onclick="Home.setTab('schedule')" aria-pressed="${this.currentTab === 'schedule'}" class="${this.currentTab === 'schedule' ? 'on' : ''}">${indieMode ? '내 스케줄표' : '회사 스케줄표'}</button>
+        <button type="button" onclick="Home.setTab('schedule')" aria-pressed="${this.currentTab === 'schedule'}" class="${this.currentTab === 'schedule' ? 'on' : ''}">${indieMode ? '내 일정표' : '회사 일정표'}</button>
       </div>
       ${window.WorkEnd && !weBusy ? WorkEnd.homeHtml() : ''}
       ${window.AutoNav?.promoHtml ? AutoNav.promoHtml() : ''}
@@ -395,9 +395,9 @@ const Home = {
     if (events.length === 0 && rawSchedules.length === 0) {
       html += `
         <div class="tl-empty">
-          <b>이 날은 스케줄이 없어요.</b>
-          <span>이 날은 쉬는 날이에요.</span>
-          <button type="button" onclick="Home.openScheduleRegisterModal()">+ 새 스케줄 등록하기</button>
+          <b>이 날은 일정이 없어요.</b>
+          <span>새 일정이 생기면 여기에 보여요.</span>
+          <button type="button" onclick="Home.openScheduleRegisterModal()">+ 새 일정 등록하기</button>
         </div>
       `;
       html += this.renderTomorrowPeek();
@@ -426,7 +426,7 @@ const Home = {
   },
 
   renderScheduleGrid(schedules, y, m, d) {
-    // 스케줄 시작/종료 시(hour) 파싱
+    // 일정 시작/종료 시(hour) 파싱
     const timeToHour = (tStr, defaultH = 9) => {
       if (!tStr) return defaultH;
       const [h] = tStr.split(':').map(Number);
@@ -442,7 +442,7 @@ const Home = {
 
     let html = `<div style="padding: 4px 0 40px; position:relative; max-width:340px;">`;
 
-    // 단일 스케줄 카드 렌더링 헬퍼
+    // 단일 일정 카드 렌더링 헬퍼
     const renderCard = (activeSched, hourLabel) => {
       const schId = activeSched.id || `sch_${sortedSchedules.indexOf(activeSched)}`;
       const isExpanded = this.expandedScheduleId === schId;
@@ -467,7 +467,7 @@ const Home = {
       const rawTitle = (activeSched.title || '').replace(/^[🎬🔒📌🏁\s]+/g, '').trim();
 
       const displayTitle = (isSecret && !canViewSecret) 
-        ? '비공개 스케줄 (보안 일정 - 열람 제한)' 
+        ? '비공개 일정 (보안 일정 - 열람 제한)' 
         : (isSecret ? `[극비 보안] ${rawTitle}` : rawTitle);
       
       const displayLocation = (isSecret && !canViewSecret) 
@@ -488,7 +488,7 @@ const Home = {
             ${esc(hourLabel)}
           </div>
 
-          <!-- 스케줄 카드 -->
+          <!-- 일정 카드 -->
           <div onclick="Home.toggleScheduleDetail(${escJs(schId)})" 
                style="width:100%; background:${esc(cardBg)}; border-radius:14px; padding:14px 14px 16px; border:1px solid ${esc(cardBorderColor)}; ${esc(cardBorderLeft)} box-shadow:0 2px 10px rgba(0,0,0,0.04); cursor:pointer; transition:all 0.2s ease; box-sizing:border-box;">
             
@@ -505,7 +505,7 @@ const Home = {
                     <span>${esc(activeSched.artistName || '아티스트')}</span>
                   </span>
                   ${isHQ && !(typeof Plan !== 'undefined' && Plan.isIndie()) ? '<span style="background:rgba(59, 69, 196,0.1); color:#3B45C4; font-size:12px; font-weight:700; padding:1px 6px; border-radius:4px; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="12" y1="22" x2="12" y2="22.01"/></svg>HQ연동</span>' : ''}
-                  ${isSecret ? '<span style="background:#f3e8ff; color:#9333ea; font-size:12px; font-weight:700; padding:1px 6px; border-radius:4px; border:1px solid #d8b4fe; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Secret</span>' : ''}
+                  ${isSecret ? '<span style="background:#f3e8ff; color:#9333ea; font-size:12px; font-weight:700; padding:1px 6px; border-radius:4px; border:1px solid #d8b4fe; display:inline-flex; align-items:center; gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>비공개</span>' : ''}
                 </div>
               </div>
 
@@ -532,7 +532,7 @@ const Home = {
                   ${(isSecret && !canViewSecret) ? `
                     <div style="color:#dc2626; font-weight:700; display:flex; align-items:center; gap:4px;">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                      <span>본 일정은 비공개 보안 스케줄로, 담당 배정자 및 경영진 외에는 열람이 제한됩니다.</span>
+                      <span>본 일정은 비공개 보안 일정으로, 담당 배정자 및 경영진 외에는 열람이 제한돼요.</span>
                     </div>
                   ` : `
                     <div style="display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3B45C4" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <strong style="white-space:nowrap;flex-shrink:0;">매니저:</strong> ${esc(activeSched.managerName || '미지정')}</div>
@@ -560,7 +560,7 @@ const Home = {
       `;
     };
 
-    // 첫 스케줄의 시작 시간(Hour)부터 타임라인 시작 (이전 새벽 시간 00:00~06:00 등은 숨김)
+    // 첫 일정의 시작 시간(Hour)부터 타임라인 시작 (이전 새벽 시간 00:00~06:00 등은 숨김)
     const firstStartHour = sortedSchedules.length > 0 ? timeToHour(sortedSchedules[0].teeOff || sortedSchedules[0].startTime, 7) : 7;
     const renderedIds = new Set();
     let currentHour = firstStartHour;
@@ -568,36 +568,36 @@ const Home = {
     while (currentHour <= 23) {
       const hourStr = String(currentHour).padStart(2, '0') + ':00';
 
-      // 현재 시간에 시작하는 스케줄 목록
+      // 현재 시간에 시작하는 일정 목록
       const matchingScheds = sortedSchedules.filter(s => {
         const sHour = timeToHour(s.teeOff || s.startTime);
         return sHour === currentHour;
       });
 
       if (matchingScheds.length > 0) {
-        // 해당 시간에 시작하는 모든 스케줄 렌더링
+        // 해당 시간에 시작하는 모든 일정 렌더링
         matchingScheds.forEach(s => {
           renderedIds.add(s.id);
           html += renderCard(s, hourStr);
         });
         currentHour++;
       } else {
-        // 현재 시간에 시작하는 스케줄이 없는 경우
-        // 진행 중인 다른 스케줄의 시간대인지 확인
+        // 현재 시간에 시작하는 일정이 없는 경우
+        // 진행 중인 다른 일정의 시간대인지 확인
         const isCovered = sortedSchedules.some(s => {
           const sHour = timeToHour(s.teeOff || s.startTime);
           const eHour = timeToHour(s.endTime, sHour + 1);
           return sHour < currentHour && currentHour < eHour;
         });
 
-        // 남은 스케줄이 없으면 빈 시간은 한 줄로 접는다
+        // 남은 일정이 없으면 빈 시간은 한 줄로 접는다
         const anyLater = sortedSchedules.some(s => timeToHour(s.teeOff || s.startTime) >= currentHour);
         if (!isCovered && !anyLater) {
           const lastEnd = sortedSchedules.reduce((mx, s) => (s.endTime || '') > mx ? (s.endTime || '') : mx, '');
           html += `<div class="grid-rest" style="font-size:13px; color:#3c3c43; padding:6px 2px 4px; border-top:1px dashed #e2e8f0;">${esc(lastEnd || hourStr)} 이후 일정 없음</div>`;
           break;
         }
-        // 진행 중인 스케줄이 없을 때만 빈 시간 표시선 렌더링
+        // 진행 중인 일정이 없을 때만 빈 시간 표시선 렌더링
         if (!isCovered) {
           html += `
             <div style="margin-bottom:8px; position:relative;">
@@ -612,7 +612,7 @@ const Home = {
       }
     }
 
-    // 24시 이후 또는 예외적인 시간으로 인해 누락된 스케줄이 있다면 추가 렌더링
+    // 24시 이후 또는 예외적인 시간으로 인해 누락된 일정이 있다면 추가 렌더링
     sortedSchedules.forEach(s => {
       if (!renderedIds.has(s.id)) {
         const startTime = s.teeOff || s.startTime || '09:00';
@@ -643,10 +643,10 @@ const Home = {
     this.currentEvents = events;
     let html = '<div style="padding: 8px 4px 40px;">';
     
-    // 아티스트/차량 요약 칸은 스케줄표와 겹쳐서 없앰. [+ 스케줄 추가]는 '지금 할 일' 카드 오른쪽 위(시계 옆)에 둔다
+    // 아티스트/차량 요약 칸은 일정표와 겹쳐서 없앰. [+ 일정 추가]는 '지금 할 일' 카드 오른쪽 위(시계 옆)에 둔다
     const addRow = `
       <div style="display:flex; justify-content:flex-end; margin:0 0 8px;">
-        <button type="button" onclick="Home.openScheduleRegisterModal()" style="display:inline-flex; align-items:center; gap:5px; background:#3B45C4; color:#fff; border:0; padding:8px 12px; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer;">+ 스케줄 추가</button>
+        <button type="button" onclick="Home.openScheduleRegisterModal()" style="display:inline-flex; align-items:center; gap:5px; background:#3B45C4; color:#fff; border:0; padding:8px 12px; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer;">+ 일정 추가</button>
       </div>`;
 
     // 타임라인 동일 시간 및 동일 라벨 단계 중복 제거 (Deduplication)
@@ -678,7 +678,7 @@ const Home = {
         const d = this.selectedDate;
         html += `<div class="home-note">지난 일정이에요 · ${d.getMonth() + 1}/${d.getDate()}(${U.DAYS[d.getDay()]}) — 기록으로 흐리게 보여요</div>`;
       } else if (uniqueEvents.length && !nowEv) {
-        html += `<div class="home-note ok">오늘 일정이 모두 끝났습니다. 수고하셨습니다.</div>`;
+        html += `<div class="home-note ok">오늘 일정이 모두 끝났어요. 수고하셨습니다.</div>`;
       } else if (nowEv) {
         const raw = String(nowEv.title || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim();
         const bm = raw.match(/^\[([^\]]+)\]\s*(.*)$/);
@@ -756,7 +756,7 @@ const Home = {
       const isDone = ev.done || false;
       const isHQ = ev.isHQ;
       
-      // 이동중: 단계별 개별 상태 (ev.moving) 사용 — 전체 스케줄 상태 아님
+      // 이동중: 단계별 개별 상태 (ev.moving) 사용 — 전체 일정 상태 아님
       const isMoving = (ev.moving === true) && !isDone;
 
       let dotBg = isDone ? '#10b981' : isMoving ? '#f59e0b' : '#3B45C4';
@@ -1001,7 +1001,7 @@ const Home = {
       U.toast('본사에 확인을 보냈어요.');
       U.haptic && U.haptic();
     } catch (e) {
-      U.toast(e?.localSaved ? '확인을 저장했어요. 연결되면 본사에 전달됩니다.' : '확인을 보내지 못했어요. 다시 눌러 주세요.');
+      U.toast(e?.localSaved ? '확인을 저장했어요. 연결되면 본사에 전달돼요.' : '확인을 보내지 못했어요. 다시 눌러 주세요.');
     }
     this.render && this.render();
   },
@@ -1071,7 +1071,7 @@ const Home = {
       await st.requestAdjust(bId, text);
       try { if (window.Chat && Chat.available && Chat.available() && !Chat.isHq()) await Chat.sendNotice({ title: '🔁 일정 조정 요청', content: `${b.date.slice(5).replace('-', '/')} ${nm(b)}\n${text}` }); } catch (e) { }
       U.toast('본사에 조정 요청을 보냈어요.');
-    } catch (e) { U.toast(e?.localSaved ? '요청을 저장했어요. 연결되면 본사에 전달됩니다.' : '보내지 못했어요. 다시 눌러 주세요.'); }
+    } catch (e) { U.toast(e?.localSaved ? '요청을 저장했어요. 연결되면 본사에 전달돼요.' : '보내지 못했어요. 다시 눌러 주세요.'); }
     this.render && this.render();
   },
 
@@ -1086,7 +1086,7 @@ const Home = {
       try { await window.hqStore.ackSchedule(s.id); ok++; } catch (e) { if (e?.localSaved) saved++; }
       if (btn) btn.textContent = `보내는 중… (${ok + saved}/${list.length})`;
     }
-    U.toast(ok + saved === list.length ? (saved ? `${list.length}건 확인을 저장했어요. 연결되면 본사에 전달됩니다.` : `${list.length}건 모두 본사에 확인을 보냈어요.`) : `${ok + saved}건 보냈어요. 나머지는 다시 눌러 주세요.`);
+    U.toast(ok + saved === list.length ? (saved ? `${list.length}건 확인을 저장했어요. 연결되면 본사에 전달돼요.` : `${list.length}건 모두 본사에 확인을 보냈어요.`) : `${ok + saved}건 보냈어요. 나머지는 다시 눌러 주세요.`);
     U.haptic && U.haptic();
     this.render && this.render();
   },
@@ -1100,8 +1100,8 @@ const Home = {
       let artist = '';
       try { artist = (window.hqStore.getSchedules().find(s => s.id === hqId) || {}).artistName || ''; } catch (e) { }
       await window.Chat.sendNotice({ title: '도착 보고', content: `${name}${artist ? ' · ' + artist : ''} (${hm} 도착)` });
-      U.toast('📍 본사에 도착 보고를 보냈습니다.');
-    } catch (e) { U.toast('도착은 기록됐지만 본사 알림은 보내지 못했습니다.'); }
+      U.toast('📍 본사에 도착 보고를 보냈어요.');
+    } catch (e) { U.toast('도착은 기록됐지만 본사 알림은 보내지 못했어요.'); }
   },
 
   // 동선 타임라인에서 [이동중] 또는 [완료] 선택 시 본사 포털과 실시간 연동 및 타임스탬프 기록
@@ -1161,7 +1161,7 @@ const Home = {
         sch.timeline[stepIdx].doneAt = timeStr; // 현장 완료 시각 기록
         sch.timeline[stepIdx].doneAtIso = now.toISOString();   // 날짜까지 (자정 넘는 일정)
       }
-      // 모든 단계가 완료되었으면 스케줄 전체 상태도 '완료'
+      // 모든 단계가 완료되었으면 일정 전체 상태도 '완료'
       const allDone = sch.timeline && sch.timeline.every(t => t.done);
       const newStatus = allDone ? '완료' : (sch.status === '예정' ? '진행중' : sch.status);
       window.hqStore.updateSchedule(hqId, { timeline: sch.timeline, status: newStatus });
@@ -1183,11 +1183,11 @@ const Home = {
         if (isAlreadyMoving) {
           // ★ 이미 이동중이면 → 토글 OFF (비활성화)
           sch.timeline[stepIdx].moving = false;
-          // 다른 이동중 단계도 없으면 전체 스케줄 상태를 '예정'으로 되돌림
+          // 다른 이동중 단계도 없으면 전체 일정 상태를 '예정'으로 되돌림
           const anyMoving = sch.timeline.some(t => t.moving);
           const newOverallStatus = anyMoving ? '이동중' : '예정';
           window.hqStore.updateSchedule(hqId, { timeline: sch.timeline, status: newOverallStatus });
-          U.toast(`⏸ 이동중 상태가 해제되었습니다.`);
+          U.toast(`⏸ 이동중 상태가 해제됐어요.`);
         } else {
           // ★ 비활성 → 토글 ON (이 단계만 이동중, 나머지 해제)
           sch.timeline.forEach((step, i) => {
@@ -1207,7 +1207,7 @@ const Home = {
             track: Home._track(sch, stepIdx, now)
           });
 
-          U.toast(`🚗 [${stepName}] 이동중으로 기록되었습니다. (${timeStr})`);
+          U.toast(`🚗 [${stepName}] 이동중으로 기록됐어요. (${timeStr})`);
         }
       }
     }
@@ -1228,11 +1228,11 @@ const Home = {
     }, 120);
   },
 
-  // 본사 스케줄 상태 변경 (이동중, 샵진행, 완료 등)
+  // 본사 일정 상태 변경 (이동중, 샵진행, 완료 등)
   changeHQStatus(hqId, newStatus) {
     if (typeof window.hqStore !== 'undefined') {
       window.hqStore.updateSchedule(hqId, { status: newStatus });
-      U.toast(`상태가 [${newStatus}]으로 변경되었습니다. (본사 실시간 반영)`);
+      U.toast(`상태가 [${newStatus}]으로 변경됐어요. (본사 실시간 반영)`);
       this.updateRightTimeline();
     }
   },
@@ -1250,7 +1250,7 @@ const Home = {
   },
 
   async logout() {
-    if (confirm('로그아웃 하시겠습니까?')) {
+    if (confirm('로그아웃 할까요?')) {
       if (window.SupabaseClient) {
         try {
           await window.SupabaseClient.signOut();
@@ -1308,7 +1308,7 @@ const Home = {
     const durMin = parseInt(document.getElementById('cs-dur').value, 10) || 30;
 
     if (!title || !time) {
-      U.toast('이름과 시간을 모두 입력해주세요.');
+      U.toast('이름과 시간을 모두 입력해 주세요.');
       return;
     }
 
@@ -1321,12 +1321,12 @@ const Home = {
     });
 
     App.closeModal();
-    U.toast('매니저 일정이 추가되었습니다.');
+    U.toast('매니저 일정이 추가됐어요.');
     this.updateRightTimeline();
   },
 
-  // 🌟 웹과 100% 동일한 '스케줄 등록' 모달 앱 내 팝업 렌더링
-  // ── 스케줄 등록·수정 창 (editId 가 있으면 수정) ──
+  // 🌟 웹과 100% 동일한 '일정 등록' 모달 앱 내 팝업 렌더링
+  // ── 일정 등록·수정 창 (editId 가 있으면 수정) ──
   openScheduleRegisterModal(editId = null) {
     const ymd = (dt) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
     const edit = editId && window.hqStore ? (window.hqStore.getSchedules() || []).find(s => s.id === editId) : null;
@@ -1373,8 +1373,8 @@ const Home = {
       <div id="app-schedule-form-container" style="padding:4px 0 20px; max-height:75vh; overflow-y:auto; -webkit-overflow-scrolling:touch;">
         <form id="app-schedule-form" onsubmit="event.preventDefault(); if (event.submitter === null) return; Home.submitScheduleFromModal(${edit ? escJs(edit.id) : 'null'});" style="display:flex; flex-direction:column; gap:14px;">
           <div style="${BOX}">
-            <div style="font-size:14px; font-weight:700; color:#3B45C4; margin-bottom:10px;">기본 스케줄 정보</div>
-            <div style="margin-bottom:12px;"><label style="${L}">스케줄명 <span style="color:#ef4444;">*</span></label>
+            <div style="font-size:14px; font-weight:700; color:#3B45C4; margin-bottom:10px;">기본 일정 정보</div>
+            <div style="margin-bottom:12px;"><label style="${L}">일정명 <span style="color:#ef4444;">*</span></label>
               <input type="text" id="m-sch-title" required maxlength="80" value="${esc(v.title)}" placeholder="예: 뮤직뱅크 사전녹화" style="${I}" /></div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
               <div><label style="${L}">아티스트 <span style="color:#ef4444;">*</span></label><select id="m-sch-artist" required style="${I} padding:10px 8px;">${artistOptions}</select></div>
@@ -1421,18 +1421,18 @@ const Home = {
               <div><label style="${L}">담당 매니저</label><select id="m-sch-mgr" style="${I} padding:10px 8px;">${managerOptions}</select></div>
             </div>
             <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1; display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:13px; font-weight:700; color:#5B616E;">🔒 비공개 보안 스케줄</span>
+              <span style="font-size:13px; font-weight:700; color:#5B616E;">🔒 비공개 보안 일정</span>
               <input type="checkbox" id="m-sch-secret" ${v.secret ? 'checked' : ''} style="width:18px; height:18px; accent-color:#9333ea;" />
             </div>
           </div>
 
           <div style="display:flex; gap:8px; margin-top:8px;">
             <button type="button" onclick="App.closeModal();" style="flex:1; padding:14px 0; border:1px solid #cbd5e1; background:#fff; color:#475569; border-radius:10px; font-size:15px; font-weight:700;">취소</button>
-            <button type="submit" id="m-sch-submit" style="flex:2; padding:14px 0; border:none; background:#3B45C4; color:#fff; border-radius:10px; font-size:15px; font-weight:700;">${edit ? '수정 저장' : '스케줄 등록 완료'}</button>
+            <button type="submit" id="m-sch-submit" style="flex:2; padding:14px 0; border:none; background:#3B45C4; color:#fff; border-radius:10px; font-size:15px; font-weight:700;">${edit ? '수정 저장' : '일정 등록 완료'}</button>
           </div>
         </form>
       </div>`;
-    App.showModal(edit ? '✏️ 스케줄 수정' : '📅 신규 스케줄 등록', modalHtml);
+    App.showModal(edit ? '✏️ 일정 수정' : '📅 신규 일정 등록', modalHtml);
     // 폰 키보드의 엔터(이동/완료)를 눌러도 창이 저장·닫히지 않게 — 저장은 아래 저장 버튼으로만
     document.getElementById('app-schedule-form')?.addEventListener('keydown', (e) => {
       if (e.key !== 'Enter' || e.isComposing || e.target.tagName === 'TEXTAREA' || e.target.type === 'submit') return;
@@ -1588,7 +1588,7 @@ const Home = {
     const shopNeeded = !!g('m-sch-shop-needed')?.checked, shopName = val('m-sch-shop-name'), shopAddr = val('m-sch-shop-addr');
     const vehicleId = g('m-sch-veh')?.value || '', managerId = g('m-sch-mgr')?.value || '', isSecret = !!g('m-sch-secret')?.checked;
 
-    if (!title || !dateVal || !startVal || !locationVal) { U.toast('필수 항목(스케줄명, 날짜, 시작시간, 장소)을 모두 입력해주세요.'); return; }
+    if (!title || !dateVal || !startVal || !locationVal) { U.toast('필수 항목(일정명, 날짜, 시작시간, 장소)을 모두 입력해 주세요.'); return; }
     if (shopNeeded && !shopName && !shopAddr) { U.toast('샵 이름이나 주소를 입력해 주세요. (샵에 안 가면 "경유함"을 끄세요)'); return; }
     const today = new Date(); const todayYmd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     if (dateVal < todayYmd && !confirm(`지난 날짜(${dateVal})예요. 그래도 저장할까요?`)) return;
@@ -1640,13 +1640,13 @@ const Home = {
         State.addSchedule(schData);
       }
       App.closeModal();
-      U.toast(editId ? '✅ 스케줄을 수정했습니다.' : '✅ 스케줄이 등록되었습니다!');
+      U.toast(editId ? '✅ 일정을 수정했어요.' : '✅ 일정이 등록됐어요!');
       if (window.Ads) Ads.moment(editId ? 'schedule-edit' : 'schedule');
       const parts = dateVal.split('-').map(Number);
       if (parts.length === 3) this.selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
       this.render();
     } catch (err) {
-      U.toast('저장하지 못했습니다: ' + (err?.message || err));
+      U.toast('저장하지 못했어요: ' + (err?.message || err));
       if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.textContent = label; }
     } finally {
       this._submittingSchedule = false;
@@ -1656,8 +1656,8 @@ const Home = {
   // 상세보기 [삭제] (본사 계정)
   async deleteScheduleFromApp(id) {
     const sch = (window.hqStore?.getSchedules?.() || []).find(s => s.id === id);
-    if (!sch || !confirm(`"${sch.title}" (${sch.date} ${sch.startTime}) 일정을 삭제할까요?\n담당 매니저 화면에서도 사라집니다.`)) return;
-    try { await window.hqStore.deleteSchedule(id); U.toast('🗑️ 일정을 삭제했습니다.'); this.render(); }
-    catch (err) { U.toast('삭제하지 못했습니다: ' + (err?.message || err)); }
+    if (!sch || !confirm(`"${sch.title}" (${sch.date} ${sch.startTime}) 일정을 삭제할까요?\n담당 매니저 화면에서도 사라져요.`)) return;
+    try { await window.hqStore.deleteSchedule(id); U.toast('🗑️ 일정을 삭제했어요.'); this.render(); }
+    catch (err) { U.toast('삭제하지 못했어요: ' + (err?.message || err)); }
   }
 };

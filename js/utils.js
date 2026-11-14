@@ -117,7 +117,7 @@ const U = {
     const [th,tm] = s.teeOff.split(':').map(Number);
 
     const dtStart = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(th)}${pad(tm)}00`;
-    // 스케줄은 보통 5시간
+    // 일정은 보통 5시간
     const endH = th + 5;
     const dtEnd = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(endH % 24)}${pad(tm)}00`;
 
@@ -134,14 +134,14 @@ const U = {
       'BEGIN:VEVENT',
       `DTSTART;TZID=Asia/Seoul:${dtStart}`,
       `DTEND;TZID=Asia/Seoul:${dtEnd}`,
-      `SUMMARY:🎬 ${s.course.name} 스케줄`,
+      `SUMMARY:🎬 ${s.course.name} 일정`,
       `DESCRIPTION:콜타임: ${U.fmtTimeKo(s.teeOff)}\\n장소: ${s.course.addr}\\n${tl.hasMeal ? '식사: '+tl.restaurantName+'\\n' : ''}준비 시작: ${U.fmtTimeKo(tl.prepStart)}\\n출발: ${U.fmtTimeKo(tl.homeDepart)}`,
       `LOCATION:${s.course.name}\\, ${s.course.addr}`,
       `GEO:${s.course.lat};${s.course.lng}`,
       'BEGIN:VALARM',
       'TRIGGER:-PT' + alarmMinutes + 'M',
       'ACTION:DISPLAY',
-      `DESCRIPTION:⏰ 스케줄 준비를 시작하세요! (${s.course.name})`,
+      `DESCRIPTION:⏰ 일정 준비를 시작하세요! (${s.course.name})`,
       'END:VALARM',
       'END:VEVENT',
       'END:VCALENDAR'
@@ -157,7 +157,7 @@ const U = {
     const endH = th + 5;
     const endStr = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(endH % 24)}${pad(tm)}00`;
     
-    const title = encodeURIComponent(`🎬 ${s.course.name} 스케줄`);
+    const title = encodeURIComponent(`🎬 ${s.course.name} 일정`);
     const tl = s.timeline;
     const startPt = s.startPoint || '집';
     const details = encodeURIComponent(`콜타임: ${U.fmtTimeKo(s.teeOff)}\n장소: ${s.course.addr}\n출발지: ${startPt}\n준비 시작: ${U.fmtTimeKo(tl.prepStart)}\n출발: ${U.fmtTimeKo(tl.homeDepart)}`);
@@ -220,12 +220,12 @@ const U = {
     
     const ua = navigator.userAgent.toLowerCase();
     if (ua.includes('kakaotalk')) {
-      alert('카카오톡에서는 캘린더 저장이 제한됩니다. 사파리(기본 브라우저)로 자동 전환합니다.');
+      alert('카카오톡에서는 캘린더 저장이 제한돼요. 사파리(기본 브라우저)로 자동 전환해요.');
       window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(window.location.href);
       return;
     }
     if (ua.includes('naver') || ua.includes('instagram')) {
-      alert('현재 앱에서는 캘린더 저장이 제한됩니다. 브라우저 메뉴에서 Safari로 열기를 선택해주세요.');
+      alert('현재 앱에서는 캘린더 저장이 제한돼요. 브라우저 메뉴에서 Safari로 열기를 선택해 주세요.');
       return;
     }
 
@@ -240,19 +240,19 @@ const U = {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     App.closeModal();
-    this.toast('✅ 캘린더 파일이 다운로드되었습니다. 다운로드 항목에서 열어주세요!');
+    this.toast('✅ 캘린더 파일이 다운로드됐어요. 다운로드 항목에서 열어주세요!');
   },
 
   autoSyncCalendar(schedule, idx) {
     // 1. 정식 앱(Native App) 환경: 네이티브 캘린더에 백그라운드로 자동 등록
     if (window.Android && window.Android.addCalendarEvent) {
       window.Android.addCalendarEvent(JSON.stringify(schedule));
-      this.toast('📅 앱 기본 캘린더에 자동 연동되었습니다.');
+      this.toast('📅 앱 기본 캘린더에 자동 연동됐어요.');
       return;
     }
     if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.addCalendarEvent) {
       window.webkit.messageHandlers.addCalendarEvent.postMessage(JSON.stringify(schedule));
-      this.toast('📅 앱 기본 캘린더에 자동 연동되었습니다.');
+      this.toast('📅 앱 기본 캘린더에 자동 연동됐어요.');
       return;
     }
 
@@ -285,9 +285,9 @@ const U = {
             ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}
           </div>
           <p style="color:var(--text-400); line-height:1.5; margin-bottom:var(--sp-4); font-size:15px;">
-            아이폰(애플) 정책상 웹 브라우저에서 알람을 자동으로 설정할 수 없습니다.<br><br>
+            아이폰(애플) 정책상 웹 브라우저에서 알람을 자동으로 설정할 수 없어요.<br><br>
             <strong>번거로우시겠지만 위 시간에 맞춰 직접 알람을 설정해 주세요!</strong><br><br>
-            <span style="font-size:13px; color:var(--text-500);">※ 향후 앱스토어에 정식 앱이 출시되면 100% 자동 알람 연동이 지원됩니다.</span>
+            <span style="font-size:13px; color:var(--text-500);">※ 향후 앱스토어에 정식 앱이 출시되면 100% 자동 알람 연동이 지원돼요.</span>
           </p>
           <button class="btn btn-primary" style="width:100%" onclick="App.closeModal()">확인했습니다</button>
         </div>
@@ -361,7 +361,7 @@ const U = {
 
   async openNavigation(destName, destAddr, forcedNavi = null) {
     if (!destName && !destAddr) {
-      this.toast('목적지 정보가 없습니다.');
+      this.toast('목적지 정보가 없어요.');
       return;
     }
     const label = (this._splitPlace(destName || destAddr).name || this._splitPlace(destName || destAddr).addr || destName || destAddr);
@@ -380,37 +380,37 @@ const U = {
     const pt = await this._resolveDest(destName, destAddr);
     const name = (pt && pt.name) || label;
     const webRoute = pt ? `https://map.kakao.com/link/to/${enc(name)},${pt.lat},${pt.lng}` : `https://map.kakao.com/link/search/${enc(label)}`;
-    if (!pt) this.toast('정확한 위치를 찾지 못해 이름으로 검색합니다.');
+    if (!pt) this.toast('정확한 위치를 찾지 못해 이름으로 검색해요.');
 
     if (pref === 'tmap') {
       if (!isMobile) {
         window.open(webRoute, '_blank');
-        this.toast('PC에서는 티맵 앱을 열 수 없어 카카오맵 웹 길찾기로 엽니다.');
+        this.toast('PC에서는 티맵 앱을 열 수 없어 카카오맵 웹 길찾기로 열어요.');
         return;
       }
       // 티맵 앱 주소 형식: route?goalname=&goalx=(경도)&goaly=(위도) — 이름을 같이 넘겨야 티맵이 근처 다른 가게 이름으로 바꾸지 않음
       const path = pt ? `route?goalname=${enc(name)}&goalx=${pt.lng}&goaly=${pt.lat}` : `search?name=${enc(label)}`;
       if (isAndroid) this._go(`intent://${path}#Intent;scheme=tmap;package=com.skt.tmap.ku;end`);
       else this._launchApp(`tmap://${path}`, 'https://apps.apple.com/kr/app/id431589174');
-      this.toast(`🚗 티맵으로 [${name}] 길안내를 엽니다.`);
+      this.toast(`🚗 티맵으로 [${name}] 길안내를 열어요.`);
     } else if (pref === 'kakao') {
       // 카카오내비 SDK가 준비돼 있으면 내비로 바로 (JavaScript 키 + 도메인 등록 필요)
       if (isMobile && pt && window.Kakao && window.Kakao.Navi && window.Kakao.isInitialized && window.Kakao.isInitialized()) {
         try {
           window.Kakao.Navi.start({ name, x: Number(pt.lng), y: Number(pt.lat), coordType: 'wgs84' });
-          this.toast(`🟡 카카오내비로 [${name}] 길안내를 엽니다.`);
+          this.toast(`🟡 카카오내비로 [${name}] 길안내를 열어요.`);
           return;
         } catch (e) { /* 아래 카카오맵으로 */ }
       }
       if (!isMobile) {
         window.open(webRoute, '_blank');
-        this.toast('PC에서는 카카오맵 웹 길찾기로 엽니다.');
+        this.toast('PC에서는 카카오맵 웹 길찾기로 열어요.');
         return;
       }
       const path = pt ? `route?ep=${pt.lat},${pt.lng}&by=CAR` : `search?q=${enc(label)}`;
       if (isAndroid) this._go(`intent://${path}#Intent;scheme=kakaomap;package=net.daum.android.map;S.browser_fallback_url=${enc(webRoute)};end`);
       else this._launchApp(`kakaomap://${path}`, webRoute);
-      this.toast(`🟡 카카오맵 길찾기로 [${name}] 경로를 엽니다.`);
+      this.toast(`🟡 카카오맵 길찾기로 [${name}] 경로를 열어요.`);
     }
   },
 
@@ -422,7 +422,7 @@ const U = {
           📍 목적지: ${esc(query)}
         </div>
         <p style="font-size:13px; color:var(--text-400); margin-bottom:20px;">
-          사용하실 네비게이션 앱을 선택해주세요.
+          사용하실 네비게이션 앱을 선택해 주세요.
         </p>
 
         <div style="display:flex; flex-direction:column; gap:10px;">
@@ -438,7 +438,7 @@ const U = {
         </div>
 
         <div style="margin-top:16px; font-size:12px; color:#94a3b8;">
-          ※ [내정보]에서 선호하는 네비를 설정하시면 원클릭으로 바로 실행됩니다.
+          ※ [내정보]에서 선호하는 네비를 설정하시면 원클릭으로 바로 실행돼요.
         </div>
       </div>
     `;

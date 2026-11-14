@@ -2,10 +2,10 @@
    RoadPlanner — API Module
    (Kakao Local & TMAP Route/Place Integration)
 
-   카카오 REST 키와 티맵 앱키는 코드에 넣지 않습니다.
-   모든 장소 검색·경로 조회는 Supabase 서버 함수(manager-planner-route)가 대신 호출합니다.
+   카카오 REST 키와 티맵 앱키는 코드에 넣지 않아요.
+   모든 장소 검색·경로 조회는 Supabase 서버 함수(manager-planner-route)가 대신 호출해요.
    - 함수 위치: 버디플래너 Supabase 프로젝트 / 소스: supabase/functions/manager-planner-route
-   - 키는 Supabase Secrets의 MANAGER_KAKAO_REST_KEY, MANAGER_TMAP_APP_KEY 에만 있습니다.
+   - 키는 Supabase Secrets의 MANAGER_KAKAO_REST_KEY, MANAGER_TMAP_APP_KEY 에만 있어요.
    ========================================= */
 
 const RouteProxy = {

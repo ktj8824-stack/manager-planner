@@ -43,9 +43,9 @@
       font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; margin-bottom: 10px;
     }
   </style>
-<script src="js/icons.js?v=340"></script>
+<script src="js/icons.js?v=341"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js?v=340"></script>
+<script src="js/supabase-client.js?v=341"></script>
 </head>
 <body>
 <div id="test-banner" style="position:sticky;top:0;z-index:9999;width:100%;background:#f59e0b;color:#1f1300;text-align:center;font:700 13px/1.4 Pretendard,sans-serif;padding:8px 12px;">🧪 테스트 결제 — 실제 결제되지 않습니다 (카드가 청구되지 않아요)</div>
@@ -72,7 +72,7 @@
   <div class="note" id="r-note" style="display:none;"></div>
   <button class="btn-primary" id="btn-va-confirm" style="display:none; background:#059669;" onclick="simulateVirtualDepositDone()">⚡ 입금 확인 시뮬레이션 (즉시 승인)</button>
   <button class="btn-primary" id="btn-retry" onclick="goToPayment()" style="display:none;">다른 카드로 결제하기</button>
-  <button class="btn-primary" id="btn-main" onclick="goToAdmin()">관제 포털로 이동</button>
+  <button class="btn-primary" id="btn-main" onclick="goToAdmin()">본사 웹로 이동</button>
 </div>
 
 <script>
@@ -99,7 +99,7 @@
   const btnRetry  = document.getElementById('btn-retry');
   const btnMain   = document.getElementById('btn-main');
   const btnVaConfirm = document.getElementById('btn-va-confirm');
-  const backLabel = (isProPlan || returnTarget === 'mobile') ? '플래너 앱으로 돌아가기' : '관제 포털로 돌아가기';
+  const backLabel = (isProPlan || returnTarget === 'mobile') ? '플래너 앱으로 돌아가기' : '본사 웹로 돌아가기';
   const planText  = isProPlan ? '개인 매니저 유료 (월 정기)' : `회사 요금제 · 매니저 ${totalSlots}자리`;
   const nextAmt   = parseInt(params.get('nextAmt') || '0') || 0;   // 다음 자동결제 금액 (자리 추가 후)
 

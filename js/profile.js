@@ -127,7 +127,7 @@ const Profile = {
                     : row('휴대폰 번호', indie ? '아직 없어요 · 연락처로 쓰는 번호예요' : '아직 없어요 · 본사가 긴급할 때 연락할 번호예요', '<span class="me-warn-btn">등록</span>', 'Profile.editContact()', 'warn')}
             ${indie ? row('차량관리 · 경비 기록', esc(vehicle || '차량 등록 안 됨') + (Plan.can('expenses') ? ' · 영수증·월별 정산' : ' · 경비 기록은 유료'), chev, 'Vehicle.open()')
                     : row('경비 기록', '주유 · 주차 · 식비 영수증, 월별 합계 · 정산', chev, 'Expenses.open()') + row('배정 차량', esc(vehicle || '등록 안 됨'), chev, 'Profile.editVehicle()')}
-            ${isHQ ? row('본사 관제 포털 열기', '관리자용 · 새 창', chev, `window.open(${escJs(typeof U !== 'undefined' && U.getHQPortalUrl ? U.getHQPortalUrl() : 'admin.html')}, '_blank', 'noopener')`) : ''}
+            ${isHQ ? row('본사 웹 열기', '관리자용 · 새 창', chev, `window.open(${escJs(typeof U !== 'undefined' && U.getHQPortalUrl ? U.getHQPortalUrl() : 'admin.html')}, '_blank', 'noopener')`) : ''}
           </div>
         </section>
 
@@ -214,7 +214,7 @@ const Profile = {
     const siblings = el.parentElement.querySelectorAll('.setting-opt-btn');
     siblings.forEach(s => s.classList.remove('active'));
     el.classList.add('active');
-    U.toast(`글꼴이 '${this.fontMap[type]}'으로 변경되었습니다.`);
+    U.toast(`글꼴이 '${this.fontMap[type]}'으로 변경됐어요.`);
     U.haptic();
   },
 
@@ -224,7 +224,7 @@ const Profile = {
     const siblings = el.parentElement.querySelectorAll('.setting-opt-btn');
     siblings.forEach(s => s.classList.remove('active'));
     el.classList.add('active');
-    U.toast(`글자 크기가 '${this.sizeMap[size]}'로 변경되었습니다.`);
+    U.toast(`글자 크기가 '${this.sizeMap[size]}'로 변경됐어요.`);
     U.haptic();
   },
 
@@ -243,7 +243,7 @@ const Profile = {
     const siblings = el.parentElement.querySelectorAll('.setting-opt-btn');
     siblings.forEach(s => s.classList.remove('active'));
     el.classList.add('active');
-    U.toast(`테마가 변경되었습니다.`);
+    U.toast(`테마가 변경됐어요.`);
     U.haptic();
   },
 
@@ -255,8 +255,8 @@ const Profile = {
     if (st === 'unsupported') {
       if (window.RoadPlannerAndroid) { U.toast('안드로이드 앱은 출발 15분 전 알림이 폰에 자동으로 예약돼요. (휴대폰 설정에서 로드플래너 알림 허용)'); this._renderPushBadge(); return; }
       const inApp = !!window.webkit?.messageHandlers;
-      U.toast(inApp ? '아이폰 앱 알림은 다음 앱 업데이트에서 켜집니다. 지금은 앱이 켜져 있을 때 화면으로 알려 드려요.' : '이 브라우저는 푸시를 지원하지 않습니다. 아이폰은 사파리에서 "홈 화면에 추가"한 앱에서 켤 수 있어요.');
-    } else if (st === 'denied') U.toast('알림이 차단되어 있습니다. 휴대폰 설정 > 알림에서 허용해 주세요.');
+      U.toast(inApp ? '아이폰 앱 알림은 다음 앱 업데이트에서 켜져요. 지금은 앱이 켜져 있을 때 화면으로 알려 드려요.' : '이 브라우저는 푸시를 지원하지 않아요. 아이폰은 사파리에서 "홈 화면에 추가"한 앱에서 켤 수 있어요.');
+    } else if (st === 'denied') U.toast('알림이 차단되어 있어요. 휴대폰 설정 > 알림에서 허용해 주세요.');
     else if (st === 'on') { if (confirm('알림을 끌까요?')) await C.disablePush(); }
     else await C.enablePush();
     this._renderPushBadge();
@@ -288,7 +288,7 @@ const Profile = {
         State.userAddresses.shop = selectedPlace;
         localStorage.setItem('bp_shop', JSON.stringify(selectedPlace));
       }
-      U.toast('✅ 주소가 좌표와 함께 정확히 저장되었습니다.');
+      U.toast('✅ 주소가 좌표와 함께 정확히 저장됐어요.');
       U.haptic();
       Profile.render();
     });
@@ -296,13 +296,13 @@ const Profile = {
 
   // 다른 계정으로 로그인: 지금 계정을 로그아웃하고, 폰에 저장된 비밀번호가 자동으로 채워지지 않는 빈 로그인 화면을 연다
   async switchAccount() {
-    if (!confirm('다른 계정으로 로그인할까요?\n지금 계정은 로그아웃됩니다.')) return;
+    if (!confirm('다른 계정으로 로그인할까요?\n지금 계정은 로그아웃돼요.')) return;
     try { sessionStorage.setItem('rp_fresh_login', '1'); } catch (e) { }
     await this.logout(true);
   },
 
   async logout(skipConfirm = false) {
-    if (skipConfirm === true || confirm('정말 로그아웃 하시겠습니까?')) {
+    if (skipConfirm === true || confirm('정말 로그아웃 할까요?')) {
       const provider = localStorage.getItem('bp_provider');
       if (window.SupabaseClient) {
         try { await window.SupabaseClient.signOut(); } catch (e) {}
@@ -327,14 +327,14 @@ const Profile = {
       localStorage.removeItem('bp_onboarded');
       ['rp_default_departure', 'bp_user_phone', 'bp_user_vehicle', 'rp_vehicle', 'bp_account', 'rp_pro_until', 'rp_recent_places'].forEach(k => localStorage.removeItem(k));
       try { Profile._planChecked = false; } catch (e) { }
-      U.toast('로그아웃 되었습니다.');
+      U.toast('로그아웃 됐어요.');
       App.navigate('login');
     }
   },
 
   editArtists() {
     // 담당 아티스트는 본사(관리자 웹 > 매니저 관리)에서 지정합니다. 서버 기준이라 앱에서 직접 바꾸지 않음
-    U.toast('담당 아티스트는 본사에서 지정합니다. 변경이 필요하면 본사에 요청해 주세요.');
+    U.toast('담당 아티스트는 본사에서 지정해요. 변경이 필요하면 본사에 요청해 주세요.');
   },
 
   saveArtists() {
@@ -345,13 +345,13 @@ const Profile = {
     if (selected.length === 0) { U.toast('최소 1명 이상의 아티스트를 선택해 주세요.'); return; }
     localStorage.setItem('bp_assigned_artists', JSON.stringify(selected));
     modal.remove();
-    U.toast(`담당 아티스트(${selected.join(', ')})가 저장되었습니다.`);
+    U.toast(`담당 아티스트(${selected.join(', ')})가 저장됐어요.`);
     U.haptic();
     Profile.render();
   },
 
   callHQ() {
-    if (confirm('🚨 [본사 24H 종합상황실]\n02-555-8282 번호로 즉시 연결하시겠습니까?')) {
+    if (confirm('🚨 [본사 24H 종합상황실]\n02-555-8282 번호로 즉시 연결할까요?')) {
       window.location.href = 'tel:025558282';
     }
   },
@@ -395,11 +395,11 @@ const Profile = {
             <div style="font-size:16px;font-weight:700;color:#f87171;">⚡ 현장 긴급 상황 보고</div>
             <button onclick="document.getElementById('emergency-report-modal').remove()" style="background:none;border:none;color:var(--text-400);font-size:20px;cursor:pointer;">✕</button>
           </div>
-          <p style="font-size:13px;color:var(--text-400);margin-bottom:12px;">작성 즉시 본사 HQ 마스터 관제 포털에 긴급 경보로 전송됩니다.</p>
+          <p style="font-size:13px;color:var(--text-400);margin-bottom:12px;">작성 즉시 본사 웹에 긴급 경보로 전송돼요.</p>
           <div class="field">
             <label class="field-label">유형 선택 <span class="req">*</span></label>
             <select id="em-type" style="width:100%;padding:10px 12px;border-radius:var(--r-lg);background:var(--bg-card);border:1px solid var(--border-subtle);color:var(--text-100);font-size:14px;">
-              <option value="스케줄 지연/변동">⏱️ 스케줄 지연 / 동선 변동</option>
+              <option value="스케줄 지연/변동">⏱️ 일정 지연 / 동선 변동</option>
               <option value="차량 고장/사고">🚗 의전 차량 고장 / 교통사고</option>
               <option value="아티스트 컨디션/부상">🏥 아티스트 건강 / 응급 치료</option>
               <option value="현장 안전/보안">🛡️ 현장 팬 밀집 / 보안 위험</option>
@@ -433,16 +433,16 @@ const Profile = {
   // 현재 위치(GPS)를 받아 입력칸에 채우고, 본사에는 지도 링크로 전달한다
   fillEmergencyGps() {
     const btn = document.getElementById('em-gps-btn');
-    if (!navigator.geolocation) { U.toast('이 기기에서는 위치를 가져올 수 없습니다. 위치를 직접 입력해 주세요.'); return; }
+    if (!navigator.geolocation) { U.toast('이 기기에서는 위치를 가져올 수 없어요. 위치를 직접 입력해 주세요.'); return; }
     if (!window.Loc || !Loc.ok()) { if (window.Loc) Loc.ask('긴급보고에 지금 위치를 함께 보내려면 동의가 필요해요.').then(ok => ok && setTimeout(() => this.fillEmergencyGps(), 350)); return; }
     if (btn) { btn.disabled = true; btn.textContent = '위치 확인 중...'; }
     Loc.get({ enableHighAccuracy: true, timeout: 10000, maximumAge: 15000 }).then(pos => {
-      if (!pos) { if (btn) { btn.disabled = false; btn.textContent = '📍 내 현재 위치 넣기 (지도 링크 첨부)'; } U.toast('위치를 가져오지 못했습니다. 기기의 위치 권한을 허용하거나 직접 입력해 주세요.'); return; }
+      if (!pos) { if (btn) { btn.disabled = false; btn.textContent = '📍 내 현재 위치 넣기 (지도 링크 첨부)'; } U.toast('위치를 가져오지 못했어요. 기기의 위치 권한을 허용하거나 직접 입력해 주세요.'); return; }
       const lat = +pos.coords.latitude.toFixed(6), lng = +pos.coords.longitude.toFixed(6);
       this._emGps = { lat, lng };
       const input = document.getElementById('em-location');
       if (input && !input.value.trim()) input.value = '현재 위치 (지도 링크 첨부됨)';
-      if (btn) { btn.disabled = false; btn.textContent = '✅ 현재 위치가 첨부되었습니다 (다시 누르면 갱신)'; }
+      if (btn) { btn.disabled = false; btn.textContent = '✅ 현재 위치가 첨부됐어요 (다시 누르면 갱신)'; }
     });
   },
 
@@ -451,7 +451,7 @@ const Profile = {
     const loc  = document.getElementById('em-location').value.trim();
     const desc = document.getElementById('em-desc').value.trim();
     if (!loc || !desc) { U.toast('위치와 상세 내용을 입력해 주세요.'); return; }
-    if (!window.Chat || !window.Chat.available()) { U.toast('서버에 연결되어 있지 않아 보내지 못했습니다. 연결 후 다시 시도하거나 전화로 연락해 주세요.'); return; }
+    if (!window.Chat || !window.Chat.available()) { U.toast('서버에 연결되어 있지 않아 보내지 못했어요. 연결 후 다시 시도하거나 전화로 연락해 주세요.'); return; }
     const userName = localStorage.getItem('bp_user_name') || '현장 매니저';
     const gps = this._emGps;
     const map = gps ? `\n지도: https://map.kakao.com/link/map/긴급위치,${gps.lat},${gps.lng}` : '';
@@ -468,17 +468,17 @@ const Profile = {
     if (gps && window.Loc) Loc.provided('sos', '긴급보고 위치');
     this._emGps = null;
     document.getElementById('emergency-report-modal').remove();
-    U.toast('🚨 본사로 긴급 보고가 전송되었습니다.');
+    U.toast('🚨 본사로 긴급 보고가 전송됐어요.');
     U.haptic();
   },
 
   applyStationPreset(name, address, lat, lng) {
-    if (confirm(`'${name}' (${address})\n선택하신 거점을 어디에 등록하시겠습니까?\n\n[확인] ➔ 자주 가는 거점으로 자동 저장`)) {
+    if (confirm(`'${name}' (${address})\n선택하신 거점을 어디에 등록할까요?\n\n[확인] ➔ 자주 가는 거점으로 자동 저장`)) {
       if (!State.userAddresses) State.userAddresses = {};
       const placeObj = { name, address, lat, lng };
       State.userAddresses.shop = placeObj;
       localStorage.setItem('bp_shop', JSON.stringify(placeObj));
-      U.toast(`✅ '${name}' 주소가 거점으로 저장되었습니다.`);
+      U.toast(`✅ '${name}' 주소가 거점으로 저장됐어요.`);
       U.haptic();
       Profile.render();
     }
@@ -505,9 +505,9 @@ const Profile = {
     const sc = window.SupabaseClient;
     if (sc?.isConfigured && sc.currentUser) {
       sc.client.from('profiles').update({ phone: v || null }).eq('id', sc.currentUser.id)
-        .then(({ error }) => U.toast(error ? '기기에는 저장했지만 서버 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.' : '✅ 휴대폰 번호를 저장했습니다. 본사 긴급연락처에도 반영돼요.'));
+        .then(({ error }) => U.toast(error ? '기기에는 저장했지만 서버 저장에 실패했어요. 잠시 후 다시 시도해 주세요.' : '✅ 휴대폰 번호를 저장했어요. 본사 긴급연락처에도 반영돼요.'));
       if (sc.currentProfile) sc.currentProfile.phone = v;
-    } else U.toast('휴대폰 번호를 저장했습니다.');
+    } else U.toast('휴대폰 번호를 저장했어요.');
     U.haptic();
     Profile.render();
   },
@@ -524,6 +524,6 @@ const Profile = {
   },
 
   showVersion() {
-    U.toast('현재 최신 버전을 사용 중입니다. (v1.0.0)');
+    U.toast('현재 최신 버전을 사용 중이에요. (v1.0.0)');
   }
 };

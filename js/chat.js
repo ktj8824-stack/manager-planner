@@ -51,29 +51,29 @@
     },
     speak(text, force) {
       try {
-        if (!this.speechSupported()) { if (force) this._toast('이 브라우저는 음성 읽기를 지원하지 않습니다. 크롬이나 사파리로 열어 주세요.'); return; }
+        if (!this.speechSupported()) { if (force) this._toast('이 브라우저는 음성 읽기를 지원하지 않아요. 크롬이나 사파리로 열어 주세요.'); return; }
         if (!force && this.prefs().voice === 'off') return;
         const clean = String(text || '').replace(/https?:\/\/\S+/g, ' 링크 ').replace(/[\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, 160);
         if (!clean) return;
         const voices = speechSynthesis.getVoices() || [];
         const ko = voices.find(x => /^ko/i.test(x.lang));
-        if (force && voices.length && !ko) this._toast('이 기기에 한국어 음성이 없는 것 같습니다. 기기 설정 → 접근성(또는 언어) → 텍스트 음성 변환에서 한국어 음성을 설치해 주세요.');
+        if (force && voices.length && !ko) this._toast('이 기기에 한국어 음성이 없는 것 같아요. 기기 설정 → 접근성(또는 언어) → 텍스트 음성 변환에서 한국어 음성을 설치해 주세요.');
         const run = () => {
           const u = new SpeechSynthesisUtterance(clean); u.lang = 'ko-KR'; u.rate = 1.0; u.volume = 1;
           if (ko) u.voice = ko;
-          u.onerror = (e) => { if (e && e.error && !['canceled', 'interrupted'].includes(e.error)) this._toast('음성을 재생하지 못했습니다 (' + e.error + '). 기기의 음성 출력(TTS) 설정과 미디어 볼륨을 확인해 주세요.'); };
-          if (force) u.onstart = () => this._toast('🔊 소리를 재생하고 있습니다. 들리지 않으면 미디어 볼륨과 무음 모드를 확인해 주세요.');
+          u.onerror = (e) => { if (e && e.error && !['canceled', 'interrupted'].includes(e.error)) this._toast('음성을 재생하지 못했어요 (' + e.error + '). 기기의 음성 출력(TTS) 설정과 미디어 볼륨을 확인해 주세요.'); };
+          if (force) u.onstart = () => this._toast('🔊 소리를 재생하고 있어요. 들리지 않으면 미디어 볼륨과 무음 모드를 확인해 주세요.');
           if (speechSynthesis.paused) speechSynthesis.resume();
           speechSynthesis.speak(u);
         };
         // 재생 중인 것이 있으면 멈춘 뒤 잠깐 쉬었다가 재생 (바로 이어 부르면 일부 기기에서 소리가 안 남)
         if (speechSynthesis.speaking || speechSynthesis.pending) { speechSynthesis.cancel(); setTimeout(run, 150); } else run();
-      } catch (e) { if (force) this._toast('음성 재생 중 오류가 났습니다: ' + (e.message || '')); }
+      } catch (e) { if (force) this._toast('음성 재생 중 오류가 났어요: ' + (e.message || '')); }
     },
     _maybeSpeak(m) {
       const mode = this.prefs().voice;
       if (mode === 'off' || !m || (mode === 'urgent' && !m.is_urgent)) return;
-      this.speak((m.is_urgent ? '긴급 메시지. ' : '새 메시지. ') + (m.sender_name ? m.sender_name + '. ' : '') + (m.body || '사진을 보냈습니다'));
+      this.speak((m.is_urgent ? '긴급 메시지. ' : '새 메시지. ') + (m.sender_name ? m.sender_name + '. ' : '') + (m.body || '사진을 보냈어요'));
     },
 
     // ── 설정 화면 ──
@@ -88,7 +88,7 @@
         <div class="chat-head"><h2>설정</h2><button class="chat-iconbtn" data-act="settings-close" aria-label="닫기">${ICON.close}</button></div>
         <div class="chat-settings-body">
           <h3>🔊 새 메시지 음성 읽기</h3>
-          <p class="chat-hint">앱이 열려 있는 동안 메시지가 오면 소리로 읽어 줍니다.${this.speechSupported() ? '' : ' <b>이 기기는 음성을 지원하지 않습니다.</b>'}<br>앱을 완전히 닫은 상태에서는 알림 소리/진동만 울립니다.</p>
+          <p class="chat-hint">앱이 열려 있는 동안 메시지가 오면 소리로 읽어 줘요.${this.speechSupported() ? '' : ' <b>이 기기는 음성을 지원하지 않아요.</b>'}<br>앱을 완전히 닫은 상태에서는 알림 소리/진동만 울려요.</p>
           ${voiceOpt('urgent', '긴급 메시지만 읽기 (추천)')}${voiceOpt('all', '모든 메시지 읽기')}${voiceOpt('off', '읽지 않기')}
           <button type="button" class="chat-btn2" data-act="voice-test">소리 들어보기</button>
           <h3>⚡ 퀵 답장 문구 (이 기기에서만 적용)</h3>
@@ -113,7 +113,7 @@
       const def = key === 'hq' ? QUICK.hq : QUICK.manager;
       p.quick[key] = (list.length === def.length && list.every((t, i) => t === def[i])) ? [] : list;   // 기본과 같으면 저장 안 함
       this._savePrefs(); this._closeSettings(); this._refreshQuick();
-      this._toast('설정을 저장했습니다.');
+      this._toast('설정을 저장했어요.');
     },
     _refreshQuick() {
       const quick = document.getElementById('chat-quick'); if (!quick) return;
@@ -241,7 +241,7 @@
       this._build();
       const root = document.getElementById('chat-root');
       if (!this.available()) {
-        this._toast('대화는 로그인한 회사 계정에서 서버에 연결되어 있을 때 사용할 수 있습니다.');
+        this._toast('대화는 로그인한 회사 계정에서 서버에 연결되어 있을 때 사용할 수 있어요.');
         return;
       }
       this.st.open = true; root.hidden = false; this._askNotifyPermission();
@@ -254,7 +254,7 @@
         if (this.isHq()) await this._ensureAllRoom();
         else await this._ensureMyRoom();
         await this.refreshList();
-      } catch (e) { this._listMessage('대화방을 불러오지 못했습니다. ' + esc(e.message || '')); return; }
+      } catch (e) { this._listMessage('대화방을 불러오지 못했어요. ' + esc(e.message || '')); return; }
       if (opts.managerId) this.select({ kind: 'direct', managerId: opts.managerId });
       else if (opts.kind === 'all') this.select({ kind: 'all' });
       else if (!this.isHq() && !this.st.active && this._items().length === 1) { const one = this._items()[0]; this.select(one.room ? { id: one.room.id } : { kind: one.kind, managerId: one.managerId }); }
@@ -301,7 +301,7 @@
       let items = this._items();
       if (q) items = items.filter(it => it.name.toLowerCase().includes(q.toLowerCase()));
       if (q && q.length >= 2) this._searchMessages(q);
-      if (!items.length) { if (q) { el.innerHTML = '<div class="chat-empty" id="chat-hits-note">검색 중...</div><div id="chat-hits"></div>'; } else this._listMessage('아직 대화방이 없습니다.<br>본사가 대화를 시작하면 여기에 나타납니다.'); return; }
+      if (!items.length) { if (q) { el.innerHTML = '<div class="chat-empty" id="chat-hits-note">검색 중...</div><div id="chat-hits"></div>'; } else this._listMessage('아직 대화방이 없어요.<br>본사가 대화를 시작하면 여기에 나타나요.'); return; }
       el.innerHTML = items.map(it => {
         const unread = it.room ? (this.st.unread[it.room.id] || 0) : 0;
         const active = this.st.active && it.room && this.st.active.id === it.room.id;
@@ -321,8 +321,8 @@
       try { hits = await this.sc().chatSearch(q); } catch (e) { hits = null; }
       if (seq !== this._searchSeq || this.st.query !== q) return;
       const box = document.getElementById('chat-hits'); if (!box) return;
-      if (hits === null) { box.innerHTML = '<div class="chat-empty">검색하지 못했습니다.</div>'; return; }
-      if (!hits.length) { box.innerHTML = '<div class="chat-empty">일치하는 메시지가 없습니다.</div>'; return; }
+      if (hits === null) { box.innerHTML = '<div class="chat-empty">검색하지 못했어요.</div>'; return; }
+      if (!hits.length) { box.innerHTML = '<div class="chat-empty">일치하는 메시지가 없어요.</div>'; return; }
       const names = new Map(this._items().filter(i => i.room).map(i => [i.room.id, i.name]));
       const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
       box.innerHTML = hits.map(h => {
@@ -338,11 +338,11 @@
       try {
         if (!room) room = await this.sc().chatEnsureRoom(target.kind, target.managerId || null);
         if (!this.st.rooms.some(r => r.id === room.id)) this.st.rooms.push(room);
-      } catch (e) { this._toast('대화방을 열지 못했습니다. ' + (e.message || '')); return; }
+      } catch (e) { this._toast('대화방을 열지 못했어요. ' + (e.message || '')); return; }
       this.st.active = room; this.st.msgs = []; this.st.seen = new Set(); this.st.reads = null;
       root.classList.add('conv-open');
       const title = room.kind === 'all' ? '전체 공지방' : (this.isHq() ? (room.manager?.name || '매니저') : '본사 (대표)');
-      root.querySelector('#chat-title').innerHTML = `${esc(title)}<small>${room.kind === 'all' ? '모든 매니저에게 전달됩니다' : '1:1 대화'}</small>`;
+      root.querySelector('#chat-title').innerHTML = `${esc(title)}<small>${room.kind === 'all' ? '모든 매니저에게 전달돼요' : '1:1 대화'}</small>`;
       root.querySelector('#chat-composer').hidden = false;
       const quick = root.querySelector('#chat-quick');
       this._refreshQuick();
@@ -357,7 +357,7 @@
         await this._loadReads();
         await this._renderMessages(true);
         this._markRead();
-      } catch (e) { box.innerHTML = `<div class="chat-placeholder">메시지를 불러오지 못했습니다.<br>${esc(e.message || '')}</div>`; return; }
+      } catch (e) { box.innerHTML = `<div class="chat-placeholder">메시지를 불러오지 못했어요.<br>${esc(e.message || '')}</div>`; return; }
       this._startPoll();
       setTimeout(() => root.querySelector('#chat-input')?.focus(), 50);
     },
@@ -442,7 +442,7 @@
       const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
       const me = this.me().id;
       let html = this.st.hasOlder ? '<button class="chat-more">이전 대화 더 보기</button>' : '';
-      if (!this.st.msgs.length) html += '<div class="chat-placeholder">아직 메시지가 없습니다.<br>첫 메시지를 보내 보세요.</div>';
+      if (!this.st.msgs.length) html += '<div class="chat-placeholder">아직 메시지가 없어요.<br>첫 메시지를 보내 보세요.</div>';
       let day = '', prevSender = '';
       for (const m of this.st.msgs) {
         const d = new Date(m.created_at);
@@ -464,7 +464,7 @@
         try {
           const urls = await this.sc().chatImageUrls(paths);
           box.querySelectorAll('.chat-img').forEach(el => { const u = urls[el.dataset.path]; if (u) el.src = u; });
-        } catch (e) { /* 사진 주소를 못 받아도 글은 보입니다 */ }
+        } catch (e) { /* 사진 주소를 못 받아도 글은 보여요 */ }
       }
       if (stick && (!soft || nearBottom)) box.scrollTop = box.scrollHeight;
     },
@@ -472,7 +472,7 @@
     // ── 보내기 ──
     async _pickImage(file, input) {
       if (!file) return;
-      if (!/^image\//.test(file.type)) { this._toast('사진 파일만 보낼 수 있습니다.'); return; }
+      if (!/^image\//.test(file.type)) { this._toast('사진 파일만 보낼 수 있어요.'); return; }
       try {
         const blob = await this._compress(file);
         this.st.pending = blob;
@@ -481,7 +481,7 @@
         box.innerHTML = '<img alt="첨부 사진"><button aria-label="사진 빼기">×</button>';
         box.querySelector('img').src = URL.createObjectURL(blob);
         box.querySelector('button').onclick = () => this._clearPending();
-      } catch (e) { this._toast('사진을 처리하지 못했습니다.'); }
+      } catch (e) { this._toast('사진을 처리하지 못했어요.'); }
       if (input) input.value = '';
     },
     _clearPending() { this.st.pending = null; const box = document.getElementById('chat-attach'); if (box) { box.hidden = true; box.innerHTML = ''; } },
@@ -497,7 +497,7 @@
           URL.revokeObjectURL(url);
           c.toBlob((b) => b ? resolve(b) : reject(new Error('변환 실패')), 'image/jpeg', 0.82);
         };
-        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('이미지를 읽을 수 없습니다.')); };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('이미지를 읽을 수 없어요.')); };
         img.src = url;
       });
     },
@@ -520,25 +520,25 @@
         if (!this.st.seen.has(m.id)) this._append([m]);
         room.last_message_at = m.created_at; room.last_message_preview = (m.body || '(사진)').slice(0, 80);
         this._renderList();
-      } catch (e) { const off = navigator.onLine === false || /failed to fetch|network|load failed/i.test(String(e?.message || '')); this._toast(off ? '인터넷 연결을 확인하고 다시 보내 주세요.' : '보내지 못했습니다. ' + (e.message || '다시 시도해 주세요.')); }
+      } catch (e) { const off = navigator.onLine === false || /failed to fetch|network|load failed/i.test(String(e?.message || '')); this._toast(off ? '인터넷 연결을 확인하고 다시 보내 주세요.' : '보내지 못했어요. ' + (e.message || '다시 시도해 주세요.')); }
       finally { this.st.sending = false; btn.disabled = false; btn.textContent = '전송'; if (!isQuick) input.focus(); }
     },
 
     // 공지/긴급보고를 대화로 보낸다 (기존 '긴급 공지 발송'과 현장 긴급보고가 이 함수를 씁니다)
     async sendNotice({ targetId = 'ALL', title = '', content = '', isUrgent = false, imageFile = null } = {}) {
-      if (!this.available()) throw new Error('서버에 연결되어 있어야 보낼 수 있습니다.');
+      if (!this.available()) throw new Error('서버에 연결되어 있어야 보낼 수 있어요.');
       const text = ((title ? '[' + title + '] ' : '') + content).trim().slice(0, 2000);
-      if (!text) throw new Error('내용이 비어 있습니다.');
+      if (!text) throw new Error('내용이 비어 있어요.');
       let room;
       if (this.isHq()) {
         if (!targetId || targetId === 'ALL') room = await this.sc().chatEnsureRoom('all');
         else if (UUID.test(targetId)) room = await this.sc().chatEnsureRoom('direct', targetId);
-        else throw new Error('서버 계정이 없는 매니저에게는 보낼 수 없습니다.');
+        else throw new Error('서버 계정이 없는 매니저에게는 보낼 수 없어요.');
       } else room = await this.sc().chatEnsureRoom('direct', this.me().id);
       const m = await this.sc().chatSend(room.id, { body: text, isUrgent });
       if (imageFile) {   // 사진은 글 바로 다음 메시지로 (실패해도 글은 이미 전달됨)
         try { await this.sc().chatSend(room.id, { body: '', imageBlob: await this._compress(imageFile), isUrgent }); }
-        catch (e) { this._toast('글은 전달됐지만 사진은 보내지 못했습니다. 대화창에서 다시 보내 주세요.'); }
+        catch (e) { this._toast('글은 전달됐지만 사진은 보내지 못했어요. 대화창에서 다시 보내 주세요.'); }
       }
       this.refreshList().catch(() => { });
       return { room, message: m };
@@ -576,25 +576,25 @@
     },
     // 알림 켜기: 사용자가 버튼을 눌렀을 때만 호출 (브라우저 규칙)
     async enablePush() {
-      if (!this.pushSupported()) { this._toast('이 기기에서는 푸시 알림을 쓸 수 없습니다. 아이폰은 사파리에서 "홈 화면에 추가"한 앱에서만 가능합니다.'); return false; }
+      if (!this.pushSupported()) { this._toast('이 기기에서는 푸시 알림을 쓸 수 없어요. 아이폰은 사파리에서 "홈 화면에 추가"한 앱에서만 가능해요.'); return false; }
       const perm = await Notification.requestPermission();
-      if (perm !== 'granted') { this._toast('알림이 허용되지 않았습니다. 기기 설정에서 알림을 허용해 주세요.'); this._renderPushBar(); return false; }
+      if (perm !== 'granted') { this._toast('알림이 허용되지 않았어요. 기기 설정에서 알림을 허용해 주세요.'); this._renderPushBar(); return false; }
       try {
         const reg = await this._swReg();
         let sub = await reg.pushManager.getSubscription();
         if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: this._b64(PUSH_PUBLIC_KEY) });
         await this.sc().pushSave(sub);
-        this._toast(this.isHq() ? '알림이 켜졌습니다. 이 창을 닫아도 매니저 메시지와 긴급 보고를 알려 드립니다.' : '알림이 켜졌습니다. 앱을 닫아도 새 메시지를 알려 드립니다.');
+        this._toast(this.isHq() ? '알림이 켜졌어요. 이 창을 닫아도 매니저 메시지와 긴급 보고를 알려 드려요.' : '알림이 켜졌어요. 앱을 닫아도 새 메시지를 알려 드려요.');
         this._renderPushBar();
         return true;
-      } catch (e) { this._toast('알림을 켜지 못했습니다. ' + (e.message || '')); return false; }
+      } catch (e) { this._toast('알림을 켜지 못했어요. ' + (e.message || '')); return false; }
     },
     async disablePush() {
       try {
         const reg = await navigator.serviceWorker.getRegistration(); const sub = reg && await reg.pushManager.getSubscription();
         if (sub) { await this.sc().pushRemove(sub.endpoint).catch(() => { }); await sub.unsubscribe(); }
       } catch (e) { }
-      this._toast('알림을 껐습니다.'); this._renderPushBar();
+      this._toast('알림을 껐어요.'); this._renderPushBar();
     },
     // 이미 허용된 기기는 조용히 다시 등록해 둔다 (주소가 바뀐 경우 대비)
     async _syncPush() {
@@ -612,7 +612,7 @@
       const st = await this.pushState();
       if (st === 'on') { bar.innerHTML = '<span>🔔 알림 켜짐</span><button data-push="off">끄기</button>'; }
       else if (st === 'unsupported') { bar.innerHTML = '<span>🔕 이 기기는 푸시 알림 불가 (아이폰은 홈 화면에 추가한 앱에서만)</span>'; }
-      else if (st === 'denied') { bar.innerHTML = '<span>🔕 알림이 막혀 있습니다. 기기 설정에서 허용해 주세요.</span>'; }
+      else if (st === 'denied') { bar.innerHTML = '<span>🔕 알림이 막혀 있어요. 기기 설정에서 허용해 주세요.</span>'; }
       else { bar.innerHTML = hq ? '<span>🔔 매니저 메시지·긴급 보고·도착 보고를 PC 알림으로 받기</span><button data-push="on">알림 켜기</button>' : '<span>🔔 운전·내비 중에도 알림을 받으려면</span><button data-push="on">알림 켜기</button>'; }
       bar.hidden = false;
     },

@@ -64,7 +64,7 @@
         <span class="p2-av" style="background:${E(art.color || '#4C57D6')}">${E(short(art.name).slice(0, 1))}</span>
         <span class="p2-main">
           <span class="l1"><b>${E(short(art.name))}</b><small>${E(art.type || '')} · ${E(art.members || 1)}명</small><em class="${active ? 'ok' : ''}">${E(active ? '활동 중' : (art.status || '휴식'))}</em></span>
-          <span class="l2">${who ? '담당 ' + E(who) : '담당 매니저 없음'} · 이번 달 스케줄 ${nMonth}건</span>
+          <span class="l2">${who ? '담당 ' + E(who) : '담당 매니저 없음'} · 이번 달 일정 ${nMonth}건</span>
           ${line3 ? `<span class="l3">${E(line3)}</span>` : ''}
         </span><span class="p2-chev" aria-hidden="true">›</span></button>`;
     }).join('') + '<p class="p2-foot">줄을 누르면 편집 화면이 열려요 · 삭제는 편집 화면 맨 아래에 있어요</p>';
@@ -233,7 +233,7 @@
   if (_openArtists) A.openArtistModal = async function () { artistQuery = ''; const q = $('p2-artist-q'); if (q) q.value = ''; return _openArtists.call(this); };
 })();
 
-/* 신규 스케줄: 아티스트를 색 칩으로 고르기 (원래 선택 칸과 자동으로 맞춤) */
+/* 신규 일정: 아티스트를 색 칩으로 고르기 (원래 선택 칸과 자동으로 맞춤) */
 (function () {
   const $ = (id) => document.getElementById(id);
   const E = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

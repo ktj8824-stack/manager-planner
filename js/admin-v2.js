@@ -26,7 +26,7 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
 
-/* 신규·수정 스케줄: 입력하는 옆에 매니저 동선을 바로 보여 줌 (CEO 플래너 일정 등록창 방식)
+/* 신규·수정 일정: 입력하는 옆에 매니저 동선을 바로 보여 줌 (CEO 플래너 일정 등록창 방식)
    - 넓은 화면: 왼쪽 입력 · 오른쪽 '매니저 앱에 보이는 동선' (스크롤해도 따라옴) + 맨 아래 등록 버튼
    - 입력하면 먼저 시간대 추정으로 바로 그리고, 입력이 멈추면 매니저 앱과 같은 방식(그날 교통 예측)으로 다시 계산
    - 저장할 때는 여기서 계산한 동선을 그대로 씀 (hqStore.rememberPreviewTimeline → buildTimelineCapped) */
@@ -77,7 +77,7 @@
     if (end.includes('T')) end = end.split('T')[1];
     start = start.slice(0, 5); end = end.slice(0, 5);
     return {
-      title: val('form-title') || '스케줄', date, startTime: start, endTime: end || undefined,
+      title: val('form-title') || '일정', date, startTime: start, endTime: end || undefined,
       location: val('form-location'), locationAddress: val('form-location-address'),
       lat: val('form-location-lat') ? Number(val('form-location-lat')) : undefined, lng: val('form-location-lng') ? Number(val('form-location-lng')) : undefined,
       shop: { needed: !!$('form-shop-needed')?.checked, name: val('form-shop-name'), address: val('form-shop-address'), durationMin: Number(val('form-shop-duration')) || 90 },
@@ -253,7 +253,7 @@
   const $ = (id) => document.getElementById(id);
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
-  const TITLE = { gantt: '오늘 현황', month: '캘린더', week: '주간 시간표', kanban: '실시간 상황판', map: '관제 지도', analytics: '활동 분석' };
+  const TITLE = { gantt: '오늘 현황', month: '캘린더', week: '주간 시간표', kanban: '실시간 상황판', map: '오늘 일정 지도', analytics: '활동 분석' };
   const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   let expPending = null;
 
@@ -481,7 +481,7 @@
           copy.series = { ...schData.series, idx: i };
           try {
             await st.saveSchedule(copy);
-            await st.addStatusLog(copy.id, { label: '[일정 등록] 본사에서 반복 일정을 등록했습니다', managerName: who(), ack: ackFor(copy.managerId) });
+            await st.addStatusLog(copy.id, { label: '[일정 등록] 본사에서 반복 일정을 등록했어요', managerName: who(), ack: ackFor(copy.managerId) });
             made++;
           } catch (e) { if (e && e.localSaved) made++; else console.warn('반복 일정 저장 실패', dates[i], e); }
         }

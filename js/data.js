@@ -41,7 +41,7 @@ const RESTAURANTS = {
     ],
     after:[
       { id:201,name:'상암 일미락 (프라이빗 룸 고깃집)',distance:'600m',distMin:5,rating:4.8,reviews:340,cat:'구이/한우',open:'11:30',features:['개별 룸 완비 (보안 철저)','아티스트 및 제작진 회식 단골','발렛파킹'],menus:['통삼겹살','한우 꽃등심','칼비빔면'],phone:'02-3153-3456',emoji:'🥩',tag:'방송가 회식 1위',lat:37.577,lng:126.894 },
-      { id:202,name:'상암 배꼽집 (평양냉면/한우)',distance:'450m',distMin:4,rating:4.7,reviews:295,cat:'한우/냉면',open:'11:00',features:['수요미식회 방영','룸 보유','스케줄 종료 후 든든한 보양식'],menus:['이베리코 생구이','평양냉면','갈비탕'],phone:'02-3153-7890',emoji:'🍖',tag:'연예인 단골 맛집',lat:37.579,lng:126.890 },
+      { id:202,name:'상암 배꼽집 (평양냉면/한우)',distance:'450m',distMin:4,rating:4.7,reviews:295,cat:'한우/냉면',open:'11:00',features:['수요미식회 방영','룸 보유','일정 종료 후 든든한 보양식'],menus:['이베리코 생구이','평양냉면','갈비탕'],phone:'02-3153-7890',emoji:'🍖',tag:'연예인 단골 맛집',lat:37.579,lng:126.890 },
       { id:203,name:'상암 락희옥 (와인 & 한식주점)',distance:'700m',distMin:6,rating:4.6,reviews:190,cat:'한식주점',open:'11:30',features:['콜키지 프리','조용하고 쾌적한 룸','뒤풀이 추천'],menus:['보쌈 정식','거제 멍게비빔밥','성게알'],phone:'02-3153-1357',emoji:'🍷',tag:'제작진 뒤풀이 추천',lat:37.576,lng:126.895 },
     ]
   }
@@ -59,8 +59,8 @@ COURSES.forEach(c => {
       ],
       after: [
         { id: c.id * 1000 + 201, name: `${shortName} 가든 (프라이빗 룸)`, distance: '600m', distMin: 5, rating: 4.8, reviews: 230, cat: '한우/구이', open: '11:00', features: ['완벽 방음 개별 룸 완비', '아티스트/제작진 회식 최적', '발렛파킹 지원'], menus: ['한우 꽃등심', '양념 갈비 정식', '한우 육회'], phone: '02-555-5555', emoji: '🥩', tag: '제작진 회식 1위', lat: c.lat + 0.001, lng: c.lng + 0.001 },
-        { id: c.id * 1000 + 202, name: `${regToken} 수라 한정식`, distance: '800m', distMin: 7, rating: 4.6, reviews: 115, cat: '한정식', open: '10:30', features: ['정갈하고 자극적이지 않은 룸 한상', '스케줄 피로 회복', '주차 편리'], menus: ['보리굴비 정식', '자연송이 불고기'], phone: '02-777-7777', emoji: '🥬', tag: '속 편한 정갈한 한상', lat: c.lat - 0.002, lng: c.lng - 0.002 },
-        { id: c.id * 1000 + 203, name: `${shortName} 참숯 직화구이`, distance: '500m', distMin: 4, rating: 4.5, reviews: 98, cat: '구이/고기', open: '11:30', features: ['불향 가득한 숯불구이', '쾌적한 단체 테이블석', '스케줄 종료 후 뒤풀이'], menus: ['숯불 닭갈비', '제주 흑돼지 모둠'], phone: '02-888-8888', emoji: '🍗', tag: '현장 스태프 단골', lat: c.lat + 0.002, lng: c.lng + 0.003 }
+        { id: c.id * 1000 + 202, name: `${regToken} 수라 한정식`, distance: '800m', distMin: 7, rating: 4.6, reviews: 115, cat: '한정식', open: '10:30', features: ['정갈하고 자극적이지 않은 룸 한상', '일정 피로 회복', '주차 편리'], menus: ['보리굴비 정식', '자연송이 불고기'], phone: '02-777-7777', emoji: '🥬', tag: '속 편한 정갈한 한상', lat: c.lat - 0.002, lng: c.lng - 0.002 },
+        { id: c.id * 1000 + 203, name: `${shortName} 참숯 직화구이`, distance: '500m', distMin: 4, rating: 4.5, reviews: 98, cat: '구이/고기', open: '11:30', features: ['불향 가득한 숯불구이', '쾌적한 단체 테이블석', '일정 종료 후 뒤풀이'], menus: ['숯불 닭갈비', '제주 흑돼지 모둠'], phone: '02-888-8888', emoji: '🍗', tag: '현장 스태프 단골', lat: c.lat + 0.002, lng: c.lng + 0.003 }
       ]
     };
   }
@@ -98,7 +98,7 @@ const STAFF_PICKS = {
   '경기 고양': [
     { place_name: '일산 양평서울해장국 24시', address_name: '경기 고양시 일산동구 호수로', category: '해장국', tel: '031-901-1234', tag: '🎬 드림센터 스태프 단골', desc: 'MBC 드림센터 바로 앞 24시간 해장국' },
     { place_name: '일산 밤가시 솥밥정식', address_name: '경기 고양시 일산동구 일산로', category: '한정식', tel: '031-901-5678', tag: '🍱 정갈한 도시락/식사', desc: '아티스트 체력 보충을 위한 깔끔한 솥밥' },
-    { place_name: '라페스타 제주도새기 룸구이', address_name: '경기 고양시 일산동구 중앙로', category: '고기/구이', tel: '031-901-9012', tag: '🔥 방송 뒤풀이 단골', desc: '넓은 룸 보유, 스케줄 종료 후 든든한 회식' },
+    { place_name: '라페스타 제주도새기 룸구이', address_name: '경기 고양시 일산동구 중앙로', category: '고기/구이', tel: '031-901-9012', tag: '🔥 방송 뒤풀이 단골', desc: '넓은 룸 보유, 일정 종료 후 든든한 회식' },
   ],
   '경기 파주': [
     { place_name: '파주 탄현 세트장 기사식당', address_name: '경기 파주시 탄현면', category: '백반/뷔페', tel: '031-945-1234', tag: '🎬 세트장 스태프 성지', desc: '새벽부터 갓 지은 밥과 15첩 반찬 무한리필' },
@@ -110,7 +110,7 @@ const STAFF_PICKS = {
   ],
   '인천 영종': [
     { place_name: '인스파이어 푸드홀', address_name: '인천 중구 공항문화로', category: '양식/한식', tel: '032-743-1234', tag: '🎬 아레나 현장 추천', desc: '아레나 공연 대기 중 신속하고 깔끔한 식사' },
-    { place_name: '영종도 24시 백운 해물칼국수', address_name: '인천 중구 운서동', category: '칼국수', tel: '032-743-5678', tag: '🍜 심야 야식 추천', desc: '영종도 스케줄 종료 후 뜨끈한 해물칼국수' },
+    { place_name: '영종도 24시 백운 해물칼국수', address_name: '인천 중구 운서동', category: '칼국수', tel: '032-743-5678', tag: '🍜 심야 야식 추천', desc: '영종도 일정 종료 후 뜨끈한 해물칼국수' },
   ]
 };
 const GOLFER_PICKS = STAFF_PICKS; // 레거시 참조 호환성 유지
@@ -265,7 +265,7 @@ const State = {
     const dateStr = `${y}-${mm}-${dd}`;
     let schedules = (typeof window.hqStore.getSchedulesSync === 'function' ? window.hqStore.getSchedulesSync() : window.hqStore.getSchedules()).filter(s => s.date === dateStr);
     
-    // 버퍼 설정값과 스케줄 타임라인의 불일치 자동 감지 및 즉시 동기화
+    // 버퍼 설정값과 일정 타임라인의 불일치 자동 감지 및 즉시 동기화
     const currentTravelBuf = Number(localStorage.getItem('bp_buffer_travel') !== null ? localStorage.getItem('bp_buffer_travel') : 10);
     const currentWaitBuf = Number(localStorage.getItem('bp_buffer_wait') !== null ? localStorage.getItem('bp_buffer_wait') : 10);
     let needSync = false;
@@ -277,7 +277,7 @@ const State = {
       if (!s.timeline || s.timeline.length === 0) {
         isMismatch = true;
       } else {
-        // 1. 샵 미경유 스케줄인데 과거에 생성된 샵 단계가 남아있는 경우 즉시 재동기화
+        // 1. 샵 미경유 일정인데 과거에 생성된 샵 단계가 남아있는 경우 즉시 재동기화
         if (!isShopNeeded) {
           const hasShopStep = s.timeline.some(st => st.label && (st.label.includes('헤어') || st.label.includes('메이크업') || st.label.includes('스타일링') || (st.label.includes('샵') && !st.label.includes('현장'))));
           if (hasShopStep) {
@@ -357,7 +357,7 @@ const State = {
       });
     };
 
-    // 1. CEO 및 본사 총괄 관리자 (전사 전체 스케줄 및 타임라인 완전 열람)
+    // 1. CEO 및 본사 총괄 관리자 (전사 전체 일정 및 타임라인 완전 열람)
     if (userRole === 'ceo' || userRole === 'hq_admin') {
       return schedules;
     }
@@ -365,13 +365,13 @@ const State = {
     // 2. 현장 매니저 (Manager)
     if (userRole === 'manager') {
       schedules = schedules.filter(s => {
-        // 비공개 스케줄: 본인이 직접 배정된 경우만 열람
+        // 비공개 일정: 본인이 직접 배정된 경우만 열람
         if (s.isSecret) {
           return s.managerId === currentMgrId;
         }
-        // 본인 직접 배정 스케줄
+        // 본인 직접 배정 일정
         if (s.managerId && s.managerId === currentMgrId) return true;
-        // 담당 아티스트 스케줄
+        // 담당 아티스트 일정
         if (isArtistMatch(s, assignedArtists)) return true;
         return false;
       });
@@ -380,7 +380,7 @@ const State = {
 
     // 3. 외부 전담 스태프 (Staff / Hair & Makeup / Security / Guest)
     if (userRole === 'staff') {
-      // 비공개 스케줄은 완전 숨김, 본인 배정 아티스트의 스케줄만 노출
+      // 비공개 일정은 완전 숨김, 본인 배정 아티스트의 일정만 노출
       schedules = schedules.filter(s => {
         if (s.isSecret) return false;
         return isArtistMatch(s, assignedArtists);
@@ -411,7 +411,7 @@ const State = {
       if (isNaN(sd)) return false;
       if (!(sd.getFullYear()===y && sd.getMonth()===m && sd.getDate()===d)) return false;
 
-      // manager 역할: 본인 managerId 또는 담당 아티스트 스케줄만
+      // manager 역할: 본인 managerId 또는 담당 아티스트 일정만
       if (userRole === 'manager') {
         if (s.isSecret) return s.managerId === mgrId;
         if (s.managerId && s.managerId === mgrId) return true;
@@ -419,7 +419,7 @@ const State = {
         if (myArtists.length > 0 && myArtists.includes(s.artistId)) return true;
         return false;
       }
-      // staff 역할: 담당 아티스트 공개 스케줄만
+      // staff 역할: 담당 아티스트 공개 일정만
       if (userRole === 'staff') {
         if (s.isSecret) return false;
         if (s.artistId === 'ALL' || (Array.isArray(s.artistIds) && s.artistIds.some(id => myArtists.includes(id)))) return true;
@@ -457,8 +457,8 @@ const State = {
     }));
 
     const hqIds = new Set(hqScheds.map(hs => hs.id));
-    // 본사 스케줄(sch_로 시작하거나 isHQ)은 본사 스토어(hqScheds)에서만 단일 소스로 공급받으며,
-    // 본사에서 삭제/이동된 일정이 로컬 캐시(bp_schedules_v2)의 유령 스케줄로 부활하지 않도록 엄격히 차단
+    // 본사 일정(sch_로 시작하거나 isHQ)은 본사 스토어(hqScheds)에서만 단일 소스로 공급받으며,
+    // 본사에서 삭제/이동된 일정이 로컬 캐시(bp_schedules_v2)의 유령 일정으로 부활하지 않도록 엄격히 차단
     const filteredLocal = localScheds.filter(s => {
       if (!s) return false;
       if (s.isHQ || (typeof s.id === 'string' && s.id.startsWith('sch_'))) {
@@ -504,7 +504,7 @@ const State = {
     const hqIds = new Set((hqScheds || []).map(hs => hs.id));
     let scheds = this.schedules.filter(s => {
       if (!s || !s.date) return false;
-      // 본사 스케줄(sch_ 또는 isHQ)은 본사 스토어에서만 처리되므로 로컬 잔여 데이터 배제
+      // 본사 일정(sch_ 또는 isHQ)은 본사 스토어에서만 처리되므로 로컬 잔여 데이터 배제
       if (s.isHQ || (typeof s.id === 'string' && s.id.startsWith('sch_'))) return false;
       if (s.id && hqIds.has(s.id)) return false;
       const sd = (s.date instanceof Date) ? s.date : new Date(s.date);
@@ -515,7 +515,7 @@ const State = {
     
     let events = [];
 
-    // 1. HQ 본사 연동 스케줄이 있는 경우: 스마트 동선 타임라인 우선 생성
+    // 1. HQ 본사 연동 일정이 있는 경우: 스마트 동선 타임라인 우선 생성
     if (hqScheds && hqScheds.length > 0) {
       // Sort hqScheds by start time
       hqScheds.sort((a, b) => {
@@ -527,7 +527,7 @@ const State = {
       let previousEndTimeStr = null;
 
       hqScheds.forEach((hs, hqIdx) => {
-        // 스케줄 사이의 빈틈(Gap) 계산 및 삽입
+        // 일정 사이의 빈틈(Gap) 계산 및 삽입
         if (previousEndTimeStr && hs.timeline && hs.timeline.length > 0) {
           const firstEventTime = (hs.timeline.find(t => !/^\[기상/.test(String(t.label || ''))) || hs.timeline[0]).time;   // 기상·준비는 빈틈 계산에서 제외
           const [ph, pm] = previousEndTimeStr.split(':').map(Number);
@@ -594,7 +594,7 @@ const State = {
           isShopNeeded = (cat === 'broadcast' || cat === 'shoot' || cat === 'concert' || cat === 'music_show' || cat === 'recording');
         }
 
-        // 스케줄 타임라인 유효성 검사 및 정제
+        // 일정 타임라인 유효성 검사 및 정제
         let activeTimeline = hs.timeline;
         const hasShopInTimeline = (activeTimeline || []).some(st => st.label && (st.label.includes('헤어') || st.label.includes('메이크업') || st.label.includes('스타일링') || (st.label.includes('샵') && !st.label.includes('현장'))));
         const hasDuplicates = (activeTimeline || []).length > 7 || (new Set((activeTimeline || []).map(st => `${st.time}_${st.label}`)).size !== (activeTimeline || []).length);
@@ -607,11 +607,11 @@ const State = {
           }
         }
 
-        // 스케줄에 저장된 세부 동선 타임라인이 있으면 그것을 직접 이벤트로 풀어서 전달
+        // 일정에 저장된 세부 동선 타임라인이 있으면 그것을 직접 이벤트로 풀어서 전달
         if (activeTimeline && activeTimeline.length > 0) {
           const dayOffs = State.stepDayOffsets(activeTimeline, hs.startTime);
           activeTimeline.forEach((step, stepIdx) => {
-            // 샵 미경유 스케줄인 경우 샵/헤어/스타일링 관련 잘못 누적된 단계 최종 스킵
+            // 샵 미경유 일정인 경우 샵/헤어/스타일링 관련 잘못 누적된 단계 최종 스킵
             if (!isShopNeeded && (step.label.includes('헤어') || step.label.includes('메이크업') || step.label.includes('스타일링') || (step.label.includes('샵') && !step.label.includes('현장')))) {
               return;
             }
@@ -678,7 +678,7 @@ const State = {
       });
     }
 
-    // 2. 일반 로컬 스케줄 계산 (HQ 본사 연동 스케줄이 전혀 없을 때만 fallback 동작)
+    // 2. 일반 로컬 일정 계산 (HQ 본사 연동 일정이 전혀 없을 때만 fallback 동작)
     if ((!hqScheds || hqScheds.length === 0) && scheds && scheds.length > 0) {
       scheds.sort((a,b) => ((a.teeOff || a.startTime || '09:00') < (b.teeOff || b.startTime || '09:00') ? -1 : 1));
       const firstSched = scheds[0];
@@ -756,7 +756,7 @@ const State = {
         const [sh, sm] = sTime.split(':').map(Number);
         const startMins = (isNaN(sh) ? 9 : sh) * 60 + (isNaN(sm) ? 0 : sm);
         const durMins = (s.duration || 1) * 60;
-        const sTitle = (s.course && s.course.name) ? s.course.name : (s.title || '스케줄');
+        const sTitle = (s.course && s.course.name) ? s.course.name : (s.title || '일정');
         events.push({
           id: `auto_${datePrefix}_sched_${i}`,
           type: 'schedule',
@@ -945,14 +945,14 @@ const ReviewStore = {
 
   submitReview() {
     const stars = window._selectedStars || 0;
-    if (stars === 0) { U.toast('⚠️ 별점을 선택해주세요!'); return; }
+    if (stars === 0) { U.toast('⚠️ 별점을 선택해 주세요!'); return; }
     const comment = document.getElementById('review-comment')?.value || '';
     const name = window._ratingRestaurantName;
     const course = window._ratingCourseName;
 
     this.addReview(name, stars, comment, course);
     App.closeModal();
-    U.toast(`⭐ ${name}에 ${stars}점 평가를 남겼습니다!`);
+    U.toast(`⭐ ${name}에 ${stars}점 평가를 남겼어요!`);
     U.haptic();
   }
 };
@@ -966,7 +966,7 @@ Object.assign(STAFF_PICKS, {
     { place_name:'여의도 창고43 VIP룸',     category:'한우',     address_name:'서울 영등포구 여의서로', tag:'프라이빗 룸 회식', rating:4.9 },
     { place_name:'청담 새벽집 24시',        category:'한우/육회', address_name:'서울 강남구 도산대로',   tag:'연예인 단골 1위',   rating:4.8 },
     { place_name:'방이동 24시 감자탕',      category:'감자탕',   address_name:'서울 송파구 올림픽로',   tag:'콘서트 스태프 추천', rating:4.6 },
-    { place_name:'동대문 24시 닭한마리',    category:'한식',     address_name:'서울 종로구 종로40가길', tag:'심야 스케줄 후 추천', rating:4.7 },
+    { place_name:'동대문 24시 닭한마리',    category:'한식',     address_name:'서울 종로구 종로40가길', tag:'심야 일정 후 추천', rating:4.7 },
   ],
   '경기': [
     { place_name:'일산 드림센터 앞 해장국', category:'해장국', address_name:'경기 고양시 일산동구 호수로', tag:'새벽 사녹 필수', rating:4.6 },
@@ -976,7 +976,7 @@ Object.assign(STAFF_PICKS, {
   ],
   '인천': [
     { place_name:'인스파이어 아레나 푸드홀', category:'양식/한식', address_name:'인천 중구 공항문화로', tag:'아레나 공연장 추천', rating:4.7 },
-    { place_name:'영종도 해물칼국수',        category:'칼국수',   address_name:'인천 중구 운서동',       tag:'스케줄 종료 후 추천', rating:4.6 },
+    { place_name:'영종도 해물칼국수',        category:'칼국수',   address_name:'인천 중구 운서동',       tag:'일정 종료 후 추천', rating:4.6 },
     { place_name:'송도 센트럴 룸 한정식',    category:'한정식',   address_name:'인천 연수구 송도동',     tag:'정갈한 미팅 식당',  rating:4.7 },
   ],
   '강원': [
@@ -986,7 +986,7 @@ Object.assign(STAFF_PICKS, {
   ],
   '제주': [
     { place_name:'제주 흑돼지 연동 본점',   category:'흑돼지',   address_name:'제주 제주시 연동',       tag:'제주 공연 후 필수', rating:4.9 },
-    { place_name:'서귀포 갈치조림 명가',    category:'한식',     address_name:'제주 서귀포시 정방동',   tag:'제주 스케줄 단골',  rating:4.8 },
+    { place_name:'서귀포 갈치조림 명가',    category:'한식',     address_name:'제주 서귀포시 정방동',   tag:'제주 일정 단골',  rating:4.8 },
     { place_name:'애월 해안도로 브런치',    category:'카페',     address_name:'제주 제주시 애월읍',     tag:'촬영 대기 추천',    rating:4.7 },
   ]
 });
