@@ -137,6 +137,7 @@ const RoadAI = {
     if (scroll) this.scrollDown();
   },
 
+  // 로드비서가 '스케줄'이라고 답해도 화면에는 앱과 같게 '일정'으로 보여 줌
   append(m, scroll = true) {
     const body = U.$('#rpai-body');
     if (!body) return;
@@ -151,7 +152,7 @@ const RoadAI = {
         <span class="rpai-time">${esc(m.time)}</span></div>`;
     } else {
       row.innerHTML = `<div class="rpai-mini" aria-hidden="true">🤖</div><div class="rpai-col">
-        <div class="rpai-bubble">${m.html || ''}${this.extras(m)}</div>
+        <div class="rpai-bubble">${String(m.html || '').replace(/스케줄로/g, '일정으로').replace(/스케줄/g, '일정')}${this.extras(m)}</div>
         <span class="rpai-time">${esc(m.time)}</span>
         ${m.chips ? this.chipsHTML() : ''}</div>`;
     }
@@ -160,12 +161,14 @@ const RoadAI = {
   },
 
   chipsHTML() {
-    const c = (label, say) => `<button class="rpai-chip" onclick="RoadAI.ask(${escJs(say)})">${esc(label)}</button>`;
-    return `<div class="rpai-chips-label">💡 눌러서 바로 물어보기</div><div class="rpai-chips">
+    // 둘러보기·로그인 전에는 쓸 수 없으니 흐리게 (눌러도 반응 없는 버튼처럼 보이지 않게)
+    const off = !this.signedIn();
+    const c = (label, say) => `<button class="rpai-chip" ${off ? 'disabled' : ''} onclick="RoadAI.ask(${escJs(say)})">${esc(label)}</button>`;
+    return `<div class="rpai-chips-label">${off ? '💡 로그인하면 이렇게 물어볼 수 있어요' : '💡 눌러서 바로 물어보기'}</div><div class="rpai-chips${off ? ' off' : ''}">
       ${c('📅 내일 일정 알려줘', '내일 일정이랑 출발 시간 알려줘')}
       ${c('🗓️ 이번 주 일정 정리', '이번 주 일정 날짜순으로 정리해줘')}
       ${c('➕ 말로 일정 등록', '토요일 오후 6시 한양대 축제 일정 잡아줘')}
-      <button class="rpai-chip" onclick="RoadAI.pickPhoto()">📷 일정표 사진으로 등록</button>
+      <button class="rpai-chip" ${off ? 'disabled' : ''} onclick="RoadAI.pickPhoto()">📷 일정표 사진으로 등록</button>
       ${c('🍚 다음 현장 근처 밥집', '다음 일정 현장 근처에서 빨리 먹을 수 있는 밥집 찾아줘')}
       ${c('🅿️ 현장 근처 주차장', '다음 일정 현장 근처 주차장 찾아줘')}
     </div>`;

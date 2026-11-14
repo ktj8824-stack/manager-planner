@@ -5,7 +5,7 @@
 //  1) 로그인 확인: 로드플래너 서버(gohxflsyhogyxantnlig)에 사용자 토큰을 물어봄
 //  2) 요금제 확인: 로드플래너 payments 함수(status)로 PRO·회사 요금제 사용 여부 확인
 //  3) 하루 사용량: rp_ai_try_use (무료 맛보기 / 유료 넉넉히)
-//  4) Claude는 스케줄 등록·변경을 '제안'(propose_schedule / propose_update)만 하고, 저장은 앱에서 사용자가 확인 카드로 승인
+//  4) Claude는 일정 등록·변경을 '제안'(propose_schedule / propose_update)만 하고, 저장은 앱에서 사용자가 확인 카드로 승인
 //     현장 주변 식당·카페·주차장은 서버가 카카오 장소 검색으로 찾은 실제 장소만 보여줌
 //  5) 안전장치: 같은 날·같은 장소·같은 아티스트 중복, 건물이 여러 곳인 장소 이름(SBS 등), 지난 날짜는 서버가 거르고 AI가 되묻게 함
 //     답에 한자·'[Note' 메모가 섞이거나 '카드'라고 말해 놓고 제안이 없으면 한 번 다시 받음
@@ -28,7 +28,7 @@ const RP_URL = "https://gohxflsyhogyxantnlig.supabase.co";
 const RP_PUBLISHABLE = "sb_publishable_4BiVB8PhD5kk1Dvtvf6Hkw_8YZL0Mwa"; // 로드플래너 공개 키 (앱 코드에도 있는 값)
 
 export const CHAT_MODEL = "claude-haiku-5-5";    // 일반 대화: 빠르고 저렴
-export const VISION_MODEL = "claude-sonnet-5-5"; // 스케줄표·콜시트 사진 읽기: 정확도 우선
+export const VISION_MODEL = "claude-sonnet-5-5"; // 일정표·콜시트 사진 읽기: 정확도 우선
 const MAX_CALLS = 2;   // 말 한 번에 Claude 호출은 최대 2번 (도구 쓰기 1번 + 답 1번, 또는 답 1번 + 다시 받기 1번) — 비용 절약
 
 const CORS = {
@@ -44,11 +44,11 @@ export const CATEGORIES = ["music_show", "broadcast", "shooting", "event", "fans
 export const TOOLS: Json[] = [
   {
     name: "propose_schedule",
-    description: "새 스케줄 등록을 제안합니다. 앱에 확인 카드가 뜨고, 사용자가 버튼을 누르면 스케줄 등록 창이 내용이 채워진 채로 열립니다. 저장과 동선(출발·샵·도착 시각) 계산은 앱이 합니다. 이미 있는 스케줄의 시간·날짜 변경이나 취소에는 쓰지 마세요(그때는 propose_update).",
+    description: "새 일정 등록을 제안합니다. 앱에 확인 카드가 뜨고, 사용자가 버튼을 누르면 일정 등록 창이 내용이 채워진 채로 열립니다. 저장과 동선(출발·샵·도착 시각) 계산은 앱이 합니다. 이미 있는 일정의 시간·날짜 변경이나 취소에는 쓰지 마세요(그때는 propose_update).",
     input_schema: {
       type: "object",
       properties: {
-        title: { type: "string", description: "짧은 스케줄명 (예: 뮤직뱅크 사전녹화, OO 화보 촬영, 대학 축제)" },
+        title: { type: "string", description: "짧은 일정명 (예: 뮤직뱅크 사전녹화, OO 화보 촬영, 대학 축제)" },
         artist: { type: "string", description: "아티스트 이름. 사용자 정보의 아티스트 목록에 있는 이름 그대로. 전원이면 '전체'. 모르면 생략" },
         category: { type: "string", enum: CATEGORIES, description: "music_show=음악방송, broadcast=예능·라디오·인터뷰, shooting=화보·촬영·광고, event=행사·콘서트·축제, fansign=팬미팅·팬사인회, recording=녹음·연습, overseas=해외·출국, meeting=미팅·기타" },
         date: { type: "string", description: "YYYY-MM-DD. 아래 [날짜표]에서 찾아 씀" },
@@ -60,22 +60,22 @@ export const TOOLS: Json[] = [
         shop_name: { type: "string", description: "헤어·메이크업 샵을 들렀다 가면 샵 이름" },
         shop_address: { type: "string" },
         memo: { type: "string", description: "편명·출국 터미널·준비물 등 덧붙일 말 (말한 경우만)" },
-        allow_duplicate: { type: "boolean", description: "같은 날 같은 장소 스케줄이 이미 있는데 사용자가 '하나 더 따로 만들어 줘'라고 분명히 말한 경우에만 true" },
+        allow_duplicate: { type: "boolean", description: "같은 날 같은 장소 일정이 이미 있는데 사용자가 '하나 더 따로 만들어 줘'라고 분명히 말한 경우에만 true" },
       },
       required: ["title", "date", "start", "place"],
     },
   },
   {
     name: "propose_update",
-    description: "이미 있는 스케줄(사용자 정보의 스케줄 목록 idx)의 날짜·시간 변경이나 취소를 제안합니다. 앱에 확인 카드가 뜨고, 사용자가 승인해야 바뀝니다. 새 스케줄을 만들지 않습니다.",
+    description: "이미 있는 일정(사용자 정보의 일정 목록 idx)의 날짜·시간 변경이나 취소를 제안합니다. 앱에 확인 카드가 뜨고, 사용자가 승인해야 바뀝니다. 새 일정을 만들지 않습니다.",
     input_schema: {
       type: "object",
       properties: {
-        idx: { type: "integer", description: "스케줄 목록의 idx" },
+        idx: { type: "integer", description: "일정 목록의 idx" },
         new_date: { type: "string", description: "옮길 날짜 YYYY-MM-DD (바뀌는 경우만)" },
         new_start: { type: "string", description: "새 콜·시작 시각 HH:MM (바뀌는 경우만)" },
         new_end: { type: "string", description: "새 끝나는 시각 HH:MM (말한 경우만)" },
-        cancel: { type: "boolean", description: "스케줄이 취소·무산됐으면 true" },
+        cancel: { type: "boolean", description: "일정이 취소·무산됐으면 true" },
         reason: { type: "string", description: "바뀐 이유를 짧게 (예: 방송국 사정으로 30분 당겨짐)" },
       },
       required: ["idx"],
@@ -151,7 +151,7 @@ export function calendarTable(today: string): string {
 }
 
 /** 바뀌지 않는 규칙 (캐시됨) */
-export const RULES = `당신은 연예인 매니저용 스케줄·이동 앱 '로드플래너'의 AI 비서 '로디'입니다. 사용자는 현장 매니저, 본사 관리자, 그리고 본사 없이 혼자 쓰는 개인 매니저입니다.
+export const RULES = `당신은 연예인 매니저용 일정·이동 앱 '로드플래너'의 AI 비서 '로디'입니다. 사용자는 현장 매니저, 본사 관리자, 그리고 본사 없이 혼자 쓰는 개인 매니저입니다.
 
 [말투]
 - 존댓말로 짧고 또렷하게 (보통 1~5문장). 현장에서 운전·대기 중에 읽으므로 핵심부터 말합니다.
@@ -159,21 +159,22 @@ export const RULES = `당신은 연예인 매니저용 스케줄·이동 앱 '�
 - 시각은 "오후 2시 30분"처럼 말합니다. 마크다운은 **굵게**와 줄바꿈만 씁니다.
 
 [할 수 있는 일]
-- 새 스케줄 등록: "내일 2시 KBS 뮤뱅 사녹" 같은 말을 propose_schedule로 제안합니다. 날짜는 직접 계산하지 말고 [날짜표]에서 찾습니다.
-  한 번에 여러 스케줄을 말하면 스케줄마다 따로, 시간 순서대로 제안합니다.
-- 이미 있는 스케줄의 변경·취소: "뮤뱅 사녹 7시 말고 6시 반으로 당겨졌어", "토요일 축제 취소됐어"처럼 목록에 있는 스케줄을 말하면 절대 새로 만들지 말고 propose_update {idx, new_start / new_date / cancel}로 제안합니다.
-  어느 스케줄인지 목록에서 하나로 정해지지 않으면(같은 날 비슷한 스케줄이 둘 이상) 어느 것인지 짧게 물어봅니다. 목록에 없는 스케줄을 바꾸라고 하면 "목록에서 그 스케줄을 찾지 못했어요"라고 말하고 스케줄 화면에서 확인하도록 안내합니다.
-- 중복 막기: 같은 날짜·같은 장소(·같은 아티스트) 스케줄이 목록에 이미 있으면 새로 만들지 말고 "이미 OO 스케줄이 있어요. 시간을 바꿀까요, 하나 더 만들까요?"라고 먼저 물어봅니다. 사용자가 하나 더 만들라고 분명히 하면 allow_duplicate:true로 제안합니다.
-- 스케줄표·콜시트·공문 사진: 날짜, 콜(도착) 시각, 장소, 주소, 아티스트를 읽어 줄마다 propose_schedule로 제안합니다. 흐리거나 애매한 값은 지어내지 말고 확인을 부탁합니다.
+- 새 일정 등록: "내일 2시 KBS 뮤뱅 사녹" 같은 말을 propose_schedule로 제안합니다. 날짜는 직접 계산하지 말고 [날짜표]에서 찾습니다.
+  한 번에 여러 일정을 말하면 일정마다 따로, 시간 순서대로 제안합니다.
+- 이미 있는 일정의 변경·취소: "뮤뱅 사녹 7시 말고 6시 반으로 당겨졌어", "토요일 축제 취소됐어"처럼 목록에 있는 일정을 말하면 절대 새로 만들지 말고 propose_update {idx, new_start / new_date / cancel}로 제안합니다.
+  어느 일정인지 목록에서 하나로 정해지지 않으면(같은 날 비슷한 일정이 둘 이상) 어느 것인지 짧게 물어봅니다. 목록에 없는 일정을 바꾸라고 하면 "목록에서 그 일정을 찾지 못했어요"라고 말하고 일정 화면에서 확인하도록 안내합니다.
+- 중복 막기: 같은 날짜·같은 장소(·같은 아티스트) 일정이 목록에 이미 있으면 새로 만들지 말고 "이미 OO 일정이 있어요. 시간을 바꿀까요, 하나 더 만들까요?"라고 먼저 물어봅니다. 사용자가 하나 더 만들라고 분명히 하면 allow_duplicate:true로 제안합니다.
+- 일정표·콜시트·공문 사진: 날짜, 콜(도착) 시각, 장소, 주소, 아티스트를 읽어 줄마다 propose_schedule로 제안합니다. 흐리거나 애매한 값은 지어내지 말고 확인을 부탁합니다.
 - 현장 주변 밥집·카페·주차장·편의점·약국: search_nearby 결과에 있는 곳만 말합니다. 결과에 없는 가게 이름, 평점, 영업시간을 지어내지 않습니다. 영업시간은 방문 전 확인을 권합니다.
   대기 중 식사는 빨리 나오는 국밥·백반·분식·도시락을, 단체 식사는 넓은 한식·고깃집을 먼저 고려합니다.
-- 스케줄 질문("내일 몇 시 출발이야?", "이번 주 일정")은 사용자 정보의 스케줄 목록 값으로 답합니다. 목록에 없는 시각을 지어내지 않습니다. 출발 시각이 목록에 없으면 "등록 후 앱이 동선을 계산해요"라고 말합니다.
+- 일정 질문("내일 몇 시 출발이야?", "이번 주 일정")은 사용자 정보의 일정 목록 값으로 답합니다. 목록에 없는 시각을 지어내지 않습니다. 출발 시각이 목록에 없으면 "등록 후 앱이 동선을 계산해요"라고 말합니다.
 - 매니저 업무 상식(방송국 출입, 사전녹화 흐름, 이동 동선 팁, 비 오는 날 대비 등)은 간단히 답합니다.
 - 저장은 사용자가 카드 버튼을 눌러야 됩니다. "등록했어요/바꿨어요"가 아니라 "아래 카드에서 확인해 주세요"라고 말합니다. 도구를 쓰지 않았으면 '카드'라는 말을 하지 않습니다.
 - 출발·기상 시각은 앱이 경로를 찾아 계산하므로 미리 말하지 않습니다.
 - 꼭 필요한 정보(날짜, 시각, 장소)가 없으면 추측하지 말고 한 가지만 짧게 물어봅니다. 아티스트·분류·종료 시각은 모르면 묻지 말고 생략합니다(사용자가 창에서 고름).
-- 현장 매니저는 기존 스케줄을 직접 바꿀 수 없습니다. 그래도 propose_update로 제안하면 카드에서 본사에 요청하도록 안내됩니다. 개인 매니저는 본사·로드톡이 없고 자기 스케줄을 카드에서 직접 고칩니다.
-- 업무와 무관한 요청(투자, 정치, 숙제, 코딩 등)은 "저는 스케줄과 이동을 돕는 비서라서요"처럼 정중히 짧게 돌려 말합니다.
+- 현장 매니저는 기존 일정을 직접 바꿀 수 없습니다. 그래도 propose_update로 제안하면 카드에서 본사에 요청하도록 안내됩니다. 개인 매니저는 본사·로드톡이 없고 자기 일정을 카드에서 직접 고칩니다.
+- 말: 사용자가 '스케줄'이라고 말해도 같은 뜻으로 알아듣고, 답할 때는 앱 화면과 같게 '일정'이라고 씁니다.
+- 업무와 무관한 요청(투자, 정치, 숙제, 코딩 등)은 "저는 일정과 이동을 돕는 비서라서요"처럼 정중히 짧게 돌려 말합니다.
 - 아티스트의 집 주소, 개인 연락처, 주민번호, 건강·연애 같은 사생활 정보는 묻거나 알려 주지 않고 정중히 거절합니다.
 
 [장소표] (방송사 사정으로 바뀔 수 있으니 공지·콜시트에 적힌 곳이 우선)
@@ -188,7 +189,7 @@ export const RULES = `당신은 연예인 매니저용 스케줄·이동 앱 '�
 [시각 알아듣기]
 - start는 24시간 HH:MM. "반"은 30분. 오전/오후를 말하지 않으면 7~11시는 오전, 12시는 낮 12시, 1~6시는 오후로 보되, 새벽 이동·출국·사전녹화처럼 이른 일정은 문맥으로 판단하고 애매하면 물어봅니다.
 - "콜 1시", "1시까지 도착"은 start=13:00. 날짜 없이 시각만 말하면 아직 안 지났으면 오늘, 지났으면 내일.
-- 지난 날짜에는 새 스케줄을 만들지 않습니다. 사용자가 지난 날짜를 말하면 날짜가 맞는지 물어봅니다.
+- 지난 날짜에는 새 일정을 만들지 않습니다. 사용자가 지난 날짜를 말하면 날짜가 맞는지 물어봅니다.
 
 [분류 고르기]
 - 음악방송(뮤뱅·음중·인가·엠카·쇼챔·더쇼 등, 사녹 포함)=music_show, 예능·라디오·인터뷰(라디오 녹음 포함)=broadcast, 화보·광고·뮤비·촬영=shooting, 행사·축제·콘서트=event, 팬미팅·팬싸=fansign, 음원 녹음·안무 연습·레슨=recording, 출국·해외=overseas, 그 밖=meeting.
@@ -208,9 +209,9 @@ export const RULES = `당신은 연예인 매니저용 스케줄·이동 앱 '�
 export function contextPrompt(ctx: Json): string {
   return `[사용자 정보]
 - 지금: ${ctx.today || ""} (${ctx.weekday || ""}) ${ctx.now || ""}
-- 이름: ${ctx.userName || ""} / 역할: ${ctx.role === "manager" ? "현장 매니저 (기존 스케줄은 직접 못 바꾸고 본사에 요청)" : ctx.role === "indie" ? "개인 매니저 (본사 없음, 자기 스케줄 직접 수정)" : (ctx.role ? "본사 관리자" : "")} / 기본 출발지: ${ctx.departure || "미등록"}
+- 이름: ${ctx.userName || ""} / 역할: ${ctx.role === "manager" ? "현장 매니저 (기존 일정은 직접 못 바꾸고 본사에 요청)" : ctx.role === "indie" ? "개인 매니저 (본사 없음, 자기 일정 직접 수정)" : (ctx.role ? "본사 관리자" : "")} / 기본 출발지: ${ctx.departure || "미등록"}
 - 아티스트: ${JSON.stringify(ctx.artists || [])}
-- 앞으로 2주 스케줄 목록(idx, 계산된 출발 시각 포함): ${JSON.stringify(ctx.upcoming || [])}
+- 앞으로 2주 일정 목록(idx, 계산된 출발 시각 포함): ${JSON.stringify(ctx.upcoming || [])}
 
 [날짜표] (오늘부터 3주, 주는 월~일)
 ${calendarTable(ctx.today)}`;
@@ -305,7 +306,7 @@ async function kakaoAddress(env: Env, q: string, f: Fetch) {
   return d ? { name: q, addr: d.road_address?.address_name || d.address_name || q, lat: parseFloat(d.y), lng: parseFloat(d.x) } : null;
 }
 
-/** 장소 이름 → 위치 (스케줄 제안 카드에 주소를 붙이고, 주변 검색의 기준점으로 씀) */
+/** 장소 이름 → 위치 (일정 제안 카드에 주소를 붙이고, 주변 검색의 기준점으로 씀) */
 export async function findPlace(env: Env, name: string, f: Fetch) {
   const q = String(name || "").trim().slice(0, 80);
   if (!q) return null;
@@ -376,7 +377,7 @@ function sameArtist(a: unknown, b: unknown) {
 /** 목록 항목의 날짜 (YYYY-MM-DD) — 앱이 "2026-11-08(일)"처럼 보내도 앞 10자리만 */
 const itemDate = (u: Json) => String(u?.date || "").slice(0, 10);
 
-/** AI 새 스케줄 제안 검사 (이상하면 AI가 다시 고치거나 되묻게 함) */
+/** AI 새 일정 제안 검사 (이상하면 AI가 다시 고치거나 되묻게 함) */
 export function checkSchedule(input: Json, ctx: Json, fromPhoto: boolean): string | null {
   if (!input.title || !String(input.place || "").trim()) return "title과 place(장소)가 필요합니다. 모르면 사용자에게 물어보세요";
   if (!realDate(input.date || "")) return "date는 달력에 있는 YYYY-MM-DD여야 합니다. 날짜표에서 고르세요";
@@ -384,7 +385,7 @@ export function checkSchedule(input: Json, ctx: Json, fromPhoto: boolean): strin
   if (input.end && !HM.test(input.end)) return "end는 HH:MM";
   if (input.category && !CATEGORIES.includes(input.category)) return "category는 정해진 값만";
   // 사진(지난 공문 등)은 지난 날짜도 기록용으로 허용, 말로 한 새 일정은 지난 날짜 거름
-  if (!fromPhoto && YMD.test(ctx.today || "") && input.date < ctx.today) return `${input.date}는 이미 지난 날짜입니다. 새 스케줄을 만들지 말고 날짜가 맞는지 사용자에게 물어보세요`;
+  if (!fromPhoto && YMD.test(ctx.today || "") && input.date < ctx.today) return `${input.date}는 이미 지난 날짜입니다. 새 일정을 만들지 말고 날짜가 맞는지 사용자에게 물어보세요`;
   if (!input.address) {
     const amb = ambiguousPlace(input.place);
     if (amb) return `'${input.place}'는 건물이 여러 곳입니다: ${amb}. 프로그램 이름으로도 정해지지 않으면 어디인지 사용자에게 물어보세요`;
@@ -392,7 +393,7 @@ export function checkSchedule(input: Json, ctx: Json, fromPhoto: boolean): strin
   if (!input.allow_duplicate) {
     const dup = (Array.isArray(ctx.upcoming) ? ctx.upcoming : []).find((u: Json) =>
       itemDate(u) === input.date && samePlace(u.place, input.place) && sameArtist(u.artist, input.artist));
-    if (dup) return `같은 날 같은 장소에 이미 스케줄이 있습니다 (idx ${dup.idx}: ${dup.start || ""} ${dup.title || ""}). 새로 만들지 말고, 시간을 바꾸는 건지(propose_update) 하나 더 만드는 건지 사용자에게 먼저 물어보세요`;
+    if (dup) return `같은 날 같은 장소에 이미 일정이 있습니다 (idx ${dup.idx}: ${dup.start || ""} ${dup.title || ""}). 새로 만들지 말고, 시간을 바꾸는 건지(propose_update) 하나 더 만드는 건지 사용자에게 먼저 물어보세요`;
   }
   return null;
 }
@@ -401,7 +402,7 @@ export function checkSchedule(input: Json, ctx: Json, fromPhoto: boolean): strin
 export function checkUpdate(input: Json, ctx: Json): string | null {
   const list = Array.isArray(ctx.upcoming) ? ctx.upcoming : [];
   const item = list.find((u: Json) => u && u.idx === input.idx);
-  if (!Number.isInteger(input.idx) || !item) return "스케줄 목록에 있는 idx를 쓰세요. 목록에 없으면 사용자에게 어느 스케줄인지 물어보세요";
+  if (!Number.isInteger(input.idx) || !item) return "일정 목록에 있는 idx를 쓰세요. 목록에 없으면 사용자에게 어느 일정인지 물어보세요";
   if (input.new_start && !HM.test(input.new_start)) return "new_start는 HH:MM";
   if (input.new_end && !HM.test(input.new_end)) return "new_end는 HH:MM";
   if (input.new_date && !realDate(input.new_date)) return "new_date는 달력에 있는 YYYY-MM-DD";
@@ -532,7 +533,7 @@ export async function handle(req: Request, env: Env, f: Fetch = fetch, nowMs = D
   if (messages.length && messages[messages.length - 1].role === "user") messages.pop();
   const userContent: Json[] = [];
   if (image) userContent.push({ type: "image", source: { type: "base64", media_type: mediaType, data: image.data } });
-  userContent.push({ type: "text", text: text || "이 스케줄표를 읽고 스케줄로 등록해 줘." });
+  userContent.push({ type: "text", text: text || "이 일정표를 읽고 일정으로 등록해 줘." });
   messages.push({ role: "user", content: userContent });
 
   // 프롬프트에 넣는 정보는 크기 제한 (요금 남용 방지). 목록 idx는 앱이 보낸 순서 그대로

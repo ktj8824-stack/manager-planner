@@ -77,3 +77,5 @@ body.ai-typing .rpai-inputwrap { --rpai-safe: env(safe-area-inset-bottom); }
 /* 아래 메뉴의 AI 버튼 */
 .bnav-ai .bnav-ai-ico { width: 30px; height: 30px; border-radius: 10px; background: linear-gradient(135deg, #3B45C4, #0ea5e9); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; letter-spacing: -0.5px; }
 .bnav-ai.active .bnav-ai-ico { box-shadow: 0 0 0 3px #D5D9F7; }
+
+.rpai-chips.off .rpai-chip, .rpai-chip:disabled { opacity: .5; cursor: default; background: #F1F2F5; border-color: #E2E4EA; color: #5B616E; }
