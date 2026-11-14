@@ -71,12 +71,12 @@
         if (a === 'close') return close();
         if (a === 'copy') {
           try { await navigator.clipboard.writeText(msg); toast('링크와 일정 요약을 복사했어요. 카톡에 붙여 넣으세요.'); }
-          catch (err) { prompt('아래 내용을 길게 눌러 복사하세요', msg); }
+          catch (err) { Ask.copy('아래 내용을 복사해 주세요', msg); }
           return;
         }
         if (a === 'send') {
           if (navigator.share) { try { await navigator.share({ title: '로드플래너 일정 공유', text: msg.replace(url, '').trim(), url }); } catch (err) { } return; }
-          try { await navigator.clipboard.writeText(msg); toast('이 기기는 바로 보내기를 지원하지 않아 복사했어요. 카톡에 붙여 넣으세요.'); } catch (err) { prompt('아래 내용을 복사하세요', msg); }
+          try { await navigator.clipboard.writeText(msg); toast('이 기기는 바로 보내기를 지원하지 않아 복사했어요. 카톡에 붙여 넣으세요.'); } catch (err) { Ask.copy('아래 내용을 복사해 주세요', msg); }
           return;
         }
         if (a === 'revoke') {

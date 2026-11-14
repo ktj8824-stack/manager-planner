@@ -216,7 +216,7 @@
     };
     H.review = async function (id, status) {
       let note = null;
-      if (status === 'rejected') { note = prompt('반려 사유를 적어 주세요 (매니저에게 보여요)', ''); if (note === null) return; }
+      if (status === 'rejected') { note = await Ask.text({ title: '반려 사유를 적어 주세요', desc: '매니저 앱에 그대로 보여요.', multiline: true, okLabel: '반려하기', max: 300 }); if (note === null) return; }
       try {
         const { error } = await window.SupabaseClient.client.rpc('expense_review', { p_id: id, p_status: status, p_note: note });
         if (error) throw error;
@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!band && msgs) { band = document.createElement('div'); band.className = 'hq-talk-late'; band.setAttribute('role', 'status'); msgs.parentElement.insertBefore(band, msgs); }
     if (band) {
       const r = late[0]; const s = r.s || {};
-      band.innerHTML = `${E(s.managerName || '담당 미지정')} · ${E(String(s.artistName || '').replace(/\s*\([^)]*\)\s*$/, ''))} · ${E(String(r.note || '').replace(/^\[[^\]]+\]\s*/, '').replace(/ 미확인$/, ''))} 확인 안 됨 (지연 ${E(r.late)}분)${late.length > 1 ? ` 외 ${late.length - 1}건` : ''}`;
+      band.innerHTML = `${E(s.managerName || '담당 미지정')} · ${E(String(s.artistName || '').replace(/\s*\([^)]*\)\s*$/, ''))} · ${E(String(r.note || '').replace(/^\[[^\]]+\]\s*/, '').replace(/ 미확인$/, ''))} 확인 안 됨 (지연 ${E(window.hqDur ? hqDur(r.late) : r.late + "분")})${late.length > 1 ? ` 외 ${late.length - 1}건` : ''}`;
     }
     return true;
   };

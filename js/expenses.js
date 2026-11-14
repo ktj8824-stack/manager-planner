@@ -74,11 +74,13 @@ const Expenses = {
   async load() {
     const [from, to] = this.range();
     try {
-      this.items = this.online() ? await SupabaseClient.expensesList(from, to)
+      // 연결이 느리면 '불러오는 중...'에서 멈추지 않게 12초 뒤 안내로 바꿈
+      const slow = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000));
+      this.items = this.online() ? await Promise.race([SupabaseClient.expensesList(from, to), slow])
         : this._local().filter(x => x.date >= from && x.date <= to).sort((a, b) => b.date.localeCompare(a.date));
     } catch (e) {
       const box = U.$('#exp-body');
-      if (box) box.innerHTML = `<div class="exp-empty">${navigator.onLine === false ? '인터넷 연결을 확인해 주세요.' : '경비를 불러오지 못했어요. 잠시 후 다시 해 주세요.'}</div>`;
+      if (box) box.innerHTML = `<div class="exp-empty">${navigator.onLine === false ? '인터넷 연결을 확인해 주세요.' : '경비를 불러오지 못했어요. 잠시 후 다시 해 주세요.'}<br><button type="button" class="art-btn" style="margin-top:10px; min-height:40px; padding:0 16px;" onclick="Expenses.load()">다시 불러오기</button></div>`;
       return;
     }
     this.draw();

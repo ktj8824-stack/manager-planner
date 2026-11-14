@@ -40,7 +40,7 @@ const Vehicle = {
     if (!Expenses.month) Expenses.month = Expenses.ymd(new Date()).slice(0, 7);
     el.innerHTML = `
       <div class="header">
-        <div class="header-btn" style="visibility:hidden"></div>
+        ${typeof Plan !== 'undefined' && Plan.isIndie() ? '<div class="header-btn" style="visibility:hidden"></div>' : `<button type="button" class="header-btn" onclick="App.navigate('profile')" aria-label="뒤로"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>`}
         <h1 class="header-title">차량관리</h1>
         <div class="header-btn" style="visibility:hidden"></div>
       </div>

@@ -133,6 +133,7 @@ const Home = {
     setTimeout(() => {
       this.centerSelectedDate();
     }, 80);
+    this._fabAutoHide();
   },
 
   // 타임라인 영역(오른쪽 칸)만 스크롤한다. scrollIntoView는 앱 전체 틀까지 밀어서 화면이 잘리는 문제가 있었음
@@ -145,7 +146,22 @@ const Home = {
     } catch (e) { }
   },
 
-  centerSelectedDate() { },   // 주간 한 줄이라 스크롤할 것이 없음
+/** 아래로 내리는 동안에는 [+] 버튼을 숨겨서 목록의 버튼(완료·카카오·문자 초안)을 가리지 않게. 위로 올리거나 맨 위면 다시 보임 */
+  _fabAutoHide() {
+    const sc = document.querySelector('.split-right'), fab = document.querySelector('.home-fab');
+    if (!sc || !fab || sc._fabBound) return;
+    sc._fabBound = true;
+    let last = sc.scrollTop;
+    sc.addEventListener('scroll', () => {
+      const y = sc.scrollTop, f = document.querySelector('.home-fab');
+      if (!f) return;
+      if (y < 24 || y < last - 6) f.classList.remove('away');
+      else if (y > last + 6) f.classList.add('away');
+      last = y;
+    }, { passive: true });
+  },
+
+    centerSelectedDate() { },   // 주간 한 줄이라 스크롤할 것이 없음
 
   // 이번 주(월~일) 7칸. 일정 있는 날은 점, 오늘은 테두리, 고른 날은 남색
   renderMiniCal() {
@@ -640,7 +656,16 @@ const Home = {
     let nowShown = null;   // 지금 할 일 카드에 크게 나온 단계 — 아래 목록에서는 빼서 겹치지 않게
     try {
       const pending = uniqueEvents.filter(e => !e.done && e.stepCategory !== 'rest');
-      const nowEv = allPast ? null : (pending.find(e => e.moving === true) || pending[0]);
+      // [기상·준비]는 안 눌러도, 다음 단계 시간이 되면 자동으로 넘어감 (하루 종일 'N시간 지남'으로 남지 않게)
+      const evAt = (e) => {
+        const mm = /^(\d{1,2}):(\d{2})/.exec(String((e && e.time) || '')); if (!mm) return NaN;
+        const b = new Date(this.selectedDate); b.setHours(+mm[1], +mm[2], 0, 0); b.setDate(b.getDate() + (e.dayOffset || 0));
+        return b.getTime();
+      };
+      const isWake = (e) => /^\s*\[기상/.test(String((e && e.title) || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim());
+      let first = 0;
+      while (first < pending.length - 1 && isWake(pending[first]) && !pending[first].moving && evAt(pending[first + 1]) <= Date.now()) first++;
+      const nowEv = allPast ? null : (pending.find(e => e.moving === true) || pending[first]);
       if (allPast) {
         const d = this.selectedDate;
         html += `<div class="home-note">지난 일정이에요 · ${d.getMonth() + 1}/${d.getDate()}(${U.DAYS[d.getDay()]}) — 기록으로 흐리게 보여요</div>`;

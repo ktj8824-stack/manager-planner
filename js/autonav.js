@@ -168,8 +168,9 @@ const AutoNav = {
 
   copyLink(el) {
     const done = () => { if (typeof U !== 'undefined') U.toast('링크를 복사했어요.'); if (el) { el.textContent = '복사됨 ✓'; setTimeout(() => { el.textContent = '링크 복사'; }, 1600); } };
-    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(this.LINK).then(done, () => prompt('아래 링크를 복사하세요', this.LINK));
-    else prompt('아래 링크를 복사하세요', this.LINK);
+    const manual = () => Ask.copy('아래 링크를 복사해 주세요', this.LINK);
+    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(this.LINK).then(done, manual);
+    else manual();
   },
 
   // 내 정보 > 설정 안내

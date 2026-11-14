@@ -54,7 +54,7 @@ const VenueNotes = {
     if (!sc) { alert('로그인 후 남길 수 있어요.'); return; }
     const { keys, label } = this.keys(text);
     if (!keys.length) return;
-    const note = prompt(`📌 ${label}\n이 장소에 대해 다른 매니저가 알면 좋은 정보를 남겨 주세요.\n(예: 지하 2층 B구역 주차, 출연자 출입구는 정문 오른쪽, 대기실 5층)`, '');
+    const note = await Ask.text({ title: '현장 메모 남기기', desc: `${label}\n다른 매니저가 알면 좋은 정보를 남겨 주세요.`, placeholder: '예: 지하 2층 B구역 주차, 출연자 출입구는 정문 오른쪽, 대기실 5층', multiline: true, okLabel: '남기기', max: 500 });
     if (note === null || !note.trim()) return;
     const name = localStorage.getItem('admin_bp_user_name') || localStorage.getItem('bp_user_name') || '';
     const { error } = await sc.client.from('venue_notes').insert({ place_key: keys[0], place_label: label.slice(0, 200), note: note.trim().slice(0, 500), author_id: this._me(), author_name: name.slice(0, 60) });

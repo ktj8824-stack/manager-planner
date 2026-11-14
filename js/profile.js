@@ -484,23 +484,23 @@ const Profile = {
     }
   },
 
-  editPrep() {
+  async editPrep() {
     const cur = localStorage.getItem('bp_buffer_prep') ?? '60';
-    const v = prompt('첫 출발 몇 분 전에 기상·준비 단계를 넣을까요? (0 = 넣지 않음)', cur);
+    const v = await Ask.text({ title: '기상·준비 시간', desc: '첫 출발 몇 분 전에 기상·준비 단계를 넣을까요?\n0을 넣으면 넣지 않아요.', value: cur, kind: 'number', placeholder: '예: 60', max: 3, select: true,
+      validate: (x) => { const k = parseInt(x, 10); return Number.isFinite(k) && k >= 0 && k <= 240 ? '' : '0~240 사이 숫자로 넣어 주세요.'; } });
     if (v === null) return;
     const n = parseInt(v, 10);
-    if (!Number.isFinite(n) || n < 0 || n > 240) { U.toast('0~240 사이 숫자로 입력해 주세요.'); return; }
     localStorage.setItem('bp_buffer_prep', String(n));
     U.toast(n ? `✅ 새로 만드는 동선부터 출발 ${n}분 전 기상·준비 단계가 들어가요.` : '기상·준비 단계를 넣지 않아요.');
     Profile.render();
   },
 
-  editContact() {
+  async editContact() {
     const current = window.SupabaseClient?.currentProfile?.phone || localStorage.getItem('bp_user_phone') || '';
-    const phone = prompt('수정할 휴대폰 번호를 입력해 주세요:', current);
+    const phone = await Ask.text({ title: '휴대폰 번호', desc: '본사 긴급 연락처에도 반영돼요.', value: current, kind: 'tel', placeholder: '010-1234-5678', max: 20,
+      validate: (x) => { const t = String(x).trim(); return !t || /^0\d{1,2}-?\d{3,4}-?\d{4}$/.test(t) ? '' : '번호 형식을 확인해 주세요. (예: 010-1234-5678)'; } });
     if (phone === null) return;
     const v = phone.trim();
-    if (v && !/^0\d{1,2}-?\d{3,4}-?\d{4}$/.test(v)) { U.toast('번호 형식을 확인해 주세요. (예: 010-1234-5678)'); return; }
     localStorage.setItem('bp_user_phone', v);
     const sc = window.SupabaseClient;
     if (sc?.isConfigured && sc.currentUser) {
@@ -512,9 +512,9 @@ const Profile = {
     Profile.render();
   },
 
-  editVehicle() {
+  async editVehicle() {
     const currentVeh = localStorage.getItem('bp_user_vehicle') || '';
-    const veh = prompt('배정 차량 정보를 입력해 주세요 (차종 및 차량번호):', currentVeh);
+    const veh = await Ask.text({ title: '배정 차량', desc: '차종과 차량 번호를 적어 주세요.', value: currentVeh, placeholder: '예: 카니발 12가 3456', max: 60 });
     if (veh?.trim()) {
       localStorage.setItem('bp_user_vehicle', veh.trim());
       U.toast(`배정 차량을 저장했어요: ${veh.trim()}`);

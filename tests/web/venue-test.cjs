@@ -24,7 +24,11 @@ const { chromium } = require('playwright');
   });
   await p.waitForTimeout(600);
   const before = await p.evaluate(() => document.getElementById('probe').innerText.replace(/\s+/g, ' ').slice(0, 500));
-  await p.evaluate(() => VenueNotes.add('MBC 상암 신사옥 (서울 마포구 성암로 267)'));
+  // 메모는 앱 안 입력 창(Ask)으로 받음 — 휴대폰 기본 입력창(prompt)을 쓰지 않음
+  await p.evaluate(() => { VenueNotes.add('MBC 상암 신사옥 (서울 마포구 성암로 267)'); });
+  await p.waitForSelector('#ask-in');
+  await p.fill('#ask-in', '지하 2층 B구역 주차 · 출연자 출입구 정문 오른쪽');
+  await p.click('#ask-back .ask-ok');
   await p.waitForTimeout(500);
   const after = await p.evaluate(() => ({ text: [...document.querySelectorAll('[data-venue]')].map(e => e.innerText.replace(/\s+/g, ' ')).join(' || '), stored: window.__store.map(r => r.place_key + ' ' + r.note) }));
   console.log(before, '\n---\n', JSON.stringify(after, null, 1), errs);

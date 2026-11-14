@@ -257,6 +257,9 @@
   const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   let expPending = null;
 
+  // 분 → '7시간 34분' (60분 미만은 'N분')
+  const dur = (m) => { m = Math.max(0, Math.round(Number(m) || 0)); return m >= 60 ? `${Math.floor(m / 60)}시간${m % 60 ? ` ${m % 60}분` : ''}` : `${m}분`; };
+  window.hqDur = dur;
   const view = () => document.querySelector('.view-tab-btn.active')?.dataset.view || 'gantt';
   const syncHead = () => {
     const v = view();
@@ -304,10 +307,10 @@
     } catch (e) { }
   }
   async function setMyPhone() {
-    const v = prompt('매니저 앱 [긴급] 화면에 보일 내 휴대폰 번호를 넣어 주세요', '');
+    const v = await Ask.text({ title: '내 휴대폰 번호', desc: '매니저 앱 [긴급] 화면에 보여요.', kind: 'tel', placeholder: '010-1234-5678', max: 20,
+      validate: (x) => String(x).replace(/[^0-9]/g, '').length < 9 ? '번호를 다시 확인해 주세요.' : '' });
     if (v === null) return;
     const tel = String(v).replace(/[^0-9-]/g, '');
-    if (tel.replace(/-/g, '').length < 9) { alert('번호를 다시 확인해 주세요.'); return; }
     try {
       const sc = window.SupabaseClient;
       const { error } = await sc.client.from('profiles').update({ phone: tel }).eq('id', sc.currentUser.id);
@@ -329,7 +332,7 @@
     const items = [];
     try {
       (window.Admin?._lateList?.() || []).slice(0, 3).forEach(r => items.push({
-        k: 'late', title: `${r.s.managerName || '담당 미지정'} · ${r.late}분 늦음`, sub: `${String(r.s.artistName || '').replace(/\s*\([^)]*\)\s*$/, '')} ${r.s.title || ''} · ${String(r.note || '').replace(/^\[[^\]]+\]\s*/, '')}`,
+        k: 'late', title: `${r.s.managerName || '담당 미지정'} · ${dur(r.late)} 늦음`, sub: `${String(r.s.artistName || '').replace(/\s*\([^)]*\)\s*$/, '')} ${r.s.title || ''} · ${String(r.note || '').replace(/^\[[^\]]+\]\s*/, '')}`,
         act: '로드톡', run: () => { try { Chat.open(r.s.managerId ? { managerId: r.s.managerId } : undefined); } catch (e) { $('btn-open-chat')?.click(); } }
       }));
     } catch (e) { }

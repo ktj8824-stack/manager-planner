@@ -1133,9 +1133,9 @@ window.Admin = {
     const label = name || '해당 아티스트';
     let ok = false;
     if (mine.length > 0) {
-      const typed = prompt(`⚠️ '${label}' 아티스트를 삭제하면 등록된 스케줄 ${mine.length}건도 함께 영구 삭제되며 되돌릴 수 없습니다.\n\n정말 삭제하려면 아티스트 이름 "${label}"을(를) 아래에 똑같이 입력하세요.`);
-      ok = typed !== null && typed.trim() === String(label).trim();
-      if (typed !== null && !ok) { alert('이름이 일치하지 않아 삭제하지 않았습니다.'); return; }
+      const typed = await Ask.text({ title: `'${label}' 아티스트를 삭제할까요?`, desc: `등록된 일정 ${mine.length}건도 함께 지워지고 되돌릴 수 없어요.\n지우려면 아래에 아티스트 이름 "${label}"을(를) 똑같이 적어 주세요.`, placeholder: label, okLabel: '삭제', danger: true, max: 80,
+        validate: (x) => String(x).trim() === String(label).trim() ? '' : '이름이 달라요. 똑같이 적어 주세요.' });
+      ok = typed !== null;
     } else {
       ok = confirm(`'${label}' 아티스트를 삭제하시겠습니까?\n등록된 스케줄은 없습니다.`);
     }
@@ -1671,6 +1671,9 @@ window.Admin = {
   }
 };
 
+// 분 → '7시간 34분' (60분 미만은 'N분')
+const hqDurTxt = (m) => { m = Math.max(0, Math.round(Number(m) || 0)); return m >= 60 ? `${Math.floor(m / 60)}시간${m % 60 ? ` ${m % 60}분` : ''}` : `${m}분`; };
+
 // 서버 저장 실패 안내 (기기에는 저장됨)
 window.addEventListener('hq-store-change', (event) => {
   if (event.detail?.type !== 'SERVER_WRITE_FAILED') return;
@@ -2068,7 +2071,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (mv) { put(s.managerId, { cls: 'move', text: '이동 중' + (mv.label ? ' · ' + clean(mv.label) : '') }); return; }
       const next = tl.find(t => !t.done && !/^\[기상/.test(t.label || ''));
       const nm = next ? toMin(next.time) : null;
-      if (next && nm !== null && nowMin - nm >= lateThreshold()) { put(s.managerId, { cls: 'late', text: `응답 없음 ${nowMin - nm}분` }); return; }
+      if (next && nm !== null && nowMin - nm >= lateThreshold()) { put(s.managerId, { cls: 'late', text: `응답 없음 ${hqDurTxt(nowMin - nm)}` }); return; }
       const doneAny = tl.some(t => t.done);
       if (doneAny) put(s.managerId, { cls: 'live', text: /샵|헤어|메이크업/.test((tl.filter(t => t.done).pop() || {}).label || '') ? '샵 진행 중' : '현장 진행 중' });
       else put(s.managerId, { cls: 'idle', text: s.startTime ? `대기 · ${s.startTime} 일정` : '대기' });
@@ -2178,7 +2181,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (lateFirstRun) { lateFirstRun = false; return; }   // 처음 열었을 때 이미 있던 지연은 패널로만 표시
     if (!fresh.length || localStorage.getItem('hq_late_alert') === '0') return;
     const r = fresh[0];
-    const msg = `⏰ 지연 ${r.late}분 · ${r.s.managerName || '담당 미지정'} · ${r.s.artistName || r.s.title || ''} (${r.note})` + (fresh.length > 1 ? ` 외 ${fresh.length - 1}건` : '');
+    const msg = `⏰ 지연 ${hqDurTxt(r.late)} · ${r.s.managerName || '담당 미지정'} · ${r.s.artistName || r.s.title || ''} (${r.note})` + (fresh.length > 1 ? ` 외 ${fresh.length - 1}건` : '');
     try {
       if (document.hidden && 'Notification' in window && Notification.permission === 'granted' && navigator.serviceWorker) {
         navigator.serviceWorker.getRegistration().then(reg => reg ? reg.showNotification('로드플래너 지연 알림', { body: msg, tag: 'late', renotify: true }) : new Notification('로드플래너 지연 알림', { body: msg }));
@@ -2205,7 +2208,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const k = tile.dataset.k, list = briefLists[k] || [];
       const items = list.map(({ s, note, late }) => `
         <div class="tb-pop-item" data-id="${esc(s.id)}">
-          <div class="r1"><span class="tm">${esc(s.startTime || '--:--')}${s.endTime ? ' ~ ' + esc(s.endTime) : ''}</span>${late ? `<span class="lt">지연 ${late}분</span>` : ''}${note && !late ? `<span class="nt">${esc(note)}</span>` : ''}</div>
+          <div class="r1"><span class="tm">${esc(s.startTime || '--:--')}${s.endTime ? ' ~ ' + esc(s.endTime) : ''}</span>${late ? `<span class="lt">지연 ${hqDurTxt(late)}</span>` : ''}${note && !late ? `<span class="nt">${esc(note)}</span>` : ''}</div>
           <div class="r2">${esc(s.artistName || '')} <span>${esc(s.title || '')}</span></div>
           <div class="r3">${esc(s.managerName || '담당 미지정')}${s.vehicleName ? ' · ' + esc(s.vehicleName) : ''}${late && note ? ' · ' + esc(note) : ''}</div>
         </div>`).join('');
@@ -2526,7 +2529,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (cur) {
         const cm = toMin(cur.time);
         line = `${clean(cur.label) || '다음 단계'} ${cur.time || ''}`.trim();
-        if (cm !== null && isToday && !cur.moving && nowMin - cm >= thr) { line = `응답 없음 ${nowMin - cm}분`; lineCls = 'bad'; }
+        if (cm !== null && isToday && !cur.moving && nowMin - cm >= thr) { line = `응답 없음 ${hqDurTxt(nowMin - cm)}`; lineCls = 'bad'; }
       }
       try { const ack = window.hqStore.ackState && window.hqStore.ackState(sch); if (ack && ack.pending && key !== 'done') { line = '시간 변경 · 확인 대기'; lineCls = 'warn'; } } catch (e) { }
       const late = lineCls === 'bad';
@@ -2595,7 +2598,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let line = '', cls = 'plan';
       if (done) { line = '완료'; cls = 'done'; }
       else if (mv) { line = '이동 중' + (mv.label ? ' · ' + clean(mv.label).slice(0, 14) : ''); cls = 'move'; }
-      else if (next && nm !== null && isToday && nowMin - nm >= thr) { line = `미확인 ${nowMin - nm}분 · ${clean(next.label).slice(0, 12)}`; cls = 'late'; }
+      else if (next && nm !== null && isToday && nowMin - nm >= thr) { line = `미확인 ${hqDurTxt(nowMin - nm)} · ${clean(next.label).slice(0, 12)}`; cls = 'late'; }
       else if (tl.some(t => t.done)) { const ld = [...tl].reverse().find(t => t.done); line = /샵|헤어|메이크업/.test(ld.label || '') ? '샵 진행 중' : '진행 중'; cls = 'live'; }
       else if (next) { line = `${next.time} ${clean(next.label).slice(0, 10)} 예정`; }
       const lat = Number(sch.lat || sch.locationLat), lng = Number(sch.lng || sch.locationLng);

@@ -3,7 +3,7 @@
    ========================================= */
 
 const App = {
-  screens: ['home','calendar','register','timeline','login','onboarding','profile','upgrade','ai','artists','expenses','vehicle','sos','talk'],
+  screens: ['home','calendar','login','onboarding','profile','upgrade','ai','artists','expenses','vehicle','sos','talk'],
 
   async init() {
     // 오프라인 기능(서비스워커)은 맨 먼저 등록 (로그인 확인을 기다리다 load 이벤트를 놓치지 않게)
@@ -154,8 +154,6 @@ const App = {
     if (State.screen === 'home' && typeof Home !== 'undefined') {
       if (typeof Home.updateLeftCal === 'function') Home.updateLeftCal();
       if (typeof Home.updateRightTimeline === 'function') Home.updateRightTimeline();
-    } else if (State.screen === 'timeline' && typeof Timeline !== 'undefined' && typeof Timeline.render === 'function') {
-      Timeline.render();
     } else if (State.screen === 'calendar' && window.CalView) {
       CalView.render();
     }
@@ -222,8 +220,6 @@ const App = {
       target.classList.add('active');
       switch(name) {
         case 'home': Home.init(); try { window.Loc && Loc.maybeAsk(); } catch (e) { } break;
-        case 'register': Register.init(); break;
-        case 'timeline': Timeline.init(); break;
         case 'login': Login.init(); break;
         case 'onboarding': Onboarding.init(); break;
         case 'profile': Profile.render(); break;
@@ -237,7 +233,7 @@ const App = {
         case 'talk': if (window.Talk) Talk.render(); break;
       }
     }
-    this.updateNav(name === 'timeline' ? 'home' : name);
+    this.updateNav(name);
     try { window.Ads && Ads.sync(); } catch (e) { }
     
     const nav = U.$('#top-header');
@@ -249,19 +245,6 @@ const App = {
     document.body.classList.toggle('has-bottom-nav', !hide && !!bn);
     
     State.screen = name;
-    window.scrollTo(0,0);
-  },
-
-  viewTimeline(idx) {
-    State.currentScheduleIdx = idx;
-    const target = U.$('#screen-timeline');
-    if (target) {
-      this.screens.forEach(s => { const el=U.$(`#screen-${s}`); if(el)el.classList.remove('active'); });
-      target.classList.add('active');
-      Timeline.init(idx);
-    }
-    this.updateNav('home');
-    State.screen = 'timeline';
     window.scrollTo(0,0);
   },
 

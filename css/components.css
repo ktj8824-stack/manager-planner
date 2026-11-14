@@ -1122,6 +1122,10 @@ div.art-add.locked button { margin-top:6px; border:0; background:#3B45C4; color:
 .hf-pick.on { border-color:#3B45C4; background:#EEF0FD; color:#2B338F; }
 .home-fab { position:fixed; right:max(16px, calc((100vw - var(--app-w, 100vw)) / 2 + 16px)); bottom:calc(var(--bottom-nav-h, 64px) + var(--nav-safe) + 16px); width:56px; height:56px; border-radius:50%; border:0; background:#3B45C4; color:#fff; box-shadow:0 8px 20px rgba(59, 69, 196,0.35); display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:30; }
 .home-fab:active { transform:scale(0.96); }
+.home-fab { transition:transform .2s ease, opacity .2s ease; }
+.home-fab.away { transform:translateY(24px) scale(.6); opacity:0; pointer-events:none; }
+@media (max-height:620px), (max-width:340px) { .home-fab { width:48px; height:48px; } .home-fab svg { width:22px; height:22px; } }
+@media (prefers-reduced-motion:reduce) { .home-fab { transition:none; } }
 .talk-app .chat-root:not(.conv-open) .chat-list { visibility:hidden; }
 /* 내 차량 (개인 매니저) */
 .exp-car { width:100%; display:flex; align-items:center; gap:10px; text-align:left; background:var(--bg-card); border:1px solid var(--border-default); border-radius:14px; padding:12px 14px; margin-bottom:12px; cursor:pointer; font:inherit; color:var(--text-100); }
