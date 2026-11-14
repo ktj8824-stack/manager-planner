@@ -782,8 +782,9 @@ const Home = {
       // 1. 타이틀 및 태그 스마트 분류 사전 처리
       let rawTitle = (ev.title || '').trim();
       const cleanTitle = rawTitle.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '').trim()
-        // 제목에는 장소 이름만: 괄호 속 주소(숫자가 든 괄호)는 빼고, '픽업 … 픽업 및 출발'처럼 겹친 말은 한 번만
-        .replace(/\s*\((?=[^()]*\d)[^()]*\)/g, '').replace(/픽업(\s*\([^()]*\))?\s+픽업 및 출발/, '픽업$1 출발').replace(/\s{2,}/g, ' ').trim();
+        // 제목에는 장소 이름만: 괄호 속 '주소'(…로 13, …동 824-1, …구 …)만 빼고 '(1회차)'·'(2부)' 같은 구분은 남김,
+        // '픽업 … 픽업 및 출발'처럼 겹친 말은 한 번만
+        .replace(/\s*\((?=[^()]*\d)(?=[^()]*(?:[가-힣](?:로|길|동|읍|면|리|가)\s*\d|\d+-\d+|번지|[가-힣](?:시|구|군)\s))[^()]*\)/g, '').replace(/픽업(\s*\([^()]*\))?\s+픽업 및 출발/, '픽업$1 출발').replace(/\s{2,}/g, ' ').trim();
       
       const getLineIcon = (type) => {
         const strokeStyle = 'width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"';
