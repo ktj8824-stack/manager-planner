@@ -101,7 +101,7 @@ const Talk = {
     const items = [
       ...urgent.map(m => ({ t: Date.parse(m.created_at) || 0, top: 1, html: toCard(m) })),
       ...rest.map(m => ({ t: Date.parse(m.created_at) || 0, top: 0, html: toCard(m) })),
-      ...bc.map(n => ({ t: Date.parse(n.at) || 0, top: 0, html: this._card({ id: n.id, title: String(n.title || '').replace(/^\W+\s*/u, '') || (n.urgent ? '긴급 공지' : '본사 공지'), text: n.content, when: n.at ? this._when(n.at) : n.date, urgent: n.urgent, local: true }) })),
+      ...bc.map(n => ({ t: Date.parse(n.at) || 0, top: 0, html: this._card({ id: n.id, title: String(n.title || '').replace(/^[\p{Extended_Pictographic}\p{S}\uFE0F\u200D\s]+/u, '').trim() || (n.urgent ? '긴급 공지' : '본사 공지'), text: n.content, when: n.at ? this._when(n.at) : n.date, urgent: n.urgent, local: true }) })),
     ].sort((a, b) => (b.top - a.top) || (b.t - a.t));
     return items.map(x => x.html).join('') +
       (this.notices.length ? `<button type="button" class="talk-more" onclick="Talk.openChat('all')">전체 공지방 대화로 보기</button>` : '');
