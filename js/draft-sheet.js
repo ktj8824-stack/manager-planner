@@ -90,7 +90,9 @@
       [10, 20, 30].forEach(m => opts.push({ label: `${m}분 늦어요`, text: Drafts.late(s, m, p) }));
       if (late && ![10, 20, 30].includes(late)) opts.splice(1, 0, { label: `${late}분 늦어요`, text: Drafts.late(s, late, p) });
       opts.push({ label: '도착했어요', text: Drafts.arrive(s, p) });
-      this.open({ to: `${s.contactName || '현장 담당자'}${s.contactPhone ? ' · ' + s.contactPhone : ''}`, phone: s.contactPhone, options: opts, pick: late ? 1 : 0 });
+      // 늦는 분(late)과 같은 칩을 고름 (20·30분이면 '10분 늦어요'가 골라지던 문제)
+      const pick = late ? Math.max(0, opts.findIndex(o => o.label === `${late}분 늦어요`)) : 0;
+      this.open({ to: `${s.contactName || '현장 담당자'}${s.contactPhone ? ' · ' + s.contactPhone : ''}`, phone: s.contactPhone, options: opts, pick });
     },
 
     /** 본사 웹: 시간을 바꾸거나 취소했을 때 (현장 담당자 연락처가 있는 일정만) */
