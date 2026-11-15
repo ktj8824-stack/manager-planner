@@ -20,6 +20,7 @@ const HQ_STORAGE_KEYS = {
   ARTISTS: 'HQ_ARTISTS_V6',
   MANAGERS: 'HQ_MANAGERS_V6',
   VEHICLES: 'HQ_VEHICLES_V6',
+  PLACES: 'HQ_PLACES_V2',
   SUBSCRIPTION: 'HQ_SUBSCRIPTION_V6'
 };
 
@@ -876,12 +877,17 @@ class HQDataStore {
     const keys = { artists: this.getUserStorageKey(HQ_STORAGE_KEYS.ARTISTS), managers: this.getUserStorageKey(HQ_STORAGE_KEYS.MANAGERS), vehicles: this.getUserStorageKey(HQ_STORAGE_KEYS.VEHICLES) };
     try {
       // 서버가 기준: 이 기기에만 있던 아티스트·차량을 서버로 올리지 않음 (지운 자료가 되살아나는 문제 방지)
-      const [remoteArtists, remoteManagers, remoteVehicles, remoteSchedules] = await Promise.allSettled([
+      const [remoteArtists, remoteManagers, remoteVehicles, remoteSchedules, remotePlaces] = await Promise.allSettled([
         window.SupabaseClient.getArtists(),
         window.SupabaseClient.getManagers(),
         window.SupabaseClient.getVehicles(),
-        window.SupabaseClient.getSchedules()
+        window.SupabaseClient.getSchedules(),
+        window.SupabaseClient.getPlaces()
       ]);
+      // 거점(샵·숙소·사옥)은 서버가 기준 — 받아 둔 사본만 갱신
+      if (remotePlaces.status === 'fulfilled' && Array.isArray(remotePlaces.value)) {
+        try { this.savePlacesCache(remotePlaces.value); } catch (e) { }
+      }
 
       if (scheduleKey !== this.getUserStorageKey(HQ_STORAGE_KEYS.SCHEDULES)) return { deferred: true };
       const snap = () => [keys.artists, keys.managers, keys.vehicles, scheduleKey].map(k => localStorage.getItem(k)).join('\u0001');
@@ -1409,6 +1415,51 @@ class HQDataStore {
     await this._serverFirst('차량 삭제', sc => sc.deleteVehicle(id));
     this.saveVehicles(this.getVehicles().filter(v => v.id !== id));
     this.syncFromSupabase().catch(() => { });
+    return true;
+  }
+
+  // ── 거점: 샵 / 아티스트 숙소 / 사옥 (서버가 원본, 이 기기 저장은 화면을 바로 그리기 위한 사본) ──
+  getPlaces() {
+    try {
+      const raw = localStorage.getItem(this.getUserStorageKey(HQ_STORAGE_KEYS.PLACES));
+      const parsed = JSON.parse(raw || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch { return []; }
+  }
+
+  savePlacesCache(places) {
+    const list = Array.isArray(places) ? places : [];
+    localStorage.setItem(this.getUserStorageKey(HQ_STORAGE_KEYS.PLACES), JSON.stringify(list));
+    this.notifyChange('PLACES_SAVED', list);
+    return list;
+  }
+
+  // 서버에서 다시 받아 사본을 갱신 (로그인 전이면 지금 사본 그대로)
+  async refreshPlaces() {
+    const sc = window.SupabaseClient;
+    if (!(sc?.isConfigured && sc.currentUser?.id)) return this.getPlaces();
+    try { return this.savePlacesCache(await sc.getPlaces()); }
+    catch (e) { console.warn('거점 목록을 받지 못했어요:', e); return this.getPlaces(); }
+  }
+
+  async savePlace(place) {
+    const saved = await this._serverFirst('거점 저장', sc => sc.savePlace(place));
+    if (!saved) {               // 로그인 전·체험 모드: 이 기기에만
+      const list = this.getPlaces();
+      const row = { ...place, id: place.id || 'p_' + Date.now() };
+      const i = list.findIndex(p => p.id === row.id);
+      if (i === -1) list.push(row); else list[i] = row;
+      this.savePlacesCache(list);
+      return row;
+    }
+    await this.refreshPlaces();
+    return saved;
+  }
+
+  async deletePlace(id) {
+    await this._serverFirst('거점 삭제', sc => sc.deletePlace(id));
+    this.savePlacesCache(this.getPlaces().filter(p => p.id !== id));
+    this.refreshPlaces().catch(() => { });
     return true;
   }
 

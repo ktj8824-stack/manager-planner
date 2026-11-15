@@ -510,43 +510,19 @@ window.Admin = {
     }
   },
 
-  openPlaceModal() {
+  async openPlaceModal() {
     const modal = document.getElementById('modal-place-management');
-    if (modal) {
-      modal.classList.add('active');
-      window.Admin.renderPlaceList();
-    }
-  },
-
-  getPlaces() {
-    const defaultPlaces = [
-      { id: 'p_1', type: 'shop', name: '순수 청담본점', address: '서울 강남구 도산대로67길 14', contact: '02-515-5575' },
-      { id: 'p_2', type: 'shop', name: '빗앤붓 (Bit&Boot)', address: '서울 강남구 압구정로79길 37-3', contact: '02-514-1005' },
-      { id: 'p_3', type: 'shop', name: '제니하우스 청담힐', address: '서울 강남구 선릉로146길 56', contact: '02-541-7774' },
-      { id: 'p_4', type: 'shop', name: '알루 청담점 (ALUU)', address: '서울 강남구 도산대로61길 4', contact: '02-542-8885' },
-      { id: 'p_5', type: 'shop', name: '정샘물 인스피레이션 청담EAST', address: '서울 강남구 도산대로81길 14', contact: '02-518-8100' },
-      { id: 'p_6', type: 'shop', name: '멥시 (MEPCI)', address: '서울 강남구 도산대로55길 26', contact: '02-514-7858' },
-      { id: 'p_7', type: 'dorm', name: '아티스트 한남 숙소', address: '서울 용산구 독서당로 00', contact: '비번: 1004*' },
-      { id: 'p_8', type: 'dorm', name: '청담 서브 숙소', address: '서울 강남구 압구정로 00', contact: '101호' },
-      { id: 'p_9', type: 'office', name: '본사 사옥 지하 주차장', address: '서울 강남구 테헤란로 00', contact: 'B1 픽업존' },
-      { id: 'p_10', type: 'office', name: '논현동 전용 안무연습실', address: '서울 강남구 학동로 00', contact: '지하 1층' }
-    ];
-
-    try {
-      const stored = localStorage.getItem('HQ_SAVED_PLACES_V1');
-      if (!stored) {
-        localStorage.setItem('HQ_SAVED_PLACES_V1', JSON.stringify(defaultPlaces));
-        return defaultPlaces;
-      }
-      return JSON.parse(stored);
-    } catch (e) {
-      return defaultPlaces;
-    }
-  },
-
-  savePlaces(places) {
-    localStorage.setItem('HQ_SAVED_PLACES_V1', JSON.stringify(places));
+    if (!modal) return;
+    modal.classList.add('active');
+    window.Admin.renderPlaceList();                 // 먼저 가지고 있는 걸로 그려 주고
+    await window.hqStore.refreshPlaces();           // 서버에서 받아 다시 그림
+    window.Admin.renderPlaceList();
     window.Admin.updatePlaceDatalists();
+  },
+
+  // 거점은 서버에 저장돼요. 여기서는 이 기기에 받아 둔 사본을 읽습니다.
+  getPlaces() {
+    try { return window.hqStore?.getPlaces?.() || []; } catch (e) { return []; }
   },
 
   filterPlaces(type, btn) {
@@ -672,7 +648,7 @@ window.Admin = {
     if (btnSubmit) btnSubmit.textContent = '등록하기';
   },
 
-  handleSavePlace(e) {
+  async handleSavePlace(e) {
     e.preventDefault();
     const editId = document.getElementById('edit-place-id')?.value;
     const type = document.getElementById('new-place-type').value;
@@ -681,55 +657,41 @@ window.Admin = {
     const contact = document.getElementById('new-place-contact').value.trim();
 
     if (!name || !address) {
-      alert('거점 이름과 주소를 입력해 주세요.');
+      await Ask.alert('거점 이름과 주소를 입력해 주세요.');
       return;
     }
 
-    let places = window.Admin.getPlaces();
-
-    if (editId) {
-      // 수정 모드
-      const idx = places.findIndex(p => p.id === editId);
-      if (idx !== -1) {
-        places[idx] = {
-          ...places[idx],
-          type,
-          name,
-          address,
-          contact
-        };
-      }
-      window.Admin.savePlaces(places);
+    const btn = document.getElementById('btn-submit-place');
+    const label = btn?.textContent;
+    if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
+    try {
+      await window.hqStore.savePlace({ id: editId || undefined, type, name, address, contact });
       window.Admin.cancelEditPlace();
       window.Admin.renderPlaceList();
-      alert(`✅ [${name}] 거점 정보가 수정됐어요!`);
-    } else {
-      // 신규 등록 모드
-      const newPlace = {
-        id: 'p_' + Date.now(),
-        type,
-        name,
-        address,
-        contact
-      };
-      places.unshift(newPlace);
-      window.Admin.savePlaces(places);
-
-      document.getElementById('new-place-name').value = '';
-      document.getElementById('new-place-address').value = '';
-      document.getElementById('new-place-contact').value = '';
-
-      window.Admin.renderPlaceList();
-      alert(`✅ [${name}] 거점이 등록됐어요! 일정 등록에서 바로 검색할 수 있어요.`);
+      window.Admin.updatePlaceDatalists();
+      await Ask.alert(editId
+        ? `[${name}] 정보를 고쳤어요.`
+        : `[${name}] 을(를) 등록했어요.\n일정 등록할 때 바로 골라 쓸 수 있어요.`);
+    } catch (err) {
+      await Ask.alert('저장하지 못했어요.\n' + (err?.message || '잠시 후 다시 시도해 주세요.'));
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = label || '등록하기'; }
     }
   },
 
   async deletePlace(id) {
-    if (!(await Ask.confirm('해당 거점을 삭제할까요?', { okLabel: '삭제', danger: true }))) return;
-    let places = window.Admin.getPlaces();
-    places = places.filter(p => p.id !== id);
-    window.Admin.savePlaces(places);
-    window.Admin.renderPlaceList();
+    const target = window.Admin.getPlaces().find(p => p.id === id);
+    if (!(await Ask.confirm(
+      `'${target?.name || '이 거점'}' 을(를) 지울까요?\n매니저들 앱에서도 함께 사라져요.`,
+      { okLabel: '삭제', danger: true }
+    ))) return;
+    try {
+      await window.hqStore.deletePlace(id);
+      window.Admin.renderPlaceList();
+      window.Admin.updatePlaceDatalists();
+    } catch (err) {
+      await Ask.alert('지우지 못했어요.\n' + (err?.message || '잠시 후 다시 시도해 주세요.'));
+    }
   },
 
   updatePlaceDatalists() {

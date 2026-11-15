@@ -14,9 +14,9 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/calendar.css">
-  <link rel="stylesheet" href="css/admin.css?v=353">
-  <link rel="stylesheet" href="css/admin-v2.css?v=353">
-  <link rel="stylesheet" href="css/chat.css?v=353">
+  <link rel="stylesheet" href="css/admin.css?v=354">
+  <link rel="stylesheet" href="css/admin-v2.css?v=354">
+  <link rel="stylesheet" href="css/chat.css?v=354">
   <link rel="stylesheet" href="css/timeline.css">
   <style>
     /* ── 사용자 드롭다운 (헤더 화이트 테마 & 호버 인터랙션) ── */
@@ -305,12 +305,12 @@
       border-color: #4C57D6;
     }
   </style>
-<script src="js/site-config.js?v=353"></script>
-<script src="js/icons.js?v=353"></script>
+<script src="js/site-config.js?v=354"></script>
+<script src="js/icons.js?v=354"></script>
 </head>
 
 <body>
-<script src="js/splash.js?v=353"></script>
+<script src="js/splash.js?v=354"></script>
   <div class="app-container">
     <aside class="hq-sidebar" id="hq-sidebar">
       <button type="button" class="hq-drawer-x" id="hq-drawer-x" aria-label="메뉴 닫기">✕</button>
@@ -329,6 +329,7 @@
         <button type="button" data-click="btn-open-add-manager"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 4-6 8-6s8 2 8 6"/></svg>매니저</button>
         <button type="button" data-click="btn-open-add-vehicle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17h14v-5l-2-5H7l-2 5zM3 12h18"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>차량</button>
         <button type="button" data-click="btn-open-expenses"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16l-3-2-3 2-3-2-3 2-4-2zM8 9h8M8 13h5"/></svg>경비 정산</button>
+        <button type="button" data-click="btn-open-places"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>샵 · 숙소 관리</button>
         <button type="button" data-click="btn-open-chat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 21l1.9-5.4A8 8 0 1 1 21 12z"/></svg>로드톡<span class="hq-menu-badge" id="hq-menu-chat-badge" hidden></span></button>
         <button type="button" data-click="btn-header-settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>설정</button>
       </nav>
@@ -384,6 +385,7 @@
             <button id="btn-open-add-manager" type="button" onclick="Admin.openManagerModal()">매니저</button>
             <button id="btn-open-add-vehicle" type="button" onclick="Admin.openVehicleModal()">차량</button>
             <button id="btn-open-expenses" type="button" onclick="HqExpenses.open()">경비 정산</button>
+            <button id="btn-open-places" type="button" onclick="Admin.openPlaceModal()" title="전담 샵 · 아티스트 숙소 · 사옥 관리">샵 · 숙소</button>
           </div>
           <button id="btn-open-chat" type="button" class="hq-act hq-act-talk" onclick="Chat.open()">로드톡<span id="chat-badge" hidden>0</span></button>
           <button id="btn-open-send-message" type="button" class="hq-act hq-act-urgent" onclick="Admin.openSendMsgModal()">긴급 공지</button>
@@ -1666,20 +1668,20 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/notify.js?v=353"></script>
-  <script src="js/supabase-client.js?v=353"></script>
-  <script src="js/ask.js?v=353"></script>
-  <script src="js/share.js?v=353"></script>
-  <script src="js/chat.js?v=353"></script>
-  <script src="js/schedule-notify.js?v=353"></script>
-  <script src="js/api.js?v=353"></script>
-  <script src="js/venue.js?v=353"></script>
-  <script src="js/learn.js?v=353"></script>
-  <script src="js/draft-sheet.js?v=353"></script>
-  <script src="js/admin-data.js?v=353"></script>
-  <script src="js/admin.js?v=353"></script>
+  <script src="js/notify.js?v=354"></script>
+  <script src="js/supabase-client.js?v=354"></script>
+  <script src="js/ask.js?v=354"></script>
+  <script src="js/share.js?v=354"></script>
+  <script src="js/chat.js?v=354"></script>
+  <script src="js/schedule-notify.js?v=354"></script>
+  <script src="js/api.js?v=354"></script>
+  <script src="js/venue.js?v=354"></script>
+  <script src="js/learn.js?v=354"></script>
+  <script src="js/draft-sheet.js?v=354"></script>
+  <script src="js/admin-data.js?v=354"></script>
+  <script src="js/admin.js?v=354"></script>
   <script src="js/admin-v2.js?v=14"></script>
-  <script src="js/hq-expenses.js?v=353"></script>
+  <script src="js/hq-expenses.js?v=354"></script>
   <script src="js/admin-panels.js?v=7"></script>
 
 

@@ -403,6 +403,47 @@ const SupabaseClient = {
     return true;
   },
 
+  // ── 5-1. 거점(샵 / 아티스트 숙소 / 사옥) 목록 API ──
+  // 회사 것은 같은 회사 사람 모두가 보고, 대표·본사 관리자만 고칠 수 있어요.
+  // 개인 매니저는 자기 것만 보고 고쳐요. (회사·주인은 서버가 정합니다)
+  async getPlaces() {
+    if (!this.isConfigured) return [];
+    const { data, error } = await this.client
+      .from('places')
+      .select('id, type, name, address, contact')
+      .order('type')
+      .order('name');
+    if (error) throw error;
+    return data || [];
+  },
+
+  async savePlace(place) {
+    const row = {
+      type: ['shop', 'dorm', 'office', 'etc'].includes(place?.type) ? place.type : 'etc',
+      name: String(place?.name || '').trim(),
+      address: String(place?.address || '').trim(),
+      contact: String(place?.contact || '').trim(),
+    };
+    if (!row.name) throw new Error('거점 이름을 입력해 주세요.');
+    // 고치는 경우에만 id를 보냄 (새로 만들 때는 서버가 번호를 붙여요)
+    if (place?.id && /^[0-9a-f-]{36}$/i.test(place.id)) row.id = place.id;
+    if (!this.isConfigured) return row;
+    const { data, error } = await this.client
+      .from('places')
+      .upsert([row], { onConflict: 'id' })
+      .select('id, type, name, address, contact')
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async deletePlace(id) {
+    if (!this.isConfigured) return true;
+    const { error } = await this.client.from('places').delete().eq('id', id);
+    if (error) throw error;
+    return true;
+  },
+
   // ── 6. 통합 일정 API ──
 
   async getSchedules(filter = {}) {

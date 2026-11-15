@@ -1440,6 +1440,8 @@ const Home = {
       e.preventDefault();
       if (!e.target.dataset.suggest) e.target.blur();
     });
+    // 본사에 등록된 샵·숙소·사옥을 서버에서 다시 받아 둠 (출발지 칸에서 바로 고를 수 있게)
+    try { window.hqStore?.refreshPlaces?.().catch(() => { }); } catch (e) { }
     // 장소 이름을 치면 카카오 장소 검색 → 고르면 이름·주소 채움
     this._placeSuggest('m-sch-loc', 'm-sch-addr');
     this._placeSuggest('m-sch-shop-name', 'm-sch-shop-addr');
@@ -1472,10 +1474,23 @@ const Home = {
     // 최근 장소가 모자라면 최근 30일 내 일정에서 이 칸에 맞는 장소를 자주 간 순서로 (새 폰·새 매니저도 첫날부터)
     const kind = /shop/.test(nameId) ? 'shop' : /dep/.test(nameId) ? 'dep' : 'loc';
     const split = (v) => { const m = String(v || '').match(/^(.*?)\s*\(([^()]*)\)\s*$/); return m ? { n: m[1].trim(), a: m[2].trim() } : { n: String(v || '').trim(), a: '' }; };
+    // 본사에 등록된 거점 (샵 / 아티스트 숙소 / 사옥) — 출발지·샵 칸의 기준 목록
+    const PLACE_TYPES = { dep: ['dorm', 'office', 'etc'], shop: ['shop'], loc: [] };
+    const registered = () => {
+      const want = PLACE_TYPES[kind] || [];
+      if (!want.length) return [];
+      let all = []; try { all = window.hqStore?.getPlaces?.() || []; } catch (e) { all = []; }
+      return all.filter(p => p && p.name && want.includes(p.type || 'etc'))
+        .map(p => ({ n: String(p.name).trim(), a: String(p.address || '').trim() }));
+    };
+    // 내가 정해 둔 기본 출발지
+    const defaultDep = () => {
+      if (kind !== 'dep') return [];
+      try { const d = split(localStorage.getItem('rp_default_departure')); return d.n ? [d] : []; } catch (e) { return []; }
+    };
     const fromSchedules = () => {
       const out = new Map();
       const add = (n, a) => { n = String(n || '').trim(); if (!n || n.length > 60) return; const k = n + '|' + (a || ''); const o = out.get(k) || { n, a: a || '', c: 0 }; o.c++; out.set(k, o); };
-      if (kind === 'dep') { try { const d = split(localStorage.getItem('rp_default_departure')); if (d.n) add(d.n, d.a), out.get(d.n + '|' + d.a).c += 1000; } catch (e) { } }
       const since = new Date(); since.setDate(since.getDate() - 30);
       const from = `${since.getFullYear()}-${String(since.getMonth() + 1).padStart(2, '0')}-${String(since.getDate()).padStart(2, '0')}`;
       let list = []; try { list = window.hqStore?.getSchedules?.() || []; } catch (e) { }
@@ -1486,19 +1501,39 @@ const Home = {
       });
       return [...out.values()].sort((x, y) => y.c - x.c);
     };
+    // 출발지·샵은 '본사에 등록된 거점'이 기준이에요. 행사장만 지난 일정에서 끌어옵니다.
     const showRecent = () => {
       const q = input.value.trim();
-      const mine = recent();
-      const seen = new Set(mine.map(x => x.n));
-      const r = [...mine, ...fromSchedules().filter(x => !seen.has(x.n))].filter(x => !q || x.n.includes(q) || (x.a || '').includes(q)).slice(0, 5);
-      if (!r.length) { close(); return; }
+      const hit = (x) => !q || x.n.includes(q) || (x.a || '').includes(q);
+      const seen = new Set();
+      const pick = (arr, max) => {
+        const out = [];
+        for (const x of arr) {
+          if (!x || !x.n || seen.has(x.n) || !hit(x)) continue;
+          seen.add(x.n); out.push(x);
+          if (out.length >= max) break;
+        }
+        return out;
+      };
+      const groups = [
+        ['내 기본 출발지', pick(defaultDep(), 1)],
+        ['등록된 샵 · 숙소 · 사옥', pick(registered(), 6)],
+        ['최근 쓴 장소', pick(recent(), 4)],
+        ['지난 일정에서', kind === 'loc' ? pick(fromSchedules(), 4) : []],
+      ].filter(g => g[1].length);
+      if (!groups.length) { close(); return; }
       seq++;
-      items = r.map(x => ({ place_name: x.n, road_address_name: x.a }));
-      list.innerHTML = `<div class="ps-msg" style="padding:8px 14px 2px;font-size:12px;font-weight:700;text-align:left;color:#5B616E;">최근·자주 간 장소</div>` + items.map((d, i) => `
-        <button type="button" class="ps-item" data-i="${i}">
-          <b>${esc(d.place_name || '')}</b>
-          <span>${esc(d.road_address_name || '')}</span>
-        </button>`).join('');
+      items = [];
+      const H = 'padding:8px 14px 2px;font-size:12px;font-weight:700;text-align:left;color:#5B616E;';
+      list.innerHTML = groups.map(([title, arr]) =>
+        `<div class="ps-msg" style="${H}">${esc(title)}</div>` + arr.map((x) => {
+          const i = items.length;
+          items.push({ place_name: x.n, road_address_name: x.a });
+          return `<button type="button" class="ps-item" data-i="${i}">
+          <b>${esc(x.n)}</b>
+          <span>${esc(x.a || '')}</span>
+        </button>`;
+        }).join('')).join('');
       list.hidden = false;
     };
     input.addEventListener('focus', () => { if (input.value.trim().length < 2) showRecent(); });
