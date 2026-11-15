@@ -99,6 +99,18 @@
     th { padding: 10px 14px; text-align: left; color: #30d158; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.1); }
     td { padding: 10px 14px; color: #aeaeb2; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; }
     tr:last-child td { border-bottom: none; }
+
+    /* 휴대폰: 표를 칸칸이 쪼개지 말고 한 줄씩 카드처럼 (표 글자가 '이름, 이/메일'처럼 끊기지 않게) */
+    @media (max-width: 620px) {
+      table, thead, tbody, tr, th, td { display: block; width: 100%; }
+      thead { display: none; }
+      tr { border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 4px 0; margin-bottom: 10px; }
+      td { border-bottom: 1px solid rgba(255,255,255,0.06); padding: 9px 14px; word-break: keep-all; }
+      tr:last-child { margin-bottom: 0; }
+      tr td:last-child { border-bottom: none; }
+      td[data-l]::before { content: attr(data-l); display: block; color: #30d158; font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+    }
+
     ul { padding-left: 0; list-style: none; }
     ul li { font-size: 14px; color: #aeaeb2; padding: 6px 0 6px 20px; position: relative; }
     ul li::before { content: '•'; color: #30d158; position: absolute; left: 4px; }
@@ -126,7 +138,7 @@
     .footer p { font-size: 12px; color: #636366; }
     .footer a { color: #30d158; text-decoration: none; }
   </style>
-<script src="js/icons.js?v=346"></script>
+<script src="js/icons.js?v=347"></script>
 </head>
 <body>
 
@@ -164,9 +176,9 @@
       <table>
         <thead><tr><th>서비스</th><th>위치를 쓰는 때</th><th>내용</th></tr></thead>
         <tbody>
-          <tr><td>이동 중 도착 예상·지연 알림 (회사 소속 매니저)</td><td>[출발]을 누른 이동 단계가 있고 앱이 화면에 켜져 있을 때, 약 2분마다</td><td>현재 위치에서 다음 장소까지 실시간 교통 기준 소요 시간을 계산해, 늦을 것 같으면 본인에게 먼저 알립니다.</td></tr>
-          <tr><td>본사 지연 보고</td><td>이용자가 [본사에 지연 알리기]를 누를 때</td><td>위치로 계산한 <b>도착 예상 시각</b>만 소속 회사 본사에 보냅니다. 좌표는 보내지 않습니다.</td></tr>
-          <tr><td>긴급보고 위치 첨부</td><td>긴급 지원 화면을 열었을 때(또는 위치 넣기를 누를 때) 1회</td><td>이용자가 보고를 보내면 그 순간 위치 1곳이 지도 링크로 소속 회사 본사에 전달됩니다.</td></tr>
+          <tr><td data-l="서비스">이동 중 도착 예상·지연 알림 (회사 소속 매니저)</td><td data-l="위치를 쓰는 때">[출발]을 누른 이동 단계가 있고 앱이 화면에 켜져 있을 때, 약 2분마다</td><td data-l="내용">현재 위치에서 다음 장소까지 실시간 교통 기준 소요 시간을 계산해, 늦을 것 같으면 본인에게 먼저 알립니다.</td></tr>
+          <tr><td data-l="서비스">본사 지연 보고</td><td data-l="위치를 쓰는 때">이용자가 [본사에 지연 알리기]를 누를 때</td><td data-l="내용">위치로 계산한 <b>도착 예상 시각</b>만 소속 회사 본사에 보냅니다. 좌표는 보내지 않습니다.</td></tr>
+          <tr><td data-l="서비스">긴급보고 위치 첨부</td><td data-l="위치를 쓰는 때">긴급 지원 화면을 열었을 때(또는 위치 넣기를 누를 때) 1회</td><td data-l="내용">이용자가 보고를 보내면 그 순간 위치 1곳이 지도 링크로 소속 회사 본사에 전달됩니다.</td></tr>
         </tbody>
       </table>
       <div class="highlight">📍 위치는 동의한 이용자에게만, 위 경우에만 씁니다. 퇴근 뒤·일정 없는 시간·앱이 꺼져 있을 때에는 위치를 읽지 않으며, 본사가 이용자의 위치를 지도에서 계속 지켜보는 기능은 없습니다.</div>
@@ -189,10 +201,10 @@
       <table>
         <thead><tr><th>항목</th><th>보유기간</th></tr></thead>
         <tbody>
-          <tr><td>지연 계산에 쓴 현재 위치</td><td>저장하지 않음 (계산 즉시 버림)</td></tr>
-          <tr><td>긴급보고에 첨부한 위치</td><td>보고 글(로드톡 공지)에 담겨 소속 회사의 서비스 이용 기간 동안 보관, 이용 종료 시 지체 없이 파기</td></tr>
-          <tr><td>위치정보 이용·제공사실 확인자료</td><td>1년 보관 후 자동 파기 (위치정보법 제16조)</td></tr>
-          <tr><td>동의·철회 기록</td><td>회원 탈퇴 시까지</td></tr>
+          <tr><td data-l="항목">지연 계산에 쓴 현재 위치</td><td data-l="보유기간">저장하지 않음 (계산 즉시 버림)</td></tr>
+          <tr><td data-l="항목">긴급보고에 첨부한 위치</td><td data-l="보유기간">보고 글(로드톡 공지)에 담겨 소속 회사의 서비스 이용 기간 동안 보관, 이용 종료 시 지체 없이 파기</td></tr>
+          <tr><td data-l="항목">위치정보 이용·제공사실 확인자료</td><td data-l="보유기간">1년 보관 후 자동 파기 (위치정보법 제16조)</td></tr>
+          <tr><td data-l="항목">동의·철회 기록</td><td data-l="보유기간">회원 탈퇴 시까지</td></tr>
         </tbody>
       </table>
     </div>
