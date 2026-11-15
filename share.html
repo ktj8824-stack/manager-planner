@@ -82,7 +82,7 @@
 <body>
   <header><b>Road<i>Planner</i></b><span>일정 공유</span></header>
   <main id="root"><div class="msg">일정을 불러오는 중…</div></main>
-  <script src="js/api.js?v=343"></script>
+  <script src="js/api.js?v=344"></script>
   <script>
   (function () {
     'use strict';
@@ -152,7 +152,8 @@
       d: null, g: null, results: [], searching: false, travel: null, calc: false,
       load: function () { try { this.g = JSON.parse(localStorage.getItem(KEY_) || 'null'); } catch (e) { } if (!this.g) this.g = { origin: null, prep: null, route: null }; },
       save: function () { try { localStorage.setItem(KEY_, JSON.stringify(this.g)); } catch (e) { } },
-      home: function () { try { return JSON.parse(localStorage.getItem('rp_home') || 'null'); } catch (e) { return null; } },
+      // 지난번에 직접 고른 출발지 (예전에는 '집'이라고 보여 줬지만 카페·역일 수도 있어 이름 그대로 보여 줌)
+      home: function () { try { return JSON.parse(localStorage.getItem('rp_recent_origin') || localStorage.getItem('rp_home') || 'null'); } catch (e) { return null; } },
       shopTime: function (d) {
         var tl = Array.isArray(d.timeline) ? d.timeline : [];
         for (var i = 0; i < tl.length; i++) if (/샵|헤어|메이크업|헤메/.test(tl[i].label || '') && tl[i].time) return tl[i].time;
@@ -174,7 +175,7 @@
         if (now === 'done') return this.planHTML(d);
         var h = '<div class="sec" style="color:#111;font-size:17px;margin-bottom:10px">내 출발 시간 맞추기</div>';
         h += '<div class="rs-step ' + cls('origin') + '" id="st-origin"><div class="rs-q"><em>' + num('origin') + '</em>어디서 출발하세요?</div><div class="rs-now">출발지를 골라 주세요</div><div class="pills">' +
-          (hm ? '<button data-r="home" class="' + (g.originLabel === '집' ? 'on' : '') + '">집</button>' : '') +
+          (hm && hm.name ? '<button data-r="home" class="' + (g.originLabel === '집' ? 'on' : '') + '">' + esc(String(hm.name).slice(0, 12)) + '</button>' : '') +
           '<button data-r="here" class="' + (g.originLabel === '지금 위치' ? 'on' : '') + '">지금 위치</button>' +
           '<button data-r="search" class="' + (g.originLabel === '직접' ? 'on' : '') + '">' + (g.originLabel === '직접' && g.origin ? esc(g.origin.name) : '직접 입력') + '</button></div>' +
           (this.searching ? '<div class="srch"><input id="rq" placeholder="동네·건물·역 이름" enterkeyhint="search"><button data-r="find">검색</button></div><div class="res">' +
@@ -192,10 +193,13 @@
         var toMin = function (t) { var p = String(t).split(':'); return (+p[0]) * 60 + (+p[1]); };
         var hmS = function (m) { m = ((m % 1440) + 1440) % 1440; return ('0' + Math.floor(m / 60)).slice(-2) + ':' + ('0' + (m % 60)).slice(-2); };
         var body;
-        if (travel == null) { body = '<div class="sub">' + (this.calc ? '길을 찾는 중…' : '이동 시간을 계산하지 못했어요. 아래 길안내로 확인해 주세요.') + '</div>'; }
+        if (o.k === 'shop' && !o.at) { body = '<div class="sub">샵 도착 시각이 일정에 없어서 출발 시간을 계산하지 못했어요.<br>매니저에게 샵 시각을 확인해 주세요.</div>'; }
+        else if (travel == null) { body = '<div class="sub">' + (this.calc ? '길을 찾는 중…' : '이동 시간을 계산하지 못했어요. 아래 길안내로 확인해 주세요.') + '</div>'; }
         else {
           var dep = toMin(at) - travel - 10, prep = dep - g.prep;
-          body = '<div class="big">' + hmS(dep) + '<small>출발</small></div><div class="sub">' + hmS(prep) + ' 준비 시작 (' + g.prep + '분) · 차로 약 ' + travel + '분 · ' + at + ' 도착 (여유 10분)<br>' + esc(g.origin.name) + ' → ' + esc(o.place) + '</div>';
+          // 자정 전에 나가야 하면 '전날'을 붙임 (00:30 일정 → 전날 23:31 출발)
+          var pv = function (m) { return m < 0 ? '전날 ' : ''; };
+          body = '<div class="big">' + (dep < 0 ? '<small style="margin-right:6px">전날</small>' : '') + hmS(dep) + '<small>출발</small></div><div class="sub">' + pv(prep) + hmS(prep) + ' 준비 시작 (' + g.prep + '분) · 차로 약 ' + travel + '분 · ' + esc(at) + ' 도착 (여유 10분)<br>' + esc(g.origin.name) + ' → ' + esc(o.place) + '</div>';
         }
         return '<div class="sec" style="color:#111;font-size:17px;margin-bottom:10px">내 출발 시간</div><div class="plan">' + body + nav(o.place) + '</div>' +
           '<button class="again" data-r="reset">출발지·준비 시간 다시 고르기</button>';
@@ -206,13 +210,16 @@
         el.querySelectorAll('a[data-go]').forEach(function (a) { a.setAttribute('href', a.getAttribute('data-go')); });
         if (scrollTo) setTimeout(function () { var t = document.getElementById('st-' + Recv.step()) || el; t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 120);
       },
-      setOrigin: function (o, label) { var first = !this.g.origin; this.g.origin = o; this.g.originLabel = label; this.searching = false; this.travel = null; this.save(); if (label !== '지금 위치') try { localStorage.setItem('rp_home', JSON.stringify(o)); } catch (e) { } this.after(first); },
+      setOrigin: function (o, label) { var first = !this.g.origin; this.g.origin = o; this.g.originLabel = label; this.searching = false; this.travel = null; this.save(); if (label === '직접') try { localStorage.setItem('rp_recent_origin', JSON.stringify(o)); } catch (e) { } this.after(first); },
       after: function (adv) { if (this.step() === 'done') this.compute(); this.draw(adv); },
       compute: function () {
         var g = this.g, o = this.opts(this.d).filter(function (x) { return x.k === g.route; })[0]; if (!o || !g.origin) return;
         var self = this; this.calc = true; this.travel = null;
-        KakaoAPI.searchPlace(o.place).then(function (r) {
-          var p = r && r[0]; if (!p) throw 0;
+        // 샵 도착 시각을 모르면 계산하지 않음 (현장 시작 시각에 샵 도착으로 잘못 잡던 문제)
+        if (o.k === 'shop' && !o.at) { this.calc = false; this.noShopTime = true; return this.draw(false); }
+        this.noShopTime = false;
+        (KakaoAPI.geocode ? KakaoAPI.geocode(o.place) : KakaoAPI.searchPlace(o.place).then(function (r) { return r && r[0]; })).then(function (p) {
+          if (!p || !p.x || !p.y) throw 0;
           return TmapAPI.getRouteTime(g.origin.lng, g.origin.lat, p.x, p.y).then(function (m) { return m || KakaoAPI.getRouteTime(g.origin.lng, g.origin.lat, p.x, p.y); });
         }).then(function (m) { self.travel = m || null; }).catch(function () { self.travel = null; }).then(function () { self.calc = false; self.draw(false); });
       },
