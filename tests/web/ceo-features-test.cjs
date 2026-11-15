@@ -1,5 +1,6 @@
 // CEO플래너에서 가져온 5가지: 이동 시간 학습 · 문자 초안 · 모두 확인 · 반복 일정 · 조정 요청
 const { chromium } = require('playwright');
+const { autoAsk, asked } = require('./_ask-auto.cjs');
 (async () => {
   const base = process.argv[2];
   const b = await chromium.launch();
@@ -9,7 +10,7 @@ const { chromium } = require('playwright');
 
   /* ── 본사 웹: 학습·반복·문자 초안 ── */
   const p = await (await b.newContext({ viewport: { width: 1440, height: 940 } })).newPage();
-  p.on('pageerror', e => errs.push('hq: ' + e.message)); p.on('dialog', d => d.accept().catch(() => { }));
+  p.on('pageerror', e => errs.push('hq: ' + e.message)); p.on('dialog', d => d.accept().catch(() => { })); await autoAsk(p);
   await route(p);
   await p.goto(base + '/admin-login.html'); await p.evaluate(() => { localStorage.setItem('admin_bp_logged_in', 'true'); localStorage.setItem('admin_bp_user_role', 'ceo'); localStorage.setItem('admin_bp_user_name', '공진문'); });
   await p.goto(base + '/admin.html'); await p.waitForTimeout(1500);
@@ -81,7 +82,7 @@ const { chromium } = require('playwright');
 
   /* ── 매니저 앱: 문자 초안 · 모두 확인 · 조정 요청 ── */
   const q = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage();
-  q.on('pageerror', e => errs.push('app: ' + e.message)); q.on('dialog', d => d.accept().catch(() => { }));
+  q.on('pageerror', e => errs.push('app: ' + e.message)); q.on('dialog', d => d.accept().catch(() => { })); await autoAsk(q);
   await route(q);
   await q.addInitScript(() => sessionStorage.setItem('rp_splash_shown', '1'));
   await q.goto(base + '/index.html'); await q.waitForTimeout(900);

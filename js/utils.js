@@ -220,12 +220,12 @@ const U = {
     
     const ua = navigator.userAgent.toLowerCase();
     if (ua.includes('kakaotalk')) {
-      alert('카카오톡에서는 캘린더 저장이 제한돼요. 사파리(기본 브라우저)로 자동 전환해요.');
+      U.toast('카카오톡에서는 캘린더 저장이 제한돼요. 사파리(기본 브라우저)로 자동 전환해요.');
       window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(window.location.href);
       return;
     }
     if (ua.includes('naver') || ua.includes('instagram')) {
-      alert('현재 앱에서는 캘린더 저장이 제한돼요. 브라우저 메뉴에서 Safari로 열기를 선택해 주세요.');
+      Ask.alert('이 앱에서는 캘린더 저장이 제한돼요.\n브라우저 메뉴에서 [Safari로 열기]를 눌러 주세요.');
       return;
     }
 

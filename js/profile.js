@@ -257,7 +257,7 @@ const Profile = {
       const inApp = !!window.webkit?.messageHandlers;
       U.toast(inApp ? '아이폰 앱 알림은 다음 앱 업데이트에서 켜져요. 지금은 앱이 켜져 있을 때 화면으로 알려 드려요.' : '이 브라우저는 푸시를 지원하지 않아요. 아이폰은 사파리에서 "홈 화면에 추가"한 앱에서 켤 수 있어요.');
     } else if (st === 'denied') U.toast('알림이 차단되어 있어요. 휴대폰 설정 > 알림에서 허용해 주세요.');
-    else if (st === 'on') { if (confirm('알림을 끌까요?')) await C.disablePush(); }
+    else if (st === 'on') { if ((await Ask.confirm('알림을 끌까요?', { okLabel: '끄기' }))) await C.disablePush(); }
     else await C.enablePush();
     this._renderPushBadge();
   },
@@ -296,13 +296,13 @@ const Profile = {
 
   // 다른 계정으로 로그인: 지금 계정을 로그아웃하고, 폰에 저장된 비밀번호가 자동으로 채워지지 않는 빈 로그인 화면을 연다
   async switchAccount() {
-    if (!confirm('다른 계정으로 로그인할까요?\n지금 계정은 로그아웃돼요.')) return;
+    if (!(await Ask.confirm('다른 계정으로 로그인할까요?\n지금 계정은 로그아웃돼요.', { okLabel: '로그아웃' }))) return;
     try { sessionStorage.setItem('rp_fresh_login', '1'); } catch (e) { }
     await this.logout(true);
   },
 
   async logout(skipConfirm = false) {
-    if (skipConfirm === true || confirm('정말 로그아웃 할까요?')) {
+    if (skipConfirm === true || (await Ask.confirm('정말 로그아웃 할까요?', { okLabel: '로그아웃' }))) {
       const provider = localStorage.getItem('bp_provider');
       if (window.SupabaseClient) {
         try { await window.SupabaseClient.signOut(); } catch (e) {}
@@ -350,8 +350,8 @@ const Profile = {
     Profile.render();
   },
 
-  callHQ() {
-    if (confirm('🚨 [본사 24H 종합상황실]\n02-555-8282 번호로 즉시 연결할까요?')) {
+  async callHQ() {
+    if ((await Ask.confirm('🚨 [본사 24H 종합상황실]\n02-555-8282 번호로 즉시 연결할까요?'))) {
       window.location.href = 'tel:025558282';
     }
   },
@@ -472,8 +472,8 @@ const Profile = {
     U.haptic();
   },
 
-  applyStationPreset(name, address, lat, lng) {
-    if (confirm(`'${name}' (${address})\n선택하신 거점을 어디에 등록할까요?\n\n[확인] ➔ 자주 가는 거점으로 자동 저장`)) {
+  async applyStationPreset(name, address, lat, lng) {
+    if ((await Ask.confirm(`'${name}' (${address})\n선택하신 거점을 어디에 등록할까요?\n\n[확인] ➔ 자주 가는 거점으로 자동 저장`))) {
       if (!State.userAddresses) State.userAddresses = {};
       const placeObj = { name, address, lat, lng };
       State.userAddresses.shop = placeObj;

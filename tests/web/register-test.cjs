@@ -1,10 +1,11 @@
 // 앱 스케줄 등록: 가짜 출발지·샵 없음 / 담당 매니저 기본값 = 나 / 연타해도 1건 / 겹침 경고 / 결제 결과 주소
 const { chromium } = require('playwright');
+const { autoAsk, asked } = require('./_ask-auto.cjs');
 (async () => {
   const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
   const p = await ctx.newPage();
   const errs = []; p.on('pageerror', e => errs.push(e.message));
-  const dialogs = []; p.on('dialog', d => { dialogs.push(d.message().split('\n')[0]); d.accept(); });
+  const dialogs = []; p.on('dialog', d => { dialogs.push(d.message().split('\n')[0]); d.accept(); }); await autoAsk(p);
   await p.addInitScript(() => { sessionStorage.setItem('rp_splash_shown', '1'); localStorage.setItem('bp_user_role', 'manager'); });
   await p.route(/^https?:\/\/(?!127\.0\.0\.1|localhost|0\.0\.0\.0)/, r => r.request().url().endsWith('.js') ? r.fulfill({ status: 200, contentType: 'application/javascript', body: '' }) : r.abort());
   await p.goto(process.env.BASE_PROD + '/index.html'); await p.waitForTimeout(700);
@@ -34,7 +35,7 @@ const { chromium } = require('playwright');
     R.mgrSaved = saved[0] && saved[0].managerId;
     return R;
   });
-  out.dialogs = dialogs;
+  out.dialogs = dialogs.concat(await asked(p));
   // 결제 주소: ?가 두 번 들어가지 않는지
   const q = await ctx.newPage();
   await q.route(/^https?:\/\/(?!127\.0\.0\.1|localhost|0\.0\.0\.0)/, r => r.request().url().includes('tosspayments') ? r.fulfill({ status: 200, contentType: 'application/javascript', body: `window.__req=[];window.TossPayments=function(){return{widgets(){return{setAmount:async()=>{},renderPaymentMethods:async()=>{},renderAgreement:async()=>{},requestPayment:async(o)=>{window.__req.push(o)}}}}};window.TossPayments.ANONYMOUS='A';` }) : (r.request().url().endsWith('.js') || r.request().url().includes('supabase-js')) ? r.fulfill({ status: 200, contentType: 'application/javascript', body: '' }) : r.abort());

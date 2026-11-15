@@ -1,5 +1,6 @@
 // 경비 기록: 앱(둘러보기=기기 저장) 등록·합계·일정 카드에서 열기·복사 / 개인 매니저 무료 잠금 / 본사 '경비 정산' 모아 보기·XSS
 const { chromium, devices } = require('playwright');
+const { autoAsk, asked } = require('./_ask-auto.cjs');
 (async () => {
   const base = process.argv[2];
   const b = await chromium.launch();
@@ -7,7 +8,7 @@ const { chromium, devices } = require('playwright');
   // ── 앱 ──
   const ctx = await b.newContext({ ...devices['iPhone 14'] });
   await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base });
-  const p = await ctx.newPage(); p.on('pageerror', e => errs.push(e.message)); p.on('dialog', d => d.accept());
+  const p = await ctx.newPage(); p.on('pageerror', e => errs.push(e.message)); p.on('dialog', d => d.accept()); await autoAsk(p);
   await p.addInitScript(() => sessionStorage.setItem('rp_splash_shown', '1'));
   await p.route(/^https?:\/\/(?!127\.0\.0\.1|localhost|0\.0\.0\.0)/, r => r.request().url().endsWith('.js') ? r.fulfill({ status: 200, contentType: 'application/javascript', body: '' }) : r.abort());
   await p.goto(base + '/index.html'); await p.waitForTimeout(1000);

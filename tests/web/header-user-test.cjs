@@ -18,9 +18,8 @@ const { chromium, devices } = require('playwright');
     });
     if (label === 'i14') {
       await p.screenshot({ path: process.env.SHOT || '/dev/null', clip: { x: 0, y: 0, width: 390, height: 120 } }).catch(() => {});
-      p.once('dialog', d => d.accept());
       await p.tap('#bottom-nav [data-s="profile"]'); await p.waitForTimeout(400);
-      await p.tap('.me-logout'); await p.waitForTimeout(800);
+      await p.tap('.me-logout'); await p.tap('#ask-back .ask-ok'); await p.waitForTimeout(800);   // 앱 안 확인 창 [로그아웃]
       R.loggedOut = await p.evaluate(() => document.getElementById('screen-login').classList.contains('active') && !localStorage.getItem('bp_user_name'));
     }
   }

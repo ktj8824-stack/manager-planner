@@ -215,7 +215,7 @@ const Expenses = {
     const cur = this.items.find(x => x.id === id);
     if (!cur) return;
     if (cur.status === 'approved') { U.toast('본사가 승인한 경비는 지울 수 없어요.'); return; }
-    if (!confirm(`${this.cat(cur.category).label} ${this.won(cur.amount)} 기록을 삭제할까요?`)) return;
+    if (!(await Ask.confirm(`${this.cat(cur.category).label} ${this.won(cur.amount)} 기록을 삭제할까요?`, { okLabel: '삭제', danger: true }))) return;
     try {
       if (this.online()) await SupabaseClient.expenseDelete(id, cur.receipt_path);
       else this._saveLocal(this._local().filter(x => x.id !== id));

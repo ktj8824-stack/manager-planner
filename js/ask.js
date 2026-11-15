@@ -5,6 +5,8 @@
        → 입력한 글(string) 또는 취소하면 null
        kind: 'tel' | 'number' | 'text'
      Ask.copy(title, text) → 복사가 막힌 기기에서 글을 보여 주고 [복사]
+     await Ask.confirm('지울까요?\n설명', { okLabel:'삭제', danger:true }) → true/false
+     await Ask.alert('알려 줄 말')
    ========================================= */
 (function () {
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -28,7 +30,8 @@
 
   const Ask = {
     _style() { if (!document.getElementById('ask-style')) { const st = document.createElement('style'); st.id = 'ask-style'; st.textContent = CSS; document.head.appendChild(st); } },
-    close() { document.getElementById('ask-back')?.remove(); },
+    // 창을 닫을 때, 답을 기다리던 쪽에는 '취소'로 알려 줌 (창이 사라졌는데 계속 기다리지 않게)
+    close() { const b = document.getElementById('ask-back'); if (b) { const f = b._cancel; b.remove(); if (typeof f === 'function') f(); } },
 
     /** 글 한 줄(또는 여러 줄) 받기. validate(v) 가 글을 돌려주면 그 글을 빨갛게 보여 주고 닫지 않음 */
     text(o) {
@@ -50,7 +53,8 @@
           </div></div>`;
         document.body.appendChild(back);
         const input = back.querySelector('#ask-in');
-        const done = (v) => { back.remove(); resolve(v); };
+        const done = (v) => { back._cancel = null; back.remove(); resolve(v); };
+        back._cancel = () => resolve(null);
         const ok = async () => {
           const v = input.value;
           if (o.onOk) { try { await o.onOk(v, back); } catch (e) { } return; }
@@ -71,6 +75,41 @@
         setTimeout(() => { try { input.focus(); if (o.readonly || o.select) input.select(); } catch (e) { } }, 60);
       });
     },
+
+    /** 물어보기: [취소] / [확인] → true·false (기본 confirm 창 대신)
+        opts: { okLabel, cancelLabel, danger, title } — 첫 줄이 제목, 나머지가 설명 */
+    confirm(msg, o) {
+      o = o || {};
+      this._style(); this.close();
+      const lines = String(msg ?? '').split('\n');
+      const title = o.title || lines.shift() || '';
+      const desc = lines.join('\n').replace(/^\n+/, '');
+      return new Promise((resolve) => {
+        const back = document.createElement('div');
+        back.className = 'ask-back'; back.id = 'ask-back';
+        back.innerHTML = `<div class="ask" role="alertdialog" aria-modal="true" aria-label="${esc(title)}">
+          <h3>${esc(title)}</h3>
+          ${desc ? `<p>${esc(desc)}</p>` : ''}
+          <div class="ask-b">
+            ${o.alert ? '' : `<button type="button" class="ask-x" data-a="x">${esc(o.cancelLabel || '취소')}</button>`}
+            <button type="button" class="ask-ok${o.danger ? ' danger' : ''}" data-a="ok">${esc(o.okLabel || '확인')}</button>
+          </div></div>`;
+        document.body.appendChild(back);
+        const done = (v) => { back._cancel = null; back.remove(); resolve(v); };
+        back._cancel = () => resolve(false);
+        back.addEventListener('click', (e) => {
+          if (e.target === back) return done(false);
+          const a = e.target.closest('[data-a]')?.dataset.a;
+          if (a === 'x') done(false);
+          if (a === 'ok') done(true);
+        });
+        back.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); done(false); } });
+        setTimeout(() => { try { back.querySelector('.ask-ok').focus(); } catch (e) { } }, 60);
+      });
+    },
+
+    /** 알려 주기: [확인] 하나 (기본 alert 창 대신) */
+    alert(msg, o) { return this.confirm(msg, Object.assign({ alert: true }, o || {})); },
 
     /** 자동 복사가 막힌 기기: 글을 보여 주고 [복사] */
     copy(title, text) {

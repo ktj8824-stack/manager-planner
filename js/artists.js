@@ -154,7 +154,7 @@ const Artists = {
   async remove(id) {
     const a = this.list().find(x => x.id === id);
     if (!a) return;
-    if (!confirm(`${a.name}님을 삭제할까요?\n이 아티스트의 일정도 함께 지워져요.`)) return;
+    if (!(await Ask.confirm(`${a.name}님을 삭제할까요?\n이 아티스트의 일정도 함께 지워져요.`, { okLabel: '삭제', danger: true }))) return;
     try {
       await window.hqStore.deleteArtist(id);
       this._syncAssigned();

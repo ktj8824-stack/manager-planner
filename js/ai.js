@@ -117,8 +117,8 @@ const RoadAI = {
     try { localStorage.setItem(this.storeKey(), JSON.stringify(this.messages.slice(-40))); } catch (e) { }
   },
 
-  clearChat() {
-    if (!confirm('대화 내용을 모두 지울까요?')) return;
+  async clearChat() {
+    if (!(await Ask.confirm('대화 내용을 모두 지울까요?', { okLabel: '삭제', danger: true }))) return;
     try { localStorage.removeItem(this.storeKey()); } catch (e) { }
     this.messages = [this.welcome()];
     this.renderAll();
@@ -466,7 +466,7 @@ const RoadAI = {
     }
     if (typeof Home === 'undefined') return;
     if (a.cancel) {   // 지우지 않고 '취소' 상태로 (매니저에게 취소 알림이 가고 기록이 남음)
-      if (!confirm(`"${sch.title}" (${sch.date} ${sch.startTime}) 일정을 '취소'로 바꿀까요?\n담당 매니저에게 취소 알림이 가요.`)) return;
+      if (!(await Ask.confirm(`"${sch.title}" (${sch.date} ${sch.startTime}) 일정을 '취소'로 바꿀까요?\n담당 매니저에게 취소 알림이 가요.`, { okLabel: '바꾸기' }))) return;
       try { await window.hqStore.updateSchedule(id, { status: '취소' }); U.toast('일정을 취소로 바꿨어요.'); Home.render && Home.render(); }
       catch (err) { U.toast('바꾸지 못했어요: ' + (err?.message || err)); return; }
       a.status = 'done'; this.save(); this._redraw(m);

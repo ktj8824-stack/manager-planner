@@ -1250,7 +1250,7 @@ const Home = {
   },
 
   async logout() {
-    if (confirm('로그아웃 할까요?')) {
+    if ((await Ask.confirm('로그아웃 할까요?', { okLabel: '로그아웃' }))) {
       if (window.SupabaseClient) {
         try {
           await window.SupabaseClient.signOut();
@@ -1578,7 +1578,14 @@ const Home = {
     }).map(o => `${o.startTime}~${o.endTime || ''} ${o.title}${sch.vehicleId && o.vehicleId === sch.vehicleId ? ' (같은 차량)' : ''}${sch.managerId && o.managerId === sch.managerId ? ' (같은 매니저)' : ''}`);
   },
 
+  // 확인 창([그래도 저장할까요?])이 떠 있는 동안 또 눌러도 한 번만 진행
   async submitScheduleFromModal(editId = null) {
+    if (this._submittingSchedule || this._checkingSchedule) return;
+    this._checkingSchedule = true;
+    try { return await this._submitScheduleFromModal(editId); } finally { this._checkingSchedule = false; }
+  },
+
+  async _submitScheduleFromModal(editId = null) {
     if (this._submittingSchedule) return;          // 두 번 눌러도 한 번만
     const g = (id) => document.getElementById(id);
     const val = (id) => (g(id)?.value || '').trim();
@@ -1591,8 +1598,8 @@ const Home = {
     if (!title || !dateVal || !startVal || !locationVal) { U.toast('필수 항목(일정명, 날짜, 시작시간, 장소)을 모두 입력해 주세요.'); return; }
     if (shopNeeded && !shopName && !shopAddr) { U.toast('샵 이름이나 주소를 입력해 주세요. (샵에 안 가면 "경유함"을 끄세요)'); return; }
     const today = new Date(); const todayYmd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    if (dateVal < todayYmd && !confirm(`지난 날짜(${dateVal})예요. 그래도 저장할까요?`)) return;
-    if (endVal && endVal <= startVal && !confirm(`종료(${endVal})가 시작(${startVal})보다 빨라요.\n다음날 ${endVal}에 끝나는 일정인가요?`)) return;
+    if (dateVal < todayYmd && !(await Ask.confirm(`지난 날짜(${dateVal})예요. 그래도 저장할까요?`, { okLabel: '저장' }))) return;
+    if (endVal && endVal <= startVal && !(await Ask.confirm(`종료(${endVal})가 시작(${startVal})보다 빨라요.\n다음날 ${endVal}에 끝나는 일정인가요?`))) return;
 
     const artists = (window.hqStore ? window.hqStore.getArtists() : []) || [];
     const vehicles = (window.hqStore ? window.hqStore.getVehicles() : []) || [];
@@ -1619,7 +1626,7 @@ const Home = {
     if (editId) delete schData.timeline;   // 수정하면 동선 다시 계산
 
     const conflicts = this._findConflicts(schData);
-    if (conflicts.length && !confirm(`같은 시간에 겹치는 일정이 있어요.\n\n${conflicts.slice(0, 3).join('\n')}\n\n그래도 저장할까요?`)) return;
+    if (conflicts.length && !(await Ask.confirm(`같은 시간에 겹치는 일정이 있어요.\n\n${conflicts.slice(0, 3).join('\n')}\n\n그래도 저장할까요?`, { okLabel: '저장' }))) return;
 
     const btn = g('m-sch-submit');
     const label = btn ? btn.textContent : '';
@@ -1656,7 +1663,7 @@ const Home = {
   // 상세보기 [삭제] (본사 계정)
   async deleteScheduleFromApp(id) {
     const sch = (window.hqStore?.getSchedules?.() || []).find(s => s.id === id);
-    if (!sch || !confirm(`"${sch.title}" (${sch.date} ${sch.startTime}) 일정을 삭제할까요?\n담당 매니저 화면에서도 사라져요.`)) return;
+    if (!sch || !(await Ask.confirm(`"${sch.title}" (${sch.date} ${sch.startTime}) 일정을 삭제할까요?\n담당 매니저 화면에서도 사라져요.`, { okLabel: '삭제', danger: true }))) return;
     try { await window.hqStore.deleteSchedule(id); U.toast('🗑️ 일정을 삭제했어요.'); this.render(); }
     catch (err) { U.toast('삭제하지 못했어요: ' + (err?.message || err)); }
   }

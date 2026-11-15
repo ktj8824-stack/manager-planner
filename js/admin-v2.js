@@ -493,7 +493,7 @@
         if (!later.length) return '';
         const changed = SHARED.filter(k => JSON.stringify(prev[k] ?? '') !== JSON.stringify(schData[k] ?? ''));
         if (!changed.length) return '';
-        if (!confirm(`이후 반복 일정 ${later.length}건(${short(later[0].date)}~)도 같이 바꿀까요?\n\n날짜는 그대로 두고 바꾼 내용(시간·장소·담당 등)만 옮겨요.\n[취소]를 누르면 이 일정만 바뀌어요.`)) return '';
+        if (!(await Ask.confirm(`이후 반복 일정 ${later.length}건(${short(later[0].date)}~)도 같이 바꿀까요?\n\n날짜는 그대로 두고 바꾼 내용(시간·장소·담당 등)만 옮겨요.\n[취소]를 누르면 이 일정만 바뀌어요.`, { okLabel: '바꾸기' }))) return '';
         let n = 0;
         for (const sib of later) {
           if (btn) btn.textContent = `이후 반복 일정 바꾸는 중… (${n + 1}/${later.length})`;
@@ -517,7 +517,7 @@
       if (!del || !del.series) return '';
       const st = window.hqStore;
       const later = Repeat.later(st.getSchedules(), del);
-      if (!later.length || !confirm(`이후 반복 일정 ${later.length}건(${short(later[0].date)}~)도 같이 지울까요?`)) return '';
+      if (!later.length || !(await Ask.confirm(`이후 반복 일정 ${later.length}건(${short(later[0].date)}~)도 같이 지울까요?`, { okLabel: '삭제', danger: true }))) return '';
       let n = 0;
       for (const sib of later) {
         try { await st.deleteSchedule(sib.id); if (window.ScheduleNotify) window.ScheduleNotify.afterDelete(sib).catch(() => { }); n++; } catch (e) { }

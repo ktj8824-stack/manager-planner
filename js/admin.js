@@ -400,7 +400,7 @@ window.Admin = {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!confirm('현재 등록된 데이터를 백업 파일 데이터로 교체 및 복원할까요?')) {
+    if (!(await Ask.confirm('현재 등록된 데이터를 백업 파일 데이터로 교체 및 복원할까요?'))) {
       e.target.value = '';
       return;
     }
@@ -435,8 +435,8 @@ window.Admin = {
     this.saveAdminSettings();
   },
 
-  resetSupabaseConfig() {
-    if (confirm('Supabase 설정을 초기화하고 브라우저 로컬 데이터 모드로 전환할까요?')) {
+  async resetSupabaseConfig() {
+    if ((await Ask.confirm('Supabase 설정을 초기화하고 브라우저 로컬 데이터 모드로 전환할까요?'))) {
       window.SupabaseClient.clearConfig();
       document.getElementById('modal-supabase-config').classList.remove('active');
       window.Admin.updateSupabaseBadge();
@@ -724,8 +724,8 @@ window.Admin = {
     }
   },
 
-  deletePlace(id) {
-    if (!confirm('해당 거점을 삭제할까요?')) return;
+  async deletePlace(id) {
+    if (!(await Ask.confirm('해당 거점을 삭제할까요?', { okLabel: '삭제', danger: true }))) return;
     let places = window.Admin.getPlaces();
     places = places.filter(p => p.id !== id);
     window.Admin.savePlaces(places);
@@ -874,7 +874,7 @@ window.Admin = {
   },
 
   async logout() {
-    if (confirm('로그아웃 할까요?')) {
+    if ((await Ask.confirm('로그아웃 할까요?', { okLabel: '로그아웃' }))) {
       // 관리자 세션 정보 완전 제거 (매니저 앱 세션은 보존)
       localStorage.removeItem('admin_bp_user_name');
       localStorage.removeItem('admin_bp_user_email');
@@ -1137,7 +1137,7 @@ window.Admin = {
         validate: (x) => String(x).trim() === String(label).trim() ? '' : '이름이 달라요. 똑같이 적어 주세요.' });
       ok = typed !== null;
     } else {
-      ok = confirm(`'${label}' 아티스트를 삭제할까요?\n등록된 일정은 없어요.`);
+      ok = (await Ask.confirm(`'${label}' 아티스트를 삭제할까요?\n등록된 일정은 없어요.`, { okLabel: '삭제', danger: true }));
     }
     if (ok) {
       try { await window.hqStore.deleteArtist(id); }
@@ -1514,7 +1514,7 @@ window.Admin = {
   },
 
   async deleteManager(id) {
-    if (confirm('해당 매니저를 삭제할까요?\n매니저가 삭제되면 앱 로그인이 차단되며 담당 배차 내역에도 영향을 줄 수 있어요.')) {
+    if ((await Ask.confirm('해당 매니저를 삭제할까요?\n매니저가 삭제되면 앱 로그인이 차단되며 담당 배차 내역에도 영향을 줄 수 있어요.', { okLabel: '삭제', danger: true }))) {
       try { await window.hqStore.deleteManager(id); }
       catch (e) { alert(e.message || '매니저를 삭제하지 못했어요.'); return; }
       this.updateManagerSlotUI();
@@ -1657,7 +1657,7 @@ window.Admin = {
   },
 
   async deleteVehicle(id, name) {
-    if (confirm(`'${name || '해당'}' 차량을 정말 삭제할까요?\n일정 배차 내역에 영향을 줄 수 있어요.`)) {
+    if ((await Ask.confirm(`'${name || '해당'}' 차량을 정말 삭제할까요?\n일정 배차 내역에 영향을 줄 수 있어요.`, { okLabel: '삭제', danger: true }))) {
       try { await window.hqStore.deleteVehicle(id); }
       catch (e) { alert(e.message || '차량을 삭제하지 못했어요.'); return; }
       await this.renderVehicleManagementList();
@@ -4016,7 +4016,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           }).join('\n');
 
-          if (!confirm('⚠️ 같은 시간대에 겹치는 배정이 있어요.\n\n' + warnMsgs + '\n\n그래도 저장할까요?')) return;
+          if (!(await Ask.confirm('⚠️ 같은 시간대에 겹치는 배정이 있어요.\n\n' + warnMsgs + '\n\n그래도 저장할까요?', { okLabel: '저장' }))) return;
         }
       }
 
@@ -4104,7 +4104,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const changes = merged.map((st, i) => (old[i] && old[i].time !== st.time) ? `${String(st.label || '').replace(/^\[([^\]]+)\].*$/, '$1')} ${old[i].time}→${st.time}` : null).filter(Boolean);
           const notes = merged.filter(st => /예측|기준|추정/.test(st.desc || '')).map(st => '· ' + String(st.label || '').replace(/^\[([^\]]+)\].*$/, '$1') + ': ' + (String(st.desc).match(/이동 약 \d+분/) || [''])[0] + ' (' + (String(st.desc).match(/· ([^·]+?)\)\s*$/) || ['', ''])[1] + ')');
           if (!changes.length) { alert('✅ 그날 교통 예측으로 다시 계산해 봤는데 바뀐 시간이 없어요.\n\n' + notes.join('\n')); return; }
-          if (!confirm('그날 교통 예측으로 다시 계산한 결과예요.\n\n' + changes.join('\n') + '\n\n' + notes.join('\n') + '\n\n이대로 바꿀까요? (담당 매니저에게 확인 요청이 가요)')) return;
+          if (!(await Ask.confirm('그날 교통 예측으로 다시 계산한 결과예요.\n\n' + changes.join('\n') + '\n\n' + notes.join('\n') + '\n\n이대로 바꿀까요? (담당 매니저에게 확인 요청이 가요)', { okLabel: '바꾸기' }))) return;
           await window.hqStore.updateSchedule(schId, { timeline: merged });
           const mid = sch.managerId, me = window.SupabaseClient?.currentUser?.id;
           const ack = (/^[0-9a-f-]{36}$/i.test(mid || '') && mid !== me) ? { need: true, managerId: mid } : null;
@@ -4151,7 +4151,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el.btnDeleteSchedule) {
       el.btnDeleteSchedule.addEventListener('click', async () => {
         const schId = state.activeScheduleId || window.Admin.currentDetailScheduleId;
-        if (confirm('이 일정을 삭제할까요? 로드플래너에서도 즉시 삭제돼요.')) {
+        if ((await Ask.confirm('이 일정을 삭제할까요? 로드플래너에서도 즉시 삭제돼요.', { okLabel: '삭제', danger: true }))) {
           let delSch = null;
           try { delSch = (await window.hqStore.getSchedules()).find(x => x.id === schId) || null; if (delSch) delSch = JSON.parse(JSON.stringify(delSch)); } catch (e) { }
           await window.hqStore.deleteSchedule(schId);

@@ -80,7 +80,7 @@
           return;
         }
         if (a === 'revoke') {
-          if (!confirm('이 일정의 공유 링크를 끊을까요? 이미 보낸 링크도 더 이상 열리지 않습니다.')) return;
+          if (!(await Ask.confirm('이 일정의 공유 링크를 끊을까요? 이미 보낸 링크도 더 이상 열리지 않습니다.', { okLabel: '링크 끊기', danger: true }))) return;
           const r = await c.rpc('revoke_schedule_shares', { p_schedule: rid });
           if (r.error) return toast('링크를 끊지 못했어요: ' + r.error.message);
           close(); toast('공유 링크를 끊었습니다.');
