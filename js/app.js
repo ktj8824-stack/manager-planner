@@ -726,7 +726,7 @@ const App = {
               </div>
               <div style="flex:1;">
                 <div style="font-size:14px;font-weight:700;color:var(--text-100);">현장 돌발상황 / 사고 긴급 보고</div>
-                <div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">본사 웹로 실시간 긴급 푸시 전송</div>
+                <div style="font-size:12.5px;color:var(--text-400);margin-top:2px;">본사 웹으로 실시간 긴급 푸시 전송</div>
               </div>
               <span style="background:rgba(245,158,11,0.12);color:#f59e0b;font-size:12px;font-weight:700;padding:3px 9px;border-radius:6px;white-space:nowrap;">보고서</span>
             </div>
