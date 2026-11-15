@@ -7,6 +7,7 @@
 -- 지금 서버에 있는 자료 (2026-11-15):
 --   일정 22건 (그중 [테스트] 2건) · 대화 2건 · 경비 0건
 --   아티스트 7명 · 차량 5대 · 위치 기록 1건 · 결제 0건
+--   거점(샵/숙소/사옥) 6건 — 전부 [시험] 자료
 -- =====================================================================
 
 
@@ -17,9 +18,17 @@ select email, name, role, created_at::date from public.profiles order by created
 -- [테스트] 일정 2건
 select id, date, title, status from public.schedules where title like '%[테스트]%';
 
+-- [시험] 거점 6건
+select type, name, address from public.places where name like '[시험]%' order by type, name;
+
 
 -- ── 2. [테스트] 일정 2건만 지우기 (가장 안전) ────────────────────────
 delete from public.schedules where title like '%[테스트]%';
+
+
+-- ── 2-1. [시험] 거점 지우기 ──────────────────────────────────────────
+-- ※ 진짜 샵·숙소를 등록하신 뒤에 실행하세요. 이름 앞에 [시험] 이 붙은 것만 지웁니다.
+delete from public.places where name like '[시험]%';
 
 
 -- ── 3. 시험용 매니저 계정 5개 지우기 ────────────────────────────────
