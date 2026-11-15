@@ -38,7 +38,7 @@ for (const s of sent) console.log(s.title, '|', s.body.replace(/\n/g, ' / '), '|
 // 대표가 '밤 요약 알림'을 끄면 본사 요약은 안 감 (매니저 요약은 감)
 prefOff = true; const before = sent.length;
 await run(db, send, t('2026-11-03T21:00:00+09:00'));
-console.log('prefOff hq:', sent.slice(before).filter(x => /manager-planner-web/.test(x.url)).length, 'mgr:', sent.slice(before).filter(x => /manager-planner-app/.test(x.url)).length);
+console.log('prefOff hq:', sent.slice(before).filter(x => /hq\.roadplanner\.kr/.test(x.url)).length, 'mgr:', sent.slice(before).filter(x => /app\.roadplanner\.kr/.test(x.url)).length);
 
 // 출발 약 1시간 전 '다음 일정' 알림 (같은 tag로 15분 전 알림이 바꿔 씀)
 const b2 = sent.length;

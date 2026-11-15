@@ -16,8 +16,8 @@ type Row = Record<string, any>;
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const DRIVE = /출발|이동|픽업/;
 // 알림을 눌렀을 때 여는 주소 — 기본값. 도메인을 바꾸면 app_settings 표의 app_url / hq_url 만 고치면 됨
-let APP_URL = "https://ktj8824-stack.github.io/manager-planner-app/";
-let HQ_URL = "https://ktj8824-stack.github.io/manager-planner-web/";
+let APP_URL = "https://app.roadplanner.kr/";
+let HQ_URL = "https://hq.roadplanner.kr/";
 
 // 한국 시간 기준 날짜/시각
 function kst(ms: number) {

@@ -6,7 +6,7 @@
  */
 (function () {
   'use strict';
-  const BASE = (window.SITE ? SITE.APP : 'https://ktj8824-stack.github.io/manager-planner-app/') + 'share.html?t=';   // 주소는 js/site-config.js
+  const BASE = (window.SITE ? SITE.APP : 'https://app.roadplanner.kr/') + 'share.html?t=';   // 주소는 js/site-config.js
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = (m) => { try { if (typeof U !== 'undefined' && U.toast) return U.toast(m); } catch (e) { } try { alert(m); } catch (e) { } };

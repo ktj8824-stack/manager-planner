@@ -7,7 +7,7 @@
 //   - iOS 앱(Xcode): roadplanner://next → 이 주소로 열림
 // =========================================
 const AutoNav = {
-  get LINK() { return (window.SITE ? SITE.APP : 'https://ktj8824-stack.github.io/manager-planner-app/') + '?go=next'; },   // 주소는 js/site-config.js
+  get LINK() { return (window.SITE ? SITE.APP : 'https://app.roadplanner.kr/') + '?go=next'; },   // 주소는 js/site-config.js
   WAIT_MS: 20000,
   COUNTDOWN: 3,
   _timer: null,

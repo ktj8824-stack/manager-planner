@@ -5,8 +5,8 @@
 // 도메인 전환 때 함께 바꿀 곳은 DOMAIN_SWITCH.md 를 보세요.
 // =========================================
 window.SITE = Object.freeze({
-  APP: 'https://ktj8824-stack.github.io/manager-planner-app/',
-  HQ: 'https://ktj8824-stack.github.io/manager-planner-web/',
+  APP: 'https://app.roadplanner.kr/',
+  HQ: 'https://hq.roadplanner.kr/',
   // 개발용 PC(localhost)에서는 같은 폴더의 파일을 씀
   isDev: ['localhost', '127.0.0.1', ''].includes(location.hostname) || location.protocol === 'file:',
   app(path = '') { return this.isDev ? path || './' : this.APP + path; },

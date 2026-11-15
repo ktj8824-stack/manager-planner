@@ -24,7 +24,7 @@
 type Env = { KAKAO_REST_KEY?: string; TMAP_APP_KEY?: string; ALLOWED_ORIGINS?: string };
 type Fetch = (input: string, init?: RequestInit) => Promise<Response>;
 
-const DEFAULT_ORIGINS = "https://ktj8824-stack.github.io,http://localhost:8080,http://127.0.0.1:8080";
+const DEFAULT_ORIGINS = "https://app.roadplanner.kr,https://hq.roadplanner.kr,https://ktj8824-stack.github.io,http://localhost:8080,http://127.0.0.1:8080";
 const GEO = "reqCoordType=WGS84GEO&resCoordType=WGS84GEO";
 const RATE_PER_MIN = 90;          // 한 사용자(IP)당 1분 최대 호출
 const CACHE_MS = 60_000;          // 같은 요청은 1분 동안 재사용 (비용 절약)

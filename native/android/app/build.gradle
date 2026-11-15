@@ -14,7 +14,7 @@ android {
         versionCode 2
         versionName "1.1.0"
         // 앱이 여는 주소 — 도메인을 바꾸면 여기 한 줄만 수정
-        buildConfigField "String", "APP_URL", '"https://ktj8824-stack.github.io/manager-planner-app/"'
+        buildConfigField "String", "APP_URL", '"https://app.roadplanner.kr/"'
     }
 
     signingConfigs {

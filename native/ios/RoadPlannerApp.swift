@@ -5,7 +5,7 @@ import UserNotifications
 // + 출발 15분 전 알림 예약 (앱이 꺼져 있어도 폰이 알림)
 // + roadplanner://next 주소로 열면 다음 목적지로 바로 길안내 (단축어 자동화용)
 
-let APP_URL = URL(string: "https://ktj8824-stack.github.io/manager-planner-app/")!   // 도메인 바꾸면 여기 한 줄
+let APP_URL = URL(string: "https://app.roadplanner.kr/")!   // 도메인 바꾸면 여기 한 줄
 
 @main
 struct RoadPlannerApp: App {

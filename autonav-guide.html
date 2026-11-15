@@ -155,8 +155,8 @@ html.embed .top{display:none}
 <body>
 <header class="top">
   <div class="in">
-    <a class="back" id="go-back" href="https://ktj8824-stack.github.io/manager-planner-app/" aria-label="앱으로 돌아가기">‹ 앱으로</a>
-    <a class="brand" href="https://ktj8824-stack.github.io/manager-planner-web/intro.html"><img src="icon.svg" alt=""><b>로드플래너</b></a>
+    <a class="back" id="go-back" href="https://app.roadplanner.kr/" aria-label="앱으로 돌아가기">‹ 앱으로</a>
+    <a class="brand" href="https://hq.roadplanner.kr/intro.html"><img src="icon.svg" alt=""><b>로드플래너</b></a>
     <a class="btn pri sm" href="#setup">1분 설정하기</a>
   </div>
 </header>
@@ -222,7 +222,7 @@ html.embed .top{display:none}
         <p><span class="tag ios">아이폰 앱</span>로드플래너 아이폰 앱을 쓰면 이 주소예요.</p>
         <div class="linkbox"><input id="lk-app" readonly value="roadplanner://next"><button class="btn pri sm" type="button" data-copy="lk-app">복사</button></div>
         <p style="margin-top:12px"><span class="tag and">브라우저·갤럭시</span>사파리·크롬으로 쓰면 이 주소예요.</p>
-        <div class="linkbox"><input id="lk-web" readonly value="https://ktj8824-stack.github.io/manager-planner-app/?go=next"><button class="btn pri sm" type="button" data-copy="lk-web">복사</button></div>
+        <div class="linkbox"><input id="lk-web" readonly value="https://app.roadplanner.kr/?go=next"><button class="btn pri sm" type="button" data-copy="lk-web">복사</button></div>
       </div>
     </div>
 
@@ -309,7 +309,7 @@ html.embed .top{display:none}
     <p class="desc">일정은 로드플래너가 거꾸로 계산하고, 길은 차에 타는 순간 열립니다.</p>
     <div class="cta">
       <a class="btn pri" href="#setup">설정 다시 보기</a>
-      <a class="btn line" id="open-app" href="https://ktj8824-stack.github.io/manager-planner-app/">로드플래너 열기</a>
+      <a class="btn line" id="open-app" href="https://app.roadplanner.kr/">로드플래너 열기</a>
     </div>
   </div>
 </section>
@@ -329,7 +329,7 @@ html.embed .top{display:none}
     if (oa) { oa.textContent = '로드플래너로 돌아가기'; oa.addEventListener('click', closeIt, true); }
     document.querySelectorAll('.top a.brand').forEach(function (a) { a.addEventListener('click', closeIt, true); });
   }
-  var app = (window.SITE && SITE.APP) || 'https://ktj8824-stack.github.io/manager-planner-app/';
+  var app = (window.SITE && SITE.APP) || 'https://app.roadplanner.kr/';
   document.getElementById('lk-web').value = app + '?go=next';
   document.getElementById('open-app').href = app;
   var isAnd = /Android/i.test(navigator.userAgent);
