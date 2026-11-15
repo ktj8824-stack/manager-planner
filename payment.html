@@ -76,7 +76,7 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
-<script src="js/icons.js?v=345"></script>
+<script src="js/icons.js?v=346"></script>
 </head>
 <body>
 <div id="test-banner" style="position:sticky;top:0;z-index:9999;width:100%;background:#f59e0b;color:#1f1300;text-align:center;font:700 13px/1.4 Pretendard,sans-serif;padding:8px 12px;">🧪 테스트 결제 — 실제 결제되지 않습니다 (카드가 청구되지 않아요)</div>
@@ -185,7 +185,7 @@
 
 <script src="https://js.tosspayments.com/v2/standard"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js?v=345"></script>
+<script src="js/supabase-client.js?v=346"></script>
 <script>
   const IS_DEV_HOST = ['localhost','127.0.0.1',''].includes(location.hostname) || location.protocol === 'file:';
   const params      = new URLSearchParams(location.search);
@@ -333,6 +333,18 @@
   }
   function clearBusy() { delete document.getElementById('btn-pay').dataset.busy; syncPayButton(); }
 
+  // 휴대폰 기본 알림 창 대신 화면 아래에 잠깐 떴다 사라지는 안내
+  function say(msg) {
+    document.getElementById('pay-toast')?.remove();
+    const t = document.createElement('div');
+    t.id = 'pay-toast'; t.setAttribute('role', 'alert'); t.textContent = String(msg || '');
+    t.style.cssText = 'position:fixed;left:16px;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));max-width:420px;margin:0 auto;'
+      + 'background:#14161A;color:#fff;padding:13px 16px;border-radius:12px;font-size:14.5px;line-height:1.5;'
+      + 'box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:99999;word-break:keep-all;text-align:center';
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3600);
+  }
+
   renderAgreeAndButton();
 
   // 서버 견적으로 금액을 다시 맞춤 (회사 요금제: 이용 중 자리 추가면 일할 금액)
@@ -379,7 +391,7 @@
   }
 
   async function startPayment() {
-    if (!document.getElementById('agree-auto').checked) { alert('결제 동의에 체크해 주세요.'); return; }
+    if (!document.getElementById('agree-auto').checked) { say('결제 동의에 체크해 주세요.'); return; }
     let name  = document.getElementById('buyer-name').value.trim() || ceoName || '';
     let email = document.getElementById('buyer-email').value.trim() || ceoEmail || '';
     const phone = document.getElementById('buyer-phone').value.trim();
@@ -387,7 +399,7 @@
     // 1) 가상계좌
     if (currentMethodTab === 'va') {
       const msg = checkVaFields();
-      if (msg) { alert(msg); return; }
+      if (msg) { say(msg); return; }
       setBusy('입금 계좌 만드는 중...');
       handleVirtualAccountIssue(name, email, phone);
       return;
@@ -402,7 +414,7 @@
       order = await SupabaseClient.invokePayments({ action: 'prepare', plan: isProPlan ? 'pro' : 'standard', addSlots });
     } catch (err) {
       if (IS_DEV_HOST && !widgets) { simulateTestPayment(); return; }
-      alert(err.message || '주문을 만들지 못했어요.');
+      say(err.message || '주문을 만들지 못했어요.');
       clearBusy();
       return;
     }
@@ -428,7 +440,7 @@
       }
     } catch (err) {
       console.error('결제 오류:', err);
-      if (err.code !== 'USER_CANCEL') alert('결제 오류: ' + (err.message || err.code || '알 수 없는 오류'));
+      if (err.code !== 'USER_CANCEL') say('결제 오류: ' + (err.message || err.code || '알 수 없는 오류'));
       clearBusy();
     }
   }
@@ -442,7 +454,7 @@
 
   function handleVirtualAccountIssue(name) {
     if (!IS_DEV_HOST) {
-      alert('가상계좌 결제는 테스트 중에는 사용할 수 없어요. 카드로 결제해 주세요.');
+      say('가상계좌 결제는 테스트 중에는 사용할 수 없어요. 카드로 결제해 주세요.');
       clearBusy();
       return;
     }

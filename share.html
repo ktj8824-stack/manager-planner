@@ -82,7 +82,7 @@
 <body>
   <header><b>Road<i>Planner</i></b><span>일정 공유</span></header>
   <main id="root"><div class="msg">일정을 불러오는 중…</div></main>
-  <script src="js/api.js?v=345"></script>
+  <script src="js/api.js?v=346"></script>
   <script>
   (function () {
     'use strict';
@@ -148,6 +148,18 @@
       flag: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 21V4M5.5 4.5h12l-2.2 4 2.2 4h-12"/></svg>'
     };
     var KEY_ = 'rp_recv_' + token.slice(0, 16);
+    // 휴대폰 기본 알림 창 대신 화면 아래 안내
+    function say(msg) {
+      var old = document.getElementById('sh-toast'); if (old) old.remove();
+      var t = document.createElement('div');
+      t.id = 'sh-toast'; t.setAttribute('role', 'alert'); t.textContent = String(msg || '');
+      t.style.cssText = 'position:fixed;left:16px;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));max-width:420px;margin:0 auto;'
+        + 'background:#14161A;color:#fff;padding:13px 16px;border-radius:12px;font-size:14.5px;line-height:1.5;'
+        + 'box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:99999;word-break:keep-all;text-align:center';
+      document.body.appendChild(t);
+      setTimeout(function () { t.remove(); }, 3600);
+    }
+
     var Recv = {
       d: null, g: null, results: [], searching: false, travel: null, calc: false,
       load: function () { try { this.g = JSON.parse(localStorage.getItem(KEY_) || 'null'); } catch (e) { } if (!this.g) this.g = { origin: null, prep: null, route: null }; },
@@ -232,9 +244,9 @@
         var r = b.dataset.r;
         if (r === 'home') return this.setOrigin(this.home(), '집');
         if (r === 'here') {
-          if (!navigator.geolocation) return alert('이 기기에서는 위치를 쓸 수 없어요. 직접 입력해 주세요.');
+          if (!navigator.geolocation) return say('이 기기에서는 위치를 쓸 수 없어요. 직접 입력해 주세요.');
           navigator.geolocation.getCurrentPosition(function (pos) { self.setOrigin({ name: '지금 위치', lat: pos.coords.latitude, lng: pos.coords.longitude }, '지금 위치'); },
-            function () { alert('위치를 가져오지 못했어요. 직접 입력해 주세요.'); }, { timeout: 8000 });
+            function () { say('위치를 가져오지 못했어요. 직접 입력해 주세요.'); }, { timeout: 8000 });
           return;
         }
         if (r === 'search') { this.searching = true; this.results = []; this.draw(false); setTimeout(function () { var i = document.getElementById('rq'); if (i) i.focus(); }, 50); return; }
