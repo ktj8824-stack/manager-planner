@@ -192,7 +192,10 @@ final class AppleSignIn: NSObject, ASAuthorizationControllerDelegate, ASAuthoriz
         var r: [String: Any] = [:]
         if let t = cred.identityToken, let s = String(data: t, encoding: .utf8) { r["idToken"] = s }
         if let c = cred.authorizationCode, let s = String(data: c, encoding: .utf8) { r["code"] = s }
-        let name = [cred.fullName?.familyName, cred.fullName?.givenName].compactMap { $0 }.joined()
+        // 한글 이름은 성+이름 붙여서(공진문), 영어 이름은 이름 성 띄워서(Jinmoon Kong)
+        let family = cred.fullName?.familyName ?? "", given = cred.fullName?.givenName ?? ""
+        let korean = (family + given).range(of: "[가-힣]", options: .regularExpression) != nil
+        let name = korean ? family + given : [given, family].filter { !$0.isEmpty }.joined(separator: " ")
         if !name.isEmpty { r["name"] = name }
         if let e = cred.email { r["email"] = e }
         send(r)
