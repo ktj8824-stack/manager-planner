@@ -79,3 +79,4 @@ body.ai-typing .rpai-inputwrap { --rpai-safe: env(safe-area-inset-bottom); }
 .bnav-ai.active .bnav-ai-ico { box-shadow: 0 0 0 3px #D5D9F7; }
 
 .rpai-chips.off .rpai-chip, .rpai-chip:disabled { opacity: .5; cursor: default; background: #F1F2F5; border-color: #E2E4EA; color: #5B616E; }
+.rpai-iconbtn.busy, #rpai-mic.busy { opacity: .55; pointer-events: none; }

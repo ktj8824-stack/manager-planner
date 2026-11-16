@@ -54,7 +54,7 @@ const RoadAI = {
         </div>
         <div class="rpai-body" id="rpai-body"></div>
         <div class="rpai-inputwrap">
-          <div class="rpai-listening" id="rpai-listening"><span>🎙️ 듣고 있어요… 말씀해 주세요</span><button onclick="RoadAI.stopListening()">취소</button></div>
+          <div class="rpai-listening" id="rpai-listening"><span id="rpai-listening-text">🎙️ 듣고 있어요 · 말을 마치면 자동으로 멈춰요</span><button onclick="RoadAI.stopListening()">취소</button></div>
           <div id="rpai-lock"></div>
           <input type="file" id="rpai-photo" accept="image/*" style="display:none" onchange="RoadAI.onPhoto(this)" />
           <div class="rpai-bar" id="rpai-bar">
@@ -560,38 +560,86 @@ const RoadAI = {
   },
 
   /* ── 말로 하기 ── */
-  toggleListening() { this.listening ? this.stopListening() : this.startListening(); },
+  /* 음성 입력: 1순위 고음질 서버 받아쓰기(js/voice-stt.js), 안 되면 기기 받아쓰기
+     받아쓴 글은 입력창에 넣고, 확인한 뒤 보내기 */
+  toggleListening() {
+    if (typeof ServerVoice !== 'undefined' && ServerVoice.active()) { ServerVoice.stop(); return; }
+    this.listening ? this.stopListening() : this.startListening();
+  },
 
-  startListening() {
+  _voiceOpts() {
+    return {
+      url: 'https://iaccdqcthhtvvetmbryr.supabase.co', anon: this.ANON, app: 'road',
+      token: async () => { const { data: s } = await SupabaseClient.client.auth.getSession(); return s?.session?.access_token || ''; }
+    };
+  },
+
+  // 자주 나오는 장소·아티스트 이름 (비공개 일정은 빼고)
+  _voiceHints() {
+    const n = [];
+    try {
+      (window.hqStore?.getSchedules?.() || []).filter(s => s && s.isSecret !== true).slice(-40)
+        .forEach(s => { [s.location, s.artistName, s.shop?.needed ? s.shop.name : ''].forEach(v => { if (v) n.push(String(v)); }); });
+    } catch (e) { }
+    return [...new Set(n)].slice(-25);
+  },
+
+  _putText(t) {
+    const el = U.$('#rpai-input');
+    if (!el || !t) return;
+    el.value = t;
+    try { el.focus(); el.setSelectionRange(t.length, t.length); } catch (e) { }
+  },
+
+  async startListening() {
+    if (this._voiceBusy) return;
+    if (typeof ServerVoice !== 'undefined' && this.signedIn() && await ServerVoice.ready(this._voiceOpts())) {
+      ServerVoice.start(Object.assign(this._voiceOpts(), {
+        hints: this._voiceHints(),
+        onState: s => { this._voiceBusy = s === 'busy'; this.micUI(s === 'listening', s === 'busy'); },
+        onText: t => this._putText(t),
+        onFail: (why, msg) => { if (why === 'no_recorder') return this._startDevice(); if (msg) U.toast(msg); }
+      }));
+      return;
+    }
+    this._startDevice();
+  },
+
+  _startDevice() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { U.toast('이 기기에서는 음성 입력이 안 돼요. 키보드의 🎤 버튼으로 말해 보세요.'); return; }
     try {
       this.recognition = new SR();
       this.recognition.lang = 'ko-KR';
       this.recognition.interimResults = true;
-      this.recognition.continuous = false;
+      this.recognition.continuous = true;            // 잠깐 쉬어도 끊지 않음
       this.recognition.onstart = () => this.micUI(true);
       this.recognition.onresult = (ev) => {
         let t = '';
-        for (let k = ev.resultIndex; k < ev.results.length; k++) t += ev.results[k][0].transcript;
-        const el = U.$('#rpai-input'); if (el) el.value = t;
-        if (ev.results[ev.results.length - 1].isFinal) { this.stopListening(); if (t.trim()) this.sendInput(); }
+        for (let k = 0; k < ev.results.length; k++) t += ev.results[k][0].transcript;   // 처음부터 전부
+        const el = U.$('#rpai-input'); if (el) el.value = t.replace(/\s+/g, ' ').trim();
+        clearTimeout(this._quiet); this._quiet = setTimeout(() => this.stopListening(), 2500);   // 2.5초 조용하면 끝
       };
       this.recognition.onerror = (e) => { this.stopListening(); if (e.error === 'not-allowed' || e.error === 'service-not-allowed') U.toast('마이크·음성 인식 권한이 꺼져 있어요. 아이폰 설정 → 로드플래너에서 마이크와 음성 인식을 켜 주세요.'); };
-      this.recognition.onend = () => this.micUI(false);
+      this.recognition.onend = () => { clearTimeout(this._quiet); this.micUI(false); const el = U.$('#rpai-input'); if (el && el.value.trim()) this._putText(el.value.trim()); };
       this.recognition.start();
     } catch (e) { this.micUI(false); U.toast('음성 입력을 시작하지 못했어요.'); }
   },
 
   stopListening() {
+    if (typeof ServerVoice !== 'undefined' && ServerVoice.active()) { ServerVoice.cancel(); return; }
+    clearTimeout(this._quiet);
     try { if (this.recognition) this.recognition.stop(); } catch (e) { }
     this.micUI(false);
   },
 
-  micUI(on) {
-    this.listening = on;
-    U.$('#rpai-mic')?.classList.toggle('on', on);
-    U.$('#rpai-listening')?.classList.toggle('on', on);
+  micUI(on, busy) {
+    this.listening = !!on;
+    U.$('#rpai-mic')?.classList.toggle('on', !!on);
+    U.$('#rpai-mic')?.classList.toggle('busy', !!busy);
+    U.$('#rpai-listening')?.classList.toggle('on', !!(on || busy));
+    const tx = U.$('#rpai-listening-text');
+    if (tx) tx.textContent = busy ? '✍️ 받아쓰는 중이에요…' : '🎙️ 듣고 있어요 · 말을 마치면 자동으로 멈춰요';
   }
 };
 
