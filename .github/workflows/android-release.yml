@@ -1,0 +1,77 @@
+# 플레이 스토어 출시용 AAB 만들기 (손으로 실행: Actions > Android Release (AAB) > Run workflow)
+# 결과: 이 실행의 Artifacts 에 RoadPlanner-release.aab — 플레이 콘솔에 올리는 파일
+# 필요한 저장소 Secrets (Settings > Secrets and variables > Actions) — 마이플래너와 같은 이름:
+#   ANDROID_KEYSTORE_B64       업로드 키 파일(.jks)을 base64로 바꾼 글자
+#   ANDROID_KEYSTORE_PASSWORD  키 파일 비밀번호 (키 비밀번호도 같음)
+#   ANDROID_KEY_ALIAS          키 이름 (기본 upload)
+# 비밀값이 없으면 '시험용 키'로 만들어 빌드가 되는지만 확인 (그 파일은 플레이에 올리지 않음)
+name: Android Release (AAB)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Check secrets
+        id: keys
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          PW: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KS" ] || [ -z "$PW" ]; then
+            echo "::warning::업로드 키(Secrets)가 아직 없어 '시험용 키'로 만들어요. 이 AAB는 플레이에 올리지 마세요 (빌드가 되는지 확인용)."
+            echo "test=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "test=0" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Signing key
+        env:
+          S1: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          S2: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          S3: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ "${{ steps.keys.outputs.test }}" = "1" ]; then
+            keytool -genkeypair -keystore "$RUNNER_TEMP/upload.jks" -alias upload -keyalg RSA -keysize 2048 -validity 1 -storepass testtest -keypass testtest -dname "CN=TEST" >/dev/null
+            KS_PW=testtest; KS_ALIAS=upload
+          else
+            # 세 값이 서로 다른 이름 칸에 들어가 있어도 알아서 찾기: 긴 글자 = 키 파일, 'upload' = 키 이름, 나머지 = 비밀번호
+            KS=""; KS_PW=""; KS_ALIAS="upload"
+            for V in "$S1" "$S2" "$S3"; do
+              C=$(printf '%s' "$V" | tr -d ' \r\n\t')
+              if [ ${#C} -gt 500 ]; then KS="$C"; elif [ "$C" = "upload" ]; then KS_ALIAS="$C"; elif [ -n "$C" ]; then KS_PW="$C"; fi
+            done
+            printf '%s' "$KS" | base64 -d > "$RUNNER_TEMP/upload.jks" || { echo "::error::키 파일 값을 풀 수 없어요. ANDROID_KEYSTORE_B64 내용 전체를 다시 넣어 주세요."; exit 1; }
+            keytool -list -keystore "$RUNNER_TEMP/upload.jks" -storepass "$KS_PW" >/dev/null || { echo "::error::키 파일 비밀번호가 맞지 않아요."; exit 1; }
+          fi
+          echo "::add-mask::$KS_PW"
+          echo "UPLOAD_KS=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
+          echo "UPLOAD_PW=$KS_PW" >> "$GITHUB_ENV"
+          echo "UPLOAD_ALIAS=$KS_ALIAS" >> "$GITHUB_ENV"
+      - name: Build AAB
+        run: |
+          # 버전 번호: 실행할 때마다 1씩 올라감 (플레이는 같은 번호를 두 번 받지 않음)
+          CODE=$((100 + ${{ github.run_number }}))
+          NAME="1.2.${{ github.run_number }}"
+          echo "versionCode=$CODE versionName=$NAME"
+          gradle -p native/android bundleRelease -PrpVersionCode=$CODE -PrpVersionName=$NAME --no-daemon --stacktrace
+          if [ "${{ steps.keys.outputs.test }}" = "1" ]; then OUT=RoadPlanner-TEST-ONLY.aab; else OUT=RoadPlanner-release.aab; fi
+          cp native/android/app/build/outputs/bundle/release/app-release.aab $OUT
+          echo "OUT=$OUT" >> "$GITHUB_ENV"
+      - name: Clean key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/upload.jks"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.keys.outputs.test == '1' && 'TEST-ONLY-do-not-upload' || 'RoadPlanner-release-aab' }}
+          path: RoadPlanner-*.aab
+          retention-days: 30

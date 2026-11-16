@@ -8,6 +8,8 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.view.View
+import android.widget.LinearLayout
 import android.webkit.GeolocationPermissions
 import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
@@ -20,6 +22,9 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 
 /**
  * 로드플래너 안드로이드 앱 — 매니저 웹앱을 그대로 보여 주는 앱
@@ -52,7 +57,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         web = WebView(this)
-        setContentView(web)
+        setContentView(edgeToEdgeLayout(web))
         Reminders.ensureChannel(this)
 
         with(web.settings) {
@@ -104,6 +109,38 @@ class MainActivity : AppCompatActivity() {
         }
 
         web.loadUrl(startUrl(intent))
+    }
+
+    /**
+     * 안드로이드 15 이상(앱 기준 API 35+)은 화면을 상태 표시줄·아래 버튼 밑까지 꽉 채워 그리게 강제함.
+     * 웹 화면이 시계·배터리 아이콘이나 아래 버튼에 가리지 않게, 위·아래에 그만큼 빈 칸을 두고 웹을 그 사이에 둠.
+     * (위 칸은 예전 상태 표시줄 색, 아래 칸은 흰색 → 예전과 같은 모습. 자판이 올라오면 아래 칸이 자판 높이만큼 커짐)
+     */
+    private fun edgeToEdgeLayout(content: View): View {
+        WindowCompat.setDecorFitsSystemWindows(window, false)   // 안드로이드 14 이하도 같은 방식으로
+        val top = View(this).apply { setBackgroundColor(0xFF1E1B4B.toInt()) }
+        val bottom = View(this).apply { setBackgroundColor(0xFFFFFFFF.toInt()) }
+        val root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(0xFFFFFFFF.toInt())
+            addView(top, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0))
+            addView(content, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
+            addView(bottom, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0))
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+            top.layoutParams = (top.layoutParams as LinearLayout.LayoutParams).apply { height = bars.top }
+            bottom.layoutParams = (bottom.layoutParams as LinearLayout.LayoutParams).apply { height = maxOf(bars.bottom, ime.bottom) }
+            v.setPadding(bars.left, 0, bars.right, 0)
+            top.requestLayout(); bottom.requestLayout()
+            WindowInsetsCompat.CONSUMED
+        }
+        WindowCompat.getInsetsController(window, root).apply {
+            isAppearanceLightStatusBars = false     // 어두운 위 칸 → 흰 아이콘
+            isAppearanceLightNavigationBars = true  // 흰 아래 칸 → 어두운 버튼
+        }
+        return root
     }
 
     override fun onNewIntent(intent: Intent) {
