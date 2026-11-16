@@ -157,7 +157,7 @@
     <div class="hero">
       <span class="hero-icon">🔒</span>
       <h1>개인정보처리방침</h1>
-      <p>로드플래너는 이용자의 개인정보를 소중히 보호합니다.<br/>시행일: 2026년 10월 31일 &nbsp;|&nbsp; 최종 수정일: 2026년 11월 9일</p>
+      <p>로드플래너는 이용자의 개인정보를 소중히 보호합니다.<br/>시행일: 2026년 10월 31일 &nbsp;|&nbsp; 최종 수정일: 2026년 11월 16일 (음성 받아쓰기 추가)</p>
     </div>
 
     <div class="section">
@@ -176,6 +176,7 @@
           <tr><td data-l="수집 항목">차량 정보 (차종, 차량 번호, 연료, 보험사, 긴급출동 번호)</td><td data-l="수집 방법">개인 매니저가 차량관리에서 직접 입력</td><td data-l="목적">차량관리, 긴급출동 전화 연결</td></tr>
           <tr><td data-l="수집 항목">경비 기록 (날짜, 금액, 항목, 메모, 영수증 사진), 승인·반려 기록</td><td data-l="수집 방법">이용자가 직접 입력 / 회사 본사가 승인·반려</td><td data-l="목적">경비 기록 및 정산</td></tr>
           <tr><td data-l="수집 항목">로드비서 대화 내용, 사용 횟수</td><td data-l="수집 방법">이용자가 로드비서에 입력</td><td data-l="목적">AI 비서 답변, 하루 사용 한도 관리</td></tr>
+          <tr><td data-l="수집 항목">음성 입력 녹음(최대 30초, 저장하지 않음), 하루 사용 횟수</td><td data-l="수집 방법">로그인한 이용자가 로드비서에 말로 입력할 때</td><td data-l="목적">말한 내용을 글자로 받아쓰기 (OpenAI로 전송 후 바로 버림)</td></tr>
           <tr><td data-l="수집 항목">결제 정보 (주문 번호, 금액, 결제 결과)</td><td data-l="수집 방법">유료 결제 시 결제대행사를 통해 수집 (카드 번호는 회사가 저장하지 않음)</td><td data-l="목적">요금 결제, 환불</td></tr>
           <tr><td data-l="수집 항목">기기 알림 주소(푸시 토큰), 브라우저 정보</td><td data-l="수집 방법">이용자가 알림을 켰을 때 자동 수집</td><td data-l="목적">새 메시지·일정 변경 알림 전송</td></tr>
           <tr><td data-l="수집 항목">서비스 이용 기록</td><td data-l="수집 방법">앱 사용 중 자동 수집</td><td data-l="목적">서비스 품질 개선, 오류 확인</td></tr>
@@ -232,6 +233,7 @@
           <tr><td data-l="서비스">Google AdSense</td><td data-l="처리 정보">쿠키, 광고 식별자</td><td data-l="목적">광고</td></tr>
           <tr><td data-l="서비스">SK Tmap API</td><td data-l="처리 정보">검색 키워드, 출발·도착지 (지연 계산 시 현재 위치 좌표 포함, 저장하지 않음)</td><td data-l="목적">경로·소요 시간 계산 및 장소 검색</td></tr>
           <tr><td data-l="서비스">Anthropic (anthropic.com)</td><td data-l="처리 정보">로드비서에 입력한 대화 내용, 일정 요약</td><td data-l="목적">AI 비서 답변 생성 (미국, 아래 국외 이전 참고)</td></tr>
+          <tr><td data-l="서비스">OpenAI (openai.com)</td><td data-l="처리 정보">로드비서 음성 입력 녹음(최대 30초), 장소·아티스트 이름 힌트(비공개 일정 제외)</td><td data-l="목적">음성 받아쓰기 (미국, 아래 국외 이전 참고)</td></tr>
           <tr><td data-l="서비스">토스페이먼츠 (tosspayments.com)</td><td data-l="처리 정보">결제 정보</td><td data-l="목적">유료 요금 결제</td></tr>
         </tbody>
       </table>
@@ -251,6 +253,12 @@
             <td data-l="이전 국가">미국</td>
             <td data-l="이전 항목">로드비서에 입력한 대화 내용, 질문에 필요한 일정 요약(일정명·날짜·시각·장소·아티스트 이름)</td>
             <td data-l="이용 목적 · 보유 기간">AI 비서 답변 생성 · 답변 생성 후 즉시 파기(모델 학습에 사용되지 않음)</td>
+          </tr>
+          <tr>
+            <td data-l="이전받는 자 · 연락처">OpenAI, L.L.C.<br><span style="color:#aeaeb2;">privacy@openai.com</span></td>
+            <td data-l="이전 국가">미국</td>
+            <td data-l="이전 항목">로드비서 음성 입력 녹음(최대 30초), 받아쓰기 힌트(장소·아티스트 이름, 비공개 일정 제외)</td>
+            <td data-l="이용 목적 · 보유 기간">음성 받아쓰기 · 로드플래너는 녹음을 저장하지 않음 (OpenAI API 데이터 보관 정책에 따름, 모델 학습에 쓰이지 않음)</td>
           </tr>
           <tr>
             <td data-l="이전받는 자 · 연락처">Google LLC<br><span style="color:#aeaeb2;">https://support.google.com</span></td>
