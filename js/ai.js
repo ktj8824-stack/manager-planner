@@ -153,7 +153,7 @@ const RoadAI = {
     } else {
       row.innerHTML = `<div class="rpai-mini" aria-hidden="true">🤖</div><div class="rpai-col">
         <div class="rpai-bubble">${String(m.html || '').replace(/스케줄로/g, '일정으로').replace(/스케줄/g, '일정')}${this.extras(m)}</div>
-        <span class="rpai-time">${esc(m.time)}</span>
+        <div class="rpai-meta"><span class="rpai-time">${esc(m.time)}</span>${m.agent ? `<button type="button" class="rpai-report" onclick="RoadAI.report(${escJs(m.id)})">${m.reported ? '신고함' : '신고'}</button>` : ''}</div>
         ${m.chips ? this.chipsHTML() : ''}</div>`;
     }
     body.appendChild(row);
@@ -192,6 +192,36 @@ const RoadAI = {
   botSay(html) {
     const m = { id: 'b' + Date.now(), from: 'bot', time: this.now(), html };
     this.messages.push(m); this.append(m); this.save();
+  },
+
+  /* ── 답변 신고 (구글 플레이 생성형 AI 정책: 앱 안에서 AI 답변을 신고할 수 있어야 함) ── */
+  async report(id) {
+    const i = this.messages.findIndex(x => x.id === id);
+    const m = this.messages[i];
+    if (!m) return;
+    if (m.reported) { U.toast('이미 신고한 답변이에요.'); return; }
+    if (!this.signedIn() || !SupabaseClient.isConfigured) { U.toast('로그인 후 신고할 수 있어요.'); return; }
+    const reason = await Ask.text({
+      title: '이 답변을 신고할까요?',
+      desc: '틀리거나 불쾌한 답변이면 알려 주세요. 운영팀이 확인해서 고칠게요.',
+      placeholder: '이유 (적지 않아도 돼요)', multiline: true, okLabel: '신고하기', max: 300,
+    });
+    if (reason === null) return;
+    let question = '';
+    for (let k = i - 1; k >= 0; k--) { if (this.messages[k].from === 'user') { question = this.messages[k].text || (this.messages[k].hadImage ? '(사진)' : ''); break; } }
+    try {
+      const { error } = await SupabaseClient.client.from('rp_ai_reports').insert({
+        reason: String(reason || '').trim().slice(0, 300),
+        question: String(question).slice(0, 1500),
+        answer: String(m.plain || '').slice(0, 4000),
+      });
+      if (error) throw error;
+      m.reported = true; this.save();
+      const btn = U.$('#rpai-m-' + id + ' .rpai-report'); if (btn) btn.textContent = '신고함';
+      U.toast('신고했어요. 고맙습니다.');
+    } catch (e) {
+      U.toast(navigator.onLine === false ? '인터넷 연결을 확인해 주세요.' : '신고를 보내지 못했어요. 잠시 후 다시 해 주세요.');
+    }
   },
 
   /* ── 보내기 ── */

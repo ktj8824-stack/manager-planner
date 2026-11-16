@@ -26,6 +26,9 @@ body.ai-typing #bottom-nav { display: none !important; }
 .rpai-bubble { background: #fff; border: 1px solid #e2e8f0; border-radius: 4px 16px 16px 16px; padding: 10px 12px; font-size: 15px; line-height: 1.55; word-break: keep-all; overflow-wrap: anywhere; }
 .rpai-row.user .rpai-bubble { background: #3B45C4; color: #fff; border-color: #3B45C4; border-radius: 16px 4px 16px 16px; }
 .rpai-time { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+.rpai-meta { display: flex; align-items: center; gap: 10px; }
+.rpai-meta .rpai-time { margin-top: 4px; }
+.rpai-report { margin-top: 4px; padding: 6px 4px; min-height: 28px; background: none; border: 0; font-size: 12px; color: #94a3b8; text-decoration: underline; cursor: pointer; }
 .rpai-photo { max-width: 200px; max-height: 240px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 4px; object-fit: cover; }
 .rpai-photo-note { font-size: 13px; color: #5B616E; margin-bottom: 4px; }
 
@@ -55,7 +58,6 @@ body.ai-typing #bottom-nav { display: none !important; }
 .rpai-place-head small { color: #0ea5e9; font-weight: 700; white-space: nowrap; }
 .rpai-place-meta { font-size: 13px; color: #5B616E; margin-top: 2px; overflow-wrap: anywhere; }
 .rpai-place .rpai-btns button { min-height: 40px; font-size: 14px; flex: 1; border-radius: 9px; border: 1px solid #cbd5e1; background: #fff; color: #334155; font-weight: 700; cursor: pointer; }
-.rpai-report { border: 0; background: none; color: #94a3b8; font-size: 12px; text-decoration: underline; cursor: pointer; padding: 0 2px; }
 
 /* 입력 */
 .rpai-inputwrap { background: #fff; border-top: 1px solid #e2e8f0; padding: 8px 10px; padding-bottom: calc(8px + (var(--rpai-safe, 0px))); }
