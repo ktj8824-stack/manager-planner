@@ -331,7 +331,15 @@ const Profile = {
       validate: (x) => String(x || '').trim() === '탈퇴' ? '' : "'탈퇴'라고 적어 주세요.",
     });
     if (v === null) return;
-    const r = await window.SupabaseClient.deleteMyAccount();
+    // Apple로 가입한 계정: Apple 확인을 한 번 더 받아 Apple 쪽 연결도 끊음 (애플 심사 지침)
+    let appleCode = '';
+    const u = window.SupabaseClient.currentUser;
+    const isApple = u?.app_metadata?.provider === 'apple' || (u?.app_metadata?.providers || []).includes('apple');
+    if (isApple && typeof Login !== 'undefined' && Login.appleCodeForWithdraw) {
+      appleCode = await Login.appleCodeForWithdraw();
+      if (appleCode === 'cancel') { U.toast('탈퇴를 멈췄어요.'); return; }
+    }
+    const r = await window.SupabaseClient.deleteMyAccount(appleCode);
     if (!r.ok) {
       if (r.code === 'CEO_CONTACT') {
         if (await Ask.confirm('대표 계정은 바로 지울 수 없어요\n' + r.message, { okLabel: '메일로 요청하기', cancelLabel: '닫기' })) {

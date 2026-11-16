@@ -274,8 +274,38 @@ async function deleteMember(db: SupabaseClient, caller: Caller, body: JsonObject
 //   - 같이 지워짐: 프로필, 알림 등록, 위치 기록·동의, 경비 기록과 영수증 사진, 개인 매니저의 아티스트·거점
 //   - 남음(회사 기록): 회사 일정(담당자만 비워짐), 로드톡 대화(보낸 사람만 비워짐)
 //   - 대표는 회사 전체 자료와 결제 기록(법정 5년 보관)이 걸려 있어 바로 지우지 않고 문의로 처리
+// ── Apple 연결 끊기 (코드 → 토큰 → revoke) ──
+const APPLE_CLIENT_ID = "kr.roadplanner.app";
+const APPLE_TEAM_ID = "WKR837G6CH";
+function b64url(buf: ArrayBuffer | string) {
+  const bytes = typeof buf === "string" ? new TextEncoder().encode(buf) : new Uint8Array(buf);
+  let s = ""; bytes.forEach((b) => (s += String.fromCharCode(b)));
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+async function appleClientSecret(pem: string, keyId: string, teamId: string, clientId: string) {
+  const now = Math.floor(Date.now() / 1000);
+  const der = Uint8Array.from(atob(pem.replace(/-----[^-]+-----/g, "").replace(/\s+/g, "")), (c) => c.charCodeAt(0));
+  const key = await crypto.subtle.importKey("pkcs8", der, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
+  const head = b64url(JSON.stringify({ alg: "ES256", kid: keyId }));
+  const claims = b64url(JSON.stringify({ iss: teamId, iat: now, exp: now + 300, aud: "https://appleid.apple.com", sub: clientId }));
+  const sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, new TextEncoder().encode(`${head}.${claims}`));
+  return `${head}.${claims}.${b64url(sig)}`;
+}
+async function appleRevoke(code: string, pem: string) {
+  const keyId = (Deno.env.get("APPLE_KEY_ID") || "").trim();
+  if (!keyId) return;
+  const clientId = (Deno.env.get("APPLE_CLIENT_ID") || APPLE_CLIENT_ID).trim();
+  const secret = await appleClientSecret(pem, keyId, (Deno.env.get("APPLE_TEAM_ID") || APPLE_TEAM_ID).trim(), clientId);
+  const hdr = { "Content-Type": "application/x-www-form-urlencoded" };
+  const tr = await fetch("https://appleid.apple.com/auth/token", { method: "POST", headers: hdr, body: new URLSearchParams({ client_id: clientId, client_secret: secret, code, grant_type: "authorization_code" }) });
+  const tj = await tr.json().catch(() => ({})) as Record<string, string>;
+  const token = tj.refresh_token || tj.access_token;
+  if (!token) throw new Error("apple exchange failed");
+  await fetch("https://appleid.apple.com/auth/revoke", { method: "POST", headers: hdr, body: new URLSearchParams({ client_id: clientId, client_secret: secret, token, token_type_hint: tj.refresh_token ? "refresh_token" : "access_token" }) });
+}
+
 async function deleteSelf(db: SupabaseClient, userId: string, body: JsonObject, requestId: string) {
-  onlyKeys(body, ["action", "confirm"]);
+  onlyKeys(body, ["action", "confirm", "apple_code"]);
   if (body.confirm !== "탈퇴") throw new HttpError(400, "CONFIRM_REQUIRED", "확인 글자가 맞지 않아요. '탈퇴'라고 적어 주세요.");
   const { data: me, error } = await db.from("profiles").select("id, role, company_id").eq("id", userId).maybeSingle();
   if (error) throw new HttpError(500, "PROFILE_READ_FAILED", "Could not read your profile.");
@@ -315,6 +345,13 @@ async function deleteSelf(db: SupabaseClient, userId: string, body: JsonObject, 
         });
       }
     } catch { console.error("manage-users kakao unlink failed", { requestId }); }
+  }
+  // Apple로 가입했으면 Apple 쪽 연결도 끊음 (애플 심사 지침 5.1.1(v)). 앱이 탈퇴 직전에 Apple 확인을 한 번 더 받아 code 를 보냄.
+  // 비밀값 APPLE_PRIVATE_KEY(.p8 내용)가 있을 때만. 실패해도 탈퇴는 진행
+  const appleCode = typeof body.apple_code === "string" ? body.apple_code.slice(0, 2000) : "";
+  const applePem = (Deno.env.get("APPLE_PRIVATE_KEY") || "").trim();
+  if (appleCode && applePem) {
+    try { await appleRevoke(appleCode, applePem); } catch { console.error("manage-users apple revoke failed", { requestId }); }
   }
   const { error: deleteError } = await db.auth.admin.deleteUser(userId);
   if (deleteError) {

@@ -1,5 +1,6 @@
 import SwiftUI
 import WebKit
+import AuthenticationServices
 
 /// 웹앱을 담는 화면.
 /// - 티맵·카카오내비·전화(tel:) 같은 앱 주소는 아이폰에서 해당 앱으로 엽니다.
@@ -18,6 +19,9 @@ struct RoadWebView: UIViewRepresentable {
         config.preferences.javaScriptCanOpenWindowsAutomatically = true
         // 웹 → 앱: 출발 알림 목록 (window.webkit.messageHandlers.roadplanner)
         config.userContentController.add(context.coordinator, name: "roadplanner")
+        // 웹에 "이 앱은 Apple 로그인을 할 수 있어요" 표시 (예전 앱에는 없어서 버튼이 안 보임)
+        config.userContentController.addUserScript(WKUserScript(source: "window.__rpNative = { apple: true, v: 2 };",
+                                                                injectionTime: .atDocumentStart, forMainFrameOnly: true))
 
         let web = WKWebView(frame: .zero, configuration: config)
         web.navigationDelegate = context.coordinator
@@ -47,11 +51,16 @@ struct RoadWebView: UIViewRepresentable {
 
     final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
         weak var webView: WKWebView?
+        private let apple = AppleSignIn()
 
         // 웹이 보낸 출발 알림 목록을 아이폰 알림으로 예약
         func userContentController(_ ucc: WKUserContentController, didReceive message: WKScriptMessage) {
             guard let body = message.body as? [String: Any], let type = body["type"] as? String else { return }
             if type == "reminders", let items = body["items"] as? [[String: Any]] { Reminders.replaceAll(items) }
+            if type == "appleLogin" {
+                apple.webView = webView
+                apple.start(nonce: body["nonce"] as? String, wantNameEmail: (body["scopes"] as? Bool) ?? true)
+            }
         }
 
         @objc func reload(_ sender: UIRefreshControl) {
@@ -152,6 +161,53 @@ struct RoadWebView: UIViewRepresentable {
             </body></html>
             """
             webView.loadHTMLString(html, baseURL: nil)
+        }
+    }
+}
+
+// MARK: - Apple 로그인
+/// 웹이 { type: "appleLogin", nonce, scopes } 를 보내면 Apple 확인 창을 띄우고,
+/// 결과를 window.__rpAppleDone({ idToken, code, name, email } 또는 { error }) 로 돌려줌
+final class AppleSignIn: NSObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
+    weak var webView: WKWebView?
+
+    func start(nonce: String?, wantNameEmail: Bool) {
+        let req = ASAuthorizationAppleIDProvider().createRequest()
+        if wantNameEmail { req.requestedScopes = [.fullName, .email] }
+        if let n = nonce, !n.isEmpty { req.nonce = n }
+        let c = ASAuthorizationController(authorizationRequests: [req])
+        c.delegate = self
+        c.presentationContextProvider = self
+        c.performRequests()
+    }
+
+    func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        if let w = webView?.window { return w }
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        return scenes.flatMap { $0.windows }.first { $0.isKeyWindow } ?? scenes.first!.windows.first!
+    }
+
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+        guard let cred = authorization.credential as? ASAuthorizationAppleIDCredential else { send(["error": "fail"]); return }
+        var r: [String: Any] = [:]
+        if let t = cred.identityToken, let s = String(data: t, encoding: .utf8) { r["idToken"] = s }
+        if let c = cred.authorizationCode, let s = String(data: c, encoding: .utf8) { r["code"] = s }
+        let name = [cred.fullName?.familyName, cred.fullName?.givenName].compactMap { $0 }.joined()
+        if !name.isEmpty { r["name"] = name }
+        if let e = cred.email { r["email"] = e }
+        send(r)
+    }
+
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+        let canceled = (error as? ASAuthorizationError)?.code == .canceled
+        send(["error": canceled ? "cancel" : "fail"])
+    }
+
+    private func send(_ r: [String: Any]) {
+        guard let data = try? JSONSerialization.data(withJSONObject: r),
+              let json = String(data: data, encoding: .utf8) else { return }
+        DispatchQueue.main.async {
+            self.webView?.evaluateJavaScript("window.__rpAppleDone && window.__rpAppleDone(\(json))", completionHandler: nil)
         }
     }
 }

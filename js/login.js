@@ -77,6 +77,10 @@ const Login = {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="#191600" aria-hidden="true"><path d="M12 3C6.48 3 2 6.47 2 10.75c0 2.76 1.84 5.17 4.67 6.49-.15.54-.53 1.96-.6 2.27-.08.35.12.35.3.23.14-.09 1.94-1.32 2.75-1.89.92.26 1.88.4 2.88.4 5.52 0 10-3.47 10-7.75S17.52 3 12 3z"/></svg>
               카카오로 시작하기
             </button>
+            ${Login.appleAvailable() ? `<button class="btn-social btn-apple lg-primary" onclick="Login.doAppleLogin()" style="background:#000; color:#fff; box-shadow:none;">
+              <svg width="18" height="20" viewBox="0 0 17 20" fill="#fff" aria-hidden="true"><path d="M14.1 10.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8s2 .8 3.3.8c1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9 0 0-2.7-1-2.7-4zM11.6 3c.7-.9 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.2.1 2.3-.6 3.1-1.5z"/></svg>
+              Apple로 계속하기
+            </button>` : ''}
             <div id="google_btn_wrapper"></div>
             <div class="lg-hint">${window.PROMO && PROMO.isFree() ? '출시 기념 · ' + PROMO.text() + ' (모든 기능)' : '아티스트 1명까지 무료예요'}</div>
           </div>
@@ -175,6 +179,76 @@ const Login = {
   },
 
   doKakaoLogin() { return this.startOAuth('kakao'); },
+
+  // ── Apple 로그인 (아이폰 앱 안에서만. 앱이 Apple 확인 창을 띄우고 받은 표를 서버에 넘김) ──
+  appleAvailable() {
+    return !!(window.__rpNative && window.__rpNative.apple && window.webkit?.messageHandlers?.roadplanner);
+  },
+
+  // 아이폰 앱에 Apple 확인 창을 부탁하고 결과를 기다림: { idToken, code, name, email } 또는 { error: 'cancel' | 'fail' }
+  _nativeApple(opts) {
+    return new Promise((resolve) => {
+      const done = (r) => { clearTimeout(t); window.__rpAppleDone = null; resolve(r && typeof r === 'object' ? r : { error: 'fail' }); };
+      const t = setTimeout(() => done({ error: 'timeout' }), 180000);
+      window.__rpAppleDone = done;
+      try { window.webkit.messageHandlers.roadplanner.postMessage({ type: 'appleLogin', ...opts }); }
+      catch (e) { done({ error: 'fail' }); }
+    });
+  },
+
+  _randomNonce() {
+    const a = new Uint8Array(24); crypto.getRandomValues(a);
+    return Array.from(a, (b) => b.toString(16).padStart(2, '0')).join('');
+  },
+
+  async _sha256Hex(text) {
+    const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(d), (b) => b.toString(16).padStart(2, '0')).join('');
+  },
+
+  async doAppleLogin() {
+    if (this._appleBusy) return;
+    this._appleBusy = true;
+    try {
+      const sc = window.SupabaseClient;
+      if (!sc?.isConfigured || !this.appleAvailable()) throw new Error('unavailable');
+      // 애플에는 해시한 값을, 서버에는 원래 값을 보냄 (중간에서 표를 가로채 다시 쓰지 못하게)
+      const raw = this._randomNonce();
+      const r = await this._nativeApple({ nonce: await this._sha256Hex(raw), scopes: true });
+      if (r.error === 'cancel') return;
+      if (!r.idToken) throw new Error(r.error || 'no_token');
+      const { error } = await sc.client.auth.signInWithIdToken({ provider: 'apple', token: r.idToken, nonce: raw });
+      if (error) throw error;
+      const session = await sc.getCurrentSession();
+      if (!session?.user || !session.profile) throw new Error('no_profile');
+      // Apple은 이름을 처음 한 번만 알려 줌 → 그때 내 이름으로 저장
+      const name = String(r.name || '').trim().slice(0, 40);
+      if (name && session.profile.name !== name) {
+        try {
+          const { error: ne } = await sc.client.from('profiles').update({ name }).eq('id', session.user.id);
+          if (!ne) { session.profile.name = name; if (sc.currentProfile) sc.currentProfile.name = name; }
+        } catch (e) { }
+      }
+      this.finishLogin('supabase', { ...session.profile, id: session.user.id, email: session.user.email });
+      try { localStorage.setItem('bp_provider', 'apple'); } catch (e) { }
+    } catch (error) {
+      const raw = String(error?.message || error || '');
+      console.warn('Apple 로그인 오류:', raw);
+      if (/provider.*(not enabled|disabled)|unsupported provider/i.test(raw)) U.toast('Apple 로그인은 아직 준비 중이에요. 곧 열어 드릴게요.');
+      else if (navigator.onLine === false || /failed to fetch|network|load failed/i.test(raw)) U.toast('인터넷 연결을 확인해 주세요.');
+      else U.toast('Apple 로그인을 하지 못했어요. 잠시 후 다시 해 주세요.');
+    } finally {
+      this._appleBusy = false;
+    }
+  },
+
+  // 회원 탈퇴 직전: Apple 확인을 한 번 더 받아 연결 끊기용 코드를 받음 → 'cancel' | 코드 | '' (못 받음, 탈퇴는 계속)
+  async appleCodeForWithdraw() {
+    if (!this.appleAvailable()) return '';
+    const r = await this._nativeApple({ scopes: false });
+    if (r.error === 'cancel') return 'cancel';
+    return typeof r.code === 'string' ? r.code : '';
+  },
 
   finishLogin(provider, user) {
     const verified = window.SupabaseClient?.currentUser;
