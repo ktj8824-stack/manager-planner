@@ -523,7 +523,11 @@ const App = {
   showHqToast(noti) {
     if (!noti || !noti.content) return;
     this._toasted = this._toasted || new Set();
-    if (noti.id) { if (this._toasted.has(noti.id)) return; this._toasted.add(noti.id); }
+    if (noti.id) {
+      // 한 번 띄운 공지는 폰에 기록 → 다시 로그인하거나 앱을 다시 열어도 또 뜨지 않음
+      if (this._toasted.has(noti.id) || this._wasToasted(noti.id)) return;
+      this._toasted.add(noti.id); this._rememberToasted(noti.id);
+    }
     setTimeout(() => { try { this.updateNoticeBadge(); if (window.Talk && State.screen === 'talk') { Talk.draw(); if (Talk.online()) Talk.load(); } } catch (e) { } }, 0);
     const container = document.getElementById('hq-toast-container');
     if (!container) return;
@@ -570,6 +574,17 @@ const App = {
     }
   },
 
+  _wasToasted(id) {
+    try { return (JSON.parse(localStorage.getItem('bp_toasted_notices') || '[]') || []).includes(id); } catch (e) { return false; }
+  },
+  _rememberToasted(ids) {
+    try {
+      const a = JSON.parse(localStorage.getItem('bp_toasted_notices') || '[]') || [];
+      const add = (Array.isArray(ids) ? ids : [ids]).filter(x => x && !a.includes(x));
+      if (add.length) localStorage.setItem('bp_toasted_notices', JSON.stringify([...a, ...add].slice(-300)));
+    } catch (e) { }
+  },
+
   // ── 공지 읽음 표시 / 자동 갱신 ──
   _myNoticeTarget() {
     return localStorage.getItem('bp_user_id') || localStorage.getItem('bp_manager_id') || window.SupabaseClient?.currentUser?.id || '';
@@ -608,7 +623,10 @@ const App = {
     if (this._autoSyncStarted) return;
     this._autoSyncStarted = true;
     this._knownNotices = new Set(this._myNotices().map(n => n.id));
+    this._rememberToasted([...this._knownNotices]);
     this._toasted = this._toasted || new Set();
+    // 로그인 전에 이미 있던 공지는 팝업으로 다시 띄우지 않음 (로드톡 공지 탭에는 그대로 있음)
+    const since = Date.now() - 2 * 60 * 1000;
     const run = async () => {
       if (document.hidden || this._autoSyncBusy || navigator.onLine === false) return;
       if (!window.SupabaseClient?.currentUser) return;
@@ -618,6 +636,8 @@ const App = {
         for (const n of this._myNotices()) {
           if (this._knownNotices.has(n.id)) continue;
           this._knownNotices.add(n.id);
+          const at = Date.parse(n.at || '') || 0;
+          if (at && at < since) { this._rememberToasted(n.id); continue; }
           if (!this._toasted.has(n.id)) this.showHqToast({ id: n.id, title: n.title, content: n.content, isUrgent: n.urgent, targetId: n.targetId });
         }
         this.refreshActiveScreens();

@@ -1518,7 +1518,7 @@ const Home = {
       const groups = [
         ['내 기본 출발지', pick(defaultDep(), 1)],
         ['등록된 샵 · 숙소 · 사옥', pick(registered(), 6)],
-        ['최근 쓴 장소', pick(recent(), 4)],
+        ['최근 쓴 장소', kind === 'dep' ? [] : pick(recent(), 4)],
         ['지난 일정에서', kind === 'loc' ? pick(fromSchedules(), 4) : []],
       ].filter(g => g[1].length);
       if (!groups.length) { close(); return; }
