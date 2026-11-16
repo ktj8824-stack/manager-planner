@@ -1,7 +1,9 @@
 // 결제: 서버가 금액·주문번호를 정하는지 / 결제 결과는 서버 승인 응답으로만 성공 / 알림 켜기 안내 카드
 const { chromium } = require('playwright');
+const { payOpen } = require('./_pay-open.cjs');
 (async () => {
   const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+  await payOpen(ctx);   // 무료 기간에도 '결제가 열린 뒤'를 시험
   const p = await ctx.newPage();
   const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('dialog', d => d.dismiss());
   const stub = (body) => (r) => r.fulfill({ status: 200, contentType: 'application/javascript', body });

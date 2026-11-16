@@ -32,10 +32,11 @@ const Artists = {
       </div>
       <div class="screen-scroll" style="padding:12px 16px 24px;">
         <div class="art-plan ${paid ? 'paid' : ''}">
-          ${paid ? `유료 사용 중 · 아티스트 여러 명 등록 가능 ${Plan.untilText() ? `(${Plan.untilText()})` : ''}`
+          ${Plan.isFree() && !Plan.hasPaid() ? `🎁 ${esc(window.PROMO.text())} · 아티스트 여러 명 등록 가능`
+            : paid ? `유료 사용 중 · 아티스트 여러 명 등록 가능 ${Plan.untilText() ? `(${Plan.untilText()})` : ''}`
                  : `무료는 아티스트 ${Plan.FREE_ARTISTS}명까지예요. <button type="button" onclick="App.navigate('upgrade')">유료 알아보기</button>`}
         </div>
-        <div class="art-count">등록 <b>${items.length}${paid ? '' : ` / ${Plan.FREE_ARTISTS}`}명</b> · ${paid ? '유료' : '무료'}</div>
+        <div class="art-count">등록 <b>${items.length}${paid ? '' : ` / ${Plan.FREE_ARTISTS}`}명</b> · ${Plan.isFree() && !Plan.hasPaid() ? '무료 기간' : paid ? '유료' : '무료'}</div>
         ${items.length ? items.map(a => {
           const nx = this.nextOf(a.id);
           return `

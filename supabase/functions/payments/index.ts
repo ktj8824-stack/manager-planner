@@ -58,6 +58,11 @@ Deno.serve(async (req) => {
         const r = must(await db.from("payments").select("period_end").eq("user_id", uid).eq("plan", "pro").eq("status", "DONE").order("period_end", { ascending: false }).limit(1)) as { period_end: string }[];
         return r?.[0]?.period_end || null;
       },
+      // 결제 스위치 (DB app_settings 'pay_open'). 읽지 못하면 안전하게 '닫힘'(무료)으로
+      payOpen: async () => {
+        const r = await db.from("app_settings").select("value").eq("key", "pay_open").maybeSingle();
+        return !r.error && r.data?.value === "true";
+      },
       recentPayments: async (cid: string) => must(await db.from("payments").select("order_id, plan, kind, add_slots, amount, status, method, approved_at, period_end, mode, created_at").eq("company_id", cid).neq("status", "READY").order("created_at", { ascending: false }).limit(12)),
     };
     const toss = async (paymentKey: string, orderId: string, amount: number) => {

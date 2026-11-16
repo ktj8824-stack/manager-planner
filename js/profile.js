@@ -100,7 +100,7 @@ const Profile = {
             <span class="me-avatar">${esc(userName.slice(0, 1) || '나')}</span>
             <span class="me-prof-txt">
               <span class="me-name">${esc(userName)}</span>
-              <span class="me-sub">${indie ? `개인 매니저 · ${paid ? '유료' : '무료'}` : esc([userCompany, userDept].filter(Boolean).join(' · '))}</span>
+              <span class="me-sub">${indie ? `개인 매니저 · ${Plan.isFree() && !Plan.hasPaid() ? '무료 기간' : paid ? '유료' : '무료'}` : esc([userCompany, userDept].filter(Boolean).join(' · '))}</span>
               ${userEmail ? `<span class="me-sub" style="font-size:12px;">${esc(userEmail)}</span>` : ''}
             </span>
           </div>
@@ -111,13 +111,21 @@ const Profile = {
         </section>
 
         ${indie ? `
+        ${Plan.isFree() && !Plan.hasPaid() ? `
+        <section class="me-plan paid">
+          <span class="me-row-txt">
+            <span class="me-row-label" style="font-weight:800;">🎁 ${esc(window.PROMO.text())}</span>
+            <span class="me-row-sub">출시 기념으로 로드비서·자동 길안내·교통 예측·아티스트 여러 명·경비 기록을 모두 쓸 수 있어요.</span>
+          </span>
+          <button type="button" onclick="App.navigate('upgrade')">자세히</button>
+        </section>` : `
         <section class="me-plan ${paid ? 'paid' : ''}">
           <span class="me-row-txt">
             <span class="me-row-label" style="font-weight:800;">${paid ? `유료 사용 중 ${esc(Plan.untilText())}` : '무료로 쓰는 중'}</span>
             <span class="me-row-sub">${paid ? '로드비서·자동 길안내·교통 예측·아티스트 여러 명·경비 기록' : `월 ${Plan.FEE.toLocaleString()}원이면 로드비서·자동 길안내·교통 예측·경비 기록을 모두 쓸 수 있어요.`}</span>
           </span>
           <button type="button" onclick="App.navigate('upgrade')">${paid ? '연장하기' : '유료 알아보기'}</button>
-        </section>` : ''}
+        </section>`}` : ''}
 
         <!-- 업무 -->
         <section class="me-group">
@@ -159,6 +167,7 @@ const Profile = {
             ${row('계정 전환', '', chev, 'Profile.switchAccount()')}
             ${row('<span style="color:#dc2626;">로그아웃</span>', '', '', 'Profile.logout()', 'me-logout')}
           </div>
+          <button type="button" class="me-withdraw" onclick="Profile.withdraw()" style="display:block;margin:14px auto 0;background:none;border:0;padding:8px 12px;color:#94a3b8;font-size:13px;text-decoration:underline;cursor:pointer;font-family:inherit;">회원 탈퇴</button>
           <div class="me-foot">
             <button type="button" onclick="Profile.showVersion()">v1.0.0</button> ·
             <button type="button" onclick="window.open('./terms.html', '_blank', 'noopener')">이용약관</button> ·
@@ -299,6 +308,48 @@ const Profile = {
     if (!(await Ask.confirm('다른 계정으로 로그인할까요?\n지금 계정은 로그아웃돼요.', { okLabel: '로그아웃' }))) return;
     try { sessionStorage.setItem('rp_fresh_login', '1'); } catch (e) { }
     await this.logout(true);
+  },
+
+  // 회원 탈퇴 (앱스토어·구글 플레이 규정: 앱 안에서 계정을 지울 수 있어야 함)
+  //   '탈퇴'라고 적어야 지워짐. 대표 계정은 서버가 거절 → 메일로 요청 안내
+  async withdraw() {
+    if (localStorage.getItem('bp_logged_in') !== 'true' || !window.SupabaseClient?.isConfigured) {
+      await Ask.alert('둘러보기에서는 지울 계정이 없어요.\n실제 계정으로 로그인하면 여기서 바로 탈퇴할 수 있어요.');
+      return;
+    }
+    const indie = typeof Plan !== 'undefined' && Plan.isIndie();
+    const what = indie
+      ? '내 계정과 함께 내 일정·아티스트·차량·경비 기록(영수증 사진 포함)·샵·숙소 목록·알림 설정·위치 기록이 모두 지워져요.'
+      : '내 계정과 함께 내 경비 기록(영수증 사진 포함)·알림 설정·위치 기록이 지워져요.\n회사 일정과 로드톡 대화는 회사 기록이라 남고, 담당자·보낸 사람 이름만 비워져요.';
+    const v = await Ask.text({
+      title: '회원 탈퇴',
+      desc: `${what}\n\n지운 정보는 되돌릴 수 없어요.\n계속하려면 아래 칸에 '탈퇴'라고 적어 주세요.`,
+      placeholder: '탈퇴',
+      okLabel: '탈퇴하기',
+      danger: true,
+      max: 10,
+      validate: (x) => String(x || '').trim() === '탈퇴' ? '' : "'탈퇴'라고 적어 주세요.",
+    });
+    if (v === null) return;
+    const r = await window.SupabaseClient.deleteMyAccount();
+    if (!r.ok) {
+      if (r.code === 'CEO_CONTACT') {
+        if (await Ask.confirm('대표 계정은 바로 지울 수 없어요\n' + r.message, { okLabel: '메일로 요청하기', cancelLabel: '닫기' })) {
+          location.href = 'mailto:support@roadplanner.kr?subject=' + encodeURIComponent('로드플래너 대표 계정 탈퇴 요청') + '&body=' + encodeURIComponent('아이디(이메일): ' + (localStorage.getItem('bp_user_email') || '') + '\n회사 이름: ' + (localStorage.getItem('bp_company_name') || '') + '\n');
+        }
+        return;
+      }
+      await Ask.alert('탈퇴하지 못했어요\n' + r.message);
+      return;
+    }
+    // 이 기기에 남은 내 정보도 정리하고 로그인 화면으로
+    try { if (localStorage.getItem('bp_provider') === 'kakao' && typeof Kakao !== 'undefined' && Kakao.Auth) Kakao.Auth.logout(() => { }); } catch (e) { }
+    try {
+      Object.keys(localStorage).filter(k => /^(bp_|rp_|HQ_)/.test(k)).forEach(k => localStorage.removeItem(k));
+    } catch (e) { }
+    try { Profile._planChecked = false; } catch (e) { }
+    await Ask.alert('계정을 지웠어요\n그동안 로드플래너를 써 주셔서 감사합니다.');
+    App.navigate('login');
   },
 
   async logout(skipConfirm = false) {

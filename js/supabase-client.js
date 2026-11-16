@@ -142,6 +142,23 @@ const SupabaseClient = {
     return { user: data.user, profile: this.currentProfile };
   },
 
+  // 회원 탈퇴: 로그인한 본인 계정을 서버에서 지움 (대표는 서버가 CEO_CONTACT 로 거절 → 문의 안내)
+  //   돌려주는 값: { ok: true } 또는 { ok: false, code, message }
+  async deleteMyAccount() {
+    if (!this.isConfigured || !this.client) return { ok: false, code: 'OFFLINE', message: '서버에 연결되지 않았어요. 잠시 후 다시 해 주세요.' };
+    const { data: s } = await this.client.auth.getSession();
+    if (!s?.session) return { ok: false, code: 'NO_LOGIN', message: '로그인한 뒤에 탈퇴할 수 있어요.' };
+    const { data, error } = await this.client.functions.invoke('manage-users', { body: { action: 'delete_self', confirm: '탈퇴' } });
+    if (error) {
+      let code = '', message = '';
+      try { const j = await error.context?.clone?.().json(); code = j?.error?.code || ''; message = j?.error?.message || ''; } catch (e) { }
+      return { ok: false, code: code || 'FAILED', message: message || '탈퇴하지 못했어요. 잠시 후 다시 해 주세요.' };
+    }
+    if (!data?.deleted) return { ok: false, code: 'FAILED', message: '탈퇴하지 못했어요. 잠시 후 다시 해 주세요.' };
+    try { await this.signOut(); } catch (e) { }   // 계정이 이미 없어도 이 기기의 로그인은 정리
+    return { ok: true };
+  },
+
   async signOut() {
     if (this.isConfigured && this.client) {
       // 이전 계정의 실시간 구독을 모두 정리 (다음 계정 로그인 때 '이미 구독 중' 오류 방지)

@@ -77,10 +77,33 @@
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 <script src="js/icons.js?v=354"></script>
+<script src="js/site-config.js?v=354"></script>
 </head>
 <body>
 <div id="test-banner" style="position:sticky;top:0;z-index:9999;width:100%;background:#f59e0b;color:#1f1300;text-align:center;font:700 13px/1.4 Pretendard,sans-serif;padding:8px 12px;">🧪 테스트 결제 — 실제 결제되지 않습니다 (카드가 청구되지 않아요)</div>
-<div class="page-wrap">
+<div id="free-notice" class="page-wrap" hidden>
+  <div class="pay-header">
+    <button class="pay-back-btn" onclick="history.back()" aria-label="뒤로">&#8592;</button>
+    <div><div class="pay-header-title">요금 안내</div></div>
+  </div>
+  <div class="card" style="text-align:center; padding:26px 20px;">
+    <div style="font-size:13px; font-weight:800; color:#047857;">출시 기념</div>
+    <div id="free-notice-title" style="font-size:22px; font-weight:800; color:#065f46; margin-top:6px;"></div>
+    <p id="free-notice-line" style="font-size:15px; color:#334155; line-height:1.7; margin:12px 0 0;"></p>
+    <p style="font-size:13px; color:#64748b; line-height:1.7; margin:14px 0 0;">무료 기간이 끝나기 전에 요금과 결제 방법을 미리 알려 드려요.<br>그때까지 결제 정보는 받지 않고, 자동으로 결제되지도 않아요.</p>
+  </div>
+</div>
+<script>
+  // 출시 기념 무료 기간: 결제 화면 대신 안내 (돈이 나갈 길은 서버 payments 도 막음)
+  window.__PAY_CLOSED = !!(window.PROMO && window.PROMO.isFree() && !new URLSearchParams(location.search).get('paymentKey'));
+  if (window.__PAY_CLOSED) {
+    document.getElementById('free-notice').hidden = false;
+    document.getElementById('free-notice-title').textContent = window.PROMO.text();
+    document.getElementById('free-notice-line').textContent = window.PROMO.line();
+    var tb = document.getElementById('test-banner'); if (tb) tb.remove();
+  }
+</script>
+<div class="page-wrap" id="pay-main">
   <div class="pay-header">
     <button class="pay-back-btn" onclick="history.back()" aria-label="뒤로">&#8592;</button>
     <div>
@@ -349,7 +372,7 @@
 
   // 서버 견적으로 금액을 다시 맞춤 (회사 요금제: 이용 중 자리 추가면 일할 금액)
   (async () => {
-    if (isProPlan) return;
+    if (isProPlan || window.__PAY_CLOSED) return;
     try {
       const r = await SupabaseClient.invokePayments({ action: 'quote', plan: 'standard', addSlots });
       if (r && r.amount) {
@@ -376,7 +399,8 @@
   }
 
   if (IS_DEV_HOST) { const m = document.getElementById('btn-mock'); if (m) m.hidden = false; }
-  initTossWidget();
+  if (window.__PAY_CLOSED) document.getElementById('pay-main').hidden = true;
+  else initTossWidget();
 
   function checkVaFields() {
     const type = (document.querySelector('input[name="receipt-type"]:checked') || {}).value;

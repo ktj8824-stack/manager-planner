@@ -1,7 +1,9 @@
 // 차량관리(개인 매니저 아래 메뉴, 로드비서 오른쪽): 무료는 차량 등록만, 경비 기록은 잠김 · 유료는 경비 화면 전체 + 주유·정비 바로 추가 · 회사 매니저는 '정비·세차' 항목 안 보임
 const { chromium, devices } = require('playwright');
+const { payOpen } = require('./_pay-open.cjs');
 (async () => {
   const b = await chromium.launch(); const p = await (await b.newContext({ ...devices['iPhone 14'] })).newPage();
+  await payOpen(p);   // 무료 기간에도 '결제가 열린 뒤'를 시험
   const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('dialog', d => d.dismiss());
   await p.addInitScript(() => { sessionStorage.setItem('rp_splash_shown', '1'); window.__noAds = 1; });
   await p.route(/^https?:\/\/(?!127\.0\.0\.1|localhost|0\.0\.0\.0)/, r => r.request().url().endsWith('.js') ? r.fulfill({ status: 200, contentType: 'application/javascript', body: '' }) : r.abort());

@@ -78,7 +78,7 @@ const Login = {
               카카오로 시작하기
             </button>
             <div id="google_btn_wrapper"></div>
-            <div class="lg-hint">아티스트 1명까지 무료예요</div>
+            <div class="lg-hint">${window.PROMO && PROMO.isFree() ? '출시 기념 · ' + PROMO.text() + ' (모든 기능)' : '아티스트 1명까지 무료예요'}</div>
           </div>
         </div>
 

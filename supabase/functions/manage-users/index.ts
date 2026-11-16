@@ -140,6 +140,8 @@ async function targetProfile(db: SupabaseClient, id: string, caller: Caller) {
   if (!data) throw new HttpError(404, "TARGET_NOT_FOUND", "A manager or staff member in your company was not found.");
   return data;
 }
+// 출시 기념 무료 기간에는 유료에서 고를 수 있는 최대 인원(기본 2 + 추가 50)까지 결제 없이 (결제 서버 payments 와 같은 숫자)
+const FREE_PERIOD_EXTRA_SLOTS = 50;
 // 회사의 허용 인원 = 기본 2명 + 운영자가 companies.extra_manager_slots 에 넣어 준 추가 슬롯
 async function slotUsage(db: SupabaseClient, companyId: string) {
   const { data: company, error: companyError } = await db.from("companies").select("extra_manager_slots").eq("id", companyId).maybeSingle();
@@ -147,7 +149,10 @@ async function slotUsage(db: SupabaseClient, companyId: string) {
   const { count, error } = await db.from("profiles").select("id", { count: "exact", head: true })
     .eq("company_id", companyId).in("role", MEMBER_ROLES);
   if (error || count === null) throw new HttpError(500, "SLOT_CHECK_FAILED", "Could not verify manager slots.");
-  const extra = Math.max(0, Number(company.extra_manager_slots) || 0);
+  // 결제 스위치(app_settings 'pay_open')가 'true'가 아니면 무료 기간
+  const { data: sw } = await db.from("app_settings").select("value").eq("key", "pay_open").maybeSingle();
+  const free = sw?.value !== "true";
+  const extra = free ? FREE_PERIOD_EXTRA_SLOTS : Math.max(0, Number(company.extra_manager_slots) || 0);
   return { used: count, total: BASE_MANAGER_SLOTS + extra };
 }
 function slotFull(): HttpError {
@@ -264,6 +269,61 @@ async function deleteMember(db: SupabaseClient, caller: Caller, body: JsonObject
   return { success: true };
 }
 
+// 회원 탈퇴: 로그인한 본인 계정을 지움 (매니저·스태프·개인 매니저·본사 관리자)
+//   - 앱스토어·구글 플레이 규정: 앱 안에서 계정을 지울 수 있어야 함
+//   - 같이 지워짐: 프로필, 알림 등록, 위치 기록·동의, 경비 기록과 영수증 사진, 개인 매니저의 아티스트·거점
+//   - 남음(회사 기록): 회사 일정(담당자만 비워짐), 로드톡 대화(보낸 사람만 비워짐)
+//   - 대표는 회사 전체 자료와 결제 기록(법정 5년 보관)이 걸려 있어 바로 지우지 않고 문의로 처리
+async function deleteSelf(db: SupabaseClient, userId: string, body: JsonObject, requestId: string) {
+  onlyKeys(body, ["action", "confirm"]);
+  if (body.confirm !== "탈퇴") throw new HttpError(400, "CONFIRM_REQUIRED", "확인 글자가 맞지 않아요. '탈퇴'라고 적어 주세요.");
+  const { data: me, error } = await db.from("profiles").select("id, role, company_id").eq("id", userId).maybeSingle();
+  if (error) throw new HttpError(500, "PROFILE_READ_FAILED", "Could not read your profile.");
+  if (me?.role === "ceo") {
+    throw new HttpError(409, "CEO_CONTACT", "대표 계정은 회사 전체 자료와 결제 기록이 연결돼 있어 바로 지울 수 없어요. support@roadplanner.kr 로 탈퇴를 요청해 주시면 3영업일 안에 처리해 드려요.");
+  }
+  // 회사 없는 개인 매니저: 일정도 본인 자료라 함께 지움 (회사 매니저의 일정은 회사 기록이라 남김)
+  if (me && !me.company_id) {
+    const { error: schedError } = await db.from("schedules").delete().or(`created_by.eq.${userId},manager_id.eq.${userId}`);
+    if (schedError) {
+      console.error("manage-users indie schedule cleanup failed", { requestId });
+      throw new HttpError(500, "CLEANUP_FAILED", "일정을 지우지 못해 탈퇴를 멈췄어요. 잠시 후 다시 해 주세요.");
+    }
+  }
+  // 내 영수증 사진 (expense-receipts/<내 아이디>/...)
+  try {
+    const bucket = db.storage.from("expense-receipts");
+    for (let i = 0; i < 20; i++) {
+      const { data: files, error: listError } = await bucket.list(userId, { limit: 1000 });
+      if (listError || !files?.length) break;
+      const { error: rmError } = await bucket.remove(files.map((f) => `${userId}/${f.name}`));
+      if (rmError) break;
+    }
+  } catch { console.error("manage-users receipt cleanup failed", { requestId }); }
+  // 카카오로 가입했으면 카카오 쪽 연결도 끊음 (비밀값 KAKAO_ADMIN_KEY 가 있을 때만. 실패해도 탈퇴는 진행)
+  const kakaoAdminKey = (Deno.env.get("KAKAO_ADMIN_KEY") || "").trim();
+  if (kakaoAdminKey) {
+    try {
+      const { data: found } = await db.auth.admin.getUserById(userId);
+      const ident = found?.user?.identities?.find((i) => i.provider === "kakao");
+      const kakaoId = String((ident?.identity_data as Record<string, unknown> | undefined)?.provider_id ?? (ident?.identity_data as Record<string, unknown> | undefined)?.sub ?? "");
+      if (/^\d+$/.test(kakaoId)) {
+        await fetch("https://kapi.kakao.com/v1/user/unlink", {
+          method: "POST",
+          headers: { Authorization: `KakaoAK ${kakaoAdminKey}`, "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ target_id_type: "user_id", target_id: kakaoId }),
+        });
+      }
+    } catch { console.error("manage-users kakao unlink failed", { requestId }); }
+  }
+  const { error: deleteError } = await db.auth.admin.deleteUser(userId);
+  if (deleteError) {
+    console.error("manage-users self delete failed", { requestId });
+    throw authFailure(deleteError);
+  }
+  return { success: true, deleted: true };
+}
+
 Deno.serve(async (req: Request): Promise<Response> => {
   const requestId = crypto.randomUUID();
   const headers = new Headers({ "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", "Vary": "Origin", "X-Content-Type-Options": "nosniff" });
@@ -304,12 +364,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
       if (authError && (authError.status ?? 0) >= 500) throw new HttpError(503, "AUTH_UNAVAILABLE", "Could not validate authentication.");
       throw new HttpError(401, "UNAUTHORIZED", "User access token is invalid or expired.");
     }
-    const caller = await callerProfile(db, authData.user.id);
     const body = await readBody(req);
+    // 회원 탈퇴는 누구나 본인 계정만 (본사 권한 검사 전에 처리)
+    if (body.action === "delete_self") return json(await deleteSelf(db, authData.user.id, body, requestId));
+    const caller = await callerProfile(db, authData.user.id);
     if (body.action === "create") return json(await createMember(db, caller, body, requestId), 201);
     if (body.action === "update") return json(await updateMember(db, caller, body, requestId));
     if (body.action === "delete") return json(await deleteMember(db, caller, body, requestId));
-    throw new HttpError(400, "INVALID_ACTION", "Action must be create, update or delete.");
+    throw new HttpError(400, "INVALID_ACTION", "Action must be create, update, delete or delete_self.");
   } catch (failure) {
     const error = failure instanceof HttpError ? failure : new HttpError(500, "INTERNAL_ERROR", "An internal server error occurred.");
     if (!(failure instanceof HttpError)) console.error("manage-users internal failure", { requestId });

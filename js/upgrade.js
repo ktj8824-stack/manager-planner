@@ -19,6 +19,23 @@ const Upgrade = {
       return;
     }
 
+    // 출시 기념 무료 기간: 가격·결제 버튼 없이 안내만 (결제 정보를 받지 않음)
+    if (Plan.isFree() && !Plan.hasPaid()) {
+      const feats = Object.values(Plan.FEATURES).map(t => `<li style="margin:6px 0;">${esc(t)}</li>`).join('');
+      el.innerHTML = `<div class="header"><button class="header-btn" onclick="App.navigate('profile')"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button><h1 class="header-title">요금제</h1><div class="header-btn" style="visibility:hidden"></div></div>
+        <div class="screen-scroll" style="padding:20px;">
+          <div style="background:#ecfdf5; border-radius:16px; padding:20px 18px; text-align:center;">
+            <div style="font-size:13px; font-weight:800; color:#047857; letter-spacing:.02em;">출시 기념</div>
+            <div style="font-size:21px; font-weight:800; color:#065f46; margin-top:6px;">${esc(window.PROMO.text())}</div>
+            <div style="font-size:14px; color:#065f46; margin-top:8px; line-height:1.6;">결제 없이 모든 기능을 그대로 쓸 수 있어요.</div>
+          </div>
+          <h3 class="upg-feature-title" style="margin-top:22px;">지금 쓸 수 있는 기능</h3>
+          <ul style="font-size:15px; color:var(--text-200); padding-left:20px; margin:6px 0 0; line-height:1.5;">${feats}</ul>
+          <p style="font-size:13px; color:var(--text-400); margin-top:18px; line-height:1.7;">무료 기간이 끝나기 전에 요금과 결제 방법을 미리 알려 드려요.<br>그때까지 결제 정보는 받지 않고, 자동으로 결제되지도 않아요.</p>
+        </div>`;
+      return;
+    }
+
     el.innerHTML = `
       <div class="header" style="background:transparent; border-bottom:none; position:absolute; width:100%; z-index:10;">
         <button class="header-btn" onclick="App.navigate('profile')" style="background:rgba(0,0,0,0.3); border-color:rgba(255,255,255,0.1);">

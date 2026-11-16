@@ -1,5 +1,6 @@
 // 경비 기록: 앱(둘러보기=기기 저장) 등록·합계·일정 카드에서 열기·복사 / 개인 매니저 무료 잠금 / 본사 '경비 정산' 모아 보기·XSS
 const { chromium, devices } = require('playwright');
+const { payOpen } = require('./_pay-open.cjs');
 const { autoAsk, asked } = require('./_ask-auto.cjs');
 (async () => {
   const base = process.argv[2];
@@ -7,6 +8,7 @@ const { autoAsk, asked } = require('./_ask-auto.cjs');
   const R = {}; const errs = [];
   // ── 앱 ──
   const ctx = await b.newContext({ ...devices['iPhone 14'] });
+  await payOpen(ctx);   // 무료 기간에도 '결제가 열린 뒤'를 시험
   await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base });
   const p = await ctx.newPage(); p.on('pageerror', e => errs.push(e.message)); p.on('dialog', d => d.accept()); await autoAsk(p);
   await p.addInitScript(() => sessionStorage.setItem('rp_splash_shown', '1'));

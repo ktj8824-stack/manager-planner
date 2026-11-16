@@ -835,6 +835,30 @@ window.Admin = {
     }
   },
 
+  // 회원 탈퇴 (본사 관리자: 바로 / 대표: 회사 전체가 걸려 있어 메일로 요청)
+  async withdraw() {
+    const role = localStorage.getItem('admin_bp_user_role');
+    if (role === 'ceo') {
+      if (await Ask.confirm('대표 계정은 바로 지울 수 없어요\n회사 전체 자료(매니저 계정·일정·로드톡)와 결제 기록이 연결돼 있어요. support@roadplanner.kr 로 탈퇴를 요청해 주시면 3영업일 안에 처리해 드려요.', { okLabel: '메일로 요청하기', cancelLabel: '닫기' })) {
+        location.href = 'mailto:support@roadplanner.kr?subject=' + encodeURIComponent('로드플래너 대표 계정 탈퇴 요청') + '&body=' + encodeURIComponent('아이디(이메일): ' + (localStorage.getItem('admin_bp_user_email') || '') + '\n회사 이름: ' + (localStorage.getItem('admin_bp_company_name') || '') + '\n');
+      }
+      return;
+    }
+    if (!window.SupabaseClient?.isConfigured) { await Ask.alert('서버에 연결되지 않았어요.\n잠시 후 다시 해 주세요.'); return; }
+    const v = await Ask.text({
+      title: '회원 탈퇴',
+      desc: "내 계정과 경비 기록·알림 설정·위치 기록이 지워져요.\n회사 일정과 로드톡 대화는 회사 기록이라 남고, 이름만 비워져요.\n\n지운 정보는 되돌릴 수 없어요. 계속하려면 '탈퇴'라고 적어 주세요.",
+      placeholder: '탈퇴', okLabel: '탈퇴하기', danger: true, max: 10,
+      validate: (x) => String(x || '').trim() === '탈퇴' ? '' : "'탈퇴'라고 적어 주세요.",
+    });
+    if (v === null) return;
+    const r = await window.SupabaseClient.deleteMyAccount();
+    if (!r.ok) { await Ask.alert('탈퇴하지 못했어요\n' + r.message); return; }
+    ['admin_bp_user_name', 'admin_bp_user_email', 'admin_bp_user_role', 'admin_bp_company_name', 'admin_bp_logged_in', 'admin_bp_onboarded'].forEach(k => localStorage.removeItem(k));
+    await Ask.alert('계정을 지웠어요\n그동안 로드플래너를 써 주셔서 감사합니다.');
+    window.location.href = 'admin-login.html';
+  },
+
   async logout() {
     if ((await Ask.confirm('로그아웃 할까요?', { okLabel: '로그아웃' }))) {
       // 관리자 세션 정보 완전 제거 (매니저 앱 세션은 보존)
@@ -1177,7 +1201,10 @@ window.Admin = {
     }
 
     if (submitBtn) {
-      if (sub.isFull) {
+      if (sub.isFull && sub.free) {
+        submitBtn.textContent = '인원이 가득 찼어요';
+        submitBtn.style.background = '#94a3b8';
+      } else if (sub.isFull) {
         submitBtn.textContent = '자리 먼저 결제하기';
         submitBtn.style.background = 'linear-gradient(135deg, #ef4444, #f59e0b)';
       } else {
@@ -1201,8 +1228,13 @@ window.Admin = {
     // 레거시 sub-badge-text (모달 내부용)
     const badgeText = document.getElementById('sub-badge-text');
     if (badgeText) {
-      badgeText.textContent = `구독: ${sub.planName || '기본'} (${sub.activeManagerCount}/${sub.totalSlots}명 · 월 ${(sub.monthlyFee / 10000).toLocaleString()}만)`;
+      badgeText.textContent = sub.free
+        ? `${sub.planName} (${sub.activeManagerCount}/${sub.totalSlots}명)`
+        : `구독: ${sub.planName || '기본'} (${sub.activeManagerCount}/${sub.totalSlots}명 · 월 ${(sub.monthlyFee / 10000).toLocaleString()}만)`;
     }
+    // 내 정보 메뉴의 '💳 구독: 기본' 줄
+    const subTitle = document.querySelector('.dropdown-sub-card .sub-title > span');
+    if (subTitle) subTitle.textContent = sub.free ? `🎁 ${sub.planName}` : `💳 구독: ${sub.planName || '기본'}`;
   },
 
   // ── 💳 회사 구독 모달 컨트롤러 ──
@@ -1241,6 +1273,14 @@ window.Admin = {
 
   openSubscriptionModal(opts = {}) {
     const sub = window.hqStore.getSubscription();
+    // 출시 기념 무료 기간: 결제 창 대신 안내만 (결제 정보를 받지 않음)
+    if (sub.free) {
+      const full = sub.isFull || (opts.need || 0) > 0;
+      Ask.alert(full
+        ? `무료 기간 인원(${sub.totalSlots}명)을 모두 쓰고 있어요.\n더 필요하시면 support@roadplanner.kr 로 알려 주세요.`
+        : `${window.PROMO.text()}\n${window.PROMO.line()}\n매니저 ${sub.totalSlots}명까지 결제 없이 등록할 수 있어요 (지금 ${sub.activeManagerCount}명).\n\n무료 기간이 끝나기 전에 요금과 결제 방법을 미리 알려 드려요. 그때까지 결제 정보는 받지 않아요.`);
+      return;
+    }
     this._seatNeed = Math.max(0, opts.need || 0);
     this.tempAdditionalSlots = Math.max(this._minAddSlots() + this._seatNeed, sub.additionalSlots || 0);
     this.renderSubscriptionModalContent();

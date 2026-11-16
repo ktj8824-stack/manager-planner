@@ -1,7 +1,9 @@
 // 개인 매니저 모드: 아래 메뉴 4개(홈·아티스트·AI·내 정보) · 로드톡/긴급/본사 없음 · 무료 제한(아티스트 1명·알림·자동 길안내·교통 예측) · 유료 화면 2만원
 const { chromium, devices } = require('playwright');
+const { payOpen } = require('./_pay-open.cjs');
 (async () => {
   const b = await chromium.launch(); const p = await (await b.newContext({ ...devices['iPhone 14'] })).newPage();
+  await payOpen(p);   // 무료 기간에도 '결제가 열린 뒤'를 시험
   const errs = []; p.on('pageerror', e => errs.push(e.message));
   p.on('dialog', d => d.dismiss());
   await p.addInitScript(() => sessionStorage.setItem('rp_splash_shown', '1'));

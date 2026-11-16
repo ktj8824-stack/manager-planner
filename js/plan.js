@@ -27,9 +27,19 @@ const Plan = {
     try { return localStorage.getItem('rp_pro_until') || ''; } catch (e) { return ''; }
   },
 
+  // 출시 기념 무료 기간 (js/site-config.js 의 PROMO). 이 동안은 결제 없이 모든 기능
+  isFree() { try { return !!window.PROMO?.isFree?.(); } catch (e) { return false; } },
+
+  // 실제로 결제해서 쓰는 중인가 (무료 기간과 구분)
+  hasPaid() {
+    const t = Date.parse(this.proUntil());
+    return Number.isFinite(t) && t > Date.now();
+  },
+
   // 개인 매니저가 아니면 항상 true (회사 계정은 여기서 막지 않음)
   isPaid() {
     if (!this.isIndie()) return true;
+    if (this.isFree()) return true;
     const t = Date.parse(this.proUntil());
     return Number.isFinite(t) && t > Date.now();
   },

@@ -1,7 +1,9 @@
 // 광고: 무료 개인 매니저만 아래 띠 광고 + 일정 등록 뒤 전면 광고(3초 뒤 닫기, 3분 간격) / 회사 매니저·유료는 광고 없음
 const { chromium, devices } = require('playwright');
+const { payOpen } = require('./_pay-open.cjs');
 (async () => {
   const b = await chromium.launch(); const p = await (await b.newContext({ ...devices['iPhone 14'] })).newPage();
+  await payOpen(p);   // 무료 기간에도 '결제가 열린 뒤'를 시험
   const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.route(/^https?:\/\/(?!127\.0\.0\.1|localhost)/, r => r.request().url().endsWith('.js') ? r.fulfill({ status: 200, contentType: 'application/javascript', body: '' }) : r.abort());
   await p.addInitScript(() => sessionStorage.setItem('rp_splash_shown', '1'));

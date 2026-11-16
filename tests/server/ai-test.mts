@@ -135,6 +135,8 @@ const il = await (await H({ message: '또', context: ctx })).json();
 out.indie = `${probe.indie}/${probe.paid} ${st} ${il.message.includes('2만원')}`;
 payStatus = { company: null, proUntil: '2099-01-01T00:00:00Z' };
 out.indiePaid = (await (await H({ probe: true })).json()).paid;
+payStatus = { company: null, proUntil: null, promo: { active: true, until: '2027-03-31T23:59:59+09:00' } };
+out.indieFree = (await (await H({ probe: true })).json()).paid;
 out.cal = calendarTable('2026-11-07').split('\n')[0];
 out.noUndefined = ['2026-11-08', '2026-11-09', '2026-11-11', '2026-11-14'].every(d => !calendarTable(d).includes('undefined'));
 out.rulesStable = systemBlocks(ctx)[0].text === systemBlocks({ ...ctx, today: '2026-12-01' })[0].text;

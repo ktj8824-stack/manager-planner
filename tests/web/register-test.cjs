@@ -1,8 +1,10 @@
 // 앱 스케줄 등록: 가짜 출발지·샵 없음 / 담당 매니저 기본값 = 나 / 연타해도 1건 / 겹침 경고 / 결제 결과 주소
 const { chromium } = require('playwright');
+const { payOpen } = require('./_pay-open.cjs');
 const { autoAsk, asked } = require('./_ask-auto.cjs');
 (async () => {
   const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+  await payOpen(ctx);   // 무료 기간에도 '결제가 열린 뒤'를 시험
   const p = await ctx.newPage();
   const errs = []; p.on('pageerror', e => errs.push(e.message));
   const dialogs = []; p.on('dialog', d => { dialogs.push(d.message().split('\n')[0]); d.accept(); }); await autoAsk(p);

@@ -781,11 +781,16 @@ class HQDataStore {
       const managers = this.getManagers();
       // 매니저 수 실시간 계산 (총괄 hq_admin 제외 현장 매니저 수 카운트)
       const activeManagerCount = managers.filter(m => m.role !== 'hq_admin' && m.role !== 'ceo').length;
-      const totalSlots = (sub.baseSlots || 2) + (sub.additionalSlots || 0);
-      const monthlyFee = (sub.baseFee || 100000) + ((sub.additionalSlots || 0) * (sub.additionalSlotFee || 20000));
+      // 출시 기념 무료 기간: 결제 없이 유료 최대 인원까지 (서버 manage-users 와 같은 숫자)
+      const free = !!window.PROMO?.isFree?.();
+      const extra = free ? window.PROMO.FREE_EXTRA_SLOTS : (sub.additionalSlots || 0);
+      const totalSlots = (sub.baseSlots || 2) + extra;
+      const monthlyFee = free ? 0 : (sub.baseFee || 100000) + ((sub.additionalSlots || 0) * (sub.additionalSlotFee || 20000));
 
       return {
         ...sub,
+        ...(free ? { planName: window.PROMO.text() } : {}),
+        free,
         activeManagerCount,
         totalSlots,
         monthlyFee,

@@ -61,4 +61,20 @@ out.indieStatus = ist.company === null && ist.proFee === 20000;
 try { await handle('prepare', { plan: 'standard', addSlots: 0 }, indie, db, okToss, 'test', now); } catch (e: any) { out.indieStd = e.code; }
 const badToss = async () => ({ ok: false, status: 400, body: { code: 'REJECT_CARD_COMPANY', message: '카드사 거절' } });
 try { await handle('confirm', { orderId: p3.orderId, paymentKey: 'k', amount: 20000 }, indie, db, badToss, 'test', now); } catch (e: any) { out.rejected = e.code; }
+
+// 출시 기념 무료 기간 (결제 스위치 닫힘): 결제·예약은 서버가 거절, 상태는 '모두 이용 가능'
+const freeDb = { ...db, payOpen: async () => false };
+let tossHit = false; const spy = async (...a: any[]) => { tossHit = true; return (okToss as any)(...a); };
+const fp: string[] = [];
+for (const [act, b, who] of [['prepare', { plan: 'standard', addSlots: 0 }, ceo], ['prepare', { plan: 'pro' }, indie], ['schedule_slots', { addSlots: 0 }, ceo]] as any) {
+  try { await handle(act, b, who, freeDb, spy, 'test', now); fp.push('통과'); } catch (e: any) { fp.push(e.code); }
+}
+// 무료 기간 전에 만들어진 주문이 남아 있어도 승인하지 않음 (토스까지 가지 않음)
+const pOld = await handle('prepare', { plan: 'pro' }, indie, db, okToss, 'test', now);
+try { await handle('confirm', { orderId: pOld.orderId, paymentKey: 'k', amount: pOld.amount }, indie, freeDb, spy, 'test', now); fp.push('통과'); } catch (e: any) { fp.push(e.code); }
+const fs = await handle('status', {}, ceo, freeDb, okToss, 'test', now);
+const fi = await handle('status', {}, indie, freeDb, okToss, 'test', now);
+out.free = [fp.join(','), tossHit, rows[pOld.orderId].status, fs.promo.active, fs.company.active, fs.company.totalSlots, fi.promo.active].join('/');
+const open = await handle('status', {}, ceo, db, okToss, 'test', now);
+out.openPromo = open.promo.active;
 console.log(JSON.stringify(out));

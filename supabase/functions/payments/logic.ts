@@ -7,6 +7,11 @@ export const PRICING = {
 };
 export const DOCS_TEST_SECRET = "test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6"; // 토스 문서 공개 테스트 키 (실제 돈 안 나감)
 
+// 출시 기념 무료 기간 (마이·버디·CEO 플래너와 같은 날). 안내용 날짜일 뿐,
+// 실제 스위치는 DB app_settings 'pay_open' — 'true' 가 되기 전까지는 날짜가 지나도 계속 무료이고 결제를 받지 않음
+export const FREE_UNTIL = "2027-03-31T23:59:59+09:00";
+export const FREE_MSG = "2027년 3월 31일까지 모든 기능이 무료예요. 결제는 그 뒤에 열려요.";
+
 export class PayError extends Error {
   status: number; code: string;
   constructor(status: number, code: string, message: string) { super(message); this.status = status; this.code = code; }
@@ -84,10 +89,17 @@ async function companyQuote(body: Record<string, unknown>, caller: Caller, db: a
   return { kind: "month", plan: "standard", addSlots: q.addSlots, prevSlots: curExtra, added: 0, supply: q.supply, vat: q.vat, amount: q.amount, nextBillAt: addMonth(start).toISOString(), monthly, orderName: q.orderName };
 }
 
-// db: { getPayment, insertPayment, updatePayment, getCompany, updateCompany, countManagers, proUntil, recentPayments }
+// db: { getPayment, insertPayment, updatePayment, getCompany, updateCompany, countManagers, proUntil, recentPayments, payOpen? }
+//   payOpen 이 없으면(시험용 가짜 저장소) 결제가 열린 것으로 봄
 // toss: (paymentKey, orderId, amount) => { ok, status, body }
 export async function handle(action: string, body: Record<string, unknown>, caller: Caller, db: any, toss: any, mode: string, now = new Date()) {
   const isHQ = ["ceo", "hq_admin"].includes(caller.role);
+  const payOpen = typeof db.payOpen === "function" ? !!(await db.payOpen()) : true;
+
+  // 무료 기간: 새 결제·자리 예약을 받지 않음 (돈이 나갈 수 있는 길을 서버에서 막음)
+  if (!payOpen && (action === "prepare" || action === "schedule_slots")) {
+    throw new PayError(400, "FREE_PERIOD", FREE_MSG);
+  }
 
   if (action === "quote" || action === "prepare") {
     const plan = body.plan;
@@ -108,6 +120,11 @@ export async function handle(action: string, body: Record<string, unknown>, call
     if (!row || row.user_id !== caller.id) throw new PayError(404, "ORDER_NOT_FOUND", "주문을 찾을 수 없습니다.");
     if (row.status === "DONE") return { status: "DONE", orderId, plan: row.plan, kind: row.kind || "month", amount: row.amount, method: row.method, approvedAt: row.approved_at, periodEnd: row.period_end, mode: row.mode };
     if (row.status !== "READY") throw new PayError(409, "ORDER_CLOSED", "이미 처리된 주문입니다.");
+    // 무료 기간에는 승인하지 않음 (토스 승인 전에 멈추므로 돈이 나가지 않음)
+    if (!payOpen) {
+      await db.updatePayment(orderId, { status: "FAILED", fail_reason: "FREE_PERIOD" });
+      throw new PayError(400, "FREE_PERIOD", FREE_MSG + " 돈은 빠져나가지 않았어요.");
+    }
     if (Number(body.amount) !== row.amount) {
       await db.updatePayment(orderId, { status: "FAILED", fail_reason: "AMOUNT_MISMATCH" });
       throw new PayError(400, "AMOUNT_MISMATCH", "결제 금액이 주문과 다릅니다. 결제가 승인되지 않았습니다.");
@@ -170,16 +187,20 @@ export async function handle(action: string, body: Record<string, unknown>, call
   }
 
   if (action === "status") {
-    if (!caller.company_id) return { company: null, proUntil: await db.proUntil(caller.id), proFee: PRICING.pro.amount, payments: [], mode };
+    // promo.active: 무료 기간이면 회사·개인 모두 모든 기능 (AI 서버도 이 값을 봄)
+    const promo = { active: !payOpen, until: FREE_UNTIL };
+    if (!caller.company_id) return { company: null, proUntil: await db.proUntil(caller.id), proFee: PRICING.pro.amount, payments: [], promo, mode };
     const c = await db.getCompany(caller.company_id);
     const used = await db.countManagers(caller.company_id);
     const paidUntil = c?.paid_until || null;
-    const active = !!paidUntil && new Date(paidUntil) > now;
+    const active = promo.active || (!!paidUntil && new Date(paidUntil) > now);
+    const extra = promo.active ? PRICING.standard.maxAdd : (Number(c?.extra_manager_slots) || 0);
     return {
+      promo,
       company: {
         plan: c?.plan || "free", active, paidUntil,
-        baseSlots: PRICING.standard.baseSlots, extraSlots: Number(c?.extra_manager_slots) || 0,
-        totalSlots: PRICING.standard.baseSlots + (Number(c?.extra_manager_slots) || 0), usedSlots: used,
+        baseSlots: PRICING.standard.baseSlots, extraSlots: extra,
+        totalSlots: PRICING.standard.baseSlots + extra, usedSlots: used,
         nextExtraSlots: c?.next_extra_slots ?? null,
         baseFee: PRICING.standard.base, perSlotFee: PRICING.standard.perSlot, vatRate: PRICING.standard.vatRate,
       },

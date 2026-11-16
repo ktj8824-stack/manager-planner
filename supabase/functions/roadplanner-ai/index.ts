@@ -249,7 +249,9 @@ async function planOf(env: Env, auth: string, f: Fetch): Promise<{ paid: boolean
     const s = await res.json();
     const indie = s?.company === null;
     const pro = !!(s?.proUntil && Date.parse(s.proUntil) > Date.now());
-    return { paid: pro || !!s?.company?.active || (all && !indie), indie };
+    // 출시 기념 무료 기간: 결제 서버가 promo.active 로 알려 줌 → 개인 매니저도 유료와 같은 한도
+    const free = s?.promo?.active === true;
+    return { paid: free || pro || !!s?.company?.active || (all && !indie), indie };
   } catch { return { paid: all, indie: false }; }
 }
 
