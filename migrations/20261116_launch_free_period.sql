@@ -1,11 +1,11 @@
 -- 2026-11-16 적용됨 (Supabase migration: launch_free_period)
--- 출시 기념 무료 기간 (마이·버디·CEO 플래너와 같은 날: 2027-03-31)
+-- 출시 기념 무료 기간 (로드플래너: 처음 2027-03-31 → 2026-11-16 대표님 요청으로 2027-02-28)
 -- 결제 스위치(pay_open)를 'true'로 바꾸기 전까지는 날짜가 지나도 계속 무료.
 -- 결제를 열 때: update app_settings set value='true' where key='pay_open';  (+ 앱 js/site-config.js PROMO.PAY_OPEN 도 true)
 
 insert into public.app_settings (key, value) values
   ('pay_open', 'false'),
-  ('free_until', '2027-03-31T23:59:59+09:00')
+  ('free_until', '2027-02-28T23:59:59+09:00')
 on conflict (key) do nothing;
 
 create or replace function public.rp_free_period()

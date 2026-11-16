@@ -7,10 +7,10 @@ export const PRICING = {
 };
 export const DOCS_TEST_SECRET = "test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6"; // 토스 문서 공개 테스트 키 (실제 돈 안 나감)
 
-// 출시 기념 무료 기간 (마이·버디·CEO 플래너와 같은 날). 안내용 날짜일 뿐,
+// 출시 기념 무료 기간 (로드플래너: 2027-02-28까지). 안내용 날짜일 뿐,
 // 실제 스위치는 DB app_settings 'pay_open' — 'true' 가 되기 전까지는 날짜가 지나도 계속 무료이고 결제를 받지 않음
-export const FREE_UNTIL = "2027-03-31T23:59:59+09:00";
-export const FREE_MSG = "2027년 3월 31일까지 모든 기능이 무료예요. 결제는 그 뒤에 열려요.";
+export const FREE_UNTIL = "2027-02-28T23:59:59+09:00";
+export const FREE_MSG = "2027년 2월 28일까지 모든 기능이 무료예요. 결제는 그 뒤에 열려요.";
 
 export class PayError extends Error {
   status: number; code: string;

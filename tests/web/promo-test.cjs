@@ -1,4 +1,4 @@
-// 출시 기념 무료 기간 (2027-03-31, 결제 스위치 닫힘): 앱·결제 페이지·본사 모두 결제 없이 모든 기능
+// 출시 기념 무료 기간 (2027-02-28, 결제 스위치 닫힘): 앱·결제 페이지·본사 모두 결제 없이 모든 기능
 //   - 개인 매니저: 유료 기능 열림 · 내 정보/요금제 화면에 무료 안내 · 결제 버튼 없음 · 아티스트 여러 명
 //   - 결제 페이지: 안내만 보이고 결제창(토스)을 띄우지 않음
 //   - 본사: 매니저 52명(2 + 50) · 구독 관리를 누르면 결제 창 대신 무료 안내
@@ -34,7 +34,7 @@ const { autoAsk, asked } = require('./_ask-auto.cjs');
   await p.evaluate(() => App.navigate('upgrade')); await p.waitForTimeout(400);
   R.upgrade = await p.evaluate(() => {
     const t = document.getElementById('screen-upgrade')?.textContent || '';
-    return { free: t.includes('2027년 3월 31일까지 무료'), noPayBtn: !document.querySelector('#screen-upgrade .btn-upg'), noPrice: !t.includes('20,000') && !t.includes('정기결제'), noAuto: t.includes('자동으로 결제되지도 않아요') };
+    return { free: t.includes('2027년 2월 28일까지 무료'), noPayBtn: !document.querySelector('#screen-upgrade .btn-upg'), noPrice: !t.includes('20,000') && !t.includes('정기결제'), noAuto: t.includes('자동으로 결제되지도 않아요') };
   });
   await p.evaluate(() => App.navigate('artists')); await p.waitForTimeout(400);
   R.artists = await p.evaluate(() => (document.querySelector('#screen-artists .art-plan')?.textContent || '').trim().slice(0, 24));
