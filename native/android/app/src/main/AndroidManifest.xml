@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- AI 음성 입력(고음질 받아쓰기): 마이크 녹음 -->
+
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- 이동 중 지연 예상(내 위치 → 목적지 소요시간) -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
