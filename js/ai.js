@@ -161,14 +161,14 @@ const RoadAI = {
   },
 
   chipsHTML() {
-    // 둘러보기·로그인 전에는 쓸 수 없으니 흐리게 (눌러도 반응 없는 버튼처럼 보이지 않게)
+    // 둘러보기·로그인 전에는 쓸 수 없으니 흐리게. 누르면 '로그인하면 쓸 수 있어요' 안내 (아무 반응 없으면 고장처럼 보임)
     const off = !this.signedIn();
-    const c = (label, say) => `<button class="rpai-chip" ${off ? 'disabled' : ''} onclick="RoadAI.ask(${escJs(say)})">${esc(label)}</button>`;
+    const c = (label, say) => `<button class="rpai-chip" ${off ? 'aria-disabled="true"' : ''} onclick="RoadAI.ask(${escJs(say)})">${esc(label)}</button>`;
     return `<div class="rpai-chips-label">${off ? '💡 로그인하면 이렇게 물어볼 수 있어요' : '💡 눌러서 바로 물어보기'}</div><div class="rpai-chips${off ? ' off' : ''}">
       ${c('📅 내일 일정 알려줘', '내일 일정이랑 출발 시간 알려줘')}
       ${c('🗓️ 이번 주 일정 정리', '이번 주 일정 날짜순으로 정리해줘')}
       ${c('➕ 말로 일정 등록', '토요일 오후 6시 한양대 축제 일정 잡아줘')}
-      <button class="rpai-chip" ${off ? 'disabled' : ''} onclick="RoadAI.pickPhoto()">📷 일정표 사진으로 등록</button>
+      <button class="rpai-chip" ${off ? 'aria-disabled="true"' : ''} onclick="RoadAI.pickPhoto()">📷 일정표 사진으로 등록</button>
       ${c('🍚 다음 현장 근처 밥집', '다음 일정 현장 근처에서 빨리 먹을 수 있는 밥집 찾아줘')}
       ${c('🅿️ 현장 근처 주차장', '다음 일정 현장 근처 주차장 찾아줘')}
     </div>`;
@@ -225,7 +225,12 @@ const RoadAI = {
   },
 
   /* ── 보내기 ── */
-  ask(text) { this.send(text); },
+  _needLogin() {
+    if (this.signedIn()) return false;
+    U.toast(localStorage.getItem('bp_provider') === 'demo' ? '둘러보기에서는 AI를 쓸 수 없어요. 회사 계정으로 로그인하면 쓸 수 있어요.' : '로그인 후 쓸 수 있어요.');
+    return true;
+  },
+  ask(text) { if (this._needLogin()) return; this.send(text); },
 
   sendInput() {
     const el = U.$('#rpai-input');
@@ -236,7 +241,7 @@ const RoadAI = {
   },
 
   pickPhoto() {
-    if (!this.signedIn()) { U.toast('로그인 후 쓸 수 있어요.'); return; }
+    if (this._needLogin()) return;
     const el = U.$('#rpai-photo');
     if (el) { el.value = ''; el.click(); }
   },
@@ -650,7 +655,9 @@ const RoadAI = {
         const el = U.$('#rpai-input'); if (el) el.value = t.replace(/\s+/g, ' ').trim();
         clearTimeout(this._quiet); this._quiet = setTimeout(() => this.stopListening(), 2500);   // 2.5초 조용하면 끝
       };
-      this.recognition.onerror = (e) => { this.stopListening(); if (e.error === 'not-allowed' || e.error === 'service-not-allowed') U.toast('마이크·음성 인식 권한이 꺼져 있어요. 아이폰 설정 → 로드플래너에서 마이크와 음성 인식을 켜 주세요.'); };
+      this.recognition.onerror = (e) => { this.stopListening(); if (e.error === 'not-allowed' || e.error === 'service-not-allowed') U.toast('마이크·음성 인식 권한이 꺼져 있어요. 아이폰 설정 → 로드플래너에서 마이크와 음성 인식을 켜 주세요.');
+        else if (e.error === 'no-speech') U.toast('말소리가 들리지 않았어요. 다시 눌러 말씀해 주세요.');
+        else if (e.error !== 'aborted') U.toast('음성 입력이 잘 안 돼요. 키보드의 🎤 버튼으로 말해 보세요.'); };
       this.recognition.onend = () => { clearTimeout(this._quiet); this.micUI(false); const el = U.$('#rpai-input'); if (el && el.value.trim()) this._putText(el.value.trim()); };
       this.recognition.start();
     } catch (e) { this.micUI(false); U.toast('음성 입력을 시작하지 못했어요.'); }

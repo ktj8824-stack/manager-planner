@@ -461,6 +461,7 @@ const Home = {
       }
 
       const isSecret = activeSched.isSecret === true;
+      const isCancelled = ['취소', 'cancelled'].includes(activeSched.status);
       const canViewSecret = window.AuthPersona ? window.AuthPersona.canViewSecret(activeSched) : true;
       const currentRole = localStorage.getItem('bp_user_role') || 'manager';
       const isStaff = currentRole === 'staff';
@@ -516,7 +517,7 @@ const Home = {
 
             <!-- 일정 타이틀 -->
             <div style="font-size:14px; font-weight:700; color:${isSecret ? '#581c87' : 'var(--text-100)'}; margin-bottom:6px; line-height:1.35; word-break:keep-all;">
-              ${esc(displayTitle)}
+              ${isCancelled ? '<span style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; font-size:12px; font-weight:800; padding:1px 6px; border-radius:4px; margin-right:4px;">취소됨</span>' : ''}<span style="${isCancelled ? 'text-decoration:line-through; color:#8A909C;' : ''}">${esc(displayTitle)}</span>
             </div>
             
             <!-- 장소 -->
@@ -1389,7 +1390,7 @@ const Home = {
               <div><label style="${L}">종료 <span style="color:#ef4444;">*</span></label>
                 <input type="time" id="m-sch-end" value="${esc(v.end)}" required oninput="this.dataset.touched='1'" style="${I} padding:10px 8px; font-weight:700;" /></div>
             </div>
-            <div style="font-size:12px; color:#5B616E; margin-top:6px;">현장 도착은 시작 ${Number(localStorage.getItem('bp_buffer_wait') ?? 10)}분 전 기준으로 출발·기상 시각을 계산해요.</div>
+            <div style="font-size:12px; color:#5B616E; margin-top:6px;">현장 도착은 시작 ${Number(localStorage.getItem('bp_buffer_wait') ?? 10)}분 전 기준으로 출발·기상 시각을 계산해요. (해외 투어/출국은 비행기 2시간 30분 전 공항 도착)</div>
           </div>
 
           <div style="${BOX}">
@@ -1556,7 +1557,27 @@ const Home = {
           <b>${esc(d.place_name || '')}</b>
           <span>${esc(d.road_address_name || d.address_name || '')}</span>
         </button>`).join('')
-        : `<div class="ps-msg">${navigator.onLine === false ? '인터넷 연결을 확인해 주세요.' : failed ? '검색이 잠시 안 돼요. 장소 이름을 직접 입력해도 돼요.' : '검색 결과가 없어요. 직접 입력해도 돼요.'}</div>`;
+        : `<div class="ps-msg">${navigator.onLine === false ? '인터넷 연결을 확인해 주세요.' : failed ? '검색이 잠시 안 돼요. 장소 이름을 직접 입력해도 돼요.' : '검색 결과가 없어요. 직접 입력해도 돼요.'}</div>`;      reveal();
+    };
+    // 자판 위로 첫 결과(최대 2개)가 보이게 창 안쪽을 올림. 창이 더 못 올라가면 아래 여백을 붙여서 올림
+    const reveal = () => {
+      try {
+        const vv = window.visualViewport;
+        const items2 = list.querySelectorAll('.ps-item, .ps-msg');
+        const tgt = items2[Math.min(1, items2.length - 1)];
+        if (!vv || !tgt) return;
+        const r = tgt.getBoundingClientRect();
+        const visBottom = (vv.offsetTop || 0) + vv.height - 8;
+        let need = r.bottom - visBottom;
+        if (need <= 0) return;
+        need = Math.min(need, Math.max(0, input.getBoundingClientRect().top - (vv.offsetTop || 0) - 8));   // 입력칸이 위로 사라지지 않게
+        let sc = input.parentElement;
+        while (sc && sc !== document.body) { const o = getComputedStyle(sc).overflowY; if ((o === 'auto' || o === 'scroll') && sc.clientHeight < sc.scrollHeight + need) break; sc = sc.parentElement; }
+        if (!sc || sc === document.body) { window.scrollBy(0, need); return; }
+        const room = sc.scrollHeight - sc.clientHeight - sc.scrollTop;
+        if (room < need) { sc.dataset.psPad = '1'; sc.style.paddingBottom = `${(parseFloat(sc.style.paddingBottom) || 0) + (need - room) + 8}px`; }
+        sc.scrollTop += need;
+      } catch (e) { }
     };
     input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(run, 350); });
     // 엔터: 바로 검색 (목록이 이미 있으면 첫 번째를 고름)
@@ -1673,8 +1694,10 @@ const Home = {
       // 동선 계산은 저장 함수(saveSchedule) 안에서 한 번만 (10초 넘으면 추정값으로)
       if (window.hqStore && typeof window.hqStore.saveSchedule === 'function') {
         if (editId && window.hqStore.updateSchedule) {
+          const before = (window.hqStore.getSchedules?.() || []).find(s => s.id === editId);
           schData.timeline = await window.hqStore.buildTimelineCapped(schData);
           await window.hqStore.updateSchedule(editId, schData);
+          this._lastChange = Home.timeDiff(before, schData);
           await window.hqStore.addStatusLog?.(editId, { label: `[일정 수정] ${title} ${dateVal} ${startVal}`, managerName: window.SupabaseClient?.currentProfile?.name || '', ack: managerId && managerId !== window.SupabaseClient?.currentUser?.id ? { need: true, managerId } : undefined });
         } else {
           await window.hqStore.saveSchedule(schData);
@@ -1683,7 +1706,9 @@ const Home = {
         State.addSchedule(schData);
       }
       App.closeModal();
-      U.toast(editId ? '✅ 일정을 수정했어요.' : '✅ 일정이 등록됐어요!');
+      const diff = editId ? this._lastChange : null; this._lastChange = null;
+      if (diff) Ask.alert(`✅ 일정을 수정했어요\n${diff}`, { okLabel: '확인' });
+      else U.toast(editId ? '✅ 일정을 수정했어요.' : '✅ 일정이 등록됐어요!');
       if (window.Ads) Ads.moment(editId ? 'schedule-edit' : 'schedule');
       const parts = dateVal.split('-').map(Number);
       if (parts.length === 3) this.selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
@@ -1696,10 +1721,49 @@ const Home = {
     }
   },
 
+  // 일정 수정 전후 시각 비교 → '바뀐 시간' 글 (바뀐 게 없으면 '')
+  timeDiff(before, after) {
+    if (!before || !after) return '';
+    const pick = (sch) => {
+      const tl = Array.isArray(sch.timeline) ? sch.timeline : [];
+      const f = (re) => { const st = tl.find(x => re.test(x.label || '')); return st ? (st.time || '') : ''; };
+      return { 날짜: sch.date || '', 기상: f(/^\[기상/), 출발: f(/^\[(현장 이동|픽업|샵 이동)/), 시작: sch.startTime || '', 종료: sch.endTime || '' };
+    };
+    const a = pick(before), b = pick(after);
+    const rows = Object.keys(a).filter(k => a[k] && b[k] && a[k] !== b[k]).map(k => `${k} ${a[k]} → ${b[k]}`);
+    return rows.length ? '바뀐 시간\n' + rows.join('\n') : '';
+  },
+
   // 상세보기 [삭제] (본사 계정)
   async deleteScheduleFromApp(id) {
     const sch = (window.hqStore?.getSchedules?.() || []).find(s => s.id === id);
-    if (!sch || !(await Ask.confirm(`"${sch.title}" (${sch.date} ${sch.startTime}) 일정을 삭제할까요?\n담당 매니저 화면에서도 사라져요.`, { okLabel: '삭제', danger: true }))) return;
+    if (!sch) return;
+    const cancelled = ['취소', 'cancelled'].includes(sch.status);
+    // 이미 취소된 일정: 되살리기 / 완전히 지우기
+    if (cancelled) {
+      const a = await Ask.confirm(`"${sch.title}" 은(는) 취소된 일정이에요.\n다시 살리면 동선·알림이 돌아와요. 완전히 지우면 기록도 없어져요.`, { okLabel: '완전히 삭제', danger: true, extraLabel: '↩️ 다시 살리기', cancelLabel: '닫기' });
+      if (a === 'extra') {
+        try { await window.hqStore.updateSchedule(id, { status: '예정' }); U.toast('일정을 다시 살렸어요.'); this.render(); }
+        catch (err) { U.toast('바꾸지 못했어요: ' + (err?.message || err)); }
+        return;
+      }
+      if (a !== true) return;
+    } else {
+      // 우천 취소 등: 지우지 않고 '취소됨'으로 남기면 기록·경비 연결이 유지됨
+      const a = await Ask.confirm(`"${sch.title}" (${sch.date} ${sch.startTime}) 일정을 어떻게 할까요?\n'취소됨으로 남기기'는 기록·경비를 남기고 동선·알림에서만 빼요.\n'삭제'는 담당 매니저 화면에서도 완전히 사라져요.`, { okLabel: '삭제', danger: true, extraLabel: '🌧️ 취소됨으로 남기기 (기록 유지)' });
+      if (a === 'extra') {
+        const why = await Ask.text({ title: '취소 이유 (선택)', placeholder: '예: 우천 취소', value: '' });
+        if (why === null) return;
+        const stamp = new Date(); const hm = `${String(stamp.getHours()).padStart(2, '0')}:${String(stamp.getMinutes()).padStart(2, '0')}`;
+        const note = `[취소 ${stamp.getMonth() + 1}/${stamp.getDate()} ${hm}] ${String(why || '').trim() || '일정 취소'}`;
+        try {
+          await window.hqStore.updateSchedule(id, { status: '취소', notes: [note, sch.notes].filter(Boolean).join('\n') });
+          U.toast('취소됨으로 남겼어요. 동선·알림에서는 빠져요.'); this.render();
+        } catch (err) { U.toast('바꾸지 못했어요: ' + (err?.message || err)); }
+        return;
+      }
+      if (a !== true) return;
+    }
     try { await window.hqStore.deleteSchedule(id); U.toast('🗑️ 일정을 삭제했어요.'); this.render(); }
     catch (err) { U.toast('삭제하지 못했어요: ' + (err?.message || err)); }
   }

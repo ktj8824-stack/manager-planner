@@ -258,12 +258,13 @@ const State = {
     localStorage.setItem('bp_manager_filter', mgrId);
   },
 
-  getHQSchedulesForDate(y, m, d) {
+  getHQSchedulesForDate(y, m, d, withCancelled = false) {
     if (typeof window.hqStore === 'undefined') return [];
     const mm = String(m + 1).padStart(2, '0');
     const dd = String(d).padStart(2, '0');
     const dateStr = `${y}-${mm}-${dd}`;
-    let schedules = (typeof window.hqStore.getSchedulesSync === 'function' ? window.hqStore.getSchedulesSync() : window.hqStore.getSchedules()).filter(s => s.date === dateStr);
+    // 취소된 일정(우천 취소 등)은 기록만 남기고 오늘 동선·알림에서는 뺌
+    let schedules = (typeof window.hqStore.getSchedulesSync === 'function' ? window.hqStore.getSchedulesSync() : window.hqStore.getSchedules()).filter(s => s.date === dateStr && (withCancelled || !['취소', 'cancelled'].includes(s.status)));
     
     // 버퍼 설정값과 일정 타임라인의 불일치 자동 감지 및 즉시 동기화
     const currentTravelBuf = Number(localStorage.getItem('bp_buffer_travel') !== null ? localStorage.getItem('bp_buffer_travel') : 10);
@@ -302,7 +303,7 @@ const State = {
         const mainStep = s.timeline.find(st => st.desc && st.desc.includes('분 전('));
         if (mainStep) {
           const matchWait = mainStep.desc.match(/(\d+)분 전\(/);
-          if (matchWait && parseInt(matchWait[1], 10) !== currentWaitBuf) {
+          if (matchWait && parseInt(matchWait[1], 10) !== (typeof window.arriveBufferFor === 'function' ? window.arriveBufferFor(s) : currentWaitBuf)) {
             isMismatch = true;
           }
         }
@@ -429,7 +430,7 @@ const State = {
       return true;
     });
 
-    const hqScheds = this.getHQSchedulesForDate(y, m, d).map(hs => ({
+    const hqScheds = this.getHQSchedulesForDate(y, m, d, true).map(hs => ({   // 일정표에는 취소된 일정도 '취소됨'으로 남김
       isHQ: true,
       id: hs.id,
       title: hs.title,

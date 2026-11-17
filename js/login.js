@@ -56,7 +56,7 @@ const Login = {
           ${back}
           <h2 class="lg-h2">사내 계정으로 로그인</h2>
           <div class="lg-box">
-            <form id="form-supabase-login" onsubmit="Login.handleEmailLogin(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <form id="form-supabase-login" novalidate onsubmit="Login.handleEmailLogin(event)" style="display:flex; flex-direction:column; gap:12px;">
               <label class="lg-label">사내 이메일
                 <input type="email" id="login-email" class="form-input" placeholder="name@company.com" autocomplete="${Login._fresh() ? 'off' : 'username'}" required style="${inputStyle}" /></label>
               <label class="lg-label">비밀번호
@@ -114,6 +114,9 @@ const Login = {
     const button = e.target.querySelector('button[type="submit"]');
     const errorEl = document.getElementById('login-auth-error');
     errorEl.textContent = '';
+    // 빈 칸·이메일 모양 확인 (아이폰 앱 안에서는 기본 안내 말풍선이 안 보일 수 있어 직접 안내)
+    const miss = !email ? ['login-email', '이메일을 입력해 주세요.'] : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? ['login-email', '이메일 형식을 확인해 주세요. (예: name@company.com)'] : !password ? ['login-pw', '비밀번호를 입력해 주세요.'] : null;
+    if (miss) { errorEl.textContent = miss[1]; errorEl.style.display = 'block'; try { document.getElementById(miss[0]).focus(); } catch (x) { } return; }
     button.disabled = true;
     button.textContent = '로그인 확인 중...';
     try {

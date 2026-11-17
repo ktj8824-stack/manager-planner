@@ -23,6 +23,11 @@ const Expenses = {
   _receipt: null,       // 등록 창에서 고른 영수증 사진 (Blob)
 
   cat(id) { return this.CATS.find(c => c.id === id) || this.CATS.find(c => c.id === 'etc'); },
+  // 금액 칸: 숫자만. 빼기(-)를 넣으면 조용히 지우지 않고 안내 (환불·취소는 메모로)
+  amtInput(el) {
+    if (/[-−]/.test(el.value)) U.toast('금액은 0보다 큰 숫자만 넣어요. 환불·취소는 메모에 적어 주세요.');
+    el.value = el.value.replace(/[^0-9]/g, '');
+  },
   won(n) { return (Number(n) || 0).toLocaleString() + '원'; },
   ymd(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; },
   online() { const sc = window.SupabaseClient; return !!(sc?.isConfigured && sc.currentUser?.id); },
@@ -139,7 +144,7 @@ const Expenses = {
       <form id="exp-form" onsubmit="event.preventDefault(); if (event.submitter === null) return; Expenses.save(${cur ? escJs(cur.id) : 'null'})" style="display:flex; flex-direction:column; gap:12px; text-align:left;">
         <div class="exp-cat-pick">${this.cats().map(c => `<button type="button" data-c="${c.id}" class="${c.id === catSel ? 'on' : ''}" onclick="Expenses._pick(this)">${c.icon} ${c.label}</button>`).join('')}</div>
         <label class="art-label"><span>금액 (원) <span style="color:#ef4444;">*</span></span>
-          <input id="exp-amount" class="art-input" inputmode="numeric" pattern="[0-9,]*" placeholder="예: 5000" value="${cur ? esc(String(cur.amount)) : ''}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" /></label>
+          <input id="exp-amount" class="art-input" inputmode="numeric" pattern="[0-9,]*" placeholder="예: 5000" value="${cur ? esc(String(cur.amount)) : ''}" oninput="Expenses.amtInput(this)" /></label>
         <label class="art-label">날짜
           <input id="exp-date" type="date" class="art-input" value="${esc(date)}" onchange="Expenses._schOptions(this.value)" /></label>
         <label class="art-label">관련 일정 (선택)
@@ -177,7 +182,9 @@ const Expenses = {
   },
 
   async save(id) {
-    const amount = Number((U.$('#exp-amount')?.value || '').replace(/[^0-9]/g, ''));
+    const rawAmt = U.$('#exp-amount')?.value || '';
+    if (/[-−]/.test(rawAmt)) { U.toast('금액은 0보다 큰 숫자만 넣어요. 환불·취소는 메모에 적어 주세요.'); return; }
+    const amount = Number(rawAmt.replace(/[^0-9]/g, ''));
     if (!amount) { U.toast('금액을 입력해 주세요.'); return; }
     if (amount > 10000000) { U.toast('금액이 너무 커요. 다시 확인해 주세요.'); return; }
     const date = U.$('#exp-date')?.value || this.ymd(new Date());

@@ -30,7 +30,7 @@
         this._probe = (async () => {
           try {
             const r = await fetch(`${o.url.replace(/\/+$/, '')}/functions/v1/voice-stt`, {
-              method: 'POST', headers: { apikey: o.anon || '', Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: '{}'
+              method: 'POST', headers: { apikey: o.anon || '', Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ app: o.app || '' })
             });
             return r.status !== 503 && r.status !== 404;
           } catch (e) { return false; }

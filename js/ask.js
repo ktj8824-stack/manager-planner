@@ -23,6 +23,7 @@
   .ask input:focus,.ask textarea:focus{outline:2px solid #3B45C4;outline-offset:1px;border-color:#3B45C4}
   .ask-err{min-height:18px;margin:6px 2px 0;font-size:13px;color:#B42318}
   .ask-b{display:flex;gap:8px;margin-top:8px}
+  .ask-b.three{flex-wrap:wrap}.ask-b.three .ask-extra{flex-basis:100%;order:-1;background:#FFF7ED;border:1px solid #FED7AA;color:#9A3412}
   .ask-b button{flex:1;min-height:48px;border-radius:12px;font-size:15.5px;font-weight:700;cursor:pointer;font-family:inherit}
   .ask-x{background:#F1F2F4;border:0;color:#334155}
   .ask-ok{background:#3B45C4;border:0;color:#fff}
@@ -77,7 +78,8 @@
     },
 
     /** 물어보기: [취소] / [확인] → true·false (기본 confirm 창 대신)
-        opts: { okLabel, cancelLabel, danger, title } — 첫 줄이 제목, 나머지가 설명 */
+        opts: { okLabel, cancelLabel, danger, title, extraLabel } — 첫 줄이 제목, 나머지가 설명
+        extraLabel 을 주면 세 번째 버튼이 생기고, 누르면 'extra' 를 돌려줌 */
     confirm(msg, o) {
       o = o || {};
       this._style(); this.close();
@@ -90,8 +92,9 @@
         back.innerHTML = `<div class="ask" role="alertdialog" aria-modal="true" aria-label="${esc(title)}">
           <h3>${esc(title)}</h3>
           ${desc ? `<p>${esc(desc)}</p>` : ''}
-          <div class="ask-b">
+          <div class="ask-b${o.extraLabel ? ' three' : ''}">
             ${o.alert ? '' : `<button type="button" class="ask-x" data-a="x">${esc(o.cancelLabel || '취소')}</button>`}
+            ${o.extraLabel ? `<button type="button" class="ask-x ask-extra" data-a="ex">${esc(o.extraLabel)}</button>` : ''}
             <button type="button" class="ask-ok${o.danger ? ' danger' : ''}" data-a="ok">${esc(o.okLabel || '확인')}</button>
           </div></div>`;
         document.body.appendChild(back);
@@ -102,6 +105,7 @@
           const a = e.target.closest('[data-a]')?.dataset.a;
           if (a === 'x') done(false);
           if (a === 'ok') done(true);
+          if (a === 'ex') done('extra');
         });
         back.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); done(false); } });
         setTimeout(() => { try { back.querySelector('.ask-ok').focus(); } catch (e) { } }, 60);

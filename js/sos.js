@@ -128,6 +128,13 @@ const Sos = {
   async send() {
     const st = this.st;
     if (!st.type || st.stage === 'sending') return;
+    // 둘러보기(로그인 전): 실제로 보내지 않는다고 바로 알려 줌
+    //   (서버 연결이 있으면 — 시험 등 — 원래대로 보냄)
+    if ((localStorage.getItem('bp_provider') === 'demo' || localStorage.getItem('bp_logged_in') !== 'true') && !(window.Chat && window.Chat.available && window.Chat.available())) {
+      U.toast('둘러보기에서는 본사로 보내지 않아요. 급하면 위 전화 버튼으로 연락해 주세요.');
+      U.haptic && U.haptic();
+      return;
+    }
     if (st.stage === 'sent') { st.stage = 'idle'; st.type = null; this.render(); return; }
     if (st.stage === 'idle') { st.stage = 'confirm'; this._sendBtn(); U.haptic && U.haptic(); return; }
     // confirm → 보내기

@@ -24,6 +24,25 @@ const HQ_STORAGE_KEYS = {
   SUBSCRIPTION: 'HQ_SUBSCRIPTION_V6'
 };
 
+// 현장에 몇 분 전에 도착할지 (기본: 설정값, 보통 10분)
+//  출국(해외 투어/출국, 또는 공항 + 출국·국제선)은 국제선 수속 때문에 최소 150분(2시간 30분) 전 공항 도착
+const AIRPORT_ARRIVE_MIN = 150;
+function isDepartureSchedule(s) {
+  if (!s) return false;
+  const cat = String(s.category || '');
+  const txt = `${s.title || ''} ${s.location || ''} ${s.locationAddress || ''}`;
+  if (/입국|귀국|도착\s*마중|마중/.test(txt) && !/출국/.test(txt)) return false;   // 공항 마중은 보통 여유
+  if (cat === 'overseas' || /해외|출국/.test(cat)) return true;
+  return /공항|airport/i.test(txt) && /출국|국제선|비행|항공|탑승|출발\s*편/.test(txt);
+}
+function arriveBufferFor(s) {
+  const base = Number(localStorage.getItem('bp_buffer_wait') !== null ? localStorage.getItem('bp_buffer_wait') : 10);
+  const b = Number.isFinite(base) ? base : 10;
+  return isDepartureSchedule(s) ? Math.max(b, AIRPORT_ARRIVE_MIN) : b;
+}
+window.arriveBufferFor = arriveBufferFor;
+window.isDepartureSchedule = isDepartureSchedule;
+
 // 동선 맨 앞에 '기상·준비' 단계 (첫 출발 시각 - 준비 시간, 기본 60분 · 0이면 넣지 않음)
 function addWakeStep(timeline) {
   try {
@@ -553,7 +572,7 @@ function getInitialMockSchedules() {
     const [startH, startM] = mainStartTime.split(':').map(Number);
     const startMinutes = (Number.isFinite(startH) ? startH : 10) * 60 + (Number.isFinite(startM) ? startM : 0);   // 0시(자정)도 그대로
 
-    const waitBuffer = Number(localStorage.getItem('bp_buffer_wait') !== null ? localStorage.getItem('bp_buffer_wait') : 10);
+    const waitBuffer = arriveBufferFor(schedule);
     const travelBuffer = Number(localStorage.getItem('bp_buffer_travel') !== null ? localStorage.getItem('bp_buffer_travel') : 10);
 
     const fmt = (min) => {
@@ -610,7 +629,7 @@ function getInitialMockSchedules() {
     timeline.push({
       time: schedule.startTime, dayOffset: 0,
       label: `[메인 일정] ${schedule.title}`,
-      desc: `장소: ${schedule.location || '현장'} / ${waitBuffer}분 전(${fmt(targetArriveMinutes)}) 현장 도착 완료 후 정시 시작`,
+      desc: `장소: ${schedule.location || '현장'} / ${waitBuffer}분 전(${fmt(targetArriveMinutes)}) ${isDepartureSchedule(schedule) ? '공항 도착 (국제선 수속 여유)' : '현장 도착 완료'} 후 정시 시작`,
       done: false
     });
     if (schedule.endTime) {
@@ -2182,7 +2201,7 @@ class HQDataStore {
     const [startH, startM] = mainStartTime.split(':').map(Number);
     const startMinutes = (Number.isFinite(startH) ? startH : 10) * 60 + (Number.isFinite(startM) ? startM : 0);   // 0시(자정)도 그대로
 
-    const waitBuffer = Number(localStorage.getItem('bp_buffer_wait') !== null ? localStorage.getItem('bp_buffer_wait') : 10);
+    const waitBuffer = arriveBufferFor(schedule);
     const travelBuffer = Number(localStorage.getItem('bp_buffer_travel') !== null ? localStorage.getItem('bp_buffer_travel') : 10);
 
     const fmt = (min) => {
@@ -2264,7 +2283,7 @@ class HQDataStore {
     timeline.push({
       time: schedule.startTime, dayOffset: 0,
       label: `[메인 일정] ${schedule.title}`,
-      desc: `장소: ${schedule.location || '현장'} ${schedule.locationAddress ? `(${schedule.locationAddress})` : ''} / ${waitBuffer}분 전(${fmt(targetArriveMinutes)}) 현장 도착 완료 후 정시 시작`,
+      desc: `장소: ${schedule.location || '현장'} ${schedule.locationAddress ? `(${schedule.locationAddress})` : ''} / ${waitBuffer}분 전(${fmt(targetArriveMinutes)}) ${isDepartureSchedule(schedule) ? '공항 도착 (국제선 수속 여유)' : '현장 도착 완료'} 후 정시 시작`,
       done: false
     });
 
@@ -2287,7 +2306,7 @@ class HQDataStore {
     const [startH, startM] = mainStartTime.split(':').map(Number);
     const startMinutes = (Number.isFinite(startH) ? startH : 10) * 60 + (Number.isFinite(startM) ? startM : 0);   // 0시(자정)도 그대로
 
-    const waitBuffer = Number(localStorage.getItem('bp_buffer_wait') !== null ? localStorage.getItem('bp_buffer_wait') : 10);
+    const waitBuffer = arriveBufferFor(schedule);
     const travelBuffer = Number(localStorage.getItem('bp_buffer_travel') !== null ? localStorage.getItem('bp_buffer_travel') : 10);
 
     const fmt = (min) => {
@@ -2344,7 +2363,7 @@ class HQDataStore {
     timeline.push({
       time: schedule.startTime, dayOffset: 0,
       label: `[메인 일정] ${schedule.title}`,
-      desc: `장소: ${schedule.location || '현장'} / ${waitBuffer}분 전(${fmt(targetArriveMinutes)}) 현장 도착 완료 후 정시 시작`,
+      desc: `장소: ${schedule.location || '현장'} / ${waitBuffer}분 전(${fmt(targetArriveMinutes)}) ${isDepartureSchedule(schedule) ? '공항 도착 (국제선 수속 여유)' : '현장 도착 완료'} 후 정시 시작`,
       done: false
     });
 
