@@ -31,9 +31,12 @@ function isDepartureSchedule(s) {
   if (!s) return false;
   const cat = String(s.category || '');
   const txt = `${s.title || ''} ${s.location || ''} ${s.locationAddress || ''}`;
-  if (/입국|귀국|도착\s*마중|마중/.test(txt) && !/출국/.test(txt)) return false;   // 공항 마중은 보통 여유
-  if (cat === 'overseas' || /해외|출국/.test(cat)) return true;
-  return /공항|airport/i.test(txt) && /출국|국제선|비행|항공|탑승|출발\s*편/.test(txt);
+  const airport = /공항|airport/i.test(txt);
+  // 공항 마중(입국·귀국 마중)은 보통 여유. 단 '귀국편·탑승'처럼 내가 비행기를 타는 일정은 출국과 같음
+  if (/입국|귀국|도착\s*마중|마중/.test(txt) && !/출국|탑승|귀국\s*편|출발\s*편/.test(txt)) return false;
+  // '해외 투어 / 출국' 분류라도 현지 공연장·호텔(도쿄돔 리허설 등)은 공항이 아니므로 보통 일정처럼 (11-18 점검)
+  if (cat === 'overseas' || /해외|출국/.test(cat)) return airport || /출국/.test(String(s.title || ''));
+  return airport && /출국|국제선|비행|항공|탑승|출발\s*편|귀국\s*편/.test(txt);
 }
 function arriveBufferFor(s) {
   const base = Number(localStorage.getItem('bp_buffer_wait') !== null ? localStorage.getItem('bp_buffer_wait') : 10);

@@ -353,7 +353,7 @@
     if (expPending && expPending.edited) items.push({ k: 'info', title: `승인 후 수정된 경비 ${expPending.edited}건`, sub: '매니저가 승인된 경비를 고쳤어요', act: '확인하기', run: () => openExp(expPending.editedMonth) });
     try {
       const tm = new Date(); tm.setDate(tm.getDate() + 1);
-      const un = (st.getSchedules() || []).filter(s => s.date === ymd(tm) && !s.managerId && s.status !== 'cancelled');
+      const un = (st.getSchedules() || []).filter(s => s.date === ymd(tm) && !s.managerId && !['취소', 'cancelled'].includes(s.status));   // 화면 상태는 '취소' (취소됨으로 남긴 일정은 배정할 필요 없음)
       if (un.length) items.push({ k: 'mute', title: `내일 담당 미지정 ${un.length}건`, sub: `${tm.getMonth() + 1}/${tm.getDate()} ${un[0].startTime || ''} ${un[0].title || ''}`, act: '배정', run: () => window.Admin?.openScheduleDetail?.(un[0].id) });
     } catch (e) { }
     if (hints && !hints.hqPhone) items.push({ k: 'late', title: '긴급 지원 전화가 비어 있어요', sub: '매니저가 [긴급]을 눌러도 본사로 전화할 번호가 없어요', act: '내 번호 넣기', run: setMyPhone });
