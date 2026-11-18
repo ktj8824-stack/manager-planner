@@ -476,8 +476,9 @@ const Home = {
         : (activeSched.location || activeSched.course?.name || '장소 미정');
 
       const cardBg = isSecret ? (canViewSecret ? 'linear-gradient(135deg, #ffffff, #faf5ff)' : '#f8fafc') : '#ffffff';
-      const cardBorderColor = isExpanded ? (isSecret ? '#9333ea' : '#3B45C4') : (isSecret ? '#d8b4fe' : '#cbd5e1');
-      const cardBorderLeft = isSecret ? 'border-left:4px solid #9333ea;' : 'border-left:4px solid #3B45C4;';
+      // 취소된 일정은 왼쪽 굵은 줄·테두리를 회색으로 (파란 줄이면 살아 있는 일정처럼 보여서)
+      const cardBorderColor = isCancelled ? '#CBD5E1' : isExpanded ? (isSecret ? '#9333ea' : '#3B45C4') : (isSecret ? '#d8b4fe' : '#cbd5e1');
+      const cardBorderLeft = isCancelled ? 'border-left:4px solid #CBD5E1;' : isSecret ? 'border-left:4px solid #9333ea;' : 'border-left:4px solid #3B45C4;';
 
       const allArtists = (typeof window.hqStore !== 'undefined') ? window.hqStore.getArtists() : [];
       const artObj = allArtists.find(a => a.id === activeSched.artistId) || { name: activeSched.artistName || '아티스트' };
@@ -671,9 +672,10 @@ const Home = {
         const b = new Date(this.selectedDate); b.setHours(+mm[1], +mm[2], 0, 0); b.setDate(b.getDate() + (e.dayOffset || 0));
         return b.getTime();
       };
-      const isWake = (e) => /^\s*\[기상/.test(String((e && e.title) || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim());
+      // 11/18: 같은 날 여러 곳 — 버튼을 안 눌러도 다음 단계 시각이 이미 지났으면 그 단계는 넘김
+      //        (뒤 일정 단계가 시작됐으면 앞 일정 단계는 넘어가고, 지금 해야 할 단계가 카드에 나옴)
       let first = 0;
-      while (first < pending.length - 1 && isWake(pending[first]) && !pending[first].moving && evAt(pending[first + 1]) <= Date.now()) first++;
+      while (first < pending.length - 1 && !pending[first].moving && !pending[first + 1].forNextDay && evAt(pending[first + 1]) <= Date.now()) first++;
       const nowEv = allPast ? null : (pending.find(e => e.moving === true) || pending[first]);
       if (allPast) {
         const d = this.selectedDate;
@@ -710,7 +712,7 @@ const Home = {
             const base = new Date(this.selectedDate); base.setHours(+mm[1], +mm[2], 0, 0);
             base.setDate(base.getDate() + (nowEv.dayOffset || 0));
             lateMin = Math.floor((Date.now() - base.getTime()) / 60000);
-            if (lateMin > 600 || lateMin < 1) lateMin = 0;   // 하루 넘게 지난 기록은 표시 안 함
+            if (lateMin > 1440 || lateMin < 1) lateMin = 0;   // 하루 넘게 지난 기록만 표시 안 함 (오래 지난 앞 단계는 위에서 넘김)
           }
         } catch (e) { lateMin = 0; }
         const lateTxt = lateMin >= 60 ? `${Math.floor(lateMin / 60)}시간 ${lateMin % 60}분 지남` : `${lateMin}분 지남`;
@@ -1362,6 +1364,7 @@ const Home = {
       shopNeeded: !!edit?.shop?.needed, shopName: edit?.shop?.needed ? (edit.shop.name || '') : '', shopAddr: edit?.shop?.needed ? (edit.shop.address || '') : '',
       dep: edit ? ((typeof edit.departure === 'object' ? (edit.departure?.address || edit.departure?.place) : edit.departure) || '') : dep,
       veh: edit?.vehicleId || '', mgr: edit?.managerId || (meMgr ? me : (managers[0]?.id || '')), secret: !!edit?.isSecret,
+      flight: typeof edit?.flight === 'boolean' ? edit.flight : null,
     };
     const opt = (val, label, sel) => `<option value="${esc(val)}"${sel ? ' selected' : ''}>${esc(label)}</option>`;
     const artistOptions = (!indie && (isHQRole || myArtists === artists) ? opt('ALL', '전체 아티스트 (전원)', v.artistId === 'ALL') : '') + myArtists.map(a => opt(a.id, a.name, a.id === v.artistId)).join('');
@@ -1371,6 +1374,7 @@ const Home = {
     const I = 'width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:16px; background:#fff; box-sizing:border-box;';
     const L = 'font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;';
     const BOX = 'background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;';
+    const chip = (on) => Home._chipStyle(on);
     const modalHtml = `
       <div id="app-schedule-form-container" style="padding:4px 0 20px; max-height:75vh; overflow-y:auto; -webkit-overflow-scrolling:touch;">
         <form id="app-schedule-form" onsubmit="event.preventDefault(); if (event.submitter === null) return; Home.submitScheduleFromModal(${edit ? escJs(edit.id) : 'null'});" style="display:flex; flex-direction:column; gap:14px;">
@@ -1380,7 +1384,12 @@ const Home = {
               <input type="text" id="m-sch-title" required maxlength="80" value="${esc(v.title)}" placeholder="예: 뮤직뱅크 사전녹화" style="${I}" /></div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
               <div><label style="${L}">아티스트 <span style="color:#ef4444;">*</span></label><select id="m-sch-artist" required style="${I} padding:10px 8px;">${artistOptions}</select></div>
-              <div><label style="${L}">분류 <span style="color:#ef4444;">*</span></label><select id="m-sch-category" required style="${I} padding:10px 8px;">${cats.map(c => opt(c[0], c[1], c[0] === v.category)).join('')}</select></div>
+              <div><label style="${L}">분류 <span style="color:#ef4444;">*</span></label><select id="m-sch-category" required onchange="Home._flightRow()" style="${I} padding:10px 8px;">${cats.map(c => opt(c[0], c[1], c[0] === v.category)).join('')}</select></div>
+            </div>
+            <div id="m-sch-flight-row" style="display:${v.category === 'overseas' ? 'flex' : 'none'}; gap:8px; margin:-4px 0 12px;">
+              <input type="hidden" id="m-sch-flight" value="${v.flight === true ? 'true' : v.flight === false ? 'false' : ''}" />
+              <button type="button" data-flight="true" onclick="Home._pickFlight('true')" style="${chip(v.flight === true)}">✈️ 비행기 탑승</button>
+              <button type="button" data-flight="false" onclick="Home._pickFlight('false')" style="${chip(v.flight === false)}">🎤 현지 일정</button>
             </div>
             <div style="margin-bottom:12px;"><label style="${L}">날짜 <span style="color:#ef4444;">*</span></label>
               <input type="date" id="m-sch-date" value="${esc(v.date)}" required style="${I} font-weight:700;" /></div>
@@ -1400,7 +1409,8 @@ const Home = {
             <div style="margin-bottom:10px;"><label style="${L}">상세 주소 (길안내용)</label>
               <input type="text" id="m-sch-addr" value="${esc(v.addr)}" placeholder="예: 서울 마포구 상암산로 82" style="${I}" /></div>
             <div><label style="${L}">출발지 (숙소·사옥 등)</label>
-              <input type="text" id="m-sch-dep" value="${esc(v.dep)}" placeholder="예: 청담동 숙소 (비우면 미정)" style="${I}" />
+              <input type="text" id="m-sch-dep" value="${esc(v.dep)}" data-default="${esc(dep)}" placeholder="예: 청담동 숙소 (비우면 미정)" style="${I}" />
+              <div id="m-sch-chain-hint" style="display:none; font-size:12px; color:#2B338F; margin-top:4px; font-weight:700;"></div>
               <div style="font-size:12px; color:#5B616E; margin-top:4px;">출발 시간을 이 주소 기준으로 계산해요. 다음 등록 때 자동으로 채워져요.</div></div>
           </div>
 
@@ -1447,6 +1457,61 @@ const Home = {
     this._placeSuggest('m-sch-loc', 'm-sch-addr');
     this._placeSuggest('m-sch-shop-name', 'm-sch-shop-addr');
     this._placeSuggest('m-sch-dep', null);
+    // 같은 날 앞 일정이 있으면 그 현장을 출발지로 미리 채움 (날짜·시작·매니저·아티스트를 바꾸면 다시 봄)
+    this._chainEditId = edit ? edit.id : null;
+    const depEl = document.getElementById('m-sch-dep');
+    if (depEl) depEl.addEventListener('input', () => { depEl.dataset.auto = ''; });
+    ['m-sch-date', 'm-sch-start', 'm-sch-mgr', 'm-sch-artist'].forEach(id => document.getElementById(id)?.addEventListener('change', () => this._chainFill()));
+    if (!edit) this._chainFill();
+    else if (edit.departure && edit.departure.chained) this._chainFill(true);
+  },
+
+  // 칩 모양 (등록 창 '해외 투어' 아래 비행기 탑승 / 현지 일정)
+  _chipStyle(on) {
+    return `flex:1; padding:9px 6px; border-radius:999px; font-size:13.5px; font-weight:700; cursor:pointer; border:1px solid ${on ? '#3B45C4' : '#cbd5e1'}; background:${on ? '#EEF0FD' : '#fff'}; color:${on ? '#2B338F' : '#475569'};`;
+  },
+  _flightRow() {
+    const row = document.getElementById('m-sch-flight-row');
+    const cat = document.getElementById('m-sch-category')?.value;
+    if (row) row.style.display = cat === 'overseas' ? 'flex' : 'none';
+  },
+  _pickFlight(val) {
+    const h = document.getElementById('m-sch-flight');
+    if (!h) return;
+    h.value = h.value === val ? '' : val;   // 다시 누르면 고르지 않음 (글자 규칙으로)
+    document.querySelectorAll('#m-sch-flight-row [data-flight]').forEach(b => { b.style.cssText = this._chipStyle(b.dataset.flight === h.value); });
+  },
+
+  // 같은 날·같은 매니저(또는 아티스트)의 바로 앞 일정 (끝 시각 ≤ 이 일정 시작)
+  _chainPrevFor({ date, start, managerId, artistId, excludeId }) {
+    if (!date || !start) return null;
+    const list = (window.hqStore?.getSchedules?.() || []).filter(s => s && s.id !== excludeId && s.date === date
+      && !['취소', 'cancelled'].includes(s.status) && s.location && s.startTime && s.endTime
+      && s.endTime >= s.startTime && s.endTime <= start
+      && ((managerId && s.managerId === managerId) || (artistId && artistId !== 'ALL' && (s.artistId === artistId || (Array.isArray(s.artistIds) && s.artistIds.includes(artistId))))));
+    list.sort((a, b) => String(b.endTime).localeCompare(String(a.endTime)));
+    return list[0] || null;
+  },
+  _chainFromForm() {
+    const g = (id) => document.getElementById(id);
+    return this._chainPrevFor({ date: g('m-sch-date')?.value, start: g('m-sch-start')?.value, managerId: g('m-sch-mgr')?.value || '', artistId: g('m-sch-artist')?.value || '', excludeId: this._chainEditId });
+  },
+  _chainFill(keep = false) {
+    const dep = document.getElementById('m-sch-dep'), hint = document.getElementById('m-sch-chain-hint');
+    if (!dep) return;
+    const p = this._chainFromForm();
+    const def = dep.dataset.default || '';
+    if (p) {
+      if (keep || dep.dataset.auto === '1' || !dep.value.trim() || dep.value === def) { dep.value = p.location; dep.dataset.auto = '1'; }
+      if (hint) {
+        const on = dep.value === p.location;
+        hint.style.display = on ? 'block' : 'none';
+        hint.textContent = on ? `↪ 앞 일정 '${p.title}'(${p.endTime} 끝) 현장에서 이어서 출발해요 · 기상 단계는 빼요` : '';
+      }
+    } else {
+      if (dep.dataset.auto === '1') { dep.value = def; dep.dataset.auto = ''; }
+      if (hint) { hint.style.display = 'none'; hint.textContent = ''; }
+    }
   },
 
   // 입력칸 아래 장소 검색 목록 (nameId: 이름 칸, addrId: 주소 칸 — 없으면 '이름 (주소)'로 한 칸에)
@@ -1681,16 +1746,28 @@ const Home = {
       departure: depVal ? { place: depVal, address: depVal } : { place: '출발지 미정', address: '' },
     };
     if (editId) delete schData.timeline;   // 수정하면 동선 다시 계산
+    // '해외 투어' 칩: ✈️ 비행기 탑승(true) / 🎤 현지 일정(false) — 안 고르면 글자 규칙
+    const flightVal = g('m-sch-flight')?.value || '';
+    if (schData.category === 'overseas' && flightVal) schData.flight = flightVal === 'true'; else delete schData.flight;
+    // 같은 날 앞 일정 현장에서 이어서 출발 → 출발지는 앞 현장 주소, 기상 단계 없음
+    const chainPrev = this._chainPrevFor({ date: dateVal, start: startVal, managerId, artistId, excludeId: editId });
+    const chained = !!(chainPrev && depVal && depVal === chainPrev.location);
+    if (chained) schData.departure = { place: chainPrev.location, address: chainPrev.locationAddress || chainPrev.location, chained: true, fromScheduleId: chainPrev.id };
 
     const conflicts = this._findConflicts(schData);
     if (conflicts.length && !(await Ask.confirm(`같은 시간에 겹치는 일정이 있어요.\n\n${conflicts.slice(0, 3).join('\n')}\n\n그래도 저장할까요?`, { okLabel: '저장' }))) return;
+    // 앞 일정 끝 + 이동 시간이 도착 목표보다 늦으면 저장 전에 물어봄
+    if (chained) {
+      const late = await this._chainLate(chainPrev, schData);
+      if (late && !(await Ask.confirm(`앞 일정이 ${chainPrev.endTime}에 끝나 ${late.arrive}쯤 도착해요.\n(도착 목표 ${late.target} · 이동 약 ${late.travel}분)\n그대로 저장할까요?`, { okLabel: '저장' }))) return;
+    }
 
     const btn = g('m-sch-submit');
     const label = btn ? btn.textContent : '';
     this._submittingSchedule = true;
     if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; btn.textContent = '동선 계산 중… (최대 10초)'; }
     try {
-      try { if (depVal) localStorage.setItem('rp_default_departure', depVal); } catch (e) { }
+      try { if (depVal && !chained) localStorage.setItem('rp_default_departure', depVal); } catch (e) { }
       // 동선 계산은 저장 함수(saveSchedule) 안에서 한 번만 (10초 넘으면 추정값으로)
       if (window.hqStore && typeof window.hqStore.saveSchedule === 'function') {
         if (editId && window.hqStore.updateSchedule) {
@@ -1721,12 +1798,32 @@ const Home = {
     }
   },
 
+  // 이어서 출발: 앞 일정 끝 + 이동 시간 > 도착 목표면 { arrive, target, travel } (늦지 않으면 null)
+  async _chainLate(prevSch, sch) {
+    const hm2m = (t) => { const m = /^(\d{1,2}):(\d{2})/.exec(String(t || '')); return m ? (+m[1]) * 60 + (+m[2]) : NaN; };
+    const m2hm = (v) => { v = ((v % 1440) + 1440) % 1440; return `${String(Math.floor(v / 60)).padStart(2, '0')}:${String(v % 60).padStart(2, '0')}`; };
+    const end = hm2m(prevSch.endTime), start = hm2m(sch.startTime);
+    if (!Number.isFinite(end) || !Number.isFinite(start)) return null;
+    const buf = typeof arriveBufferFor === 'function' ? arriveBufferFor(sch) : 10;
+    const target = start - buf;
+    let travel = 40;
+    try {
+      const from = prevSch.locationAddress || prevSch.location, to = sch.locationAddress || sch.location;
+      const r = window.hqStore?.getTravelDuration
+        ? await Promise.race([window.hqStore.getTravelDuration(from, to, 40, sch.date, m2hm(target)), new Promise(ok => setTimeout(() => ok(null), 6000))]) : null;
+      if (r && Number(r.minutes) > 0) travel = Math.round(Number(r.minutes));
+    } catch (e) { }
+    const arrive = end + travel;
+    return arrive > target ? { arrive: m2hm(arrive), target: m2hm(target), travel } : null;
+  },
+
   // 일정 수정 전후 시각 비교 → '바뀐 시간' 글 (바뀐 게 없으면 '')
   timeDiff(before, after) {
     if (!before || !after) return '';
     const pick = (sch) => {
       const tl = Array.isArray(sch.timeline) ? sch.timeline : [];
-      const f = (re) => { const st = tl.find(x => re.test(x.label || '')); return st ? (st.time || '') : ''; };
+      // 자정 전으로 넘어간 단계(dayOffset < 0)는 '전날 23:25'처럼
+      const f = (re) => { const st = tl.find(x => re.test(x.label || '')); return st && st.time ? `${Number(st.dayOffset) < 0 ? '전날 ' : ''}${st.time}` : ''; };
       return { 날짜: sch.date || '', 기상: f(/^\[기상/), 출발: f(/^\[(현장 이동|픽업|샵 이동)/), 시작: sch.startTime || '', 종료: sch.endTime || '' };
     };
     const a = pick(before), b = pick(after);
@@ -1750,7 +1847,7 @@ const Home = {
       if (a !== true) return;
     } else {
       // 우천 취소 등: 지우지 않고 '취소됨'으로 남기면 기록·경비 연결이 유지됨
-      const a = await Ask.confirm(`"${sch.title}" (${sch.date} ${sch.startTime}) 일정을 어떻게 할까요?\n'취소됨으로 남기기'는 기록·경비를 남기고 동선·알림에서만 빼요.\n'삭제'는 담당 매니저 화면에서도 완전히 사라져요.`, { okLabel: '삭제', danger: true, extraLabel: '🌧️ 취소됨으로 남기기 (기록 유지)' });
+      const a = await Ask.confirm(`"${sch.title}" (${sch.date} ${sch.startTime}) 일정을 어떻게 할까요?\n'취소됨으로 남기기'는 기록·경비를 남기고 동선·알림에서만 빼요.\n'삭제'는 담당 매니저 화면에서도 완전히 사라져요.`, { okLabel: '삭제', danger: true, extraLabel: '🌧️ 취소됨으로 남기기 (기록 유지)', cancelLabel: '닫기' });
       if (a === 'extra') {
         const why = await Ask.text({ title: '취소 이유 (선택)', placeholder: '예: 우천 취소', value: '' });
         if (why === null) return;
@@ -1759,7 +1856,11 @@ const Home = {
         try {
           await window.hqStore.updateSchedule(id, { status: '취소', notes: [note, sch.notes].filter(Boolean).join('\n') });
           U.toast('취소됨으로 남겼어요. 동선·알림에서는 빠져요.'); this.render();
-        } catch (err) { U.toast('바꾸지 못했어요: ' + (err?.message || err)); }
+        } catch (err) { U.toast('바꾸지 못했어요: ' + (err?.message || err)); return; }
+        // 현장 담당자 번호가 있으면 취소 안내 문자 초안을 열지 물어봄 (번호가 없으면 묻지 않음)
+        if (sch.contactPhone && window.DraftSheet && (await Ask.confirm('현장 담당자에게 취소를 알릴까요?', { okLabel: '문자 초안', cancelLabel: '닫기' }))) {
+          window.DraftSheet.afterHqChange(sch, { ...sch, status: '취소' }, false);
+        }
         return;
       }
       if (a !== true) return;

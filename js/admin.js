@@ -59,6 +59,18 @@ const ARTIST_TYPE_COLORS = {
 
 // Global Admin Interface
 window.Admin = {
+  // 일정 등록 창 '해외 투어' 칩: val 이 있으면 고름(같은 걸 다시 누르면 해제), null 이면 모양·보이기만 다시
+  pickFlight(val) {
+    const h = document.getElementById('form-flight'), row = document.getElementById('form-flight-row');
+    if (!h || !row) return;
+    if (val !== null && val !== undefined) h.value = h.value === val ? '' : val;
+    row.style.display = document.getElementById('form-category')?.value === 'overseas' ? 'flex' : 'none';
+    row.querySelectorAll('[data-flight]').forEach(b => {
+      const on = b.dataset.flight === h.value;
+      b.style.borderColor = on ? '#4C57D6' : '#cbd5e1'; b.style.background = on ? '#EEF0FD' : '#fff'; b.style.color = on ? '#2B338F' : '#475569';
+    });
+  },
+
   getArtistTypeIcon(art, size = 14) {
     return getArtistTypeIcon(art, size);
   },
@@ -3370,6 +3382,14 @@ document.addEventListener('DOMContentLoaded', () => {
       };
     }
 
+    // 해외 투어 칩 (✈️ 비행기 탑승 / 🎤 현지 일정) — 고친 일정이면 저장된 값, 새 일정이면 비움
+    try {
+      const fl = document.getElementById('form-flight');
+      if (fl) fl.value = editSch && typeof editSch.flight === 'boolean' ? String(editSch.flight) : '';
+      window.Admin.pickFlight(null);
+      if (el.formCategory) el.formCategory.onchange = () => window.Admin.pickFlight(null);
+    } catch (e) { }
+
     el.modalScheduleForm.classList.add('active');
   }
 
@@ -3975,6 +3995,8 @@ document.addEventListener('DOMContentLoaded', () => {
         artistName: isAllArtists ? '전체 아티스트 (전원)' : (art ? art.name : ''),
         targetMembers: targetMembers,
         category: el.formCategory.value,
+        // 해외 투어 칩: 고르면 true/false, 안 고르면 글자 규칙 (null 은 저장 때 빠짐)
+        flight: el.formCategory.value === 'overseas' && document.getElementById('form-flight')?.value ? document.getElementById('form-flight').value === 'true' : null,
         date: dateVal,
         startTime: startVal,
         endTime: endVal,
@@ -4153,7 +4175,34 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el.btnDeleteSchedule) {
       el.btnDeleteSchedule.addEventListener('click', async () => {
         const schId = state.activeScheduleId || window.Admin.currentDetailScheduleId;
-        if ((await Ask.confirm('이 일정을 삭제할까요? 로드플래너에서도 즉시 삭제돼요.', { okLabel: '삭제', danger: true }))) {
+        let cur = null;
+        try { cur = (await window.hqStore.getSchedules()).find(x => x.id === schId) || null; if (cur) cur = JSON.parse(JSON.stringify(cur)); } catch (e) { }
+        const isCx = cur && ['취소', 'cancelled'].includes(cur.status);
+        // 매니저 앱과 같게: 지우지 않고 '취소됨'으로 남기기 / 이미 취소된 일정은 다시 살리기 (11-18)
+        const a = !cur ? await Ask.confirm('이 일정을 삭제할까요? 로드플래너에서도 즉시 삭제돼요.', { okLabel: '삭제', danger: true })
+          : isCx ? await Ask.confirm(`"${cur.title}" 은(는) 취소된 일정이에요.\n다시 살리면 동선·알림이 돌아와요. 완전히 지우면 기록도 없어져요.`, { okLabel: '완전히 삭제', danger: true, extraLabel: '↩️ 다시 살리기', cancelLabel: '닫기' })
+          : await Ask.confirm(`"${cur.title}" (${cur.date} ${cur.startTime}) 일정을 어떻게 할까요?\n'취소됨으로 남기기'는 기록·경비를 남기고 동선·알림에서만 빼요.\n'삭제'는 담당 매니저 화면에서도 완전히 사라져요.`, { okLabel: '삭제', danger: true, extraLabel: '🌧️ 취소됨으로 남기기 (기록 유지)', cancelLabel: '닫기' });
+        if (a === 'extra') {
+          let patch;
+          if (isCx) patch = { status: '예정' };
+          else {
+            const why = await Ask.text({ title: '취소 이유 (선택)', placeholder: '예: 우천 취소', value: '' });
+            if (why === null) return;
+            const t = new Date(); const hm = `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`;
+            patch = { status: '취소', notes: [`[취소 ${t.getMonth() + 1}/${t.getDate()} ${hm}] ${String(why || '').trim() || '일정 취소'}`, cur.notes].filter(Boolean).join('\n') };
+          }
+          try { await window.hqStore.updateSchedule(schId, patch); }
+          catch (err) { alert('바꾸지 못했어요: ' + (err?.message || err)); return; }
+          const next = { ...cur, ...patch };
+          if (window.ScheduleNotify) window.ScheduleNotify.afterSave(cur, next).then(m => { if (m) setTimeout(() => alert(m), 1200); }).catch(() => { });   // 담당 매니저에게 취소·되살림 알림
+          if (!isCx && window.DraftSheet) window.DraftSheet.afterHqChange(cur, next, false);   // 현장 담당자에게 취소 안내 문자 초안
+          el.modalScheduleDetail.classList.remove('active');
+          await renderSidebar();
+          await renderKPI();
+          await renderCurrentView();
+          return;
+        }
+        if (a === true) {
           let delSch = null;
           try { delSch = (await window.hqStore.getSchedules()).find(x => x.id === schId) || null; if (delSch) delSch = JSON.parse(JSON.stringify(delSch)); } catch (e) { }
           await window.hqStore.deleteSchedule(schId);

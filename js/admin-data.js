@@ -29,23 +29,53 @@ const HQ_STORAGE_KEYS = {
 const AIRPORT_ARRIVE_MIN = 150;
 function isDepartureSchedule(s) {
   if (!s) return false;
+  // 등록 창 칩(✈️ 비행기 탑승 / 🎤 현지 일정)으로 고른 값이 있으면 그게 먼저 (11-18)
+  //  서버에는 열이 없어 departure_info(JSON) 안에 같이 넣어 둠 → 다시 받아와도 남음
+  const fl = typeof s.flight === 'boolean' ? s.flight : (s.departure && typeof s.departure === 'object' && typeof s.departure.flight === 'boolean' ? s.departure.flight : null);
+  if (fl === true) return true;
+  if (fl === false) return false;
   const cat = String(s.category || '');
   const txt = `${s.title || ''} ${s.location || ''} ${s.locationAddress || ''}`;
-  if (/입국|귀국|도착\s*마중|마중/.test(txt) && !/출국/.test(txt)) return false;   // 공항 마중은 보통 여유
-  if (cat === 'overseas' || /해외|출국/.test(cat)) return true;
-  return /공항|airport/i.test(txt) && /출국|국제선|비행|항공|탑승|출발\s*편/.test(txt);
+  const airport = /공항|airport/i.test(txt);
+  // 공항 마중(입국·귀국 마중)은 보통 여유. 단 '귀국편·탑승'처럼 내가 비행기를 타는 일정은 출국과 같음
+  if (/입국|귀국|도착\s*마중|마중/.test(txt) && !/출국|탑승|귀국\s*편|출발\s*편/.test(txt)) return false;
+  // '해외 투어 / 출국' 분류라도 현지 공연장·호텔(도쿄돔 리허설 등)은 공항이 아니므로 보통 일정처럼 (11-18 점검)
+  if (cat === 'overseas' || /해외|출국/.test(cat)) return airport || /출국/.test(String(s.title || ''));
+  if (domesticText(txt)) return false;   // 국내선(제주·김해 등)은 50분 여유 — arriveBufferFor 에서
+  return airport && /출국|국제선|비행|항공|탑승|출발\s*편|귀국\s*편/.test(txt);
+}
+// 국내선 비행기 탑승 글자 (국제선·출국·인천이 같이 있으면 아님)
+function domesticText(txt) {
+  if (/국제선|출국|인천/.test(txt)) return false;
+  if (/국내선/.test(txt)) return true;
+  return /공항/.test(txt) && /제주|김해|김포|청주|대구|광주|여수|양양|사천|포항|울산|원주|군산|무안/.test(txt) && /비행|탑승|항공|편/.test(txt);
+}
+// 국내선(제주·김해 등) 비행기 탑승: 공항 50분 전 도착 (11-18)
+const DOMESTIC_ARRIVE_MIN = 50;
+function isDomesticFlight(s) {
+  if (!s || isDepartureSchedule(s)) return false;
+  return domesticText(`${s.title || ''} ${s.location || ''} ${s.locationAddress || ''}`);
 }
 function arriveBufferFor(s) {
   const base = Number(localStorage.getItem('bp_buffer_wait') !== null ? localStorage.getItem('bp_buffer_wait') : 10);
   const b = Number.isFinite(base) ? base : 10;
-  return isDepartureSchedule(s) ? Math.max(b, AIRPORT_ARRIVE_MIN) : b;
+  if (isDepartureSchedule(s)) return Math.max(b, AIRPORT_ARRIVE_MIN);
+  return isDomesticFlight(s) ? Math.max(b, DOMESTIC_ARRIVE_MIN) : b;
+}
+// 동선 [메인 일정] 설명의 도착 문구
+function arriveDescFor(s) {
+  return isDepartureSchedule(s) ? '공항 도착 (국제선 수속 여유)' : isDomesticFlight(s) ? '공항 도착 (국내선 수속 여유)' : '현장 도착 완료';
 }
 window.arriveBufferFor = arriveBufferFor;
 window.isDepartureSchedule = isDepartureSchedule;
+window.isDomesticFlight = isDomesticFlight;
+window.arriveDescFor = arriveDescFor;
 
 // 동선 맨 앞에 '기상·준비' 단계 (첫 출발 시각 - 준비 시간, 기본 60분 · 0이면 넣지 않음)
-function addWakeStep(timeline) {
+function addWakeStep(timeline, schedule) {
   try {
+    // 같은 날 앞 일정 현장에서 이어서 출발하는 일정은 이미 깨어 있으니 기상 단계 없음 (11-18)
+    if (schedule && schedule.departure && typeof schedule.departure === 'object' && schedule.departure.chained) return timeline;
     if (!Array.isArray(timeline) || !timeline.length || timeline.some(s => /^\[기상/.test(s.label || ''))) return timeline;
     const prep = Number(localStorage.getItem('bp_buffer_prep') ?? 60);
     if (!(prep > 0)) return timeline;
@@ -629,7 +659,7 @@ function getInitialMockSchedules() {
     timeline.push({
       time: schedule.startTime, dayOffset: 0,
       label: `[메인 일정] ${schedule.title}`,
-      desc: `장소: ${schedule.location || '현장'} / ${waitBuffer}분 전(${fmt(targetArriveMinutes)}) ${isDepartureSchedule(schedule) ? '공항 도착 (국제선 수속 여유)' : '현장 도착 완료'} 후 정시 시작`,
+      desc: `장소: ${schedule.location || '현장'} / ${waitBuffer}분 전(${fmt(targetArriveMinutes)}) ${arriveDescFor(schedule)} 후 정시 시작`,
       done: false
     });
     if (schedule.endTime) {
@@ -640,7 +670,7 @@ function getInitialMockSchedules() {
         done: false
       });
     }
-    return addWakeStep(timeline);
+    return addWakeStep(timeline, schedule);
   };
 
   return schedules.map(sch => {
@@ -1179,7 +1209,8 @@ class HQDataStore {
         // 현장 담당자 연락처 (문자 초안·전화) · 반복 일정 묶음
         contactName: (row.contact_info && row.contact_info.name) || existing?.contactName || '',
         contactPhone: (row.contact_info && row.contact_info.phone) || existing?.contactPhone || '',
-        series: row.series || existing?.series || null
+        series: row.series || existing?.series || null,
+        flight: (row.departure_info && typeof row.departure_info.flight === 'boolean') ? row.departure_info.flight : existing?.flight
       });
       outbox[id] = { ...(entry || {}), remoteId: row.id, created: true, pending: false };
     }
@@ -1579,6 +1610,16 @@ class HQDataStore {
     return { scheduled: '예정', in_progress: '진행중', completed: '완료', cancelled: '취소' }[status] || status || '예정';
   }
 
+  // 출발지 JSON — '해외 투어' 칩 값(flight)은 서버 열이 없어서 여기 같이 넣어 둠
+  _departureInfo(schedule) {
+    const d = schedule.departure;
+    const hasFlight = typeof schedule.flight === 'boolean';
+    if (!(d && typeof d === 'object')) return hasFlight ? { ...(d ? { place: String(d), address: String(d) } : {}), flight: schedule.flight } : (d || {});
+    const base = { ...d };
+    if (hasFlight) base.flight = schedule.flight; else delete base.flight;
+    return base;
+  }
+
   _schedulePayload(schedule) {
     return {
       title: schedule.title, category: schedule.category || 'broadcast',
@@ -1591,7 +1632,7 @@ class HQDataStore {
       status: this._scheduleDbStatus(schedule.status), is_secret: !!schedule.isSecret,
       secret_level: schedule.secretLevel || (schedule.isSecret ? 'confidential' : 'public'),
       notes: schedule.notes || '', timeline_items: schedule.timeline || [], status_logs: schedule.statusLogs || [],
-      departure_info: schedule.departure || {}, outfit: schedule.outfit || null, supplies: schedule.supplies || null,
+      departure_info: this._departureInfo(schedule), outfit: schedule.outfit || null, supplies: schedule.supplies || null,
       // 샵 상세(주소·소요시간)도 서버에 보관 → 다른 기기·매니저 앱에서도 길안내/동선 계산 가능
       shop_info: (schedule.shop && typeof schedule.shop === 'object') ? schedule.shop : {},
       contact_info: (schedule.contactName || schedule.contactPhone) ? { name: String(schedule.contactName || '').slice(0, 60), phone: String(schedule.contactPhone || '').slice(0, 30) } : {},
@@ -2283,7 +2324,7 @@ class HQDataStore {
     timeline.push({
       time: schedule.startTime, dayOffset: 0,
       label: `[메인 일정] ${schedule.title}`,
-      desc: `장소: ${schedule.location || '현장'} ${schedule.locationAddress ? `(${schedule.locationAddress})` : ''} / ${waitBuffer}분 전(${fmt(targetArriveMinutes)}) ${isDepartureSchedule(schedule) ? '공항 도착 (국제선 수속 여유)' : '현장 도착 완료'} 후 정시 시작`,
+      desc: `장소: ${schedule.location || '현장'} ${schedule.locationAddress ? `(${schedule.locationAddress})` : ''} / ${waitBuffer}분 전(${fmt(targetArriveMinutes)}) ${arriveDescFor(schedule)} 후 정시 시작`,
       done: false
     });
 
@@ -2296,7 +2337,7 @@ class HQDataStore {
       });
     }
 
-    return addWakeStep(timeline);
+    return addWakeStep(timeline, schedule);
   }
 
   // 매니저용 스마트 동선 타임라인 역산 생성기 (동기 기본형)
@@ -2363,7 +2404,7 @@ class HQDataStore {
     timeline.push({
       time: schedule.startTime, dayOffset: 0,
       label: `[메인 일정] ${schedule.title}`,
-      desc: `장소: ${schedule.location || '현장'} / ${waitBuffer}분 전(${fmt(targetArriveMinutes)}) ${isDepartureSchedule(schedule) ? '공항 도착 (국제선 수속 여유)' : '현장 도착 완료'} 후 정시 시작`,
+      desc: `장소: ${schedule.location || '현장'} / ${waitBuffer}분 전(${fmt(targetArriveMinutes)}) ${arriveDescFor(schedule)} 후 정시 시작`,
       done: false
     });
 
@@ -2376,7 +2417,7 @@ class HQDataStore {
       });
     }
 
-    return addWakeStep(timeline);
+    return addWakeStep(timeline, schedule);
   }
 
   notifyChange(type, payload = null) {

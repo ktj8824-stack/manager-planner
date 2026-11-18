@@ -479,7 +479,10 @@ window.AutoNav = AutoNav;
    ========================================= */
 const WorkEnd = {
   FROM_HOUR: 15,   // 오후 3시부터 홈에 보임 (오늘 퇴근 기록이 있으면 언제든 기록 줄)
-  _day(d = new Date()) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; },
+  UNTIL_HOUR: 6,   // 밤샘 촬영: 새벽 6시 전까지도 보임 — 이 시간은 전날 근무일로 기록
+  // 근무일: 새벽 6시 전은 전날 (00:40 퇴근 → 전날 기록)
+  _workDate() { return new Date(Date.now() - 6 * 3600e3); },
+  _day(d = this._workDate()) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; },
   _hm(t) { const d = new Date(t); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; },
   _esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); },
   _place(k) { const a = (typeof State !== 'undefined' && State.userAddresses) || {}; const p = a[k]; return p && (p.name || p.address) ? p : null; },
@@ -491,7 +494,8 @@ const WorkEnd = {
     if (t) return `<div class="we-done" role="note"><span class="we-done-ic" aria-hidden="true">✓</span>
       <span class="we-done-t"><b>오늘 ${this._hm(t.at)} 퇴근</b><small>${this._esc(this.KIND[t.kind] || '')}${t.eta ? ` · ${this._hm(t.at + t.eta * 60000)} 도착 예정` : ''}</small></span>
       <button type="button" class="we-done-go" onclick="WorkEnd.open()">다시 길안내</button></div>`;
-    if (new Date().getHours() < this.FROM_HOUR) return '';
+    const hr = new Date().getHours();
+    if (!(hr >= this.FROM_HOUR || hr < this.UNTIL_HOUR)) return '';
     return `<button type="button" class="we-btn" onclick="WorkEnd.open()">
       <span class="we-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span>
       <span class="we-t"><b>퇴근합시다</b><small>집·회사·원하는 곳으로 바로 내비</small></span>
