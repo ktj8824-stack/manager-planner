@@ -611,7 +611,12 @@ const State = {
         // 일정에 저장된 세부 동선 타임라인이 있으면 그것을 직접 이벤트로 풀어서 전달
         if (activeTimeline && activeTimeline.length > 0) {
           const dayOffs = State.stepDayOffsets(activeTimeline, hs.startTime);
+          // 같은 날 다음 일정이 이 현장에서 이어서 출발하면(11-18), 이 일정의 [현장 철수 · 복귀] 단계는 빼요.
+          //  그 시각엔 다음 일정의 [현장 이동] 단계가 '지금 할 일'·길안내(다음 현장)를 맡아요 (11-19 점검 R6b — 첫 샵으로 복귀 안내되던 문제)
+          const chainNext = hqScheds.find(n => n && n.id !== hs.id && n.departure && typeof n.departure === 'object'
+            && n.departure.chained && n.departure.fromScheduleId === hs.id && !['취소', 'cancelled'].includes(n.status));
           activeTimeline.forEach((step, stepIdx) => {
+            if (chainNext && /^\[현장 철수\]/.test(String(step.label || ''))) return;
             // 샵 미경유 일정인 경우 샵/헤어/스타일링 관련 잘못 누적된 단계 최종 스킵
             if (!isShopNeeded && (step.label.includes('헤어') || step.label.includes('메이크업') || step.label.includes('스타일링') || (step.label.includes('샵') && !step.label.includes('현장')))) {
               return;

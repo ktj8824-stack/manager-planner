@@ -71,6 +71,29 @@ window.isDepartureSchedule = isDepartureSchedule;
 window.isDomesticFlight = isDomesticFlight;
 window.arriveDescFor = arriveDescFor;
 
+// 같은 날 앞 일정 현장에서 이어서 출발하는 일정(11-18): 앞 일정이 끝나기 전에는 나갈 수 없음 (11-19 점검 R6b)
+//  출발 = max(계산 출발, 앞 일정 끝). 그래서 늦으면 [현장 이동] 설명에 '몇 분 늦음'을 붙이고 schedule.chainLateMin 에 남김
+function chainPrevEndMin(schedule, list) {
+  const dep = schedule && schedule.departure;
+  if (!dep || typeof dep !== 'object' || !dep.chained || !dep.fromScheduleId) return null;
+  const prev = (Array.isArray(list) ? list : []).find(x => x && x.id === dep.fromScheduleId);
+  if (!prev || ['취소', 'cancelled'].includes(prev.status)) return null;
+  const m = /^(\d{1,2}):(\d{2})/.exec(String(prev.endTime || ''));
+  if (!m) return null;
+  let v = (+m[1]) * 60 + (+m[2]);
+  if (prev.startTime && String(prev.endTime) < String(prev.startTime)) v += 1440;   // 자정 넘겨 끝남
+  return v;
+}
+function holdChainDepart(departMinutes, schedule, list, targetArriveMinutes, fmt) {
+  const pe = chainPrevEndMin(schedule, list);
+  if (schedule && typeof schedule === 'object') delete schedule.chainLateMin;
+  if (pe == null || departMinutes >= pe) return { departMinutes, note: '' };
+  const late = pe - departMinutes;
+  if (schedule && typeof schedule === 'object') schedule.chainLateMin = late;
+  return { departMinutes: pe, note: ` · 앞 일정 끝(${fmt(pe)}) 바로 출발 → 현장 도착 약 ${fmt(targetArriveMinutes + late)} (도착 목표 ${fmt(targetArriveMinutes)}보다 ${late}분 늦음)` };
+}
+window.holdChainDepart = holdChainDepart;
+
 // 동선 맨 앞에 '기상·준비' 단계 (첫 출발 시각 - 준비 시간, 기본 60분 · 0이면 넣지 않음)
 function addWakeStep(timeline, schedule) {
   try {
@@ -2311,12 +2334,13 @@ class HQDataStore {
       const travelDepartToMain = travelDepartToMainInfo.minutes;
       const totalDepartToMain = travelDepartToMain + travelBuffer;
 
-      const departMinutes = targetArriveMinutes - totalDepartToMain;
+      const held = holdChainDepart(targetArriveMinutes - totalDepartToMain, schedule, typeof this.getSchedules === 'function' ? this.getSchedules() : [], targetArriveMinutes, fmt);
+      const departMinutes = held.departMinutes;
 
       timeline.push({
         time: fmt(departMinutes), dayOffset: Math.floor((departMinutes) / 1440),
         label: (typeof schedule.departure === 'object' ? schedule.departure?.place || schedule.departure?.address : schedule.departure) ? `[현장 이동] ${departurePlace} 출발 및 이동` : '[현장 이동] 현장으로 출발',
-        desc: `이동 약 ${travelDepartToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToMain + travelBuffer}분 · ${travelDepartToMainInfo.note})`,
+        desc: `이동 약 ${travelDepartToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToMain + travelBuffer}분 · ${travelDepartToMainInfo.note})${held.note}`,
         done: false
       });
     }
@@ -2391,12 +2415,13 @@ class HQDataStore {
     } else {
       const travelDepartToMain = 35;
       const totalDepartToMain = travelDepartToMain + travelBuffer;
-      const departMinutes = targetArriveMinutes - totalDepartToMain;
+      const held = holdChainDepart(targetArriveMinutes - totalDepartToMain, schedule, typeof this.getSchedules === 'function' ? this.getSchedules() : [], targetArriveMinutes, fmt);
+      const departMinutes = held.departMinutes;
 
       timeline.push({
         time: fmt(departMinutes), dayOffset: Math.floor((departMinutes) / 1440),
         label: `[현장 이동] ${schedule.departure?.place || '출발지'} 출발 및 이동`,
-        desc: `이동 약 ${travelDepartToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToMain + travelBuffer}분)`,
+        desc: `이동 약 ${travelDepartToMain}분 + 버퍼 ${travelBuffer}분 배정 (예상 소요 약 ${travelDepartToMain + travelBuffer}분)${held.note}`,
         done: false
       });
     }
