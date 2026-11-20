@@ -80,12 +80,37 @@
     },
     _sch(id) { try { return (window.hqStore?.getSchedules?.() || []).find(x => x.id === id) || null; } catch (e) { return null; } },
 
+    // 지금 출발하면(이미 출발했으면 출발 시각부터) 도착 목표보다 몇 분 늦는지 — 아직 안 끝난 첫 이동 단계 기준
+    //  도착 목표 = 다음 단계 시각 (메인 일정이면 설명의 'N분 전(HH:MM)'), 이동 시간 = 설명의 '이동 약 N분'
+    //  (기상·준비 단계 시각부터 세거나 출발 늦은 분을 그대로 쓰면 여유(버퍼)만큼 부풀려짐)
+    _lateNow(s) {
+      try {
+        const tl = Array.isArray(s.timeline) ? s.timeline : [];
+        const offs = typeof State !== 'undefined' && State.stepDayOffsets ? State.stepDayOffsets(tl, s.startTime) : tl.map(t => Number(t && t.dayOffset) || 0);
+        const at = (hhmm, i) => {
+          const m = /^(\d{1,2}):(\d{2})/.exec(String(hhmm || '')); if (!m || !s.date) return NaN;
+          const d = new Date(s.date + 'T00:00:00'); d.setHours(+m[1], +m[2], 0, 0); d.setDate(d.getDate() + (offs[i] || 0));
+          return d.getTime();
+        };
+        const i = tl.findIndex(t => t && !t.done && t.stepCategory !== 'rest' && (t.moving === true || /^\[(현장 이동|픽업 출발)\]/.test(t.label || '')));
+        if (i < 0 || !tl[i + 1]) return 0;
+        const st = tl[i], nx = tl[i + 1];
+        const tm = /^\[메인/.test(nx.label || '') && /분 전\((\d{1,2}:\d{2})\)/.exec(String(nx.desc || ''));
+        const target = at(tm ? tm[1] : nx.time, i + 1), dep = at(st.time, i);
+        const tv = /이동 약\s*(\d+)분/.exec(String(st.desc || ''));
+        const travel = tv ? +tv[1] * 60000 : target - dep;   // 이동 시간을 모르면 계획 출발~도착 전체
+        const from = st.moving && st.movingAtIso ? new Date(st.movingAtIso).getTime() : Date.now();
+        const late = Math.round((from + travel - target) / 60000);
+        return late >= 1 && late <= 180 ? late : 0;
+      } catch (e) { return 0; }
+    },
+
     /** 매니저 앱: 지금 할 일 카드 · 지연 예상 창에서 */
     forSchedule(id, lateMin) {
       const s = this._sch(id);
       if (!s) return;
       const p = this._profile(s);
-      const late = Number(lateMin) || 0;
+      const late = Number(lateMin) || this._lateNow(s);   // 늦는 분을 안 넘기면(지금 할 일 카드) 이동 단계로 직접 계산
       const opts = [{ label: '출발했어요', text: Drafts.depart(s, '', p) }];
       [10, 20, 30].forEach(m => opts.push({ label: `${m}분 늦어요`, text: Drafts.late(s, m, p) }));
       if (late && ![10, 20, 30].includes(late)) opts.splice(1, 0, { label: `${late}분 늦어요`, text: Drafts.late(s, late, p) });

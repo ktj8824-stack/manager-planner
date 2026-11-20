@@ -2082,6 +2082,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const clean = (l) => String(l || '').replace(/^\[[^\]]+\]\s*/, '').slice(0, 14);
       if (s.status === '완료' || (tl.length && tl.every(t => t.done))) { put(s.managerId, { cls: 'done', text: '오늘 일정 완료' }); return; }
       const mv = tl.find(t => t.moving && !t.done);
+      const ml = movingLate(s, today, nowMin);   // 이동 중인데 도착 목표가 지났거나, 매니저가 '지연 예상'을 보냈으면 지연으로
+      if (ml) { put(s.managerId, { cls: 'late', text: ml.report ? `지연 예상 ${ml.report}분` : `도착 늦음 ${hqDurTxt(ml.late)}` }); return; }
       if (mv) { put(s.managerId, { cls: 'move', text: '이동 중' + (mv.label ? ' · ' + clean(mv.label) : '') }); return; }
       const next = tl.find(t => !t.done && !/^\[기상/.test(t.label || ''));
       const nm = next ? toMin(next.time) : null;
@@ -2093,6 +2095,28 @@ document.addEventListener('DOMContentLoaded', () => {
     return out;
   }
   Admin._managerNow = (list) => managerNowMap(list);
+  // 이동 중 지연: ① 이동 단계의 다음 단계(현장 도착 목표, 메인 일정이면 'N분 전(HH:MM)') 시각이 기준 넘게 지남
+  //               ② 오늘 매니저가 보낸 '[지연 예상]' 기록이 있고 그 뒤로 도착(완료)을 아직 안 누름
+  function movingLate(s, today, nowMin) {
+    const tl = Array.isArray(s && s.timeline) ? s.timeline : [];
+    const toMin = (hhmm) => { const m = /^(\d{1,2}):(\d{2})/.exec(String(hhmm || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; };
+    if (s.status === '완료' || !tl.length || tl.every(t => t.done)) return null;
+    let late = 0, report = 0, arrive = '';
+    const i = tl.findIndex(t => t.moving && !t.done);
+    const nx = i >= 0 ? tl[i + 1] : null;
+    if (nx) {
+      const tm = /^\[메인/.test(nx.label || '') && /분 전\((\d{1,2}:\d{2})\)/.exec(String(nx.desc || ''));
+      const t = toMin(tm ? tm[1] : nx.time);
+      if (t !== null && nowMin - t >= lateThreshold()) late = nowMin - t;
+    }
+    const log = (Array.isArray(s.statusLogs) ? s.statusLogs : []).find(l => l && l.date === today && /^\[지연 예상\]/.test(l.label || ''));
+    if (log && !tl.some(t => t.done && t.doneAtIso && t.doneAtIso > (log.recordedAt || ''))) {
+      const m = /약\s*(\d+)분(?:.*도착 예상\s*(\d{1,2}:\d{2}))?/.exec(log.label);
+      if (m) { report = +m[1]; arrive = m[2] || ''; }
+    }
+    if (!late && !report) return null;
+    return { late: Math.max(late, report), report, note: report ? `매니저 보고 · 약 ${report}분${arrive ? ` · ${arrive} 도착 예상` : ''}` : '이동 중 · 도착 늦음' };
+  }
   // 지연 판단 기준 (관리자 설정에서 바꿀 수 있음, 기본 10분)
   function lateThreshold() { const v = parseInt(localStorage.getItem('hq_late_minutes') || '10', 10); return v >= 5 && v <= 60 ? v : 10; }
 
@@ -2150,7 +2174,9 @@ document.addEventListener('DOMContentLoaded', () => {
       // 지연: 아직 안 끝난 첫 단계의 시간이 10분 넘게 지났는데 이동중/완료 표시가 없음
       const next = tl.find(t => !t.done && !/^\[기상/.test(t.label || ''));   // 기상·준비는 본사 지연 판단에서 제외
       const nm = next ? toMin(next.time) : null;
-      if (next && !next.moving && nm !== null && nowMin - nm >= lateThreshold()) lists.late.push({ s, note: `${next.label || '다음 단계'} 미확인`, late: nowMin - nm });
+      const ml = movingLate(s, fmtDate(now), nowMin);   // 이동 중 도착 늦음 · 매니저 지연 보고
+      if (ml) lists.late.push({ s, note: ml.note, late: ml.late });
+      else if (next && !next.moving && nm !== null && nowMin - nm >= lateThreshold()) lists.late.push({ s, note: `${next.label || '다음 단계'} 미확인`, late: nowMin - nm });
     });
     lists.late.sort((x, y) => y.late - x.late);
     Object.assign(briefLists, lists);
