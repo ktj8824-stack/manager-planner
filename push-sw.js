@@ -13,7 +13,8 @@ self.addEventListener('push', event => {
     icon: new URL('icon-192.png', SCOPE_URL).href,
     badge: new URL('icon-192.png', SCOPE_URL).href,
     tag: data.tag || 'chat',
-    renotify: true,
+    silent: !!data.silent,
+    renotify: !data.silent,
     requireInteraction: urgent,
     data: { room_id: data.room_id || '' }
   }));

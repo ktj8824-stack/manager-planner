@@ -264,6 +264,7 @@ export async function run(db: SupabaseClient, send: Sender, nowMs: number, route
           title: `🚗 다음 일정 · ${st.time} 출발`,
           body: `${stepName(st.label)}\n${who}\n차에 타면 눌러서 바로 길안내`,
           tag: `next-${s.id}-${i}`, url: APP_URL + "?go=next", kind: "pre",
+          silent: true,   // 미리 남겨 두는 알림이라 소리·진동 없이 (15분 전 출발 알림만 울림 → 두 번 울리지 않게)
         }, 3600);
         out.pushed += r.sent;
         continue;

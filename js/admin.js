@@ -2459,7 +2459,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const rows = showArtists.map(art => {
       const artSch = schedules.filter(s => matchArtistSchedule(s, art.id, artists)).sort((x, z) => String(x.startTime || '').localeCompare(String(z.startTime || '')));
-      let anyLate = false;
+      let anyLate = false, moveLate = false;
       const bars = [];
       artSch.forEach(sch => {
         const canView = window.AuthPersona ? window.AuthPersona.canViewSecret(sch) : true;
@@ -2473,7 +2473,11 @@ document.addEventListener('DOMContentLoaded', () => {
           if (st !== null && a0 >= st) return;                 // 본 일정 시간 안의 단계는 본 막대로
           let cls = 'plan';
           if (t.done) cls = 'done';
-          else if (t.moving) cls = 'live';
+          else if (t.moving) {
+            // 이동 중이어도 도착 목표가 지났거나 '지연 예상' 보고가 있으면 지연(빨강) — 위 카운터의 '지연'과 맞춤
+            const ml = isToday ? movingLate(sch, todayStr, nowMin) : null;
+            if (ml) { cls = 'late'; anyLate = true; moveLate = true; } else cls = 'live';
+          }
           else if (isToday && t === firstOpen && nowMin - a0 >= thr) { cls = 'late'; anyLate = true; }
           bars.push({ a0, a1, cls, label: clean(t.label) || '이동', id: sch.id });
         });
@@ -2484,7 +2488,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
       const mgr = artSch.find(s => s.managerName);
-      const sub = mgr ? (anyLate ? `${mgr.managerName} · 응답 없음` : mgr.managerName) : '';
+      const sub = mgr ? (anyLate ? `${mgr.managerName} · ${moveLate ? '지연' : '응답 없음'}` : mgr.managerName) : '';
       const barHtml = bars.map(b => `<div class="cal-event-pill gv2-bar ${b.cls}${b.main ? ' main' : ''}" data-sch-id="${esc(b.id)}" title="${esc(b.label)}" style="left:${pct(b.a0)}%; width:${Math.max(0.8, pct(b.a1) - pct(b.a0))}%">${esc(b.label)}</div>`).join('');
       return `<div class="gv2-row${anyLate ? ' late' : ''}">
         <div class="gv2-who"><span class="gv2-dot" style="background:${esc(art.color || '#4C57D6')}"></span><span><b>${esc(String(art.name || '').replace(/\s*\([^)]*\)\s*$/, ''))}</b><small class="${anyLate ? 'bad' : ''}">${esc(sub)}</small></span></div>
