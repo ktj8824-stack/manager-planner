@@ -1611,7 +1611,16 @@ const Home = {
       const first = list.hidden;
       list.hidden = false;
       // 아이폰 자판에 목록이 가리지 않게 입력칸을 창 위쪽으로 올림 (목록이 처음 열릴 때만)
-      if (first) { try { input.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { } }
+      // scrollIntoView 는 아이폰에서 페이지 전체까지 밀어 올려 입력칸·목록이 화면 위로 사라지므로, 창 안쪽만 올림
+      if (first) {
+        pinTop();
+        setTimeout(() => {
+          try {
+            const vv = window.visualViewport;
+            if (vv && vv.offsetTop > 0) { window.scrollTo(0, 0); pinTop(); if (!list.hidden && list.querySelector('.ps-item')) reveal(); }
+          } catch (e) { }
+        }, 350);
+      }
       list.innerHTML = '<div class="ps-msg">검색 중...</div>';
       let docs = [], failed = false;
       try { docs = await KakaoAPI.searchPlace(q); failed = !!KakaoAPI.lastSearchFailed; } catch (e) { docs = []; failed = true; }
@@ -1620,9 +1629,32 @@ const Home = {
       list.innerHTML = items.length ? items.map((d, i) => `
         <button type="button" class="ps-item" data-i="${i}">
           <b>${esc(d.place_name || '')}</b>
-          <span>${esc(d.road_address_name || d.address_name || '')}</span>
+          <span>${d.jibun_name ? '<em>도로명</em>' : ''}${esc(d.road_address_name || d.address_name || '')}</span>${d.jibun_name ? `<span><em>지번</em>${esc(String(d.jibun_name).replace(/^\S+\s+\S+[시군구]\s+/, ''))}</span>` : ''}
         </button>`).join('')
         : `<div class="ps-msg">${navigator.onLine === false ? '인터넷 연결을 확인해 주세요.' : failed ? '검색이 잠시 안 돼요. 장소 이름을 직접 입력해도 돼요.' : '검색 결과가 없어요. 직접 입력해도 돼요.'}</div>`;      reveal();
+    };
+    // 입력칸이 들어 있는 창(모달)의 스크롤 칸을 찾아, 입력칸이 창 맨 위에서 약 12px 아래에 오도록 맞춤
+    const scrollBox = () => {
+      let sc = input.parentElement;
+      while (sc && sc !== document.body && sc !== document.documentElement) {
+        const o = getComputedStyle(sc).overflowY;
+        if (o === 'auto' || o === 'scroll') return sc;
+        sc = sc.parentElement;
+      }
+      return null;
+    };
+    const pinTop = () => {
+      try {
+        const sc = scrollBox();
+        if (!sc) return;
+        const need = input.getBoundingClientRect().top - sc.getBoundingClientRect().top - 12;
+        if (Math.abs(need) < 2) return;
+        if (need > 0) {
+          const room = sc.scrollHeight - sc.clientHeight - sc.scrollTop;
+          if (room < need) { sc.dataset.psPad = '1'; sc.style.paddingBottom = `${(parseFloat(sc.style.paddingBottom) || 0) + (need - room) + 8}px`; }
+        }
+        sc.scrollTop = Math.max(0, sc.scrollTop + need);
+      } catch (e) { }
     };
     // 자판 위로 첫 결과(최대 2개)가 보이게 창 안쪽을 올림. 창이 더 못 올라가면 아래 여백을 붙여서 올림
     const reveal = () => {

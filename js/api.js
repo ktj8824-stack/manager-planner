@@ -74,26 +74,41 @@ const KakaoAPI = {
     } catch (e) { return null; }
   },
 
-  /** 카카오 로컬 장소/주소 검색 (키워드 → 없으면 주소) */
+  /** 주소처럼 친 검색어인지 (역삼동 824 · 테헤란로 114 · 상암동 1605-1) */
+  looksAddr(q) { return /\d/.test(q) && /(동|리|가|로|길|읍|면)\s*\d/.test(q); },
+  /** 도로명과 지번이 다르면 둘 다 들고 있게 (검색 목록에 두 줄로 보여 줌) */
+  _withJibun(d) {
+    const road = (d.road_address_name || '').trim(), jb = (d.address_name || '').trim();
+    return { ...d, road_address_name: road || jb, jibun_name: road && jb && road !== jb ? jb : '' };
+  },
+  /** 카카오 로컬 장소/주소 검색 — 주소처럼 치면 그 주소를 맨 위에, 장소는 그 아래 (지번으로 쳐도 찾게) */
   async searchPlace(keyword) {
     const q = String(keyword || '').trim();
     this.lastSearchFailed = false;
     if (!q) return [];
-    const kw = await RouteProxy.call('kakao_keyword', { query: q });
-    if (kw && Array.isArray(kw.documents) && kw.documents.length > 0) return kw.documents;
-    const ad = await RouteProxy.call('kakao_address', { query: q });
-    if (ad && Array.isArray(ad.documents) && ad.documents.length > 0) {
-      return ad.documents.map(d => ({
-        id: d.address_name,
-        place_name: d.address_name,
-        address_name: (d.road_address && d.road_address.address_name) || (d.address && d.address.address_name) || d.address_name,
-        x: d.x,
-        y: d.y
-      }));
+    const addrFirst = this.looksAddr(q);
+    const [kw, ad] = await Promise.all([
+      RouteProxy.call('kakao_keyword', { query: q }),
+      addrFirst ? RouteProxy.call('kakao_address', { query: q }) : Promise.resolve(null),
+    ]);
+    const places = (kw && Array.isArray(kw.documents) ? kw.documents : []).map(d => this._withJibun(d));
+    const toAddr = (docs) => (docs || []).map(d => {
+      const road = (d.road_address && d.road_address.address_name) || '';
+      const jb = (d.address && d.address.address_name) || (d.address_type !== 'ROAD_ADDR' ? d.address_name : '') || '';
+      const bld = d.road_address && d.road_address.building_name;
+      return { id: d.address_name, place_name: bld || d.address_name, road_address_name: road || jb, address_name: jb || road, jibun_name: road && jb && road !== jb ? jb : '', x: d.x, y: d.y };
+    });
+    let addrs = toAddr(ad && ad.documents);
+    if (!addrs.length && !places.length && !addrFirst) {
+      // 키워드로 하나도 없으면 주소로 한 번 더 (예전 방식)
+      const ad2 = await RouteProxy.call('kakao_address', { query: q });
+      addrs = toAddr(ad2 && ad2.documents);
+      // 두 검색이 모두 응답 자체를 못 받았으면 '0건'이 아니라 '고장' (화면에서 다른 문구로 알림)
+      if (!kw && !ad2) this.lastSearchFailed = true;
+      return addrs;
     }
-    // 두 검색이 모두 응답 자체를 못 받았으면 '0건'이 아니라 '고장' (화면에서 다른 문구로 알림)
-    if (!kw && !ad) this.lastSearchFailed = true;
-    return [];
+    if (!kw && !ad && addrFirst) this.lastSearchFailed = true;
+    return [...addrs.slice(0, 2), ...places];
   },
 
   /**
