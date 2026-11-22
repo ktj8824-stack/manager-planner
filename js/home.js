@@ -1407,7 +1407,8 @@ const Home = {
             <div style="margin-bottom:10px;"><label style="${L}">행사장 / 촬영 위치 <span style="color:#ef4444;">*</span></label>
               <input type="text" id="m-sch-loc" required value="${esc(v.loc)}" placeholder="이름을 치면 검색돼요 (예: SBS 프리즘타워)" style="${I}" /></div>
             <div style="margin-bottom:10px;"><label style="${L}">상세 주소 (길안내용)</label>
-              <input type="text" id="m-sch-addr" value="${esc(v.addr)}" placeholder="예: 서울 마포구 상암산로 82" style="${I}" /></div>
+              <input type="text" id="m-sch-addr" value="${esc(v.addr)}" placeholder="예: 서울 마포구 상암산로 82" style="${I}" />
+              <div id="m-sch-venue"></div></div>
             <div><label style="${L}">출발지 (숙소·사옥 등)</label>
               <input type="text" id="m-sch-dep" value="${esc(v.dep)}" data-default="${esc(dep)}" placeholder="예: 청담동 숙소 (비우면 미정)" style="${I}" />
               <div id="m-sch-chain-hint" style="display:none; font-size:12px; color:#2B338F; margin-top:4px; font-weight:700;"></div>
@@ -1457,6 +1458,19 @@ const Home = {
     this._placeSuggest('m-sch-loc', 'm-sch-addr');
     this._placeSuggest('m-sch-shop-name', 'm-sch-shop-addr');
     this._placeSuggest('m-sch-dep', null);
+    // 주소가 정해지면 그 장소의 현장 메모(출입구·주차)를 바로 아래에 — 같은 주소로 다음에 등록할 때도 자동으로 보임
+    const venueBox = document.getElementById('m-sch-venue');
+    const syncVenue = () => {
+      if (!venueBox || !window.VenueNotes) return;
+      const key = (document.getElementById('m-sch-addr')?.value || '').trim();
+      if (key === (venueBox.getAttribute('data-venue') || '')) return;
+      venueBox._vHtml = ''; venueBox.innerHTML = '';
+      if (!key) { venueBox.removeAttribute('data-venue'); return; }
+      venueBox.setAttribute('data-venue', key);
+      VenueNotes.hydrate(venueBox.parentElement);
+    };
+    ['m-sch-loc', 'm-sch-addr'].forEach(id => document.getElementById(id)?.addEventListener('change', syncVenue));
+    syncVenue();
     // 같은 날 앞 일정이 있으면 그 현장을 출발지로 미리 채움 (날짜·시작·매니저·아티스트를 바꾸면 다시 봄)
     this._chainEditId = edit ? edit.id : null;
     const depEl = document.getElementById('m-sch-dep');
@@ -1561,7 +1575,8 @@ const Home = {
       const from = `${since.getFullYear()}-${String(since.getMonth() + 1).padStart(2, '0')}-${String(since.getDate()).padStart(2, '0')}`;
       let list = []; try { list = window.hqStore?.getSchedules?.() || []; } catch (e) { }
       list.filter(s => s && String(s.date || '') >= from && s.status !== '취소').forEach(s => {
-        if (kind === 'loc') { const v = split(s.location); add(v.n, s.locationAddress || v.a); }
+        // 주소 칸이 따로 있으면 장소 글자 그대로 ('문화콘텐츠센터 (상암동 1605)' 의 괄호를 떼지 않게)
+        if (kind === 'loc') { const v = s.locationAddress ? { n: String(s.location || '').trim(), a: '' } : split(s.location); add(v.n, s.locationAddress || v.a); }
         else if (kind === 'shop') { const sh = s.shop || {}; if (sh.needed && sh.name) add(sh.name, sh.address); }
         else { const d = typeof s.departure === 'object' ? (s.departure || {}) : { place: s.departure }; const v = split(d.place); add(v.n, d.address || v.a); }
       });
@@ -1699,7 +1714,9 @@ const Home = {
         const a = document.getElementById(addrId);
         if (a) a.value = addr;
       } else {
-        input.value = addr && addr !== d.place_name ? `${d.place_name} (${addr})` : (d.place_name || '');
+        // 주소로 고른 건 '건물 (도로명 주소)' 한 겹만 (괄호가 두 번 붙지 않게)
+        const nm = d.is_addr ? (d.bld || '') : (d.place_name || '');
+        input.value = addr && nm && addr !== nm ? `${nm} (${addr})` : (nm || addr);
       }
       seq++; close();
       input.dispatchEvent(new Event('change', { bubbles: true }));
