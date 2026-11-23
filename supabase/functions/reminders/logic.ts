@@ -50,7 +50,8 @@ const tag = (label: string) => (String(label || "").match(/^\[([^\]]+)\]/) || [,
 export function splitPlace(s: string) {
   const str = String(s || "").replace(/\s+/g, " ").trim();
   const m = str.match(/^(.*?)\s*[(\[]([^()\[\]]+)[)\]]\s*$/);
-  const looksAddr = (v: string) => /(시|도|구|군|읍|면|동|리|로|길)\s*\d|\d+(-\d+)?\s*$/.test(v) && /(시|도|구|군)\s/.test(v + " ");
+  // 시·구가 빠진 '상암동 1605' · '테헤란로 114' 도 주소로 (앱 KakaoAPI.splitPlace 와 같게)
+  const looksAddr = (v: string) => (/(시|도|구|군|읍|면|동|리|로|길)\s*\d|\d+(-\d+)?\s*$/.test(v) && /(시|도|구|군)\s/.test(v + " ")) || /^[가-힣0-9]+(동|리|가|로|길)\s*\d+(-\d+)?$/.test(String(v).trim());
   if (m && m[1].trim() && looksAddr(m[2])) return { name: m[1].trim(), addr: m[2].trim() };
   if (looksAddr(str)) return { name: "", addr: str };
   return { name: m && m[1].trim() ? m[1].trim() : str, addr: "" };

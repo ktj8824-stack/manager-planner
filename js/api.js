@@ -49,7 +49,8 @@ const KakaoAPI = {
   splitPlace(s) {
     const str = String(s || '').replace(/\s+/g, ' ').trim();
     const m = str.match(/^(.*?)\s*[(\[]([^()\[\]]+)[)\]]\s*$/);
-    const looksAddr = (v) => /(시|도|구|군|읍|면|동|리|로|길)\s*\d|\d+(-\d+)?\s*$/.test(v) && /(시|도|구|군)\s/.test(v + ' ');
+    // 시·구가 빠진 '상암동 1605' · '테헤란로 114' 도 주소로 (주소 검색에서 고른 '건물 (친 주소)' 모양)
+    const looksAddr = (v) => (/(시|도|구|군|읍|면|동|리|로|길)\s*\d|\d+(-\d+)?\s*$/.test(v) && /(시|도|구|군)\s/.test(v + ' ')) || /^[가-힣0-9]+(동|리|가|로|길)\s*\d+(-\d+)?$/.test(String(v).trim());
     if (m && m[1].trim() && looksAddr(m[2])) return { name: m[1].trim(), addr: m[2].trim() };
     if (looksAddr(str)) return { name: '', addr: str };
     return { name: m && m[1].trim() ? m[1].trim() : str, addr: '' };
@@ -95,8 +96,9 @@ const KakaoAPI = {
     const toAddr = (docs) => (docs || []).map(d => {
       const road = (d.road_address && d.road_address.address_name) || '';
       const jb = (d.address && d.address.address_name) || (d.address_type !== 'ROAD_ADDR' ? d.address_name : '') || '';
-      const bld = d.road_address && d.road_address.building_name;
-      return { id: d.address_name, place_name: bld || d.address_name, road_address_name: road || jb, address_name: jb || road, jibun_name: road && jb && road !== jb ? jb : '', x: d.x, y: d.y };
+      const bld = ((d.road_address && d.road_address.building_name) || '').trim();
+      // 건물 이름만 남기면 PD가 준 글자(상암동 1605)와 달라져서 → '문화콘텐츠센터 (상암동 1605)' 처럼 친 주소를 괄호로 같이
+      return { id: d.address_name, place_name: bld ? `${bld} (${q})` : d.address_name, is_addr: true, bld, road_address_name: road || jb, address_name: jb || road, jibun_name: road && jb && road !== jb ? jb : '', x: d.x, y: d.y };
     });
     let addrs = toAddr(ad && ad.documents);
     if (!addrs.length && !places.length && !addrFirst) {
