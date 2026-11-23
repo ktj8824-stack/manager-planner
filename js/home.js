@@ -728,32 +728,59 @@ const Home = {
           }
         } catch (e) { lateMin = 0; }
         const lateTxt = lateMin >= 60 ? `${Math.floor(lateMin / 60)}시간 ${lateMin % 60}분 지남` : `${lateMin}분 지남`;
+        // 11/24: [메인 일정]이 시작~끝 사이면 '지남'이 아니라 '진행 중' + 'HH:MM 끝 · 다음 출발 HH:MM' 한 줄 (끝 시각이 지나면 원래대로 '지남')
+        let inProg = null;
+        try {
+          if (lateMin && tag === '메인 일정' && nowDay === 'today' && !nowEv.dayOffset) {
+            const sch = window.hqStore?.getSchedules().find(s => s.id === nowEv.hqScheduleId);
+            const em = /^(\d{1,2}):(\d{2})/.exec(String((sch && sch.endTime) || ''));
+            const sm = /^(\d{1,2}):(\d{2})/.exec(String(nowEv.time || ''));
+            if (em && sm) {
+              const endAt = new Date(this.selectedDate); endAt.setHours(+em[1], +em[2], 0, 0);
+              if (+em[1] * 60 + +em[2] <= +sm[1] * 60 + +sm[2]) endAt.setDate(endAt.getDate() + 1);   // 자정 넘김
+              if (Date.now() < endAt.getTime()) {
+                const endHm = `${String(em[1]).padStart(2, '0')}:${em[2]}`;
+                // 다음 출발 = 끝난 뒤의 첫 이동 단계 (다음 일정 출발·픽업 또는 오늘 남은 이동 단계)
+                const after = uniqueEvents.slice(uniqueEvents.indexOf(nowEv) + 1);
+                const nx = after.find(e => {
+                  const t = plain(e);
+                  if (e.done || e.forNextDay || e.dayOffset || e.stepCategory === 'rest' || /^\[(대기|식사|기상)/.test(t)) return false;
+                  if (!(/^\[(픽업|현장 이동)/.test(t) || t.includes('출발'))) return false;
+                  return evAt(e) > endAt.getTime();
+                });
+                inProg = { endHm, next: nx ? String(nx.time || '').slice(0, 5) : '' };
+              }
+            }
+          }
+        } catch (e) { inProg = null; }
         // 제목은 장소 이름만, 주소는 아래 줄로
         const shortName = String(name).replace(/\s*\((?=[^)]*\d)[^)]*\)\s*/g, ' ').replace(/픽업(\s*\([^()]*\))?\s+픽업 및 출발/, '픽업$1 출발').replace(/\s{2,}/g, ' ').trim() || name;
         const SB = 'min-height:46px; border-radius:12px; font-size:14.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; font-family:inherit;';
         const dayTag = nowEv.forNextDay ? '내일 일정 · ' : nowEv.dayOffset === -1 ? '전날 ' : nowEv.dayOffset === 1 ? '다음날 ' : '';
+        const ncActs = canAct ? `<div class="nc-acts">
+              ${nowDay === 'future' ? `<div class="nc-wait">일정 당일에 출발·도착을 누를 수 있어요</div>` : nowDay === 'past' ? `<button type="button" onclick="Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '완료')" class="nc-btn pri" style="${SB}">완료</button>` : `
+              ${isDrive ? `<button type="button" onclick="Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '이동중')" class="nc-btn ${nowEv.moving ? 'moving' : ''}" style="${SB}">${nowEv.moving ? '● 이동중' : '출발'}</button>` : ''}
+              <button type="button" onclick="${isDrive ? `Home.arriveStep(${escJs(nowEv.hqScheduleId)}, ${idx}, ${escJs(name)})` : `Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '완료')`}" class="nc-btn pri" style="${SB}">${isDrive ? '도착' : '완료'}</button>
+              `}
+            </div>` : '';
+        const ncNavs = dest ? `<div class="nc-navs">
+              <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'tmap')" class="nc-nav"><span class="nc-sq" style="background:#14161A"></span>티맵 길안내</button>
+              <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'kakao')" class="nc-nav"><span class="nc-sq" style="background:#FEE500; box-shadow:inset 0 0 0 1px #E5CF00"></span>카카오내비</button>
+            </div>` : '';
         html += `
-          <section class="now-card${lateMin ? ' late' : ''}" aria-label="지금 할 일">
+          <section class="now-card${lateMin ? ' late' : ''}${inProg ? ' in-prog' : ''}" aria-label="지금 할 일">
             <div class="nc-top">
               <span class="nc-kicker">지금 할 일 · ${esc(tag)}</span>
-              ${lateMin ? `<span class="now-late">${esc(lateTxt)}</span>` : ''}
+              ${lateMin ? `<span class="now-late">${esc(inProg ? '진행 중' : lateTxt)}</span>` : ''}
             </div>
             <div class="nc-main">
               <span class="nc-time">${dayTag ? `<small>${esc(dayTag)}</small>` : ''}${esc(nowEv.time || '')}</span>
               <span class="nc-info"><b class="nc-name">${esc(shortName)}</b>${dest ? `<span class="nc-dest">${esc(dest)}</span>` : ''}</span>
             </div>
             ${dest ? `<div data-venue="${esc(dest)}" data-venue-compact style="margin:-4px 0 0;"></div>` : ''}
-            ${canAct ? `<div class="nc-acts">
-              ${nowDay === 'future' ? `<div class="nc-wait">일정 당일에 출발·도착을 누를 수 있어요</div>` : nowDay === 'past' ? `<button type="button" onclick="Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '완료')" class="nc-btn pri" style="${SB}">완료</button>` : `
-              ${isDrive ? `<button type="button" onclick="Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '이동중')" class="nc-btn ${nowEv.moving ? 'moving' : ''}" style="${SB}">${nowEv.moving ? '● 이동중' : '출발'}</button>` : ''}
-              <button type="button" onclick="${isDrive ? `Home.arriveStep(${escJs(nowEv.hqScheduleId)}, ${idx}, ${escJs(name)})` : `Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '완료')`}" class="nc-btn pri" style="${SB}">${isDrive ? '도착' : '완료'}</button>
-              `}
-            </div>` : ''}
-            ${dest ? `<div class="nc-navs">
-              <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'tmap')" class="nc-nav"><span class="nc-sq" style="background:#14161A"></span>티맵 길안내</button>
-              <button type="button" onclick="U.openNavigation(${escJs(dest)}, '', 'kakao')" class="nc-nav"><span class="nc-sq" style="background:#FEE500; box-shadow:inset 0 0 0 1px #E5CF00"></span>카카오내비</button>
-            </div>` : ''}
-            ${contact ? `<div class="nc-contact"><a href="tel:${esc(contact.phone.replace(/[^0-9+]/g, ''))}" class="nc-tel">${esc(contact.name)} 전화 · ${esc(contact.phone)}</a>${window.DraftSheet && canAct ? `<button type="button" class="nc-tel nc-sms" onclick="DraftSheet.forSchedule(${escJs(nowEv.hqScheduleId)})">문자 초안</button>` : ''}</div>` : ''}
+            ${inProg ? `<div class="nc-endline">${esc(inProg.endHm)} 끝${inProg.next ? ` · 다음 출발 ${esc(inProg.next)}` : ''}</div>
+            ${ncNavs}${ncActs}` : `${ncActs}${ncNavs}`}
+            ${contact && !inProg ? `<div class="nc-contact"><a href="tel:${esc(contact.phone.replace(/[^0-9+]/g, ''))}" class="nc-tel">${esc(contact.name)} 전화 · ${esc(contact.phone)}</a>${window.DraftSheet && canAct ? `<button type="button" class="nc-tel nc-sms" onclick="DraftSheet.forSchedule(${escJs(nowEv.hqScheduleId)})">문자 초안</button>` : ''}</div>` : ''}
           </section>`;
         nowShown = nowEv;   // 카드가 다 만들어진 뒤에만 아래 목록에서 뺌
         if (prepShown) {

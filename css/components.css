@@ -1242,6 +1242,8 @@ div.art-add.locked button { margin-top:6px; border:0; background:#3B45C4; color:
 .nc-kicker { font-size:12.5px; font-weight:600; color:#3B45C4; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .now-card.late .nc-kicker { color:#4A4F5A; }
 .now-late { font-size:12.5px; font-weight:700; background:#FDF1E3; color:#8A4205; padding:3px 10px; border-radius:999px; flex-shrink:0; }
+/* 메인 일정 진행 중: '진행 중' 알약과 같은 색의 'HH:MM 끝 · 다음 출발 HH:MM' 한 줄 */
+.nc-endline { font-size:15px; font-weight:700; background:#FDF1E3; color:#8A4205; padding:11px 14px; border-radius:12px; text-align:center; line-height:1.4; }
 .nc-main { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
 .nc-time { font-family:var(--font-mono); font-size:32px; font-weight:600; letter-spacing:-1px; line-height:1.1; }
 .nc-time small { font-family:var(--font-sans); font-size:13px; font-weight:600; color:#6B7180; letter-spacing:0; margin-right:4px; }
