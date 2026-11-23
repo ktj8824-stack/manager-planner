@@ -1868,6 +1868,20 @@ class HQDataStore {
     } finally { clearTimeout(timer); }
   }
 
+  /** 같은 날짜 일정이면 예전 동선의 진행 표시(done·doneAt·moving)를 같은 순서·같은 종류 단계에 옮겨 담음
+   *  (종류 = 라벨의 ']' 앞, 예: '[기상·준비'). 날짜가 바뀌었거나 예전 동선이 없으면 새 동선 그대로 */
+  carryTimelineProgress(prev, next) {
+    const fresh = Array.isArray(next && next.timeline) ? next.timeline : [];
+    const old = Array.isArray(prev && prev.timeline) ? prev.timeline : [];
+    if (!fresh.length || !old.length || !prev || prev.date !== next.date) return fresh;
+    const kind = st => String((st && st.label) || '').split(']')[0];
+    return fresh.map((st, i) => {
+      const o = old[i];
+      if (!o || kind(o) !== kind(st) || !(o.done || o.moving)) return st;
+      return { ...st, done: !!o.done, doneAt: o.doneAt || null, moving: !!o.moving };
+    });
+  }
+
   async saveSchedule(schedule) {
     if (!schedule.id) schedule.id = 'sch_' + this._scheduleUuid();
     const key = this.getUserStorageKey(HQ_STORAGE_KEYS.SCHEDULES);
@@ -1876,6 +1890,8 @@ class HQDataStore {
       input.timeline = await this.buildTimelineCapped(input);
       const schedules = this._readSchedules(key);
       const idx = schedules.findIndex(s => s.id === input.id);
+      // 본사가 시각만 고쳐 다시 저장해도 매니저가 이미 누른 단계(완료·이동 중)는 지우지 않음 (11-23 점검 R15)
+      if (idx >= 0) input.timeline = this.carryTimelineProgress(schedules[idx], input);
       const saved = { ...(idx >= 0 ? schedules[idx] : {}), ...input, id: input.id };
       this._assertScheduleManagerEdit(idx >= 0 ? schedules[idx] : null, saved, key);
       this._queueSchedule(key, saved);

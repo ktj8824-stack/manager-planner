@@ -110,17 +110,20 @@
       if (d.expired) { show('공유 기간이 끝났어요', '이 링크는 일정 다음 날까지만 열립니다.'); return; }
       var dt = new Date(d.date + 'T00:00:00');
       var dateTxt = isNaN(dt) ? d.date : (dt.getMonth() + 1) + '월 ' + dt.getDate() + '일 (' + DAYS[dt.getDay()] + ')';
-      var loc = cleanPlace(d.location), shop = cleanPlace(d.shop), dep = cleanPlace(d.departure);
+      // 숙소 출발·픽업은 외부 사람에게 보이지 않음 (서버가 아직 보내더라도 화면에 안 씀)
+      var loc = cleanPlace(d.location), shop = cleanPlace(d.shop);
+      var memo = String(d.memo == null ? '' : d.memo).trim();
       var h = '<div class="card">' + (d.artist ? '<span class="tag">' + esc(d.artist) + '</span>' : '') +
-        '<h1>' + esc(d.title) + '</h1><div class="when">' + esc(dateTxt) + ' · ' + esc(d.start_time) + (d.end_time ? ' ~ ' + esc(d.end_time) : '') + '</div></div>';
+        '<h1>' + esc(d.title) + '</h1><div class="when">' + esc(dateTxt) + ' · ' + esc(d.start_time) + (d.end_time ? ' ~ ' + esc(d.end_time) : '') + '</div>' +
+        (loc ? '<div class="when sh-loc" style="margin-top:4px">📍 ' + esc(loc) + '</div>' : '') +
+        (memo ? '<div class="when sh-memo" style="margin-top:6px;font-size:14px;font-weight:600;white-space:pre-line">메모 · ' + esc(memo) + '</div>' : '') + '</div>';
       h += '<div class="card" id="recv">' + Recv.html(d) + '</div>';
       h += '<div class="card">';
       if (loc) h += '<div class="row"><div class="k">장소</div><div class="v">' + esc(loc) + '</div></div>';
       if (shop) h += '<div class="row"><div class="k">헤어·메이크업</div><div class="v">' + esc(shop) + '</div></div>';
-      if (dep) h += '<div class="row"><div class="k">출발·픽업</div><div class="v">' + esc(dep) + '</div></div>';
       if (loc) h += nav(loc);
       h += '</div>';
-      var tl = Array.isArray(d.timeline) ? d.timeline.filter(function (t) { return t && t.time; }) : [];
+      var tl = Array.isArray(d.timeline) ? d.timeline.filter(function (t) { return t && t.time && !/^\s*\[(기상|픽업)/.test(String(t.label || '')); }) : [];
       if (tl.length) {
         h += '<div class="card"><div class="sec">동선</div><ul class="tl">' + tl.map(function (t) {
           var m = String(t.label || '').match(/^\[([^\]]+)\]\s*(.*)$/);

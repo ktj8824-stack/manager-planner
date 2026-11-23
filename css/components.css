@@ -1124,6 +1124,8 @@ div.art-add.locked button { margin-top:6px; border:0; background:#3B45C4; color:
 .home-fab:active { transform:scale(0.96); }
 .home-fab { transition:transform .2s ease, opacity .2s ease; }
 .home-fab.away { transform:translateY(24px) scale(.6); opacity:0; pointer-events:none; }
+/* 11/23: 목록 맨 아래 카드의 [카카오] 버튼이 떠 있는 [+]에 가리지 않게 (+ 버튼 56px + 여유, 아이폰 아래 여백 포함) */
+#timeline-area { padding-bottom:calc(96px + var(--nav-safe, 0px)) !important; }
 .hf-new { display:none; margin-left:auto; min-height:40px; padding:0 14px; border:0; border-radius:999px; background:#3B45C4; color:#fff; font-size:14px; font-weight:700; cursor:pointer; white-space:nowrap; font-family:inherit; }
 @media (max-height:620px), (max-width:340px) { .home-fab { display:none !important; } .hf-new { display:inline-flex; align-items:center; } }
 @media (prefers-reduced-motion:reduce) { .home-fab { transition:none; } }
