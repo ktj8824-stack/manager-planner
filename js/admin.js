@@ -2097,6 +2097,14 @@ document.addEventListener('DOMContentLoaded', () => {
   Admin._managerNow = (list) => managerNowMap(list);
   // 이동 중 지연: ① 이동 단계의 다음 단계(현장 도착 목표, 메인 일정이면 'N분 전(HH:MM)') 시각이 기준 넘게 지남
   //               ② 오늘 매니저가 보낸 '[지연 예상]' 기록이 있고 그 뒤로 도착(완료)을 아직 안 누름
+  // 매니저가 앱에서 최근 본사 변경을 확인한 시각 ('[변경 확인]' 또는 '확인했습니다' 기록 · 최근 변경 뒤의 것만) — 없으면 ''
+  function changeSeenAt(s) {
+    const logs = Array.isArray(s && s.statusLogs) ? s.statusLogs : [];
+    const ci = logs.findIndex(l => l && /^\[(일정 수정|일정 등록)\]/.test(l.label || ''));
+    if (ci < 0) return '';
+    const res = logs.slice(0, ci).find(l => l && l.ackOf === logs[ci].id);
+    return res ? (res.time || '') : '';
+  }
   function movingLate(s, today, nowMin) {
     const tl = Array.isArray(s && s.timeline) ? s.timeline : [];
     const toMin = (hhmm) => { const m = /^(\d{1,2}):(\d{2})/.exec(String(hhmm || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; };
@@ -2488,7 +2496,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
       const mgr = artSch.find(s => s.managerName);
-      const sub = mgr ? (anyLate ? `${mgr.managerName} · ${moveLate ? '지연' : '응답 없음'}` : mgr.managerName) : '';
+      const seenAt = artSch.map(changeSeenAt).filter(Boolean).pop();
+      const sub = mgr ? (anyLate ? `${mgr.managerName} · ${moveLate ? '지연' : '응답 없음'}` : mgr.managerName + (seenAt ? ` · 매니저 확인 ${seenAt}` : '')) : '';
       const barHtml = bars.map(b => `<div class="cal-event-pill gv2-bar ${b.cls}${b.main ? ' main' : ''}" data-sch-id="${esc(b.id)}" title="${esc(b.label)}" style="left:${pct(b.a0)}%; width:${Math.max(0.8, pct(b.a1) - pct(b.a0))}%">${esc(b.label)}</div>`).join('');
       return `<div class="gv2-row${anyLate ? ' late' : ''}">
         <div class="gv2-who"><span class="gv2-dot" style="background:${esc(art.color || '#4C57D6')}"></span><span><b>${esc(String(art.name || '').replace(/\s*\([^)]*\)\s*$/, ''))}</b><small class="${anyLate ? 'bad' : ''}">${esc(sub)}</small></span></div>
@@ -2988,7 +2997,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       ${(() => {
         const st = window.hqStore?.ackState?.(sch);
-        if (!st) return '';
+        if (!st) { const seen = changeSeenAt(sch); return seen ? `<div class="ack-seen-tag" style="margin-top:10px; display:inline-block; padding:3px 9px; border-radius:999px; background:#ecfdf5; border:1px solid #a7f3d0; color:#047857; font-size:12px; font-weight:700;">매니저 확인 ${esc(seen)}</div>` : ''; }
         const req = st.request, res = st.response;
         const at = (l) => (l.date && l.date !== fmtDate(new Date()) ? l.date.slice(5).replace('-', '/') + ' ' : '') + (l.time || '');
         return st.pending
@@ -4084,6 +4093,23 @@ document.addEventListener('DOMContentLoaded', () => {
       let prevSch = null;
       try { prevSch = (await window.hqStore.getSchedules()).find(x => x.id === schData.id) || null; if (prevSch) prevSch = JSON.parse(JSON.stringify(prevSch)); } catch (e) { }
 
+      // 11/23 R15: 매니저가 이미 단계를 누른 오늘 일정의 시작 시각을 바꾸면 저장 전에 한 번 알림 (취소하면 저장 안 함)
+      const firstDep = (tl) => (Array.isArray(tl) ? tl : []).find(x => x && x.time && /^\[(픽업|현장 이동)/.test(String(x.label || '')));
+      try {
+        const ptl = prevSch && Array.isArray(prevSch.timeline) ? prevSch.timeline : [];
+        const pressed = ptl.filter(x => x && (x.done || x.moving));
+        if (prevSch && prevSch.date === schData.date && String(prevSch.startTime || '') !== String(schData.startTime || '') && pressed.length) {
+          const toMin = (v) => { const m = /^(\d{1,2}):(\d{2})/.exec(String(v || '')); return m ? +m[1] * 60 + +m[2] : NaN; };
+          const hm = (n) => `${String(Math.floor(((n % 1440) + 1440) % 1440 / 60)).padStart(2, '0')}:${String(((n % 60) + 60) % 60).padStart(2, '0')}`;
+          const last = pressed[pressed.length - 1];
+          const what = String(last.label || '').match(/^\[([^\]]+)\]/)?.[1] || '앞 단계';
+          const did = last.moving && !last.done ? `매니저가 이미 ${what} 중이에요` : `매니저가 이미 ${what}를 마쳤어요${last.doneAt ? '(' + last.doneAt + ')' : ''}`;
+          const dep = firstDep(ptl), delta = toMin(schData.startTime) - toMin(prevSch.startTime);
+          const depTxt = dep && Number.isFinite(delta) && delta ? ` 출발 ${String(dep.time).slice(0, 5)}→${hm(toMin(dep.time) + delta)}로 ${delta < 0 ? '당겨집니다' : '늦춰집니다'}.` : '';
+          if (!(await Ask.confirm(`${did}.${depTxt} 매니저에게 전화도 해 주세요`, { okLabel: '저장' }))) return;
+        }
+      } catch (e) { console.warn('진행 중 일정 변경 확인 실패', e); }
+
       let queuedOnly = false;
       try {
         await window.hqStore.saveSchedule(schData);
@@ -4097,7 +4123,14 @@ document.addEventListener('DOMContentLoaded', () => {
           const me = window.SupabaseClient?.currentUser?.id;
           const ack = (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(mid || '') && mid !== me) ? { need: true, managerId: mid } : null;
           if (!prevSch) await window.hqStore.addStatusLog(schData.id, { label: '[일정 등록] 본사에서 새 일정을 등록했어요', managerName: who, ack });
-          else if (changes && changes.length) await window.hqStore.addStatusLog(schData.id, { label: '[일정 수정] ' + changes.join(' · '), managerName: who, ack });
+          else if (changes && changes.length) {
+            // 첫 출발 시각이 바뀌었으면 같이 남김 (매니저 앱 '본사 변경' 띠에 그대로 보임)
+            try {
+              const a = firstDep(prevSch.timeline), b = firstDep(((await window.hqStore.getSchedules()).find(x => x.id === schData.id) || {}).timeline);
+              if (a && b && prevSch.date === schData.date && String(a.time).slice(0, 5) !== String(b.time).slice(0, 5)) changes.push(`출발 ${String(a.time).slice(0, 5)}→${String(b.time).slice(0, 5)}`);
+            } catch (e) { }
+            await window.hqStore.addStatusLog(schData.id, { label: '[일정 수정] ' + changes.join(' · '), managerName: who, ack });
+          }
         } catch (e) { console.warn('변경 이력 기록 실패', e); }   // (알림은 기다리지 않음)
         try { if (window.AdminRepeat) repeatMsg = await window.AdminRepeat.afterSave(prevSch, schData, repeatDates, submitBtn); } catch (e) { console.warn('반복 일정 처리 실패', e); }
       } catch (err) {
@@ -4115,7 +4148,9 @@ document.addEventListener('DOMContentLoaded', () => {
       await renderCurrentView();
       alert(queuedOnly
         ? `⏳ [${schData.title || '일정'}] 이 컴퓨터에 저장했지만 아직 서버에 올라가지 않았어요.\n인터넷이 연결되면 자동으로 올라가며, 화면 아래 노란 표시가 사라지면 완료예요.`
-        : `✅ [${schData.title || '일정'}] 일정이 서버에 저장됐어요.` + (repeatMsg ? '\n' + repeatMsg : ''));
+        : (!(window.SupabaseClient?.isConfigured && window.SupabaseClient.currentUser?.id)
+          ? `✅ [${schData.title || '일정'}] 이 컴퓨터에만 저장됐어요(체험 모드).`
+          : `✅ [${schData.title || '일정'}] 일정이 서버에 저장됐어요.`) + (repeatMsg ? '\n' + repeatMsg : ''));
       // 시간을 바꾸거나 취소했으면 현장 담당자에게 보낼 문자 초안 (연락처가 있는 일정만)
       if (prevSch && window.DraftSheet) window.DraftSheet.afterHqChange(prevSch, schData);
       } finally {

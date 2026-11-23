@@ -388,7 +388,9 @@ const Home = {
         </div>`;
       }
     } catch (e) { }
-    html += this.renderAckCards();
+    const band = this.renderChangeBand();
+    html += band.html;
+    html += this.renderAckCards(band.ids);
     html += this.renderAdjustCards();
     html += this.renderPushCard();
 
@@ -664,6 +666,7 @@ const Home = {
     // ── 지금 할 일 카드: 이동중인 단계가 있으면 그것, 없으면 아직 안 끝난 첫 단계를 크게 보여 준다 ──
     const allPast = uniqueEvents.length > 0 && uniqueEvents.every(e => e._day === 'past');
     let nowShown = null;   // 지금 할 일 카드에 크게 나온 단계 — 아래 목록에서는 빼서 겹치지 않게
+    let prepShown = null;  // 출발 카드가 위로 올라와 한 줄로 접힌 [기상·준비]
     try {
       const pending = uniqueEvents.filter(e => !e.done && e.stepCategory !== 'rest');
       // [기상·준비]는 안 눌러도, 다음 단계 시간이 되면 자동으로 넘어감 (하루 종일 'N시간 지남'으로 남지 않게)
@@ -676,7 +679,16 @@ const Home = {
       //        (뒤 일정 단계가 시작됐으면 앞 일정 단계는 넘어가고, 지금 해야 할 단계가 카드에 나옴)
       let first = 0;
       while (first < pending.length - 1 && !pending[first].moving && !pending[first + 1].forNextDay && evAt(pending[first + 1]) <= Date.now()) first++;
-      const nowEv = allPast ? null : (pending.find(e => e.moving === true) || pending[first]);
+      let nowEv = allPast ? null : (pending.find(e => e.moving === true) || pending[first]);
+      // 11/23 R15: [기상·준비]를 안 눌렀어도 다음 단계가 출발(픽업·현장 이동)이고 30분 안이면 출발 카드를 위로,
+      //            기상·준비는 카드 아래 한 줄('지남' + 완료)로 접음
+      const plain = (e) => String((e && e.title) || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim();
+      if (nowEv && !nowEv.moving && /^\[기상/.test(plain(nowEv))) {
+        const nx = pending[pending.indexOf(nowEv) + 1];
+        const nt = plain(nx);
+        const isMove = nx && !nx.forNextDay && nx.stepCategory !== 'rest' && !/^\[(대기|식사|기상)/.test(nt) && (/^\[(픽업|현장 이동)/.test(nt) || nt.includes('출발'));
+        if (isMove && evAt(nx) - Date.now() <= 30 * 60000) { prepShown = nowEv; nowEv = nx; }
+      }
       if (allPast) {
         const d = this.selectedDate;
         html += `<div class="home-note">지난 일정이에요 · ${d.getMonth() + 1}/${d.getDate()}(${U.DAYS[d.getDay()]}) — 기록으로 흐리게 보여요</div>`;
@@ -744,8 +756,16 @@ const Home = {
             ${contact ? `<div class="nc-contact"><a href="tel:${esc(contact.phone.replace(/[^0-9+]/g, ''))}" class="nc-tel">${esc(contact.name)} 전화 · ${esc(contact.phone)}</a>${window.DraftSheet && canAct ? `<button type="button" class="nc-tel nc-sms" onclick="DraftSheet.forSchedule(${escJs(nowEv.hqScheduleId)})">문자 초안</button>` : ''}</div>` : ''}
           </section>`;
         nowShown = nowEv;   // 카드가 다 만들어진 뒤에만 아래 목록에서 뺌
+        if (prepShown) {
+          const pp = prepShown, pAct = pp.isHQ && pp.hqScheduleId && nowDay !== 'future';
+          const pState = pp.done ? '완료' : evAt(pp) <= Date.now() ? '지남' : '';
+          html += `<div class="home-note prep-fold" style="display:flex; align-items:center; gap:8px; margin-top:-6px; padding:8px 12px;">
+            <span style="flex:1;">기상·준비 ${esc(pp.time || '')}${pState ? ' · ' + pState : ''}</span>
+            ${pAct ? `<button type="button" class="rs-btn" onclick="Home.setHQRouteStatus(${escJs(pp.hqScheduleId)}, ${pp.timelineIdx}, '완료')">완료</button>` : ''}
+          </div>`;
+        }
       }
-    } catch (e) { console.warn('지금 할 일 카드 오류', e); }
+    } catch (e) { console.warn('지금 할 일 카드 오류', e); prepShown = null; }
 
     // 이미 끝난 앞쪽 단계는 접어 두고(지우지 않음), 다음에 할 단계가 맨 위에 오게 한다
     const firstPending = uniqueEvents.findIndex(e => !e.done);
@@ -754,7 +774,7 @@ const Home = {
     let foldEnd = -1;
     uniqueEvents.forEach((ev, idx) => {
       if (idx === foldCount && foldCount > 0) foldEnd = html.length;
-      if (ev === nowShown) return;   // 위 카드와 같은 단계는 한 번만
+      if (ev === nowShown || (nowShown && ev === prepShown)) return;   // 위 카드(와 접힌 한 줄)와 같은 단계는 한 번만
       const isLast = idx === uniqueEvents.length - 1 || (idx === uniqueEvents.length - 2 && uniqueEvents[uniqueEvents.length - 1] === nowShown);
       const isDone = ev.done || false;
       const isHQ = ev.isHQ;
@@ -865,6 +885,14 @@ const Home = {
         : (titleText.includes('헤어') || titleText.includes('메이크업')) ? (ev.shopAddress || ev.shopName || '') : '';
       const dayState = isHQ && ev.hqScheduleId ? Home._stepDay(ev.hqScheduleId, ev.timelineIdx) : 'today';
       const stCls = isDone ? 'done' : isMoving ? 'moving' : iconType === 'main' ? 'main' : '';
+      // [메인 일정] 단계에 작은 [공유] (메이크업·스타일리스트에게 링크 — 상세를 안 열어도 2번 만에)
+      let canShare = false;
+      try {
+        if (iconType === 'main' && ev.hqScheduleId && !ev.isSecretHidden && window.ScheduleShare && (isHQ || (typeof Plan !== 'undefined' && Plan.isIndie()))) {
+          const shSch = (window.hqStore?.getSchedules?.() || []).find(s => s.id === ev.hqScheduleId);
+          canShare = !!shSch && !shSch.isSecret;
+        }
+      } catch (e) { canShare = false; }
       html += `
         <div id="route-step-${esc(ev.hqScheduleId || '')}-${esc(ev.timelineIdx ?? idx)}" class="rs${ev._day === 'past' ? ' step-past' : ''} ${stCls}">
           <div class="rs-time">
@@ -880,7 +908,7 @@ const Home = {
             <div class="rs-title">${esc(restText || cleanTitle)}</div>
             ${descLine ? `<div class="rs-desc">${esc(descLine)}</div>` : ''}
             ${venuePlace && !ev.isSecretHidden ? `<div data-venue="${esc(venuePlace)}"></div>` : ''}
-            ${(isHQ && ev.hqScheduleId) || isDriveStep ? `<div class="rs-acts">
+            ${(isHQ && ev.hqScheduleId) || isDriveStep || canShare ? `<div class="rs-acts">
               ${isHQ && ev.hqScheduleId && dayState === 'future' ? '<span class="rs-wait">당일에 표시</span>' : ''}
               ${isHQ && ev.hqScheduleId && dayState !== 'future' ? `
                 ${isDriveStep && dayState === 'today' ? `<button type="button" class="rs-btn${isMoving ? ' on-move' : ''}" onclick="Home.setHQRouteStatus(${escJs(ev.hqScheduleId)}, ${ev.timelineIdx}, '이동중')">${isMoving ? '● 이동중' : '출발'}</button>` : ''}
@@ -889,6 +917,7 @@ const Home = {
                 <button type="button" class="rs-btn ghost" onclick="U.openNavigation(${escJs(destinationTarget)}, '', 'tmap')" title="티맵 길안내">티맵</button>
                 <button type="button" class="rs-btn ghost" onclick="U.openNavigation(${escJs(destinationTarget)}, '', 'kakao')" title="카카오내비 길안내">카카오</button>
               </span>` : ''}
+              ${canShare ? `<button type="button" class="rs-btn ghost rs-share" onclick="event.stopPropagation(); ScheduleShare.open(${escJs(ev.hqScheduleId)})" title="메이크업·스타일리스트에게 일정 공유">공유</button>` : ''}
             </div>` : ''}
           </div>
         </div>
@@ -962,10 +991,69 @@ const Home = {
     const box = document.getElementById('home-push-card'); if (box) box.innerHTML = '';
   },
 
-  renderAckCards() {
+  // ── 오늘 일정을 본사가 고쳤으면 한 줄 띠 (서버 로그인 없이도): '본사 변경 08:42 · 시작 11:00→10:30 · 출발 09:32→09:02'
+  //  누르면 이 기기에서 본 것으로 표시 + 일정 기록에 '[변경 확인] 08:45' (ackOf = 그 변경 기록 → 본사 확인 요청도 같이 풀림)
+  _CHG_SEEN: 'rp_chg_seen',
+  _chgSeen() { try { const v = JSON.parse(localStorage.getItem(this._CHG_SEEN) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } },
+  _todayChanges() {
+    const st = window.hqStore;
+    if (!st || !st.getSchedules) return [];
+    const t = new Date();
+    const today = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+    const seen = this._chgSeen();
+    const toMin = (v) => { const m = /^(\d{1,2}):(\d{2})/.exec(String(v || '')); return m ? +m[1] * 60 + +m[2] : NaN; };
+    const hm = (n) => `${String(Math.floor(((n % 1440) + 1440) % 1440 / 60)).padStart(2, '0')}:${String(((n % 60) + 60) % 60).padStart(2, '0')}`;
+    const out = [];
+    (st.getSchedules() || []).forEach(s => {
+      if (!s || s.date !== today || ['취소', 'cancelled'].includes(s.status) || !this._passFilter(s)) return;
+      const logs = Array.isArray(s.statusLogs) ? s.statusLogs : [];
+      const log = logs[0];   // 가장 최근 기록이 본사의 일정 수정일 때만
+      if (!log || !log.id || !/^\[일정 수정\]/.test(log.label || '') || !(log.ack || /\(본사\)\s*$/.test(log.managerName || ''))) return;
+      if (seen.includes(log.id)) return;
+      let detail = String(log.label).replace(/^\[[^\]]+\]\s*/, '');
+      const sm = /시작\s*(\d{1,2}:\d{2})\s*→\s*(\d{1,2}:\d{2})/.exec(detail);
+      if (sm && !/출발\s*\d/.test(detail)) {
+        // 기록에 출발이 없으면 지금 동선의 첫 출발(픽업·현장 이동)에서 바뀐 만큼 거꾸로 계산
+        const tl = Array.isArray(s.timeline) ? s.timeline : [];
+        const dep = tl.find(x => x && x.time && /^\[(픽업|현장 이동)/.test(String(x.label || '')));
+        const delta = toMin(sm[2]) - toMin(sm[1]);
+        if (dep && Number.isFinite(delta) && delta) detail += ` · 출발 ${hm(toMin(dep.time) - delta)}→${String(dep.time).slice(0, 5)}`;
+      }
+      out.push({ s, log, detail: s.isSecret ? '비공개 일정 시간 변경' : detail });
+    });
+    return out;
+  },
+  renderChangeBand() {
+    try {
+      const list = this._todayChanges();
+      if (!list.length) return { html: '', ids: [] };
+      const html = list.slice(0, 3).map(x => `<button type="button" class="home-note chg-band" onclick="Home.seeChange(${escJs(x.s.id)}, ${escJs(x.log.id)}, this)" style="display:flex; align-items:center; gap:8px; width:100%; text-align:left; font:inherit; font-size:14px; font-weight:700; color:#9a3412; background:#fff7ed; border-color:#fed7aa; cursor:pointer; margin-bottom:10px;">
+          <span style="flex:1; line-height:1.4; word-break:keep-all;">본사 변경 ${esc(x.log.time || '')} · ${esc(x.detail)}</span>
+          <span style="flex-shrink:0; font-size:13px; color:#3B45C4;">확인</span>
+        </button>`).join('');
+      return { html, ids: list.map(x => x.log.id) };
+    } catch (e) { console.warn('변경 띠 표시 실패', e); return { html: '', ids: [] }; }
+  },
+  async seeChange(schId, logId, btn) {
+    if (btn) btn.disabled = true;
+    try { const v = this._chgSeen().filter(x => x !== logId).concat([logId]).slice(-50); localStorage.setItem(this._CHG_SEEN, JSON.stringify(v)); } catch (e) { }
+    try {
+      const n = new Date();
+      await window.hqStore.addStatusLog(schId, {
+        label: `[변경 확인] ${String(n.getHours()).padStart(2, '0')}:${String(n.getMinutes()).padStart(2, '0')}`,
+        ackOf: logId, byId: window.SupabaseClient?.currentUser?.id || null,
+        managerName: localStorage.getItem('bp_user_name') || '담당 매니저'
+      });
+      U.toast('변경 내용을 확인했어요.');
+    } catch (e) { U.toast(e?.localSaved ? '확인을 저장했어요. 연결되면 본사에 전달돼요.' : '확인을 이 기기에 남겼어요.'); }
+    this.render && this.render();
+  },
+
+  renderAckCards(skipLogIds) {
     try {
       const me = window.SupabaseClient?.currentUser?.id;
-      const list = me && window.hqStore?.getPendingAcks ? window.hqStore.getPendingAcks(me) : [];
+      const skip = Array.isArray(skipLogIds) ? skipLogIds : [];
+      const list = (me && window.hqStore?.getPendingAcks ? window.hqStore.getPendingAcks(me) : []).filter(s => !skip.includes(window.hqStore.ackState(s)?.request?.id));
       if (!list.length) return '';
       const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
       const cards = list.slice(0, 5).map(s => {
