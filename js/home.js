@@ -689,6 +689,13 @@ const Home = {
         const isMove = nx && !nx.forNextDay && nx.stepCategory !== 'rest' && !/^\[(대기|식사|기상)/.test(nt) && (/^\[(픽업|현장 이동)/.test(nt) || nt.includes('출발'));
         if (isMove && evAt(nx) - Date.now() <= 30 * 60000) { prepShown = nowEv; nowEv = nx; }
       }
+      // 11/24: 앞 일정 단계를 완료 안 누른 채 1시간 넘게 지났고, 뒤 출발(자정 넘는 내일 일정 포함)이 30분 안이면
+      //        출발 카드를 위로, 지난 단계는 카드 아래 한 줄('OO · 16:00 끝 · 완료 안 함' + 완료)로 접음
+      if (nowEv && !prepShown && !nowEv.moving && !nowEv.forNextDay && Date.now() - evAt(nowEv) >= 60 * 60000) {
+        const isMv = (e) => { const t = plain(e); return e.stepCategory !== 'rest' && !/^\[(대기|식사|기상)/.test(t) && (/^\[(픽업|현장 이동)/.test(t) || t.includes('출발')); };
+        const nx = pending.slice(pending.indexOf(nowEv) + 1).find(isMv);
+        if (nx && evAt(nx) - Date.now() <= 30 * 60000) { prepShown = nowEv; prepShown._stale = true; nowEv = nx; }
+      }
       if (allPast) {
         const d = this.selectedDate;
         html += `<div class="home-note">지난 일정이에요 · ${d.getMonth() + 1}/${d.getDate()}(${U.DAYS[d.getDay()]}) — 기록으로 흐리게 보여요</div>`;
@@ -787,7 +794,7 @@ const Home = {
           const pp = prepShown, pAct = pp.isHQ && pp.hqScheduleId && nowDay !== 'future';
           const pState = pp.done ? '완료' : evAt(pp) <= Date.now() ? '지남' : '';
           html += `<div class="home-note prep-fold" style="display:flex; align-items:center; gap:8px; margin-top:-6px; padding:8px 12px;">
-            <span style="flex:1;">기상·준비 ${esc(pp.time || '')}${pState ? ' · ' + pState : ''}</span>
+            <span style="flex:1;">${pp._stale ? (() => { const sc = window.hqStore?.getSchedules().find(x => x.id === pp.hqScheduleId); return `${esc((sc && sc.title) || plain(pp))}${sc && sc.endTime ? ' · ' + esc(String(sc.endTime).slice(0, 5)) + ' 끝' : ''} · 완료 안 함`; })() : `기상·준비 ${esc(pp.time || '')}${pState ? ' · ' + pState : ''}`}</span>
             ${pAct ? `<button type="button" class="rs-btn" onclick="Home.setHQRouteStatus(${escJs(pp.hqScheduleId)}, ${pp.timelineIdx}, '완료')">완료</button>` : ''}
           </div>`;
         }
