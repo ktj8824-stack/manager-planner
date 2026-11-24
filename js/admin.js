@@ -3412,6 +3412,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    // 같은 날 앞 일정에서 이어서 출발 (11/24)
+    try {
+      window.HQChain.editId = (editSch && editSch.id) || '';
+      const dp = document.getElementById('form-departure-place'); if (dp) dp.dataset.auto = '';
+      window.HQChain.bind();
+      window.HQChain.fill(!!(editSch && editSch.departure && editSch.departure.chained));
+    } catch (e) { }
+
     // 아티스트 선택 변경 시 멤버 목록 즉시 갱신
     if (el.formArtist) {
       el.formArtist.onchange = () => {
@@ -3913,6 +3921,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       updateEventDurationFromTimes();
+      try { window.HQChain && window.HQChain.fill(); } catch (e) { }
       if (window.updateDisplayDateTimeTexts) window.updateDisplayDateTimeTexts();
       if (wheelPopover) wheelPopover.style.display = 'none';
     };
@@ -4066,6 +4075,13 @@ document.addEventListener('DOMContentLoaded', () => {
           address: el.formDepartureAddress ? el.formDepartureAddress.value : ''
         }
       };
+      // 같은 날 앞 일정 현장에서 이어서 출발 → chained (기상 단계 없음 · 출발은 앞 일정 끝 이후) (11/24)
+      try {
+        const cp = window.HQChain.prev();
+        if (cp && schData.departure.place && schData.departure.place === cp.location) {
+          schData.departure = { place: cp.location, address: schData.departure.address || cp.locationAddress || cp.location, chained: true, fromScheduleId: cp.id };
+        }
+      } catch (e) { }
 
       // 🚨 배차/매니저 중복 충돌 검사
       if (window.hqStore && window.hqStore.checkConflict) {
@@ -4596,3 +4612,53 @@ document.addEventListener('DOMContentLoaded', () => {
   Admin.updateHeaderUserInfo();
   init();
 });
+
+// 11/24: 본사 등록 — 같은 날·같은 매니저(또는 아티스트)의 앞 일정이 있으면 출발 장소를 그 현장으로 채우고
+//        '앞 일정에서 이어서' 안내를 보여 줌 (저장 시 departure.chained → 기상 단계 없음, 출발은 도착 시각 기준·앞 일정 끝 이후)
+window.HQChain = {
+  editId: '',
+  prev() {
+    const g = (id) => document.getElementById(id);
+    const date = g('form-date')?.value, start = g('form-start-time')?.value;
+    const managerId = g('form-manager')?.value || '', artistId = g('form-artist')?.value || '';
+    if (!date || !start) return null;
+    const list = (window.hqStore?.getSchedules?.() || []).filter(s => s && s.id !== this.editId && s.date === date
+      && !['취소', 'cancelled'].includes(s.status) && s.location && s.startTime && s.endTime
+      && s.endTime >= s.startTime && s.endTime <= start
+      && ((managerId && s.managerId === managerId) || (artistId && artistId !== 'ALL' && (s.artistId === artistId || (Array.isArray(s.artistIds) && s.artistIds.includes(artistId))))));
+    list.sort((a, b) => String(b.endTime).localeCompare(String(a.endTime)));
+    return list[0] || null;
+  },
+  fill(keep = false) {
+    const dep = document.getElementById('form-departure-place');
+    if (!dep) return;
+    const addr = document.getElementById('form-departure-address');
+    let hint = document.getElementById('form-chain-hint');
+    if (!hint) {
+      hint = document.createElement('div'); hint.id = 'form-chain-hint';
+      hint.style.cssText = 'display:none; margin-top:6px; font-size:12.5px; font-weight:700; color:#3B45C4;';
+      (dep.parentElement || dep).insertAdjacentElement('afterend', hint);
+    }
+    const p = this.prev();
+    if (p) {
+      if (keep || dep.dataset.auto === '1' || !dep.value.trim()) {
+        dep.value = p.location; dep.dataset.auto = '1';
+        if (addr) addr.value = p.locationAddress || p.location;
+      }
+      const on = dep.value === p.location;
+      hint.style.display = on ? 'block' : 'none';
+      hint.textContent = on ? `↪ 앞 일정 '${p.title}'(${String(p.endTime).slice(0, 5)} 끝) 현장에서 이어서 출발해요 · 기상 단계는 빼요` : '';
+    } else {
+      if (dep.dataset.auto === '1') { dep.value = ''; if (addr) addr.value = ''; dep.dataset.auto = ''; }
+      hint.style.display = 'none'; hint.textContent = '';
+    }
+  },
+  bind() {
+    ['form-date', 'form-manager', 'form-artist'].forEach(id => {
+      const e = document.getElementById(id);
+      if (e && !e.dataset.chainBound) { e.dataset.chainBound = '1'; e.addEventListener('change', () => this.fill()); }
+    });
+    const dep = document.getElementById('form-departure-place');
+    if (dep && !dep.dataset.chainBound) { dep.dataset.chainBound = '1'; dep.addEventListener('input', () => { dep.dataset.auto = ''; this.fill(); }); }
+  },
+};

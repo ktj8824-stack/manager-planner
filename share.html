@@ -127,6 +127,9 @@
       if (tl.length) {
         h += '<div class="card"><div class="sec">동선</div><ul class="tl">' + tl.map(function (t) {
           var m = String(t.label || '').match(/^\[([^\]]+)\]\s*(.*)$/);
+          // 출발지(숙소·자택 등) 이름은 밖으로 안 보냄: 'OO 출발 및 이동' → '현장으로 이동'
+          if (m && /출발 및 이동\s*$/.test(m[2])) m[2] = '현장으로 이동';
+          else if (!m && /출발 및 이동\s*$/.test(String(t.label || ''))) t = Object.assign({}, t, { label: '현장으로 이동' });
           return '<li class="' + (t.done ? 'done' : '') + '"><div class="t">' + esc(t.time) + '</div><div class="l">' + (m ? '<small>' + esc(m[1]) + '</small>' + esc(m[2]) : esc(t.label)) + '</div></li>';
         }).join('') + '</ul></div>';
       }

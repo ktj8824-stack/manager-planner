@@ -81,7 +81,12 @@
       location: val('form-location'), locationAddress: val('form-location-address'),
       lat: val('form-location-lat') ? Number(val('form-location-lat')) : undefined, lng: val('form-location-lng') ? Number(val('form-location-lng')) : undefined,
       shop: { needed: !!$('form-shop-needed')?.checked, name: val('form-shop-name'), address: val('form-shop-address'), durationMin: Number(val('form-shop-duration')) || 90 },
-      departure: { place: val('form-departure-place'), address: val('form-departure-address') },
+      departure: (() => {
+        const d = { place: val('form-departure-place'), address: val('form-departure-address') };
+        // 11/24: 같은 날 앞 일정 현장에서 이어서 출발 → 기상 단계 없음 (저장 때와 같은 규칙)
+        try { const cp = window.HQChain && window.HQChain.prev(); if (cp && d.place && d.place === cp.location) Object.assign(d, { chained: true, fromScheduleId: cp.id }); } catch (e) { }
+        return d;
+      })(),
     };
   };
   const canReal = (s) => s.date && /^\d{2}:\d{2}$/.test(s.startTime) && (s.location || s.locationAddress) && (s.departure.place || s.departure.address);
