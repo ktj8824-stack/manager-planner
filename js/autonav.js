@@ -50,7 +50,16 @@ const AutoNav = {
       seen.add(k); return true;
     });
     const pending = uniq.filter(e => !e.done && e.stepCategory !== 'rest' && !/^\[기상/.test(String(e.title || '')));   // 기상·준비는 길안내 대상 아님
-    const ev = pending.find(e => e.moving === true) || pending[0];
+    // 11/24: 홈 '지금 할 일'(home.js)과 같은 규칙 — 버튼을 안 눌러도 다음 단계 시각이 이미 지났으면 그 단계는 넘김
+    //        (안 누른 13:25 픽업이 남아 있어도 15:20에 차에 타면 지금 가야 할 현장으로 안내)
+    const evAt = (e) => {
+      const mm = /^(\d{1,2}):(\d{2})/.exec(String((e && e.time) || '')); if (!mm) return NaN;
+      const b = new Date(now); b.setHours(+mm[1], +mm[2], 0, 0); b.setDate(b.getDate() + (e.dayOffset || 0));
+      return b.getTime();
+    };
+    let first = 0;
+    while (first < pending.length - 1 && !pending[first].moving && !pending[first + 1].forNextDay && evAt(pending[first + 1]) <= now.getTime()) first++;
+    const ev = pending.find(e => e.moving === true) || pending[first];
     if (!ev) return { total: uniq.length, ev: null };
     const raw = String(ev.title || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim();
     const bm = raw.match(/^\[([^\]]+)\]\s*(.*)$/);
