@@ -3039,6 +3039,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.openScheduleDetailModal = openScheduleDetailModal;
   if (window.Admin) {
     window.Admin.openScheduleDetailModal = openScheduleDetailModal;
+    window.Admin.openScheduleFormModal = (...a) => openScheduleFormModal(...a);   // 11/25: 앞 일정 취소 뒤 '출발지 직접 정하기'
   }
 
   // ── 일정 등록/수정 모달 열기 ──
@@ -4126,6 +4127,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } catch (e) { console.warn('진행 중 일정 변경 확인 실패', e); }
 
+      // 11/25: 상태를 '취소'로 바꿔 저장할 때도, 이 현장에서 이어서 출발하는 일정이 있으면 먼저 묻기
+      let chainF = { action: 'none', deps: [] };
+      if (prevSch && !['취소', 'cancelled'].includes(prevSch.status) && ['취소', 'cancelled'].includes(schData.status)) {
+        try { chainF = await window.HQChainCancel.ask({ ...prevSch, title: schData.title || prevSch.title }, '취소'); } catch (e) { chainF = { action: 'none', deps: [] }; }
+        if (chainF.action === 'back') return;
+      }
+
       let queuedOnly = false;
       try {
         await window.hqStore.saveSchedule(schData);
@@ -4169,6 +4177,10 @@ document.addEventListener('DOMContentLoaded', () => {
           : `✅ [${schData.title || '일정'}] 일정이 서버에 저장됐어요.`) + (repeatMsg ? '\n' + repeatMsg : ''));
       // 시간을 바꾸거나 취소했으면 현장 담당자에게 보낼 문자 초안 (연락처가 있는 일정만)
       if (prevSch && window.DraftSheet) window.DraftSheet.afterHqChange(prevSch, schData);
+      if (chainF.action === 'repoint' && chainF.fb) {
+        const n = await window.HQChainCancel.repoint(chainF.deps, chainF.fb, schData, '취소');
+        if (n) { setTimeout(() => alert(`↪ 이어지는 일정 ${n}개를 ${chainF.fb.place}에서 출발로 바꿨어요. 기상 단계도 다시 넣었어요.`), 1600); await renderCurrentView(); }
+      } else if (chainF.action === 'manual') window.HQChainCancel.openManual(chainF.deps);
       } finally {
         Admin._savingSchedule = false;
         if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = submitLabel; }
@@ -4263,6 +4275,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const a = !cur ? await Ask.confirm('이 일정을 삭제할까요? 로드플래너에서도 즉시 삭제돼요.', { okLabel: '삭제', danger: true })
           : isCx ? await Ask.confirm(`"${cur.title}" 은(는) 취소된 일정이에요.\n다시 살리면 동선·알림이 돌아와요. 완전히 지우면 기록도 없어져요.`, { okLabel: '완전히 삭제', danger: true, extraLabel: '↩️ 다시 살리기', cancelLabel: '닫기' })
           : await Ask.confirm(`"${cur.title}" (${cur.date} ${cur.startTime}) 일정을 어떻게 할까요?\n'취소됨으로 남기기'는 기록·경비를 남기고 동선·알림에서만 빼요.\n'삭제'는 담당 매니저 화면에서도 완전히 사라져요.`, { okLabel: '삭제', danger: true, extraLabel: '🌧️ 취소됨으로 남기기 (기록 유지)', cancelLabel: '닫기' });
+        // 11/25: 이 현장에서 이어서 출발하는 일정이 있으면, 취소·삭제 전에 그 일정 출발지를 어떻게 할지 묻기
+        let chain = { action: 'none', deps: [] };
+        if (cur && ((a === 'extra' && !isCx) || a === true)) {
+          try { chain = await window.HQChainCancel.ask(cur, a === true ? '삭제' : '취소'); } catch (e) { console.warn('이어지는 일정 확인 실패', e); chain = { action: 'none', deps: [] }; }
+          if (chain.action === 'back') return;
+        }
+        const afterChain = async (verb) => {
+          if (chain.action === 'repoint' && chain.fb) {
+            const n = await window.HQChainCancel.repoint(chain.deps, chain.fb, cur, verb);
+            if (n) setTimeout(() => alert(`↪ 이어지는 일정 ${n}개를 ${chain.fb.place}에서 출발로 바꿨어요. 기상 단계도 다시 넣었어요.`), 400);
+          } else if (chain.action === 'manual') {
+            window.HQChainCancel.openManual(chain.deps);
+          }
+        };
         if (a === 'extra') {
           let patch;
           if (isCx) patch = { status: '예정' };
@@ -4278,6 +4304,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (window.ScheduleNotify) window.ScheduleNotify.afterSave(cur, next).then(m => { if (m) setTimeout(() => alert(m), 1200); }).catch(() => { });   // 담당 매니저에게 취소·되살림 알림
           if (!isCx && window.DraftSheet) window.DraftSheet.afterHqChange(cur, next, false);   // 현장 담당자에게 취소 안내 문자 초안
           el.modalScheduleDetail.classList.remove('active');
+          if (!isCx) await afterChain('취소');
           await renderSidebar();
           await renderKPI();
           await renderCurrentView();
@@ -4291,6 +4318,7 @@ document.addEventListener('DOMContentLoaded', () => {
           try { if (window.AdminRepeat) { const m = await window.AdminRepeat.afterDelete(delSch); if (m) alert(m); } } catch (e) { }
           if (delSch && window.DraftSheet) window.DraftSheet.afterHqChange(delSch, null, true);   // 현장 담당자에게 취소 안내 문자 초안
           el.modalScheduleDetail.classList.remove('active');
+          await afterChain('삭제');
           await renderSidebar();
           await renderKPI();
           await renderCurrentView();
@@ -4660,5 +4688,90 @@ window.HQChain = {
     });
     const dep = document.getElementById('form-departure-place');
     if (dep && !dep.dataset.chainBound) { dep.dataset.chainBound = '1'; dep.addEventListener('input', () => { dep.dataset.auto = ''; this.fill(); }); }
+  },
+};
+
+// 11/25: 본사가 앞 일정을 취소·삭제할 때, 그 현장에서 이어서 출발하던 일정(departure.chained)을 같이 정리
+//        [사옥(또는 그날 원래 출발지)에서 출발로 바꾸기] / [출발지는 직접 정하기] / [돌아가기]
+window.HQChainCancel = {
+  dependents(id) {
+    if (!id) return [];
+    return (window.hqStore?.getSchedules?.() || []).filter(s => s && s.id !== id && s.departure && typeof s.departure === 'object'
+      && s.departure.chained && s.departure.fromScheduleId === id && !['취소', 'cancelled'].includes(s.status))
+      .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')) || String(a.startTime || '').localeCompare(String(b.startTime || '')));
+  },
+  // 바꿔 넣을 출발지: ① 등록된 거점 중 사옥(type 'office', 이름에 '사옥'이 있으면 그것) ② 없으면 취소하는 일정의 그날 원래 출발지(이어서 출발이면 앞으로 거슬러)
+  fallbackPlace(cur) {
+    let places = [];
+    try { places = (window.Admin && window.Admin.getPlaces ? window.Admin.getPlaces() : window.hqStore.getPlaces()) || []; } catch (e) { }
+    const offices = places.filter(p => p && p.type === 'office' && String(p.name || '').trim());
+    const o = offices.find(p => /사옥/.test(p.name)) || offices[0];
+    if (o) return { place: o.name, address: o.address || o.name, label: /사옥/.test(o.name) ? '사옥' : o.name };
+    const all = window.hqStore?.getSchedules?.() || [];
+    let s = cur, guard = 0;
+    while (s && s.departure && typeof s.departure === 'object' && s.departure.chained && guard++ < 10) s = all.find(x => x.id === s.departure.fromScheduleId);
+    const d = s && s.departure;
+    const place = d && typeof d === 'object' ? String(d.place || '').trim() : String(d || '').trim();
+    if (place && !(d && typeof d === 'object' && d.chained)) return { place, address: (typeof d === 'object' && d.address) || place, label: place };
+    return null;
+  },
+  // 버튼에 넣을 짧은 이름 ('SBS 파워FM 라디오 생방송' → '라디오')
+  shortName(title) {
+    const t = String(title || '').trim();
+    if (t.length <= 8) return t || '다음 일정';
+    const kw = ['라디오', '팬미팅', '팬사인회', '사인회', '쇼케이스', '콘서트', '공연', '시상식', '화보', '광고', '뮤직비디오', '인터뷰', '리허설', '녹화', '촬영', '생방송', '행사', '미팅'];
+    return kw.find(k => t.includes(k)) || (t.slice(0, 8).trim() + '…');
+  },
+  josa(word, a, b) {
+    const c = String(word || '').replace(/[…\s'")\]>]+$/, '').slice(-1).charCodeAt(0);
+    if (!(c >= 0xAC00 && c <= 0xD7A3)) return word + b;
+    return word + ((c - 0xAC00) % 28 ? a : b);
+  },
+  /** 묻기. verb: '취소' | '삭제'. 이어지는 일정이 없으면 { action:'none' } */
+  async ask(cur, verb = '취소') {
+    const deps = this.dependents(cur && cur.id);
+    if (!deps.length) return { action: 'none', deps };
+    const fb = this.fallbackPlace(cur);
+    const who = deps.length === 1 ? this.josa(this.shortName(deps[0].title), '은', '는') : `이어지는 ${deps.length}개 일정은`;
+    const whoPlain = deps.length === 1 ? this.shortName(deps[0].title) : `이어지는 ${deps.length}개 일정`;
+    const buttons = [];
+    if (fb) buttons.push({ label: `${verb}하고, ${who} ${fb.label}에서 출발로 바꾸기`, value: 'repoint', kind: 'ok' });
+    buttons.push({ label: `${verb}하고, ${whoPlain} 출발지는 직접 정하기`, value: 'manual', kind: fb ? 'line' : 'ok' });
+    buttons.push({ label: '돌아가기', value: 'back', kind: 'plain' });
+    const action = await Ask.choose({
+      title: `'${cur.title || '일정'}'${this.josa(cur.title || '일정', '을', '를').slice(String(cur.title || '일정').length)} ${verb}할까요?`,
+      desc: `이 현장에서 이어서 출발하는 일정이 ${deps.length}개 있어요.`,
+      notes: deps.map(d => ({ head: `${String(d.startTime || '').slice(0, 5)} ${d.title || ''}`, sub: `지금: ${d.departure.place || cur.location || '앞 일정 현장'}에서 출발 · 기상 단계 없음` })),
+      buttons,
+    });
+    return { action: action || 'back', deps, fb };
+  },
+  /** 이어지는 일정들의 출발지를 바꾸고 동선을 다시 계산 (기상 단계가 다시 들어감) */
+  async repoint(deps, fb, cur, verb = '취소') {
+    const who = (localStorage.getItem('admin_bp_user_name') || localStorage.getItem('bp_user_name') || '본사') + ' (본사)';
+    let n = 0;
+    for (const d of deps) {
+      const before = JSON.parse(JSON.stringify(d));
+      const next = JSON.parse(JSON.stringify(d));
+      next.departure = { place: fb.place, address: fb.address || fb.place };
+      delete next.chainLateMin;
+      try { window.hqStore._previewTL = null; } catch (e) { }   // 등록창 미리보기 동선을 다시 쓰지 않게
+      try {
+        await window.hqStore.saveSchedule(next);
+        n++;
+      } catch (e) { if (e && e.localSaved) n++; else { console.warn('이어지는 일정 출발지 변경 실패', e); continue; } }
+      try { await window.hqStore.addStatusLog(next.id, { label: `[일정 수정] 앞 일정 '${cur.title || ''}' ${verb} · 출발지 ${before.departure.place || '앞 일정 현장'} → ${fb.place}`, managerName: who }); } catch (e) { }
+      try { if (window.ScheduleNotify) window.ScheduleNotify.afterSave(before, next).catch(() => { }); } catch (e) { }
+    }
+    return n;
+  },
+  /** 직접 정하기: 첫 일정의 수정 창을 열고, 출발지 칸을 비워 둠 (이어서 출발 표시는 뺌) */
+  openManual(deps) {
+    const d = deps && deps[0];
+    if (!d || typeof window.Admin?.openScheduleFormModal !== 'function') return;
+    const copy = JSON.parse(JSON.stringify(d));
+    copy.departure = { place: '', address: '' };
+    window.Admin.openScheduleFormModal(null, copy);
+    setTimeout(() => { try { const f = document.getElementById('form-departure-place'); f.scrollIntoView({ block: 'center' }); f.focus(); } catch (e) { } }, 300);
   },
 };
