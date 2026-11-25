@@ -1402,6 +1402,8 @@ body.ads-on .bottom-nav { padding-top:58px; }
 .nc-info { padding-left:12px; gap:1px; }
 .nc-name { font-size:18px; line-height:1.3; }
 .nc-info .nc-dest { font-size:13px; }
+/* 11/25: 오늘 밤 출발 카드 — 내일 일정 한 줄 (연한 남색) */
+.nc-nextday { align-self:flex-start; margin:4px 0 3px; padding:4px 9px; border-radius:8px; background:#EEF0FD; color:#2B338F; font-size:13px; font-weight:700; line-height:1.4; overflow-wrap:anywhere; }
 .nc-acts button, .now-card .nc-btn { min-height:42px !important; }
 .nc-nav { height:36px; }
 

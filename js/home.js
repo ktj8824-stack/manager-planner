@@ -763,7 +763,30 @@ const Home = {
         // 제목은 장소 이름만, 주소는 아래 줄로
         const shortName = String(name).replace(/\s*\((?=[^)]*\d)[^)]*\)\s*/g, ' ').replace(/픽업(\s*\([^()]*\))?\s+픽업 및 출발/, '픽업$1 출발').replace(/\s{2,}/g, ' ').trim() || name;
         const SB = 'min-height:46px; border-radius:12px; font-size:14.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; font-family:inherit;';
-        const dayTag = nowEv.forNextDay ? '내일 일정 · ' : nowEv.dayOffset === -1 ? '전날 ' : nowEv.dayOffset === 1 ? '다음날 ' : '';
+        // 11/25: 내일 새벽 일정의 오늘 밤 단계는 '오늘 밤'으로 (예전 '내일 일정 · 23:35'는 내일 밤으로 읽혔음)
+        //        제목 아래에 '내일 00:30 <일정> · 출발까지 N분' 한 줄
+        const nightHr = parseInt(String(nowEv.time || ''), 10);
+        const dayTag = nowEv.forNextDay ? (nightHr >= 18 ? '오늘 밤 · ' : '오늘 · ') : nowEv.dayOffset === -1 ? '전날 ' : nowEv.dayOffset === 1 ? '다음날 ' : '';
+        let nextDayLine = '';
+        if (nowEv.forNextDay) {
+          try {
+            const hs = window.hqStore?.getSchedules().find(s => s.id === nowEv.hqScheduleId);
+            if (hs) {
+              const tl = Array.isArray(hs.timeline) ? hs.timeline : [];
+              const offs = State.stepDayOffsets(tl, hs.startTime);
+              const di = tl.findIndex(st => { const t = String((st && st.label) || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim(); return /^\[(픽업|현장 이동)/.test(t) || (/출발/.test(t) && !/^\[(기상|대기|식사)/.test(t)); });
+              let left = '';
+              const dm = di >= 0 ? /^(\d{1,2}):(\d{2})/.exec(String(tl[di].time || '')) : null;
+              const dd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(hs.date || ''));
+              if (dm && dd) {
+                const at = new Date(+dd[1], +dd[2] - 1, +dd[3] + (offs[di] || 0), +dm[1], +dm[2], 0, 0);
+                const mins = Math.ceil((at.getTime() - Date.now()) / 60000);
+                if (mins > 0) left = ` · 출발까지 ${mins >= 60 ? `${Math.floor(mins / 60)}시간${mins % 60 ? ` ${mins % 60}분` : ''}` : `${mins}분`}`;
+              }
+              nextDayLine = `내일 ${String(hs.startTime || '').slice(0, 5)} ${hs.title || ''}${left}`.replace(/\s{2,}/g, ' ');
+            }
+          } catch (e) { nextDayLine = ''; }
+        }
         const ncActs = canAct ? `<div class="nc-acts">
               ${nowDay === 'future' ? `<div class="nc-wait">일정 당일에 출발·도착을 누를 수 있어요</div>` : nowDay === 'past' ? `<button type="button" onclick="Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '완료')" class="nc-btn pri" style="${SB}">완료</button>` : `
               ${isDrive ? `<button type="button" onclick="Home.setHQRouteStatus(${escJs(nowEv.hqScheduleId)}, ${idx}, '이동중')" class="nc-btn ${nowEv.moving ? 'moving' : ''}" style="${SB}">${nowEv.moving ? '● 이동중' : '출발'}</button>` : ''}
@@ -782,7 +805,7 @@ const Home = {
             </div>
             <div class="nc-main">
               <span class="nc-time">${dayTag ? `<small>${esc(dayTag)}</small>` : ''}${esc(nowEv.time || '')}</span>
-              <span class="nc-info"><b class="nc-name">${esc(shortName)}</b>${dest ? `<span class="nc-dest">${esc(dest)}</span>` : ''}</span>
+              <span class="nc-info"><b class="nc-name">${esc(shortName)}</b>${nextDayLine ? `<span class="nc-nextday">${esc(nextDayLine)}</span>` : ''}${dest ? `<span class="nc-dest">${esc(dest)}</span>` : ''}</span>
             </div>
             ${dest ? `<div data-venue="${esc(dest)}" data-venue-compact style="margin:-4px 0 0;"></div>` : ''}
             ${inProg ? `<div class="nc-endline">${esc(inProg.endHm)} 끝${inProg.next ? ` · 다음 출발 ${esc(inProg.next)}` : ''}</div>

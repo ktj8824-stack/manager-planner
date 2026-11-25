@@ -27,7 +27,15 @@
   .ask-b button{flex:1;min-height:48px;border-radius:12px;font-size:15.5px;font-weight:700;cursor:pointer;font-family:inherit}
   .ask-x{background:#F1F2F4;border:0;color:#334155}
   .ask-ok{background:#3B45C4;border:0;color:#fff}
-  .ask-ok.danger{background:#B42318}`;
+  .ask-ok.danger{background:#B42318}
+  .ask-col{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+  .ask-col button{width:100%;min-height:46px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;padding:8px 12px;line-height:1.35;word-break:keep-all}
+  .ask-col .ask-line{background:#fff;border:1px solid #D5D8DF;color:#14161A}
+  .ask-col .ask-plain{background:none;border:0;color:#5B616E;font-weight:600;min-height:40px}
+  .ask-note{margin:0 0 12px;padding:10px 12px;border-radius:12px;background:#FFF8E1;border:1px solid #F5DFA0}
+  .ask-note div{font-size:14px;font-weight:700;color:#14161A;line-height:1.45}
+  .ask-note small{display:block;margin-top:1px;font-size:13px;font-weight:500;color:#8A5A00;line-height:1.45}
+  .ask-note div+div{margin-top:8px}`;
 
   const Ask = {
     _style() { if (!document.getElementById('ask-style')) { const st = document.createElement('style'); st.id = 'ask-style'; st.textContent = CSS; document.head.appendChild(st); } },
@@ -109,6 +117,33 @@
         });
         back.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); done(false); } });
         setTimeout(() => { try { back.querySelector('.ask-ok').focus(); } catch (e) { } }, 60);
+      });
+    },
+
+    /** 여러 갈래 고르기 (11/25): 버튼을 위아래로 쌓아 보여 주고, 누른 버튼의 value 를 돌려줌 (닫으면 null)
+        o: { title, desc, notes:[{ head, sub }] (연노랑 상자), buttons:[{ label, value, kind:'ok'|'line'|'plain' }] } */
+    choose(o) {
+      o = o || {};
+      this._style(); this.close();
+      const btns = Array.isArray(o.buttons) ? o.buttons : [];
+      return new Promise((resolve) => {
+        const back = document.createElement('div');
+        back.className = 'ask-back'; back.id = 'ask-back';
+        back.innerHTML = `<div class="ask" role="alertdialog" aria-modal="true" aria-label="${esc(o.title || '')}">
+          <h3>${esc(o.title || '')}</h3>
+          ${o.desc ? `<p>${esc(o.desc)}</p>` : ''}
+          ${Array.isArray(o.notes) && o.notes.length ? `<div class="ask-note">${o.notes.map(n => `<div>${esc(n.head || '')}${n.sub ? `<small>${esc(n.sub)}</small>` : ''}</div>`).join('')}</div>` : ''}
+          <div class="ask-col">${btns.map((b, i) => `<button type="button" class="${b.kind === 'line' ? 'ask-line' : b.kind === 'plain' ? 'ask-plain' : 'ask-ok'}" data-i="${i}">${esc(b.label)}</button>`).join('')}</div></div>`;
+        document.body.appendChild(back);
+        const done = (v) => { back._cancel = null; back.remove(); resolve(v); };
+        back._cancel = () => resolve(null);
+        back.addEventListener('click', (e) => {
+          if (e.target === back) return done(null);
+          const i = e.target.closest('[data-i]')?.dataset.i;
+          if (i != null && btns[+i]) done(btns[+i].value);
+        });
+        back.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); done(null); } });
+        setTimeout(() => { try { back.querySelector('.ask-col button').focus(); } catch (e) { } }, 60);
       });
     },
 
