@@ -4181,6 +4181,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const n = await window.HQChainCancel.repoint(chainF.deps, chainF.fb, schData, '취소');
         if (n) { setTimeout(() => alert(`↪ 이어지는 일정 ${n}개를 ${chainF.fb.place}에서 출발로 바꿨어요. 기상 단계도 다시 넣었어요.`), 1600); await renderCurrentView(); }
       } else if (chainF.action === 'manual') window.HQChainCancel.openManual(chainF.deps);
+      // 11/27 점검: 앞 일정이 끝나는 시각을 바꾸면(예: 녹화 1시간 연장), 이 현장에서 이어서 출발하는 일정의 동선도 다시 계산
+      //  (예전에는 다음 일정이 예전 끝 시각 기준 출발 그대로 남아, 녹화 중인데 '15:43 출발'로 보였음)
+      if (prevSch && chainF.action === 'none' && !['취소', 'cancelled'].includes(schData.status)
+        && prevSch.date === schData.date && String(prevSch.endTime || '') !== String(schData.endTime || '')) {
+        try {
+          const m = await window.HQChainCancel.refollow(schData, prevSch.endTime);
+          if (m) { setTimeout(() => alert(m), 1800); await renderCurrentView(); }
+        } catch (e) { console.warn('이어지는 일정 다시 계산 실패', e); }
+      }
       } finally {
         Admin._savingSchedule = false;
         if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = submitLabel; }
@@ -4764,6 +4773,33 @@ window.HQChainCancel = {
       try { if (window.ScheduleNotify) window.ScheduleNotify.afterSave(before, next).catch(() => { }); } catch (e) { }
     }
     return n;
+  },
+  /** 11/27: 앞 일정(cur)의 끝 시각이 바뀌었을 때, 이어서 출발하는 일정들의 동선을 다시 계산하고 본사에 알릴 글을 돌려줌 (없으면 '')
+   *  출발 = max(계산 출발, 앞 일정 끝) 규칙(holdChainDepart)이 새 끝 시각으로 다시 적용됨 */
+  async refollow(cur, prevEnd) {
+    const deps = this.dependents(cur && cur.id);
+    if (!deps.length) return '';
+    const who = (localStorage.getItem('admin_bp_user_name') || localStorage.getItem('bp_user_name') || '본사') + ' (본사)';
+    const depOf = (tl) => (Array.isArray(tl) ? tl : []).find(x => x && /^\[(픽업|현장 이동)/.test(String(x.label || '')));
+    const lines = []; let anyLate = false;
+    for (const d of deps) {
+      const before = JSON.parse(JSON.stringify(d));
+      const next = JSON.parse(JSON.stringify(d));
+      delete next.chainLateMin;
+      try { window.hqStore._previewTL = null; } catch (e) { }
+      try { await window.hqStore.saveSchedule(next); } catch (e) { if (!(e && e.localSaved)) { console.warn('이어지는 일정 다시 계산 실패', e); continue; } }
+      const saved = (window.hqStore.getSchedules() || []).find(x => x.id === d.id) || next;
+      const o = depOf(before.timeline), n = depOf(saved.timeline);
+      const ot = o ? String(o.time || '').slice(0, 5) : '', nt = n ? String(n.time || '').slice(0, 5) : '';
+      const late = /(\d+)분 늦음/.exec(String((n && n.desc) || ''));
+      if (late) anyLate = true;
+      if (ot === nt && !late) continue;
+      try { await window.hqStore.addStatusLog(d.id, { label: `[일정 수정] 앞 일정 '${cur.title || ''}' 끝 ${prevEnd ? String(prevEnd).slice(0, 5) + '→' : ''}${String(cur.endTime || '').slice(0, 5)} · 출발 ${ot || '-'} → ${nt || '-'}`, managerName: who }); } catch (e) { }
+      try { if (window.ScheduleNotify) window.ScheduleNotify.afterSave(before, saved).catch(() => { }); } catch (e) { }
+      lines.push(`· ${String(d.startTime || '').slice(0, 5)} ${d.title || ''}: 출발 ${ot || '-'} → ${nt || '-'}${late ? ` (약 ${late[1]}분 늦게 도착)` : ''}`);
+    }
+    if (!lines.length) return '';
+    return `${anyLate ? '⚠️' : '↪'} 이어서 출발하는 일정 ${lines.length}개의 동선을 다시 계산했어요.\n${lines.join('\n')}${anyLate ? '\n담당 매니저와 다음 현장에 늦는다고 알려 주세요.' : ''}`;
   },
   /** 직접 정하기: 첫 일정의 수정 창을 열고, 출발지 칸을 비워 둠 (이어서 출발 표시는 뺌) */
   openManual(deps) {
