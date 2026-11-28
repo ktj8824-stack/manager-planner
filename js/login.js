@@ -54,10 +54,10 @@ const Login = {
         <!-- 2-1) 소속 매니저: 사내 계정 -->
         <div id="login-b2b-section" class="lg-step" style="display:none;">
           ${back}
-          <h2 class="lg-h2">사내 계정으로 로그인</h2>
+          <h2 class="lg-h2">이메일 계정으로 로그인</h2>
           <div class="lg-box">
             <form id="form-supabase-login" novalidate onsubmit="Login.handleEmailLogin(event)" style="display:flex; flex-direction:column; gap:12px;">
-              <label class="lg-label">사내 이메일
+              <label class="lg-label">이메일
                 <input type="email" id="login-email" class="form-input" placeholder="name@company.com" autocomplete="${Login._fresh() ? 'off' : 'username'}" required style="${inputStyle}" /></label>
               <label class="lg-label">비밀번호
                 <input type="password" id="login-pw" class="form-input" placeholder="비밀번호" autocomplete="${Login._fresh() ? 'new-password' : 'current-password'}" required style="${inputStyle}" /></label>
@@ -82,6 +82,7 @@ const Login = {
               Apple로 계속하기
             </button>` : ''}
             <div id="google_btn_wrapper"></div>
+            <button type="button" class="lg-link" onclick="Login.setTab('b2b')" style="background:none;border:0;color:#5B616E;font-size:13px;text-decoration:underline;padding:4px;cursor:pointer;">이메일 계정이 있어요 (테스트·심사용 계정 포함)</button>
             <div class="lg-hint">${window.PROMO && PROMO.isFree() ? '출시 기념 · ' + PROMO.text() + ' (모든 기능)' : '아티스트 1명까지 무료예요'}</div>
           </div>
         </div>
@@ -152,6 +153,24 @@ const Login = {
     button.textContent = 'Google로 시작하기';
     button.addEventListener('click', () => this.startOAuth('google'));
     wrap.replaceChildren(button);
+    // 서버에서 Google 로그인이 아직 꺼져 있으면 버튼을 아예 숨김 ('준비 중' 버튼은 스토어 심사에서 고장으로 보임 · 11-28)
+    this.providerEnabled('google').then(on => { if (on === false) { wrap.replaceChildren(); wrap.style.display = 'none'; } });
+  },
+
+  // 로그인 서버 설정에서 소셜 로그인이 켜져 있는지 (true/false, 모르면 null)
+  async providerEnabled(provider) {
+    try {
+      if (!this._authSettings) {
+        const sc = window.SupabaseClient;
+        if (!sc) return null;
+        const base = localStorage.getItem(sc.STORAGE_KEY_URL) || sc.DEFAULT_URL;
+        const key = localStorage.getItem(sc.STORAGE_KEY_ANON_KEY) || sc.DEFAULT_KEY;
+        this._authSettings = fetch(base + '/auth/v1/settings', { headers: { apikey: key } }).then(r => r.ok ? r.json() : null).catch(() => null);
+      }
+      const st = await this._authSettings;
+      const v = st && st.external ? st.external[provider] : undefined;
+      return typeof v === 'boolean' ? v : null;
+    } catch (e) { return null; }
   },
 
   async startOAuth(provider) {

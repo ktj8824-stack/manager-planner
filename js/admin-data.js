@@ -2248,7 +2248,7 @@ class HQDataStore {
       }
 
       // 한강 횡단(강남 ↔ 강북) 추가 병목 보정 (청담/강남 ↔ 상암/마포/여의도/KBS/SBS/MBC 등)
-      const isGangnam = (t) => /청담|강남|논현|역삼|삼성|압구정|신사|서초/i.test(t);
+      const isGangnam = (t) => /청담|강남|논현|역삼|삼성|압구정|신사(?!옥)|서초/i.test(t);   // 'MBC 신사옥'은 신사동 아님 (11-28)
       const isGangbukOrWest = (t) => /상암|마포|mbc|sbs|kbs|jtbc|여의도|합정|홍대|일산|고양|성산/i.test(t);
       if ((isGangnam(cleanOrigin) && isGangbukOrWest(cleanDest)) || (isGangnam(cleanDest) && isGangbukOrWest(cleanOrigin))) {
         baseDurationMin = Math.max(baseDurationMin, 24); // 최소 기준거리 보장
