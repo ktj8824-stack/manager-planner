@@ -2286,8 +2286,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const day0 = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
       const diff = Math.round((day0(cur) - day0(now)) / 864e5);
       let isNow, rel = '';
-      if (v === 'month') { isNow = cur.getFullYear() === now.getFullYear() && cur.getMonth() === now.getMonth(); rel = isNow ? '이번 달' : ''; }
-      else if (v === 'week') { const ws = (d) => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - x.getDay()); return x.getTime(); }; isNow = ws(cur) === ws(now); rel = isNow ? '이번 주' : ''; }
+      if (v === 'month') { const md = (cur.getFullYear() - now.getFullYear()) * 12 + cur.getMonth() - now.getMonth(); isNow = md === 0; rel = isNow ? '이번 달' : md === 1 ? '다음 달' : md === -1 ? '지난달' : md > 0 ? `${md}달 뒤` : `${-md}달 전`; }
+      else if (v === 'week') { const ws = (d) => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - x.getDay()); return x.getTime(); }; const wd = Math.round((ws(cur) - ws(now)) / (7 * 864e5)); isNow = wd === 0; rel = isNow ? '이번 주' : wd === 1 ? '다음 주' : wd === -1 ? '지난주' : wd > 0 ? `${wd}주 뒤` : `${-wd}주 전`; }
       else { isNow = diff === 0; rel = isNow ? '오늘' : diff === 1 ? '내일' : diff === -1 ? '어제' : diff > 0 ? `${diff}일 뒤` : `${-diff}일 전`; }
       if (chip) { chip.textContent = rel; chip.hidden = !rel; chip.classList.toggle('now', !!isNow); }
       if (btn) { btn.textContent = isNow ? '오늘' : '오늘로'; btn.classList.toggle('is-now', !!isNow); btn.classList.toggle('go-now', !isNow); btn.setAttribute('aria-pressed', isNow ? 'true' : 'false'); }
