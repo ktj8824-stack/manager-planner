@@ -2277,7 +2277,28 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(() => { try { renderKPI(); } catch (e) {} }, 60000);
 
   // ── 뷰 렌더링 라우터 ──
+  // 보고 있는 날짜가 오늘인지 한눈에 (11-28): 오늘이면 '오늘' 표시 + 오늘 버튼은 흐리게,
+  //  다른 날이면 '3일 뒤'·'2일 전' 표시 + 버튼은 '오늘로' 로 눈에 띄게
+  function updateTodayMark() {
+    try {
+      const chip = document.getElementById('date-rel-chip'); const btn = el.btnToday;
+      const now = new Date(); const cur = state.currentDate; const v = state.currentView;
+      const day0 = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+      const diff = Math.round((day0(cur) - day0(now)) / 864e5);
+      let isNow, rel = '';
+      if (v === 'month') { isNow = cur.getFullYear() === now.getFullYear() && cur.getMonth() === now.getMonth(); rel = isNow ? '이번 달' : ''; }
+      else if (v === 'week') { const ws = (d) => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - x.getDay()); return x.getTime(); }; isNow = ws(cur) === ws(now); rel = isNow ? '이번 주' : ''; }
+      else { isNow = diff === 0; rel = isNow ? '오늘' : diff === 1 ? '내일' : diff === -1 ? '어제' : diff > 0 ? `${diff}일 뒤` : `${-diff}일 전`; }
+      if (chip) { chip.textContent = rel; chip.hidden = !rel; chip.classList.toggle('now', !!isNow); }
+      if (btn) { btn.textContent = isNow ? '오늘' : '오늘로'; btn.classList.toggle('is-now', !!isNow); btn.classList.toggle('go-now', !isNow); btn.setAttribute('aria-pressed', isNow ? 'true' : 'false'); }
+    } catch (e) { }
+  }
+
   async function renderCurrentView() {
+    try { await renderCurrentViewInner(); } finally { updateTodayMark(); }
+  }
+
+  async function renderCurrentViewInner() {
     if (state.currentView === 'month') {
       await renderMonthView();
     } else if (state.currentView === 'week') {
@@ -2510,6 +2531,18 @@ document.addEventListener('DOMContentLoaded', () => {
       ${rows || '<div class="gv2-empty">등록된 아티스트가 없어요.</div>'}
       <div class="gv2-legend"><span><i class="plan"></i>예정</span><span><i class="live"></i>진행 · 이동 중</span><span><i class="late"></i>지연 · 미확인</span><span><i class="done"></i>완료</span>${isToday ? `<span><i class="nowk"></i>지금 ${nowTxt}</span>` : ''}</div>
     </div></div>`;
+    // 휴대폰처럼 좁은 화면: 06시부터만 보여서 오후 일정이 화면 밖에 있으면 '없는 것'처럼 보임 (11-28)
+    //  → 오늘이면 지금 시각, 아니면 그날 가장 이른 막대가 보이게 가로 스크롤을 옮김
+    try {
+      const box = el.scheduleViewport.querySelector('.gv2');
+      if (box && box.scrollWidth > box.clientWidth + 4) {
+        const all = [...box.querySelectorAll('.gv2-bar')].map(b => parseFloat(b.style.left) || 0);
+        const target = isToday && nowMin >= H0 * 60 ? Math.max(0, pct(nowMin) - 8) : (all.length ? Math.max(0, Math.min(...all) - 3) : 0);
+        const track = box.querySelector('.gv2-track, .gv2-ticks');
+        const tw = track ? track.getBoundingClientRect().width : 0;
+        if (tw && target > 0) box.scrollLeft = Math.round(tw * target / 100);
+      }
+    } catch (e) { }
   }
 
   // ── 4. 실시간 관제 칸반 보드 뷰 (Kanban View) ──
@@ -3529,6 +3562,10 @@ document.addEventListener('DOMContentLoaded', () => {
       state.currentDate = new Date();
       renderCurrentView();
     });
+
+    // 날짜 옆 '캘린더' 버튼: 어느 탭(지도·분석 등)에 있어도 바로 월간 캘린더로 (11-28)
+    const calJump = document.getElementById('btn-open-month');
+    if (calJump) calJump.addEventListener('click', () => { const t = document.getElementById('btn-view-month'); if (t) t.click(); });
 
     // 사이드바 아티스트 필터 클릭 위임
     el.artistFilterList.addEventListener('click', (e) => {
