@@ -355,7 +355,14 @@ const Home = {
     const scope = this.scope();
     // [퇴근합시다]는 오늘 할 일이 남아 있으면 목록 아래에, 다 끝났거나 이미 퇴근했으면 위에 (위쪽에 배너가 겹겹이 쌓이지 않게)
     const _now = new Date();
-    const weBusy = !!window.WorkEnd && !WorkEnd.today() && this.currentTab !== 'schedule'
+    // 퇴근 카드는 '오늘(근무일)'을 볼 때만, 그리고 그날 일정이 있었던 날에만 (쉬는 날·다른 날짜에는 안 보임 · 11-28)
+    //  새벽 6시 전에는 전날이 근무일 (밤샘 촬영)
+    const _same = (a) => y === a.getFullYear() && m === a.getMonth() && d === a.getDate();
+    const _wd = window.WorkEnd ? WorkEnd._workDate() : _now;
+    const _hadWork = (dt) => (State.getSchedulesForDate(dt.getFullYear(), dt.getMonth(), dt.getDate()) || [])
+      .some(s => this._passFilter(s) && !['취소', 'cancelled'].includes(s.status));
+    const weShow = !!window.WorkEnd && (WorkEnd.today() ? (_same(_now) || _same(_wd)) : ((_same(_now) || _same(_wd)) && _hadWork(_wd)));
+    const weBusy = weShow && !WorkEnd.today() && this.currentTab !== 'schedule'
       && y === _now.getFullYear() && m === _now.getMonth() && d === _now.getDate()
       && events.some(ev => ev && !ev.done && ev.stepCategory !== 'rest');
     let html = `
@@ -378,7 +385,7 @@ const Home = {
         <button type="button" onclick="Home.setTab('timeline')" aria-pressed="${this.currentTab === 'timeline'}" class="${this.currentTab === 'timeline' ? 'on' : ''}">동선 타임라인</button>
         <button type="button" onclick="Home.setTab('schedule')" aria-pressed="${this.currentTab === 'schedule'}" class="${this.currentTab === 'schedule' ? 'on' : ''}">${indieMode ? '내 일정표' : '회사 일정표'}</button>
       </div>
-      ${window.WorkEnd && !weBusy ? WorkEnd.homeHtml() : ''}
+      ${weShow && !weBusy ? WorkEnd.homeHtml() : ''}
       ${window.AutoNav?.promoHtml ? AutoNav.promoHtml() : ''}
     `;
 
