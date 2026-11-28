@@ -175,7 +175,8 @@ const Home = {
       const c = new Date(start); c.setDate(start.getDate() + i);
       const y = c.getFullYear(), m = c.getMonth(), d = c.getDate();
       const isSel = same(c, sel), isToday = same(c, today);
-      const has = State.getSchedulesForDate(y, m, d).length > 0;
+      // 고른 담당 아티스트·내 일정 기준으로 점 표시 (전체 일정 점이 찍혀 눌러 보면 비어 있던 것 · 11-28)
+      const has = State.getSchedulesForDate(y, m, d).filter(s => this._passFilter(s)).length > 0;
       const past = !isToday && c < today;
       let cls = 'v-cal-day';
       if (isSel) cls += ' selected';
@@ -192,7 +193,8 @@ const Home = {
   renderTomorrowPeek() {
     try {
       const t = new Date(this.selectedDate); t.setDate(t.getDate() + 1);
-      const evs = State.calculateDailyEvents(t.getFullYear(), t.getMonth(), t.getDate()) || [];
+      const all = window.hqStore?.getSchedules?.() || [];
+      const evs = (State.calculateDailyEvents(t.getFullYear(), t.getMonth(), t.getDate()) || []).filter(ev => !ev || !ev.hqScheduleId || this._passFilter(all.find(s => s.id === ev.hqScheduleId)));
       if (!evs.length) return '';
       const pick = (re) => evs.find(ev => ev.time && re.test(String(ev.title || '')));
       const wake = pick(/^\[기상/), go = pick(/출발|이동|픽업/);
@@ -271,6 +273,7 @@ const Home = {
   },
   setScope(v) {
     try { localStorage.setItem('rp_home_scope', v === 'all' ? 'all' : 'mine'); } catch (e) { }
+    this.updateLeftCal();
     this.updateRightTimeline();
   },
   _passFilter(s) {
@@ -282,7 +285,8 @@ const Home = {
       if (me && s.managerId && s.managerId !== me) return false;
     }
     const a = this.artistFilter;
-    if (a && a !== 'ALL' && s.artistId !== a && !(Array.isArray(s.artistIds) && s.artistIds.includes(a))) return false;
+    // '전체 아티스트(전원)' 일정(회의 등)은 어느 팀을 골라도 보임
+    if (a && a !== 'ALL' && s.artistId && s.artistId !== 'ALL' && s.artistId !== a && !(Array.isArray(s.artistIds) && s.artistIds.includes(a))) return false;
     return true;
   },
   openArtistPicker() {
@@ -300,6 +304,7 @@ const Home = {
   pickArtist(id) {
     this.artistFilter = id || 'ALL';
     App.closeModal();
+    this.updateLeftCal();
     this.updateRightTimeline();
   },
 
