@@ -2302,7 +2302,8 @@ document.addEventListener('DOMContentLoaded', () => {
           h.classList.add('one');
         } else if (m) {
           h.classList.remove('one');
-          h.innerHTML = `<small class="cdt-y">${m[1]}년<span id="date-rel-chip" class="date-rel-chip"></span></small><span class="cdt-d"></span>`;
+          // '5일 뒤' 표시는 날짜(12월 3일 (목)) 옆에 — 월간 '다음 달'과 같은 자리 (11-28)
+          h.innerHTML = `<small class="cdt-y">${m[1]}년</small><span class="cdt-row"><span class="cdt-d"></span><span id="date-rel-chip" class="date-rel-chip"></span></span>`;
           h.querySelector('.cdt-d').textContent = m[2] || '';
         }
       }

@@ -76,6 +76,7 @@
 #current-date-text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
 #current-date-text .cdt-y { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #71717a; }
 #current-date-text .cdt-d { white-space: nowrap; }
+#current-date-text .cdt-row { display: flex; align-items: center; gap: 6px; }
 #current-date-text.one { flex-direction: row; align-items: center; gap: 8px; }
 #current-date-text.one .cdt-one { white-space: nowrap; }
 #current-date-text .date-rel-chip { height: 20px; padding: 0 7px; font-size: 11px; }
