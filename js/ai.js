@@ -307,7 +307,7 @@ const RoadAI = {
       this.hideTyping();
       if (!res.ok) {
         const up = data.error === 'daily_limit' && data.indie && !data.paid
-          ? `<br><button type="button" class="rpai-btn" style="margin-top:8px;" onclick="App.navigate('upgrade')">유료 알아보기 (월 2만원)</button>` : '';
+          ? U.iosApp() ? `<br><span style="display:inline-block; margin-top:8px;">${esc(U.IOS_PLAN_NOTE)}</span>` : `<br><button type="button" class="rpai-btn" style="margin-top:8px;" onclick="App.navigate('upgrade')">유료 알아보기 (월 2만원)</button>` : '';
         if (data.error === 'daily_limit') this.remaining = 0;
         this.botSay(esc(data.message || 'AI가 잠시 대답하지 못했어요. 조금 뒤에 다시 말씀해 주세요.') + up);
         return;

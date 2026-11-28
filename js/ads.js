@@ -17,6 +17,8 @@ const Ads = {
   enabled() {
     try {
       if (typeof Plan === 'undefined' || !Plan.isIndie() || Plan.isPaid()) return false;
+      // 아이폰 앱: 자체 광고('광고 없이 쓰기 · 월 2만원')는 결제 안내라 띄우지 않음 (Apple 심사 3.1.1). 실제 광고 번호가 있으면 광고만
+      if (U.iosApp() && !this.UNIT_BANNER && !this.UNIT_BOX) return false;
       if (State.screen === 'login' || State.screen === 'onboarding' || State.screen === 'upgrade') return false;
       return true;
     } catch (e) { return false; }
@@ -45,6 +47,7 @@ const Ads = {
     bar.className = 'ad-banner';
     bar.setAttribute('role', 'complementary');
     bar.setAttribute('aria-label', '광고');
+    if (!this.UNIT_BANNER && U.iosApp()) { document.body.classList.remove('ads-on'); return; }
     bar.innerHTML = this.UNIT_BANNER
       ? `<span class="ad-tag">광고</span>${this._adfit(this.UNIT_BANNER, 320, 50)}`
       : `<span class="ad-tag">광고</span>
@@ -85,6 +88,7 @@ const Ads = {
 
   _showFull(reason) {
     if (document.getElementById('ad-full')) return;
+    if (!this.UNIT_BOX && U.iosApp()) return;   // 아이폰 앱: 자체 결제 안내 광고는 띄우지 않음
     const box = document.createElement('div');
     box.id = 'ad-full';
     box.className = 'ad-full';
@@ -104,7 +108,7 @@ const Ads = {
             <span class="ad-house-price">월 20,000원</span>
           </div>`}
         </div>
-        <button type="button" class="ad-full-up" onclick="Ads.toUpgrade('full')">광고 없이 쓰기</button>
+        ${U.iosApp() ? '' : `<button type="button" class="ad-full-up" onclick="Ads.toUpgrade('full')">광고 없이 쓰기</button>`}
       </div>`;
     document.body.appendChild(box);
     if (this.UNIT_BOX) this._loadAdfit();
@@ -122,6 +126,6 @@ const Ads = {
 
   closeFull() { document.getElementById('ad-full')?.remove(); },
 
-  toUpgrade() { this.closeFull(); try { App.navigate('upgrade'); } catch (e) { } },
+  toUpgrade() { this.closeFull(); if (U.iosApp()) return; try { App.navigate('upgrade'); } catch (e) { } },
 };
 window.Ads = Ads;

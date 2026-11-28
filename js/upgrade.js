@@ -12,6 +12,12 @@ const Upgrade = {
     if (!el) return;
     const fee = Plan.FEE.toLocaleString();
     const paid = Plan.isIndie() && Plan.isPaid();
+    // 아이폰 앱: 가격·결제 버튼 없이 안내 한 줄만 (Apple 심사 3.1.1)
+    if (U.iosApp()) {
+      el.innerHTML = `<div class="header"><button class="header-btn" onclick="App.navigate('profile')"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button><h1 class="header-title">요금제</h1><div class="header-btn" style="visibility:hidden"></div></div>
+        <div class="screen-scroll" style="padding:24px 20px; text-align:center; font-size:15px; color:var(--text-300); line-height:1.7;">${paid && Plan.untilText() ? `이용 중 · ${esc(Plan.untilText())}<br>` : ''}${esc(U.IOS_PLAN_NOTE)}</div>`;
+      return;
+    }
     // 회사 계정은 회사 요금제(본사 웹에서 결제)
     if (!Plan.isIndie()) {
       el.innerHTML = `<div class="header"><button class="header-btn" onclick="App.navigate('profile')"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button><h1 class="header-title">요금제</h1><div class="header-btn" style="visibility:hidden"></div></div>
@@ -121,6 +127,7 @@ const Upgrade = {
 
   // 중간 확인 창 없이 결제 페이지로 바로 이동 (동의·금액은 결제 페이지에서 확인)
   startPayment() {
+    if (U.iosApp()) { U.toast(U.IOS_PLAN_NOTE); return; }   // 아이폰 앱에서는 결제 페이지로 가지 않음
     const userName = encodeURIComponent(localStorage.getItem('bp_user_name') || '');
     const userEmail = encodeURIComponent(localStorage.getItem('bp_user_email') || '');
     location.href = `payment.html?plan=pro&ceo=${userName}&email=${userEmail}&return=mobile`;

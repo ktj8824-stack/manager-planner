@@ -34,7 +34,7 @@ const Artists = {
         <div class="art-plan ${paid ? 'paid' : ''}">
           ${Plan.isFree() && !Plan.hasPaid() ? `🎁 ${esc(window.PROMO.text())} · 아티스트 여러 명 등록 가능`
             : paid ? `유료 사용 중 · 아티스트 여러 명 등록 가능 ${Plan.untilText() ? `(${Plan.untilText()})` : ''}`
-                 : `무료는 아티스트 ${Plan.FREE_ARTISTS}명까지예요. <button type="button" onclick="App.navigate('upgrade')">유료 알아보기</button>`}
+                 : `무료는 아티스트 ${Plan.FREE_ARTISTS}명까지예요.${U.iosApp() ? '' : ` <button type="button" onclick="App.navigate('upgrade')">유료 알아보기</button>`}`}
         </div>
         <div class="art-count">등록 <b>${items.length}${paid ? '' : ` / ${Plan.FREE_ARTISTS}`}명</b> · ${Plan.isFree() && !Plan.hasPaid() ? '무료 기간' : paid ? '유료' : '무료'}</div>
         ${items.length ? items.map(a => {
@@ -56,8 +56,8 @@ const Artists = {
         ${full ? `
           <div class="art-add locked">
             <span class="art-lock-t">🔒 아티스트 더 추가하기</span>
-            <span class="art-lock-s">유료로 바꾸면 여러 명을 함께 관리할 수 있어요</span>
-            <button type="button" onclick="App.navigate('upgrade')">유료 혜택 보기</button>
+            ${U.iosApp() ? `<span class="art-lock-s">${esc(U.IOS_PLAN_NOTE)}</span>` : `<span class="art-lock-s">유료로 바꾸면 여러 명을 함께 관리할 수 있어요</span>
+            <button type="button" onclick="App.navigate('upgrade')">유료 혜택 보기</button>`}
           </div>` : `<button type="button" class="art-add" onclick="Artists.openForm()">+ 아티스트 추가</button>`}
       </div>`;
   },
