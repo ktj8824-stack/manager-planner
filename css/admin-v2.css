@@ -74,6 +74,7 @@
 #current-date-text { font-size: 20px; font-weight: 900; margin-left: 8px; color: #14161A; }
 /* 보고 있는 날짜가 오늘인지 (11-28) */
 .date-rel-chip { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 999px; background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 800; white-space: nowrap; flex-shrink: 0; }
+.date-rel-chip[hidden] { display: none; }
 .date-rel-chip.now { background: #DCFCE7; color: #166534; }
 .today-btn.is-now { color: #9ca3af !important; background: #f4f4f5 !important; }
 .today-btn.go-now { background: #3B45C4 !important; color: #fff !important; border-color: #3B45C4 !important; }
@@ -575,10 +576,10 @@ body.hq-today-view .hq-todo { display: block; }
 /* 하루 막대: 지연은 주황, 지금 선은 검정 */
 .gv2-row.late { background: #FDF7EF; }
 .gv2-who small.bad { color: #9A4A06; }
-.gv2-bar.plan { background: #FFFFFF !important; color: #14161A !important; box-shadow: inset 0 0 0 1.5px #C9CDD5; }
+.gv2-bar.plan { background: #FFFFFF !important; color: #14161A !important; box-shadow: inset 0 0 0 1.5px #C9CDD5 !important; }   /* 테두리가 .gv2-bar 의 box-shadow:none 에 지워져 글자만 떠 보이던 것 (11-28) */
 .gv2-bar.main.plan { background: #F1F2F5 !important; }
 .gv2-bar.live { background: #3B45C4 !important; }
-.gv2-bar.late { background: #FDF1E3 !important; color: #8A4205 !important; box-shadow: inset 0 0 0 1.5px #E3A15C; }
+.gv2-bar.late { background: #FDF1E3 !important; color: #8A4205 !important; box-shadow: inset 0 0 0 1.5px #E3A15C !important; }
 .gv2-bar.done { background: #E3E5EA !important; color: #6B7180 !important; }
 .gv2-now { background: #14161A; opacity: .6; }
 .gv2-legend i.plan { background: #FFFFFF; box-shadow: inset 0 0 0 1.5px #C9CDD5; } .gv2-legend i.late { background: #FDF1E3; box-shadow: inset 0 0 0 1.5px #E3A15C; } .gv2-legend i.done { background: #E3E5EA; } .gv2-legend i.nowk { background: #14161A; }
