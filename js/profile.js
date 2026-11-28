@@ -117,14 +117,14 @@ const Profile = {
             <span class="me-row-label" style="font-weight:800;">🎁 ${esc(window.PROMO.text())}</span>
             <span class="me-row-sub">출시 기념으로 로드비서·자동 길안내·교통 예측·아티스트 여러 명·경비 기록을 모두 쓸 수 있어요.</span>
           </span>
-          <button type="button" onclick="App.navigate('upgrade')">자세히</button>
+          ${U.iosApp() ? '' : `<button type="button" onclick="App.navigate('upgrade')">자세히</button>`}
         </section>` : `
         <section class="me-plan ${paid ? 'paid' : ''}">
           <span class="me-row-txt">
             <span class="me-row-label" style="font-weight:800;">${paid ? `유료 사용 중 ${esc(Plan.untilText())}` : '무료로 쓰는 중'}</span>
-            <span class="me-row-sub">${paid ? '로드비서·자동 길안내·교통 예측·아티스트 여러 명·경비 기록' : `월 ${Plan.FEE.toLocaleString()}원이면 로드비서·자동 길안내·교통 예측·경비 기록을 모두 쓸 수 있어요.`}</span>
+            <span class="me-row-sub">${paid ? '로드비서·자동 길안내·교통 예측·아티스트 여러 명·경비 기록' : U.iosApp() ? esc(U.IOS_PLAN_NOTE) : `월 ${Plan.FEE.toLocaleString()}원이면 로드비서·자동 길안내·교통 예측·경비 기록을 모두 쓸 수 있어요.`}</span>
           </span>
-          <button type="button" onclick="App.navigate('upgrade')">${paid ? '연장하기' : '유료 알아보기'}</button>
+          ${U.iosApp() ? '' : `<button type="button" onclick="App.navigate('upgrade')">${paid ? '연장하기' : '유료 알아보기'}</button>`}
         </section>`}` : ''}
 
         <!-- 업무 -->

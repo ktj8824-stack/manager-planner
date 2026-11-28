@@ -11,6 +11,15 @@ const U = {
     window.open(this.getHQPortalUrl(), '_blank');
   },
 
+  /* ── 아이폰 앱(App Store) 안인지 ──
+     아이폰 앱은 window.__rpNative 와 webkit 메시지 통로(roadplanner)를 넣어 줌 (native/ios/WebView.swift).
+     앱 안에서는 결제·요금·업그레이드 안내를 보이지 않음 (Apple 심사 3.1.1). 안드로이드 앱·웹은 그대로. */
+  iosApp() {
+    try { return !!(window.__rpNative && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.roadplanner); }
+    catch (e) { return false; }
+  },
+  IOS_PLAN_NOTE: '요금제는 회사 관리자에게 문의해 주세요',
+
   /* ── Korean Chosung Search ── */
   CHO: ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'],
 

@@ -299,7 +299,7 @@ html.embed .top{display:none}
     <details><summary>일정이 끝났는데 또 안내하나요?</summary><p>아니요. 완료를 누른 단계는 건너뛰고 아직 남은 다음 단계로만 안내해요. 오늘 일정이 다 끝났으면 "수고하셨습니다"로 끝나요.</p></details>
     <details><summary>가족 차를 탈 때도 켜지나요?</summary><p>등록한 차(CarPlay 또는 고른 블루투스 기기)에 연결될 때만 켜져요. 켜져도 3초 안에 '취소'를 누르면 바로 닫혀요.</p></details>
     <details><summary>로그인을 매번 해야 하나요?</summary><p>아니요. 앱에서 한 번 로그인해 두면 그다음부터 바로 안내돼요. 브라우저로 쓰는 경우엔 같은 브라우저에서 로그인해 두세요.</p></details>
-    <details><summary>무료로도 쓸 수 있나요?</summary><p><b>출시 기념으로 2027년 2월 28일까지는 누구나 무료로 쓸 수 있어요.</b> 그 뒤에는 회사 소속 매니저는 회사 요금제로, 개인 매니저는 유료(월 2만원)에서 쓸 수 있어요. 홈 화면의 티맵·카카오내비 버튼은 언제나 무료예요.</p></details>
+    <details id="faq-price"><summary>무료로도 쓸 수 있나요?</summary><p><b>출시 기념으로 2027년 2월 28일까지는 누구나 무료로 쓸 수 있어요.</b> 그 뒤에는 회사 소속 매니저는 회사 요금제로, 개인 매니저는 유료(월 2만원)에서 쓸 수 있어요. 홈 화면의 티맵·카카오내비 버튼은 언제나 무료예요.</p></details>
   </div>
 </section>
 
@@ -371,6 +371,10 @@ html.embed .top{display:none}
 (function(){var b=document.getElementById('go-back');if(!b)return;var same=false;try{same=!!document.referrer&&new URL(document.referrer).origin===location.origin}catch(e){}
 if(!same&&!/[?&]from=app\b/.test(location.search)&&!(navigator.standalone||matchMedia('(display-mode: standalone)').matches)){b.style.display='none';return}
 b.addEventListener('click',function(e){if(same&&history.length>1){e.preventDefault();history.back()}})})();
+</script>
+<script>
+// 아이폰 앱 안에서는 요금 안내 대신 한 줄만 (Apple 심사 3.1.1). 안드로이드 앱·웹은 그대로
+(function(){try{if(!(window.__rpNative&&window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.roadplanner))return;var d=document.getElementById('faq-price');if(d){var p=d.querySelector('p');if(p)p.textContent='요금제는 회사 관리자에게 문의해 주세요. 홈 화면의 티맵·카카오내비 버튼은 언제나 무료예요.'}}catch(e){}})();
 </script>
 </body>
 </html>

@@ -30,7 +30,9 @@ struct RoadWebView: UIViewRepresentable {
         web.isOpaque = false
         web.backgroundColor = UIColor(red: 0.078, green: 0.071, blue: 0.239, alpha: 1)
         web.scrollView.contentInsetAdjustmentBehavior = .never
-        if #available(iOS 16.4, *) { web.isInspectable = true }   // 맥 Safari 개발자 메뉴로 디버깅 가능
+        #if DEBUG
+        if #available(iOS 16.4, *) { web.isInspectable = true }   // 개발용 빌드에서만 맥 Safari 개발자 메뉴로 디버깅 (출시 빌드에서는 꺼짐)
+        #endif
 
         let refresh = UIRefreshControl()
         refresh.addTarget(context.coordinator, action: #selector(Coordinator.reload(_:)), for: .valueChanged)

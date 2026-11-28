@@ -143,6 +143,8 @@ const Login = {
   initOAuth() {
     const wrap = document.getElementById('google_btn_wrapper');
     if (!wrap) return;
+    // 아이폰 앱(WKWebView) 안에서는 Google이 로그인을 막음 → 버튼을 숨김 (카카오·Apple·이메일은 그대로)
+    if (U.iosApp()) { wrap.replaceChildren(); wrap.style.display = 'none'; return; }
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'btn-social btn-google lg-primary';
