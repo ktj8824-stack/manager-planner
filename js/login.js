@@ -46,7 +46,7 @@ const Login = {
           </button>
           <button type="button" id="tab-b2c" class="lg-card" onclick="Login.setTab('b2c')">
             <span class="lg-ico" style="background:#ecfdf5; color:#047857;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span>
-            <span class="lg-txt"><b>혼자 일하는 매니저예요</b><small>개인 매니저 · 무료로 바로 시작해요</small></span>${chev}
+            <span class="lg-txt"><b>혼자 일하는 매니저예요</b><small>${U.iosApp() ? '개인 매니저 · 바로 시작해요' : '개인 매니저 · 무료로 바로 시작해요'}</small></span>${chev}
           </button>
           <button type="button" id="demo-login-btn" ${Login.isDevHost() ? '' : 'hidden'} onclick="Login.demoLogin('ceo')" class="lg-demo">⚡ 테스트 대표 계정 1초 둘러보기 (데모)</button>
         </div>
@@ -83,7 +83,7 @@ const Login = {
             </button>` : ''}
             <div id="google_btn_wrapper"></div>
             <button type="button" class="lg-link" onclick="Login.setTab('b2b')" style="background:none;border:0;color:#5B616E;font-size:13px;text-decoration:underline;padding:4px;cursor:pointer;">이메일 계정이 있어요 (테스트·심사용 계정 포함)</button>
-            <div class="lg-hint">${window.PROMO && PROMO.isFree() ? '출시 기념 · ' + PROMO.text() + ' (모든 기능)' : '아티스트 1명까지 무료예요'}</div>
+            ${U.iosApp() ? '' : `<div class="lg-hint">${window.PROMO && PROMO.isFree() ? '출시 기념 · ' + PROMO.text() + ' (모든 기능)' : '아티스트 1명까지 무료예요'}</div>`}
           </div>
         </div>
 
