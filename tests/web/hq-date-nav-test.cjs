@@ -20,6 +20,22 @@ const { chromium, devices } = require('playwright');
   R.month = await snap('month');
   await p.click('#btn-nav-today'); await p.waitForTimeout(400);
   R.back = await snap('back');
+  // 월간 아래 아티스트 표: 누르면 그 아티스트만, 다시 누르면 전체 (11-28)
+  R.legend = await p.evaluate(async () => {
+    const arts = await hqStore.getArtists(); const now = new Date();
+    const d = (n) => `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(n).padStart(2, '0')}`;
+    await hqStore.saveSchedule({ title: '범례A', date: d(2), startTime: '10:00', endTime: '11:00', artistId: arts[0].id, location: 'KBS', shop: { needed: false } });
+    await hqStore.saveSchedule({ title: '범례B', date: d(3), startTime: '10:00', endTime: '11:00', artistId: arts[1].id, location: 'MBC', shop: { needed: false } });
+    document.getElementById('btn-view-day').click(); await new Promise(r => setTimeout(r, 200));
+    document.getElementById('btn-open-month').click(); await new Promise(r => setTimeout(r, 500));
+    const titles = () => [...document.querySelectorAll('.mv2-ev .mv2-tt')].map(e => e.textContent);
+    const before = titles();
+    document.querySelector(`[data-legend-art="${arts[0].id}"]`).click(); await new Promise(r => setTimeout(r, 500));
+    const onlyA = titles(); const on = !!document.querySelector(`[data-legend-art="${arts[0].id}"].on`);
+    document.querySelector(`[data-legend-art="${arts[0].id}"]`).click(); await new Promise(r => setTimeout(r, 500));
+    const back = titles();
+    return { a: before.includes('범례A') && before.includes('범례B'), onlyA: onlyA.includes('범례A') && !onlyA.includes('범례B'), on, back: back.includes('범례B'), twoLine: !!document.querySelector('#current-date-text .cdt-y') && !!document.querySelector('#current-date-text .cdt-d') };
+  });
   console.log(JSON.stringify(R), 'errs', JSON.stringify(errs));
   await b.close();
 })();
