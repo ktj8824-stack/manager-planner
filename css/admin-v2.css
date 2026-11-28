@@ -72,6 +72,14 @@
 .nav-arrow-btn, .today-btn { height: 36px; min-width: 36px; border: 1px solid #e4e4e7 !important; border-radius: 10px !important; background: #fff !important; color: #14161A !important; font-size: 15px; cursor: pointer; }
 .today-btn { padding: 0 12px; font-size: 13px; font-weight: 700; }
 #current-date-text { font-size: 20px; font-weight: 900; margin-left: 8px; color: #14161A; }
+/* 보고 있는 날짜가 오늘인지 (11-28) */
+.date-rel-chip { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 999px; background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 800; white-space: nowrap; flex-shrink: 0; }
+.date-rel-chip.now { background: #DCFCE7; color: #166534; }
+.today-btn.is-now { color: #9ca3af !important; background: #f4f4f5 !important; }
+.today-btn.go-now { background: #3B45C4 !important; color: #fff !important; border-color: #3B45C4 !important; }
+/* 날짜 오른쪽 '캘린더' 네모 버튼 */
+.cal-jump-btn { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; margin-left: auto; border: 1px solid #c7cbf5; border-radius: 10px; background: #EEF0FD; color: #3B45C4; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.cal-jump-btn:hover { filter: brightness(.97); }
 .view-tabs { display: flex; flex-wrap: wrap; gap: 2px; background: #f4f4f5 !important; border-radius: 12px; padding: 3px; border: 0 !important; }
 .view-tab-btn { height: 34px; padding: 0 12px; border-radius: 9px; font-size: 13px; background: transparent !important; color: #3f3f46 !important; font-weight: 500; border: 0 !important; box-shadow: none !important; }
 .view-tab-btn.active { background: #fff !important; color: #2B338F !important; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.1) !important; }
@@ -133,6 +141,9 @@
 .gv2-row.head { min-height: 28px; }
 .gv2-row.late { background: #fef2f2; }
 .gv2-who { display: flex; align-items: center; gap: 10px; padding: 0 6px; min-width: 0; }
+/* 가로로 밀어도 아티스트 이름은 왼쪽에 붙어 있게 (휴대폰) */
+.gv2-who { position: sticky; left: 0; z-index: 3; background: #fff; align-self: stretch; }
+.gv2-row.late .gv2-who { background: #fef2f2; }
 .gv2-who > span:last-child { display: flex; flex-direction: column; min-width: 0; }
 .gv2-who b { font-size: 14px; font-weight: 800; color: #14161A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gv2-who small { font-size: 12px; color: #52525b; }
@@ -682,6 +693,8 @@ body.hq-today-view .hq-todo { display: block; }
 }
 @media (max-width: 640px) {
   .date-nav-group h3 { font-size: 16.5px !important; white-space: normal; word-break: keep-all; line-height: 1.3; }
+  .date-nav-group { flex-wrap: wrap; row-gap: 8px; }
+  .date-nav-group h3 { margin-left: 0 !important; }
   .mv2 { overflow-x: visible; }
   .mv2-head, .mv2-grid { min-width: 0; gap: 3px; }
   .mv2-legend { min-width: 0; gap: 10px; }
