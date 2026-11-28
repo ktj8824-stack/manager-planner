@@ -2281,7 +2281,7 @@ document.addEventListener('DOMContentLoaded', () => {
   //  다른 날이면 '3일 뒤'·'2일 전' 표시 + 버튼은 '오늘로' 로 눈에 띄게
   function updateTodayMark() {
     try {
-      const chip = document.getElementById('date-rel-chip'); const btn = el.btnToday;
+      const btn = el.btnToday;
       const now = new Date(); const cur = state.currentDate; const v = state.currentView;
       const day0 = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
       const diff = Math.round((day0(cur) - day0(now)) / 864e5);
@@ -2289,7 +2289,19 @@ document.addEventListener('DOMContentLoaded', () => {
       if (v === 'month') { const md = (cur.getFullYear() - now.getFullYear()) * 12 + cur.getMonth() - now.getMonth(); isNow = md === 0; rel = isNow ? '이번 달' : md === 1 ? '다음 달' : md === -1 ? '지난달' : md > 0 ? `${md}달 뒤` : `${-md}달 전`; }
       else if (v === 'week') { const ws = (d) => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - x.getDay()); return x.getTime(); }; const wd = Math.round((ws(cur) - ws(now)) / (7 * 864e5)); isNow = wd === 0; rel = isNow ? '이번 주' : wd === 1 ? '다음 주' : wd === -1 ? '지난주' : wd > 0 ? `${wd}주 뒤` : `${-wd}주 전`; }
       else { isNow = diff === 0; rel = isNow ? '오늘' : diff === 1 ? '내일' : diff === -1 ? '어제' : diff > 0 ? `${diff}일 뒤` : `${-diff}일 전`; }
-      if (chip) { chip.textContent = rel; chip.hidden = !rel; chip.classList.toggle('now', !!isNow); }
+      // 날짜 두 줄: 위 작은 글씨 '2026년 · 5일 뒤', 아래 큰 글씨 '12월 3일 (목)' → 오른쪽에 캘린더 버튼 자리 (11-28)
+      const h = el.currentDateText;
+      if (h) {
+        const raw = h.dataset.raw && h.querySelector('.cdt-d') ? h.dataset.raw : h.textContent;
+        const m = /^(\d{4})년\s*(.*)$/.exec(String(raw).trim());
+        h.dataset.raw = raw;
+        if (m) {
+          h.innerHTML = `<small class="cdt-y">${m[1]}년<span id="date-rel-chip" class="date-rel-chip"></span></small><span class="cdt-d"></span>`;
+          h.querySelector('.cdt-d').textContent = m[2] || '';
+        }
+      }
+      const chip2 = document.getElementById('date-rel-chip');
+      if (chip2) { chip2.textContent = rel; chip2.hidden = !rel; chip2.classList.toggle('now', !!isNow); }
       if (btn) { btn.textContent = isNow ? '오늘' : '오늘로'; btn.classList.toggle('is-now', !!isNow); btn.classList.toggle('go-now', !isNow); btn.setAttribute('aria-pressed', isNow ? 'true' : 'false'); }
     } catch (e) { }
   }
@@ -2347,6 +2359,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const artists = await window.hqStore.getArtists();
     let allSchedules = await window.hqStore.getSchedules();
+    const monthAll = allSchedules;   // 아래 아티스트 표(범례)는 고르기 전 전체 기준으로
     if (state.selectedArtistFilter !== 'ALL') {
       allSchedules = allSchedules.filter(s => matchArtistSchedule(s, state.selectedArtistFilter, artists));
     }
@@ -2380,13 +2393,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const more = daySchedules.length > 3 ? `<div class="mv2-more">+${daySchedules.length - 3}개 더</div>` : '';
       html += `<div class="cal-cell mv2-cell ${isToday ? 'today' : ''}" data-date="${esc(dateStr)}"><span class="mv2-num ${dow === 0 ? 'sun' : dow === 6 ? 'sat' : ''}">${esc(day)}</span><div class="cell-events">${rows}${more}</div></div>`;
     }
-    const used = new Map();
-    allSchedules.filter(s => s.date && s.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).forEach(s => {
+    // 아래 아티스트 표: 누르면 그 아티스트 일정만, 다시 누르거나 '전체'를 누르면 모두 (11-28)
+    const used = new Map();   // id → [이름, 색]
+    monthAll.filter(s => s.date && s.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).forEach(s => {
       const c = artColorOf(s);
-      if (c.all) used.set('전원', '#52525b');
-      else { const a = artists.find(x => x.id === s.artistId); if (a) used.set(String(a.name).replace(/\s*\([^)]*\)\s*$/, ''), a.color || '#4C57D6'); }
+      if (c.all) used.set('ALL', ['전원', '#52525b']);
+      else { const a = artists.find(x => x.id === s.artistId); if (a) used.set(a.id, [String(a.name).replace(/\s*\([^)]*\)\s*$/, ''), a.color || '#4C57D6']); }
     });
-    html += `</div>${used.size ? `<div class="mv2-legend">${[...used].map(([n, c]) => `<span><i style="background:${esc(c)}"></i>${esc(n)}</span>`).join('')}</div>` : ''}</div>`;
+    const curF = state.selectedArtistFilter || 'ALL';
+    const legend = [...used].filter(([id]) => id !== 'ALL').map(([id, [n, c]]) => `<button type="button" class="mv2-lg${curF === id ? ' on' : ''}" data-legend-art="${esc(id)}" aria-pressed="${curF === id}"><i style="background:${esc(c)}"></i>${esc(n)}</button>`).join('');
+    const allBtn = `<button type="button" class="mv2-lg${curF === 'ALL' ? ' on' : ''}" data-legend-art="ALL" aria-pressed="${curF === 'ALL'}"><i style="background:#52525b"></i>전체</button>`;
+    html += `</div>${used.size ? `<div class="mv2-legend">${allBtn}${legend}</div>${curF !== 'ALL' ? '<div class="mv2-lg-hint">전원(전체 회의 등) 일정은 같이 보여요</div>' : ''}` : ''}</div>`;
     el.scheduleViewport.innerHTML = html;
   }
 
@@ -3800,6 +3817,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // 일정 클릭 위임
     el.scheduleViewport.addEventListener('click', (e) => {
       if (popover) { popover.style.display = 'none'; popover.style.opacity = '0'; }
+      const lg = e.target.closest('[data-legend-art]');
+      if (lg) {
+        const id = lg.dataset.legendArt;
+        state.selectedArtistFilter = (id === 'ALL' || state.selectedArtistFilter === id) ? 'ALL' : id;
+        try { renderSidebar(); } catch (x) { }
+        renderCurrentView();
+        return;
+      }
       const pill = e.target.closest('.cal-event-pill');
       if (pill && pill.dataset.schId) {
         openScheduleDetailModal(pill.dataset.schId);
