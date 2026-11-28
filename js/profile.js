@@ -56,9 +56,10 @@ const Profile = {
     const userDept       = localStorage.getItem('bp_dept_name')    || '';
     const indie = typeof Plan !== 'undefined' && Plan.isIndie();   // 개인 매니저 (본사 없음)
     const paid = !indie || Plan.isPaid();
-    const lock = (f) => (indie && f === 'autonav' && !Plan.can(f) && !Plan.trialUsed()) ? '<span style="font-size:12px;font-weight:800;color:#1F7A4C;background:#E7F5EE;border:1px solid #BFE3CF;padding:3px 9px;border-radius:999px;white-space:nowrap;">7일 무료 체험</span>'
-      : (indie && f === 'autonav' && !Plan.isPaid() && Plan.trialActive()) ? `<span style="font-size:12px;font-weight:800;color:#1F7A4C;background:#E7F5EE;border:1px solid #BFE3CF;padding:3px 9px;border-radius:999px;white-space:nowrap;">체험 ${Plan.trialLeftText()}</span>`
-      : (indie && !Plan.can(f)) ? '<span style="font-size:12px;font-weight:800;color:#4C57D6;background:#EEF0FD;border:1px solid #D5D9F7;padding:3px 9px;border-radius:999px;white-space:nowrap;">🔒 유료</span>' : ProfileIcons.chevron;
+    const ios = U.iosApp();   // 아이폰 앱: 무료·체험·유료 글자 대신 중립 문구 (Apple 심사 3.1.1)
+    const lock = (f) => (indie && f === 'autonav' && !Plan.can(f) && !Plan.trialUsed()) ? `<span style="font-size:12px;font-weight:800;color:#1F7A4C;background:#E7F5EE;border:1px solid #BFE3CF;padding:3px 9px;border-radius:999px;white-space:nowrap;">${ios ? '7일 사용하기' : '7일 무료 체험'}</span>`
+      : (indie && f === 'autonav' && !Plan.isPaid() && Plan.trialActive()) ? `<span style="font-size:12px;font-weight:800;color:#1F7A4C;background:#E7F5EE;border:1px solid #BFE3CF;padding:3px 9px;border-radius:999px;white-space:nowrap;">${ios ? '사용 중' : '체험'} ${Plan.trialLeftText()}</span>`
+      : (indie && !Plan.can(f)) ? `<span style="font-size:12px;font-weight:800;color:#4C57D6;background:#EEF0FD;border:1px solid #D5D9F7;padding:3px 9px;border-radius:999px;white-space:nowrap;">${ios ? U.IOS_LOCK : '🔒 유료'}</span>` : ProfileIcons.chevron;
     if (indie && !this._planChecked) { this._planChecked = true; Plan.refresh().then(() => { if (State.screen === 'profile') this.render(); }); }
     // 담당 아티스트: 본사가 지정한 아티스트 ID → 이름
     const assignedArtists = (() => {
@@ -100,7 +101,7 @@ const Profile = {
             <span class="me-avatar">${esc(userName.slice(0, 1) || '나')}</span>
             <span class="me-prof-txt">
               <span class="me-name">${esc(userName)}</span>
-              <span class="me-sub">${indie ? `개인 매니저 · ${Plan.isFree() && !Plan.hasPaid() ? '무료 기간' : paid ? '유료' : '무료'}` : esc([userCompany, userDept].filter(Boolean).join(' · '))}</span>
+              <span class="me-sub">${indie ? (ios ? '개인 매니저' : `개인 매니저 · ${Plan.isFree() && !Plan.hasPaid() ? '무료 기간' : paid ? '유료' : '무료'}`) : esc([userCompany, userDept].filter(Boolean).join(' · '))}</span>
               ${userEmail ? `<span class="me-sub" style="font-size:12px;">${esc(userEmail)}</span>` : ''}
             </span>
           </div>
@@ -110,7 +111,7 @@ const Profile = {
           </div>
         </section>
 
-        ${indie ? `
+        ${indie && !ios ? `
         ${Plan.isFree() && !Plan.hasPaid() ? `
         <section class="me-plan paid">
           <span class="me-row-txt">
@@ -133,7 +134,7 @@ const Profile = {
           <div class="me-box">
             ${phone ? row('휴대폰 번호', esc(phone), chev, 'Profile.editContact()')
                     : row('휴대폰 번호', indie ? '아직 없어요 · 연락처로 쓰는 번호예요' : '아직 없어요 · 본사가 긴급할 때 연락할 번호예요', '<span class="me-warn-btn">등록</span>', 'Profile.editContact()', 'warn')}
-            ${indie ? row('차량관리 · 경비 기록', esc(vehicle || '차량 등록 안 됨') + (Plan.can('expenses') ? ' · 영수증·월별 정산' : ' · 경비 기록은 유료'), chev, 'Vehicle.open()')
+            ${indie ? row('차량관리 · 경비 기록', esc(vehicle || '차량 등록 안 됨') + (Plan.can('expenses') ? ' · 영수증·월별 정산' : ios ? '' : ' · 경비 기록은 유료'), chev, 'Vehicle.open()')
                     : row('경비 기록', '주유 · 주차 · 식비 영수증, 월별 합계 · 정산', chev, 'Expenses.open()') + row('배정 차량', esc(vehicle || '등록 안 됨'), chev, 'Profile.editVehicle()')}
             ${isHQ ? row('본사 웹 열기', '관리자용 · 새 창', chev, `window.open(${escJs(typeof U !== 'undefined' && U.getHQPortalUrl ? U.getHQPortalUrl() : 'admin.html')}, '_blank', 'noopener')`) : ''}
           </div>
@@ -172,7 +173,8 @@ const Profile = {
             <button type="button" onclick="Profile.showVersion()">v1.0.0</button> ·
             <button type="button" onclick="window.open('./terms.html', '_blank', 'noopener')">이용약관</button> ·
             <button type="button" onclick="window.open('./privacy.html', '_blank', 'noopener')">개인정보처리방침</button> ·
-            <button type="button" onclick="window.open('./location-terms.html', '_blank', 'noopener')">위치기반서비스 이용약관</button>
+            <button type="button" onclick="window.open('./location-terms.html', '_blank', 'noopener')">위치기반서비스 이용약관</button> ·
+            <button type="button" onclick="window.open('./support.html', '_blank', 'noopener')">고객 지원</button>
           </div>
         </section>
       </div>

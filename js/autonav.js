@@ -81,7 +81,8 @@ const AutoNav = {
     const began = Date.now();
     const tick = () => {
       if (this._loggedIn() && !this._can('autonav')) {
-        return this._message('자동 길안내는 유료 기능이에요', (typeof U !== 'undefined' && U.iosApp() ? U.IOS_PLAN_NOTE + '. ' : '앱의 내 정보 → 유료 알아보기에서 시작할 수 있어요. ') + '홈의 길안내 버튼은 무료로 쓸 수 있어요.');
+        if (typeof U !== 'undefined' && U.iosApp()) return this._message('자동 길안내는 관리자 설정이 필요해요', U.IOS_PLAN_NOTE + '. 홈의 길안내 버튼은 언제든 쓸 수 있어요.');
+        return this._message('자동 길안내는 유료 기능이에요', '앱의 내 정보 → 유료 알아보기에서 시작할 수 있어요. 홈의 길안내 버튼은 무료로 쓸 수 있어요.');
       }
       const r = this._loggedIn() ? this.nextStep() : null;
       if (r && r.ev) return this._ready(r);
@@ -234,11 +235,12 @@ const AutoNav = {
     const locked = typeof Plan !== 'undefined' && Plan.isIndie && Plan.isIndie() && !Plan.can('autonav');   // 무료 개인 매니저: 설정 전에 알림
     const canTrial = locked && Plan.trialUsed && !Plan.trialUsed();   // 아직 체험 전 → 누르면 7일 무료 체험
     if (locked && !canTrial && typeof U !== 'undefined' && U.iosApp()) return '';   // 아이폰 앱: 잠긴 기능 홍보는 띄우지 않음 (Apple 심사 3.1.1)
+    const ios = typeof U !== 'undefined' && U.iosApp();   // 아이폰 앱: 무료·체험 글자 없이
     return `<div class="an-promo" role="note">
       <a class="an-promo-go" href="autonav-guide.html?from=app&os=${os}"${canTrial ? ` onclick="Plan.startTrial(); return AutoNav.guideClick('${os}');"` : locked ? ` onclick="event.preventDefault(); Plan.require('autonav');"` : ` onclick="return AutoNav.guideClick('${os}')"`}>
         <span class="an-promo-ic" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17l1.5-5h9L18 17M7.5 12l1.2-3.6A2 2 0 0 1 10.6 7h2.8a2 2 0 0 1 1.9 1.4L16.5 12"/><circle cx="8" cy="17" r="1.6"/><circle cx="16" cy="17" r="1.6"/></svg></span>
-        <span class="an-promo-t"><b>차에 타면 길안내가 저절로</b><small>${canTrial ? '7일 무료 체험 · 차에 연결되면 내비 자동 실행' : locked ? '유료 기능 · 무료 체험이 끝났어요' : (Plan.isIndie && Plan.isIndie() && !Plan.isPaid() && Plan.trialActive() ? `무료 체험 중 · ${Plan.trialLeftText()}` : '차에 연결되면 다음 일정 내비 자동 실행')}</small></span>
-        <span class="an-promo-btn">${canTrial ? '무료 체험' : locked ? '알아보기' : '1분 설정'}</span>
+        <span class="an-promo-t"><b>차에 타면 길안내가 저절로</b><small>${canTrial ? (ios ? '7일 사용 · 차에 연결되면 내비 자동 실행' : '7일 무료 체험 · 차에 연결되면 내비 자동 실행') : locked ? '유료 기능 · 무료 체험이 끝났어요' : (Plan.isIndie && Plan.isIndie() && !Plan.isPaid() && Plan.trialActive() ? `${ios ? '사용 중' : '무료 체험 중'} · ${Plan.trialLeftText()}` : '차에 연결되면 다음 일정 내비 자동 실행')}</small></span>
+        <span class="an-promo-btn">${canTrial ? (ios ? '7일 사용' : '무료 체험') : locked ? '알아보기' : '1분 설정'}</span>
       </a>
       <button type="button" class="an-promo-x" aria-label="다시 보지 않기" onclick="AutoNav.hidePromo()">✕</button>
     </div>`;

@@ -18,7 +18,8 @@ const U = {
     try { return !!(window.__rpNative && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.roadplanner); }
     catch (e) { return false; }
   },
-  IOS_PLAN_NOTE: '요금제는 회사 관리자에게 문의해 주세요',
+  IOS_PLAN_NOTE: '사용 범위는 회사 관리자에게 문의해 주세요',
+  IOS_LOCK: '🔒 관리자 설정 필요',   // 아이폰 앱: "🔒 유료" 대신
 
   /* ── Korean Chosung Search ── */
   CHO: ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'],

@@ -60,7 +60,7 @@ const Vehicle = {
         </section>
 
         <section class="veh-cost">
-          <div class="veh-cost-h"><h2>경비 기록</h2>${can ? '' : '<span class="veh-paid">유료</span>'}</div>
+          <div class="veh-cost-h"><h2>경비 기록</h2>${can || U.iosApp() ? '' : '<span class="veh-paid">유료</span>'}</div>
           ${can ? `
             <div class="exp-month">
               <button type="button" aria-label="이전 달" onclick="Expenses.shift(-1)">‹</button>
@@ -71,7 +71,7 @@ const Vehicle = {
             <div id="exp-body"><div class="exp-empty">불러오는 중...</div></div>`
           : `
             <div class="art-add locked" style="display:flex;">
-              <span class="art-lock-t">🔒 경비 기록은 유료 기능이에요</span>
+              <span class="art-lock-t">${U.iosApp() ? '🔒 경비 기록은 관리자 설정이 필요해요' : '🔒 경비 기록은 유료 기능이에요'}</span>
               <span class="art-lock-s">주유·주차·통행료·정비·식비 영수증을 사진과 함께 남기고, 달마다 합계를 정산용으로 받을 수 있어요</span>
               ${U.iosApp() ? `<span class="art-lock-s">${esc(U.IOS_PLAN_NOTE)}</span>` : `<button type="button" onclick="App.navigate('upgrade')">유료 혜택 보기</button>`}
             </div>`}

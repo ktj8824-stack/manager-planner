@@ -309,7 +309,8 @@ const RoadAI = {
         const up = data.error === 'daily_limit' && data.indie && !data.paid
           ? U.iosApp() ? `<br><span style="display:inline-block; margin-top:8px;">${esc(U.IOS_PLAN_NOTE)}</span>` : `<br><button type="button" class="rpai-btn" style="margin-top:8px;" onclick="App.navigate('upgrade')">유료 알아보기 (월 2만원)</button>` : '';
         if (data.error === 'daily_limit') this.remaining = 0;
-        this.botSay(esc(data.message || 'AI가 잠시 대답하지 못했어요. 조금 뒤에 다시 말씀해 주세요.') + up);
+        const msg = U.iosApp() && data.error === 'daily_limit' ? '오늘 쓸 수 있는 횟수를 모두 썼어요. 내일 다시 이용해 주세요.' : data.message;   // 아이폰 앱: 서버 문구의 무료·유료 안내 대신
+        this.botSay(esc(msg || 'AI가 잠시 대답하지 못했어요. 조금 뒤에 다시 말씀해 주세요.') + up);
         return;
       }
       if (typeof data.remaining === 'number') this.remaining = data.remaining;

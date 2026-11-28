@@ -56,9 +56,13 @@
     <tr><th>회사 매니저 · 스태프 · 본사 관리자</th><td>계정(이름·연락처), 경비 기록과 영수증 사진, 알림 설정, 위치 기록과 동의 기록</td></tr>
     <tr><th>남는 것 (회사 기록)</th><td>회사 일정과 로드톡 대화는 회사의 업무 기록이라 남고, 담당자·보낸 사람 이름만 비워져요.</td></tr>
   </table>
-  <p>지운 정보는 되돌릴 수 없어요. 법에 따라 보관해야 하는 결제 기록이 있으면 그 기간(전자상거래법 5년) 동안만 따로 보관한 뒤 지워요. 출시 기념 무료 기간(2027년 2월 28일까지)에는 결제를 받지 않아 결제 기록이 없어요.</p>
+  <p>지운 정보는 되돌릴 수 없어요. 법에 따라 보관해야 하는 결제 기록이 있으면 그 기간(전자상거래법 5년) 동안만 따로 보관한 뒤 지워요.<span id="promo-note"> 출시 기념 무료 기간(2027년 2월 28일까지)에는 결제를 받지 않아 결제 기록이 없어요.</span></p>
 
-  <p class="muted" style="margin-top:28px;"><a href="privacy.html">개인정보처리방침</a> · <a href="terms.html">이용약관</a> · 문의 <a href="mailto:support@roadplanner.kr">support@roadplanner.kr</a></p>
+  <p class="muted" style="margin-top:28px;"><a href="privacy.html">개인정보처리방침</a> · <a href="terms.html">이용약관</a> · <a href="support.html">고객 지원</a> · 문의 <a href="mailto:support@roadplanner.kr">support@roadplanner.kr</a></p>
 </main>
+<script>
+// 아이폰 앱 안에서는 무료 기간 안내를 숨김 (Apple 심사 3.1.1). 안드로이드 앱·웹은 그대로
+(function(){try{if(!(window.__rpNative&&window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.roadplanner))return;var n=document.getElementById('promo-note');if(n)n.remove()}catch(e){}})();
+</script>
 </body>
 </html>
