@@ -20,6 +20,8 @@ const CalView = {
     const lead = first.getDay();                       // 일요일 시작
     const days = new Date(y, m + 1, 0).getDate();
     const arts = (window.hqStore?.getArtists?.() || []);
+    // 홈에서 고른 담당 아티스트·내 일정 기준과 같게 (11-28)
+    const pass = (s) => (typeof Home !== 'undefined' && Home._passFilter) ? Home._passFilter(s) : true;
     const colorOf = (s) => (arts.find(a => a.id === s.artistId)?.color) || '#3B45C4';
     const same = (a, b) => a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
@@ -27,14 +29,14 @@ const CalView = {
     for (let i = 0; i < lead; i++) cells += '<span class="cv-cell blank" aria-hidden="true"></span>';
     for (let d = 1; d <= days; d++) {
       const date = new Date(y, m, d);
-      const list = State.getSchedulesForDate(y, m, d) || [];
+      const list = (State.getSchedulesForDate(y, m, d) || []).filter(pass);
       const dots = list.slice(0, 3).map(s => `<i style="background:${esc(colorOf(s))}"></i>`).join('') + (list.length > 3 ? '<b>+</b>' : '');
       const cls = ['cv-cell', same(date, this.sel) ? 'sel' : '', same(date, now) ? 'today' : '', date.getDay() === 0 ? 'sun' : date.getDay() === 6 ? 'sat' : '', date < new Date(now.getFullYear(), now.getMonth(), now.getDate()) ? 'past' : ''].filter(Boolean).join(' ');
       cells += `<button type="button" class="${cls}" onclick="CalView.pick(${y},${m},${d})" aria-pressed="${same(date, this.sel)}" aria-label="${m + 1}월 ${d}일${list.length ? ` 일정 ${list.length}건` : ''}"><span class="cv-n">${d}</span><span class="cv-dots">${dots}</span></button>`;
     }
 
     const sel = this.sel;
-    const selList = (State.getSchedulesForDate(sel.getFullYear(), sel.getMonth(), sel.getDate()) || []).slice().sort((a, b) => this._t(a).localeCompare(this._t(b)));
+    const selList = (State.getSchedulesForDate(sel.getFullYear(), sel.getMonth(), sel.getDate()) || []).filter(pass).slice().sort((a, b) => this._t(a).localeCompare(this._t(b)));
     const rows = selList.map(s => {
       const hidden = s.isSecret && window.AuthPersona && !window.AuthPersona.canViewSecret?.(s);
       return `<button type="button" class="cv-row" onclick="CalView.open(${sel.getFullYear()},${sel.getMonth()},${sel.getDate()})">
