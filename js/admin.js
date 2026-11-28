@@ -2486,6 +2486,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const clean = (l) => String(l || '').replace(/^\[[^\]]+\]\s*/, '');
     const ticks = []; for (let h = H0; h < H1; h += 2) ticks.push(`<span style="left:${pct(h * 60)}%">${String(h).padStart(2, '0')}시</span>`);
 
+    const mobileRows = [];   // 휴대폰용: 아티스트별 일정 카드 (막대 대신)
+    const hm = (min) => { const v = ((min % 1440) + 1440) % 1440; return `${String(Math.floor(v / 60)).padStart(2, '0')}:${String(v % 60).padStart(2, '0')}`; };
     const rows = showArtists.map(art => {
       const artSch = schedules.filter(s => matchArtistSchedule(s, art.id, artists)).sort((x, z) => String(x.startTime || '').localeCompare(String(z.startTime || '')));
       let anyLate = false, moveLate = false;
@@ -2520,12 +2522,40 @@ document.addEventListener('DOMContentLoaded', () => {
       const seenAt = artSch.map(changeSeenAt).filter(Boolean).pop();
       const sub = mgr ? (anyLate ? `${mgr.managerName} · ${moveLate ? '지연' : '응답 없음'}` : mgr.managerName + (seenAt ? ` · 매니저 확인 ${seenAt}` : '')) : '';
       const barHtml = bars.map(b => `<div class="cal-event-pill gv2-bar ${b.cls}${b.main ? ' main' : ''}" data-sch-id="${esc(b.id)}" title="${esc(b.label)}" style="left:${pct(b.a0)}%; width:${Math.max(0.8, pct(b.a1) - pct(b.a0))}%">${esc(b.label)}</div>`).join('');
+      mobileRows.push({ art, sub, anyLate, items: artSch.map(sch => {
+        const mine = bars.filter(x => x.id === sch.id);
+        const main = mine.find(x => x.main) || {};
+        return { sch, main, steps: mine.filter(x => !x.main) };
+      }) });
       return `<div class="gv2-row${anyLate ? ' late' : ''}">
         <div class="gv2-who"><span class="gv2-dot" style="background:${esc(art.color || '#4C57D6')}"></span><span><b>${esc(String(art.name || '').replace(/\s*\([^)]*\)\s*$/, ''))}</b><small class="${anyLate ? 'bad' : ''}">${esc(sub)}</small></span></div>
         <div class="gv2-track">${barHtml || '<span class="gv2-none">오늘 일정 없음</span>'}${isToday && nowMin >= H0 * 60 ? `<i class="gv2-now" style="left:${pct(nowMin)}%"></i>` : ''}</div>
       </div>`;
     }).join('');
     const nowTxt = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    // 휴대폰: 06~24시 막대는 칸이 너무 작아 '기상'·'픽업' 글자가 잘림 → 아티스트별로 그날 동선을 세로 카드로 (11-28)
+    if (window.matchMedia && window.matchMedia('(max-width: 640px)').matches) {
+      const ST = { plan: '예정', live: '진행 중', late: '지연', done: '완료' };
+      const cards = mobileRows.map(r => {
+        const nm = esc(String(r.art.name || '').replace(/\s*\([^)]*\)\s*$/, ''));
+        const head = `<div class="gv2m-who"><span class="gv2-dot" style="background:${esc(r.art.color || '#4C57D6')}"></span><b>${nm}</b>${r.sub ? `<small class="${r.anyLate ? 'bad' : ''}">${esc(r.sub)}</small>` : ''}</div>`;
+        if (!r.items.length) return `<div class="gv2m-art gv2m-noitem">${head}<span class="gv2m-none">일정 없음</span></div>`;
+        const items = r.items.map(it => {
+          const sch = it.sch; const m = it.main;
+          const steps = it.steps.map(st => `<li class="${st.cls}"><time>${hm(st.a0)}</time><span>${esc(st.label)}</span></li>`).join('');
+          const range = `${esc(String(sch.startTime || '').slice(0, 5))}${sch.endTime ? '–' + esc(String(sch.endTime).slice(0, 5)) : ''}`;
+          return `<div class="cal-event-pill gv2m-card ${m.cls || 'plan'}" data-sch-id="${esc(sch.id)}">
+            <div class="gv2m-top"><span class="gv2m-time">${range}</span><span class="gv2m-st ${m.cls || 'plan'}">${ST[m.cls] || '예정'}</span></div>
+            <div class="gv2m-title">${esc(m.label || sch.title || '')}</div>
+            ${sch.location ? `<div class="gv2m-loc">${esc(String(sch.location).replace(/\s*\([^)]*\)\s*$/, ''))}</div>` : ''}
+            ${steps ? `<ol class="gv2m-steps">${steps}</ol>` : ''}
+          </div>`;
+        }).join('');
+        return `<div class="gv2m-art${r.anyLate ? ' late' : ''}">${head}${items}</div>`;
+      }).join('');
+      el.scheduleViewport.innerHTML = `<div class="gv2m">${cards || '<div class="gv2-empty">등록된 아티스트가 없어요.</div>'}</div>`;
+      return;
+    }
     el.scheduleViewport.innerHTML = `<div class="gv2"><div class="gv2-in">
       <div class="gv2-row head"><div class="gv2-who"></div><div class="gv2-ticks">${ticks.join('')}</div></div>
       ${rows || '<div class="gv2-empty">등록된 아티스트가 없어요.</div>'}
@@ -3562,6 +3592,9 @@ document.addEventListener('DOMContentLoaded', () => {
       state.currentDate = new Date();
       renderCurrentView();
     });
+
+    // 휴대폰 ↔ PC 폭이 바뀌면 하루 막대를 다시 그림 (세로 카드 ↔ 가로 막대)
+    try { const mq = window.matchMedia('(max-width: 640px)'); const re = () => { if (state.currentView === 'gantt') renderCurrentView(); }; mq.addEventListener ? mq.addEventListener('change', re) : mq.addListener(re); } catch (e) { }
 
     // 날짜 옆 '캘린더' 버튼: 어느 탭(지도·분석 등)에 있어도 바로 월간 캘린더로 (11-28)
     const calJump = document.getElementById('btn-open-month');
