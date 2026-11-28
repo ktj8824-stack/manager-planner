@@ -2295,14 +2295,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const raw = h.dataset.raw && h.querySelector('.cdt-d') ? h.dataset.raw : h.textContent;
         const m = /^(\d{4})년\s*(.*)$/.exec(String(raw).trim());
         h.dataset.raw = raw;
-        if (m) {
+        // 월간(일 없음)은 '2026년 12월' 한 줄, 날짜가 있는 화면만 두 줄 (11-28)
+        if (m && !/일/.test(m[2] || '')) {
+          h.innerHTML = `<span class="cdt-one"></span><span id="date-rel-chip" class="date-rel-chip"></span>`;
+          h.querySelector('.cdt-one').textContent = `${m[1]}년 ${m[2] || ''}`.trim();
+          h.classList.add('one');
+        } else if (m) {
+          h.classList.remove('one');
           h.innerHTML = `<small class="cdt-y">${m[1]}년<span id="date-rel-chip" class="date-rel-chip"></span></small><span class="cdt-d"></span>`;
           h.querySelector('.cdt-d').textContent = m[2] || '';
         }
       }
       const chip2 = document.getElementById('date-rel-chip');
       if (chip2) { chip2.textContent = rel; chip2.hidden = !rel; chip2.classList.toggle('now', !!isNow); }
-      if (btn) { btn.textContent = isNow ? '오늘' : '오늘로'; btn.classList.toggle('is-now', !!isNow); btn.classList.toggle('go-now', !isNow); btn.setAttribute('aria-pressed', isNow ? 'true' : 'false'); }
+      if (btn) { btn.textContent = '오늘'; btn.classList.toggle('is-now', !!isNow); btn.classList.toggle('go-now', !isNow); btn.setAttribute('aria-pressed', isNow ? 'true' : 'false'); }
     } catch (e) { }
   }
 

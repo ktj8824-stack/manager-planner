@@ -34,7 +34,7 @@ const { chromium, devices } = require('playwright');
     const onlyA = titles(); const on = !!document.querySelector(`[data-legend-art="${arts[0].id}"].on`);
     document.querySelector(`[data-legend-art="${arts[0].id}"]`).click(); await new Promise(r => setTimeout(r, 500));
     const back = titles();
-    return { a: before.includes('범례A') && before.includes('범례B'), onlyA: onlyA.includes('범례A') && !onlyA.includes('범례B'), on, back: back.includes('범례B'), twoLine: !!document.querySelector('#current-date-text .cdt-y') && !!document.querySelector('#current-date-text .cdt-d') };
+    return { a: before.includes('범례A') && before.includes('범례B'), onlyA: onlyA.includes('범례A') && !onlyA.includes('범례B'), on, back: back.includes('범례B'), oneLine: document.querySelector('#current-date-text.one .cdt-one')?.textContent || '' };
   });
   console.log(JSON.stringify(R), 'errs', JSON.stringify(errs));
   await b.close();
